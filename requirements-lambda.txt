@@ -1,0 +1,60 @@
+# ── THE RENTED-GPU ENVIRONMENT, AS MEASURED ON A WORKING BOX ─────────────
+#
+# ⛔⛔ THREE RUNS IN A ROW LOST TIME TO THE SAME SHAPE: the base image ships
+# system packages that are TOO OLD for the pinned training stack, and each one
+# surfaces as an ImportError from deep inside transformers, one stage at a time,
+# with the meter running.
+#
+#   Pillow 9.0.1   → `module 'PIL.Image' has no attribute 'Resampling'`
+#                    (raised from transformers.image_utils, while importing PEFT)
+#   Jinja2 3.0.3   → `apply_chat_template requires jinja2>=3.1.0`
+#                    (raised only when the model is first PROMPTED — so it
+#                     survives install, survives import, and detonates at the
+#                     first real generation)
+#   numpy          → torch/scipy ABI breakage when upgraded carelessly
+#
+# ⭐ THE JINJA ONE IS THE INSTRUCTIVE CASE: nothing catches it until something
+# actually calls the chat template. `pip install` succeeds, `import transformers`
+# succeeds, the model LOADS — and then the first generation dies. That is why the
+# pipeline keeps a BASELINE stage that runs the real gate on the untuned model
+# before the fine-tune: it is the cheapest stage that exercises the whole call
+# path, and it caught this for ~$0.30 instead of ~$2.50 after a 66-minute train.
+#
+# Install in THIS ORDER on a fresh Lambda box:
+#
+#   pip install -q --upgrade Pillow 'jinja2>=3.1.0'
+#   pip install -q -r requirements-lambda.txt
+#   python -c "from transformers import AutoTokenizer; \
+#       t=AutoTokenizer.from_pretrained('Qwen/Qwen2.5-7B-Instruct'); \
+#       print(t.apply_chat_template([{'role':'user','content':'x'}], tokenize=False))"
+#
+# ⛔ THAT LAST LINE IS NOT OPTIONAL. It is the smoke test for the failure that
+# import-time checks cannot see. Ask the live path a real question.
+
+# ── the two the base image ships too old ─────────────────────────────────
+Pillow>=10.0.0
+Jinja2>=3.1.0
+
+# ── the pinned stack the published results were produced with ────────────
+transformers==5.8.1
+peft==0.19.1
+datasets==4.8.5
+accelerate==1.13.0
+
+# ── the core the language itself needs ───────────────────────────────────
+PyYAML>=6.0
+pytest>=8.0
+
+# ⛔ torch is NOT pinned here on purpose. The correct wheel depends on the box's
+# driver, and Lambda images ship a working torch already — replacing it is how
+# the cu130-vs-driver-12.8 breakage happened locally. Verified working on
+# gpu_1x_a100_sxm4: torch 2.7.0 + CUDA available.
+#
+# Measured-good on that box, 2026-08-25 (run 4):
+#   torch 2.7.0 · transformers 5.8.1 · peft 0.19.1 · datasets 4.8.5
+#   accelerate 1.13.0 · Jinja2 3.1.6 · pillow 12.3.0 · tokenizers 0.22.2
+#   huggingface_hub 1.28.0 · safetensors 0.8.0
+#
+# ⚠️ numpy 1.21.5 and PyYAML 5.4.1 are the IMAGE's versions and were left alone.
+# Both are older than this project's local pins and both worked. Upgrading numpy
+# on a rented box has broken torch before; do not touch it without a reason.
