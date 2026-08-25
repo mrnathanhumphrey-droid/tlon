@@ -66,7 +66,16 @@ def main() -> int:
                          f"Measured-derived value is {corpus.SLOT_OCCUPANCY_FLOOR}")
     ap.add_argument("--contrastive", type=int, default=0,
                     help="§8.2: minimal pairs per mined confusion (0 = off)")
+    # ⛔ ADDED AFTER A 3,000-ROW TEST BUILD OVERWROTE THE LIVE 40,000-ROW CORPUS.
+    # It was fully recoverable — the build is deterministic and the restore was
+    # verified against fingerprints — but only because the fingerprints had been
+    # measured minutes earlier by luck, not by discipline. A search over `--n`
+    # writes many candidate corpora; none of them may land on the live one.
+    ap.add_argument("--out", default=str(OUT),
+                    help="corpus directory. Defaults to the LIVE corpus — pass "
+                         "a scratch path when sweeping.")
     a = ap.parse_args()
+    out_dir = pathlib.Path(a.out)
 
     # ── §8.2 — the confusions come from the RUN, not from a list ──────────
     mined, focus = [], None
@@ -149,14 +158,21 @@ def main() -> int:
         raise SystemExit(f"⛔ classes not fully covered: {short}. Refusing to "
                          "write a corpus that cannot teach the whole partition.")
 
-    OUT.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
     train, ev = pairs[:a.n], pairs[a.n:]
 
     # ⭐⭐ §8.2 — THE MINIMAL PAIRS. Two legal scenes differing in ONE slot, so
     # the only thing that varies between the rows is the class assignment. ⛔ They
-    # go into TRAIN ONLY: eval must stay byte-identical to run 3's or the gate
-    # number stops being comparable, and a held-out set that shares a generator
-    # with a targeted intervention is measuring its own training data.
+    # go into TRAIN ONLY — a held-out set that shares a generator with a targeted
+    # intervention is measuring its own training data.
+    #
+    # ⚠️ BE PRECISE ABOUT WHAT IS AND IS NOT COMPARABLE. `--slot-floor` changes
+    # the sampling distribution, so eval.jsonl is NOT the same set run 3 held
+    # out, and `eval_loss` is therefore NOT comparable across the two runs.
+    # ⭐ THE GATE IS UNAFFECTED: F-LOCAL scores an independent battery
+    # (`probes.build(seed=7)`) that no corpus setting can reach. eval_loss is a
+    # training-time diagnostic here, nothing more, and must not be quoted as a
+    # cross-run improvement.
     if a.contrastive and mined:
         extra = corpus.contrastive_pairs(mined, per_confusion=a.contrastive,
                                          seed=a.seed)
@@ -188,7 +204,7 @@ def main() -> int:
               f"({len(train) // 2:,} write + {len(train) // 2:,} read)")
 
     for name, part in (("train", train), ("eval", ev)):
-        path = OUT / f"{name}.jsonl"
+        path = out_dir / f"{name}.jsonl"
         with path.open("w", encoding="utf-8", newline="") as fh:
             for p in part:
                 # ⛔⛔ `canon_json` WAS HERE AND IT COST A FINE-TUNE. It is the
@@ -224,7 +240,7 @@ def main() -> int:
     print("     ⇒ trim --n so the TOKEN total matches, or the render delta is "
           "confounded with a longer run.")
 
-    meta = OUT / "meta.json"
+    meta = out_dir / "meta.json"
     meta.write_text(json.dumps({
         "n_train": len(train), "n_eval": len(ev), "seed": a.seed,
         "balanced": not a.naive, "focus_forms": focus,

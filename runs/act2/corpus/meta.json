@@ -1,96 +1,130 @@
 {
-  "n_train": 80000,
+  "n_train": 63608,
   "n_eval": 2000,
   "seed": 20620,
   "balanced": true,
   "focus_forms": {
-    "pal": 60,
-    "rän": 60,
-    "plas": 60,
-    "hul": 60
+    "nol": 300,
+    "xel": 60,
+    "sen": 240,
+    "hrix": 120,
+    "hul": 60,
+    "fro": 60,
+    "fen": 60,
+    "kim": 120,
+    "hram": 60,
+    "xom": 180,
+    "hlin": 60,
+    "hlan": 120,
+    "xun": 60,
+    "hres": 60,
+    "kem": 60,
+    "nem": 420,
+    "fral": 120,
+    "hlim": 60,
+    "nong": 60,
+    "fläx": 60,
+    "hrin": 60,
+    "pöl": 60,
+    "plin": 60,
+    "flox": 60,
+    "sung": 60,
+    "nax": 60,
+    "fim": 60,
+    "pän": 60,
+    "mim": 60
   },
-  "slot_floor": null,
-  "contrastive_per_confusion": 0,
-  "mined_confusions": 0,
-  "mined_from": null,
-  "approx_train_tokens": 2228506,
+  "slot_floor": 0.3,
+  "contrastive_per_confusion": 24,
+  "mined_confusions": 48,
+  "mined_from": "D:\\Tlon\\runs\\act2\\harden\\ledger_harden.jsonl",
+  "approx_train_tokens": 2156509,
   "slot_occupancy": {
-    "orient": 0.30837016941435375,
-    "modal": 0.06427500901140179,
-    "aspect_root": 0.03847394282028419,
-    "quant": 0.038682627914477054,
-    "tense": 0.05043539299197511,
-    "degree": 0.03891028438086927
+    "orient": 0.3042392107879375,
+    "modal": 0.29771342629177394,
+    "aspect_root": 0.29930663539728264,
+    "quant": 0.29971449692829283,
+    "tense": 0.2998674450024217,
+    "degree": 0.2999566647123302
   },
   "lexicon": "e2b8527010231a81fd31b6eeb9de3d8c",
   "exposure": {
-    "n_pairs": 41000,
+    "n_pairs": 30500,
     "by_class": {
       "R": {
         "forms": 156,
         "covered": 156,
-        "total": 105422,
-        "min_form_exposure": 675,
-        "max_form_exposure": 735
+        "total": 78458,
+        "min_form_exposure": 493,
+        "max_form_exposure": 622
       },
       "O": {
         "forms": 24,
         "covered": 24,
-        "total": 48749,
-        "min_form_exposure": 2025,
-        "max_form_exposure": 2081
+        "total": 35684,
+        "min_form_exposure": 1465,
+        "max_form_exposure": 1537
       },
       "L": {
         "forms": 12,
         "covered": 12,
-        "total": 64422,
-        "min_form_exposure": 5368,
-        "max_form_exposure": 5369
+        "total": 47958,
+        "min_form_exposure": 3939,
+        "max_form_exposure": 4186
       },
       "A": {
         "forms": 6,
         "covered": 6,
-        "total": 4056,
-        "min_form_exposure": 676,
-        "max_form_exposure": 676
+        "total": 23483,
+        "min_form_exposure": 3907,
+        "max_form_exposure": 3921
       },
       "M": {
         "forms": 10,
         "covered": 10,
-        "total": 6776,
-        "min_form_exposure": 677,
-        "max_form_exposure": 678
+        "total": 23358,
+        "min_form_exposure": 2269,
+        "max_form_exposure": 2692
       },
       "D": {
         "forms": 6,
         "covered": 6,
-        "total": 4102,
-        "min_form_exposure": 683,
-        "max_form_exposure": 684
+        "total": 23534,
+        "min_form_exposure": 3906,
+        "max_form_exposure": 3969
       },
       "Q": {
         "forms": 6,
         "covered": 6,
-        "total": 4078,
-        "min_form_exposure": 679,
-        "max_form_exposure": 680
+        "total": 23515,
+        "min_form_exposure": 3851,
+        "max_form_exposure": 4159
       },
       "T": {
         "forms": 8,
         "covered": 8,
-        "total": 5317,
-        "min_form_exposure": 664,
-        "max_form_exposure": 665
+        "total": 23527,
+        "min_form_exposure": 2913,
+        "max_form_exposure": 3040
       },
       "F": {
         "forms": 5,
         "covered": 5,
-        "total": 41000,
-        "min_form_exposure": 8200,
-        "max_form_exposure": 8200
+        "total": 30500,
+        "min_form_exposure": 6094,
+        "max_form_exposure": 6107
       }
     },
-    "worst_form_exposure": 664,
-    "exposure_spread": 12.349397590361447
-  }
+    "worst_form_exposure": 493,
+    "exposure_spread": 12.387423935091277
+  },
+  "n_train_after_prune": 63603,
+  "pruned_over_seq": 5,
+  "train_sha256": "7ee9c98a6ee9ae205ad8eebaffe27ef32da302764c9c5ee072f72e5485085772",
+  "eval_sha256": "e7ea3e493503b37d29b63b78b8f573b0ef97f24681f53bc90480dcd06573633d",
+  "node_fingerprint": 79394,
+  "tokens": 9527752,
+  "tokens_baseline_run3": 9539850,
+  "tokens_delta_fraction": -0.0012681541114378109,
+  "token_verdict": "HELD"
 }

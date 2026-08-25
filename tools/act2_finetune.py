@@ -45,6 +45,34 @@ SYSTEM = {
 # F-LOCAL would then be measuring a crutch that was installed on purpose.
 
 
+def row_messages(row) -> list[dict]:
+    """The exact chat messages a training row becomes.
+
+    ⛔⛔ MODULE-LEVEL ON PURPOSE, SO THE TOKEN BUDGET AND THE TRAINER SHARE ONE
+    FOLD. This lived inside `main()`, which meant anything wanting to count the
+    corpus's tokens had to re-spell the formatting — and a counter that
+    reimplements the thing it measures verifies itself. The project has already
+    shipped that shape twice (a partition test that called `impression()`; four
+    name-folds sharing a constant instead of a rule). `act2_token_budget.py`
+    imports THIS function, so if it drifts they drift together.
+    """
+    direction = row.get("direction") or "write"
+    return [{"role": "system", "content": SYSTEM[direction]},
+            {"role": "user", "content": row.get("prompt") or row["english"]},
+            {"role": "assistant",
+             "content": json.dumps(row["scene"], ensure_ascii=False,
+                                   sort_keys=True)}]
+
+
+def row_to_text(row, tok) -> str:
+    """Messages → the literal string that gets tokenized."""
+    msgs = row_messages(row)
+    if getattr(tok, "chat_template", None):
+        return tok.apply_chat_template(msgs, tokenize=False)
+    return (f"{msgs[0]['content']}\n\n{msgs[1]['content']}\n\n"
+            f"{msgs[2]['content']}")
+
+
 #: ⛔⛔ MEASURED ON REAL RUNS. The first version of `plan()` predicted 4.6 GiB for
 #: the local job and the job used 15.5 of a 16 GiB card. These are the anchors any
 #: change to the arithmetic must still reproduce; a planner is only worth having
@@ -196,20 +224,9 @@ def main() -> int:
 
     def fmt(row):
         # ⛔ Back-compatible: a corpus written before the read direction existed
-        # has neither field, and must still train as it did.
-        direction = row.get("direction") or "write"
-        user = row.get("prompt") or row["english"]
-        system = SYSTEM[direction]
-        msgs = [{"role": "system", "content": system},
-                {"role": "user", "content": user},
-                {"role": "assistant",
-                 "content": json.dumps(row["scene"], ensure_ascii=False,
-                                       sort_keys=True)}]
-        text = (tok.apply_chat_template(msgs, tokenize=False)
-                if getattr(tok, "chat_template", None)
-                else f"{system}\n\n{user}\n\n"
-                     f"{json.dumps(row['scene'], ensure_ascii=False)}")
-        return tok(text, truncation=True, max_length=a.seq)
+        # has neither field, and must still train as it did. The formatting
+        # itself lives in `row_to_text` so the token budget measures THIS fold.
+        return tok(row_to_text(row, tok), truncation=True, max_length=a.seq)
 
     ds = load_dataset("json", data_files={
         "train": str(CORPUS / "train.jsonl"),

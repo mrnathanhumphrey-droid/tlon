@@ -1,0 +1,24 @@
+{
+  "rows": 63603,
+  "tokens": 9527752,
+  "mean": 149.80035532915113,
+  "max_untruncated": 256,
+  "p99": 229,
+  "truncated": 0,
+  "by_direction": {
+    "read": {
+      "rows": 31804,
+      "mean": 145.92287133693875
+    },
+    "write": {
+      "rows": 31799,
+      "mean": 153.67844900783044
+    }
+  },
+  "pruned_over_seq": 5,
+  "baseline_tokens": 9539850,
+  "delta_fraction": -0.0012681541114378109,
+  "verdict": "HELD",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "seq": 256
+}
