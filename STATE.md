@@ -1,36 +1,106 @@
 # Tlön — STATE
 
-**Updated:** 2026-08-24. ⭐⭐ **THE RESEARCH IS SEALED. THE LIVE WORK IS THE
+**Updated:** 2026-08-25. ⭐⭐ **THE RESEARCH IS SEALED. THE LIVE WORK IS THE
 PRODUCT — the open-world chatbot (the freeware door).**
 
-✅ **ACT 2 TIER-A IS DONE. THREE RUNS ON LAMBDA, ALL INSTANCES TERMINATED.**
-Artifacts sha256-verified in `runs/act2/tlon_run{1,2,3}/`. Lambda ≈ **$14.60**;
-Act 2 total ≈ **$14.70**. **The $1,500 contingency is untouched.**
+✅ **ACT 2 TIER-A DONE. THE 7B READS AND WRITES TLÖN NATIVELY.** Four Lambda
+runs, every instance TERMINATED, ≈ **$23** total. **$1,500 untouched.**
+⭐ **PUBLIC: https://github.com/mrnathanhumphrey-droid/tlon** (MIT, all pushed).
 
-| | baseline | run 1 | run 2 | **run 3** |
-|---|---|---|---|---|
-| speak | 0.0 % | *artifact* | 9.4 % | **98.4 %** |
-| render | 0.0 % | 31.2 % | 81.2 % | **84.4 %** |
-| comprehension | 46.9 % | 64.1 % | 51.6 % | **68.0 %** |
+| | baseline | run 3 | at n=256 |
+|---|---|---|---|
+| render (English→Tlön) | 0.0 % | 84.4 % | **82.0 %** CI [76.8, 86.5] |
+| speak (Tlön→reply) | 0.0 % | 98.4 % | **97.3 %** CI [94.4, 98.9] |
+| comprehension | 46.9 % | 68.0 % | **71.1 %** |
 
-⭐⭐ **ESTABLISHED — THE CLASS SYSTEM IS LEARNABLE FROM WEIGHTS.** A fine-tuned 7B
-writes Tlön from English at **84.4 %** and reads Tlön to reply at **98.4 %**,
-**cardless and unconstrained**. Both directions, from weights, no lookup table.
+⭐⭐ **COMPREHENSION IS ESTABLISHED** — McNemar **p = 1.1 × 10⁻⁶** (n=256).
+⛔ **The same 64 items read p=0.21 UNPAIRED and p=0.000049 PAIRED.** You cannot
+recover pairing you did not record. Per-item outcomes are now ledgered.
 
-⭐⭐ **ESTABLISHED — COMPREHENSION.** baseline 46.9 % → **68.0 %**, McNemar
-**p = 1.1 × 10⁻⁶** (n=256). ⛔ **The same 64 items read p=0.21 UNPAIRED and
-p=0.000049 PAIRED** — the ledger was discarding the pairing at write time. **You
-cannot recover pairing you did not record.**
+⛔ **THE GATE IS RESOLVED AND RENDER FAILS: 82.0 %, CI ENTIRELY BELOW 0.90.**
+At n=64 it was formally UNDECIDABLE (CI [73.1, 92.2] contained the bar) — the
+extra $2 of measurement was the difference between knowing and guessing.
 
-⛔ **F-LOCAL STILL FIRES, AND THE BLOCKER SWAPPED**: now **render 84.4 %** vs the
-0.90 bar (speak clears at 98.4 %). 11 small-class slot confusions remain —
-`L→M`×3, `Q→A`×2 — the family targeted positives exist for.
+# ⛔⛔ THE ARENA IS NOT READY, AND WE KNOW EXACTLY WHY
 
-⛔ **RETRACTED AND RESOLVED:** comprehension was called "the one clean result"
-after run 1. Run 2 did not replicate the significance; it was downgraded to
-*suggestive*. It is **now established** by the correct test at adequate n. The
-direction was right all along, the confidence was not — only the replication plus
-the paired test could separate those. See `DEVIATIONS_ACT2` **D12–D14**.
+⭐⭐ **`speak 97.3 %` DOES NOT MEAN "CONVERSES".** The probe fed **depth-1**
+histories, and at depth 1 the model **deterministically ECHOES `parse(history)`**
+(8/10 exact, 1/8 distinct, identical at temp 0.0 AND 1.5). An echo of a valid
+parse is trivially valid. Behaviour by history depth, measured:
+
+| depth | valid | echoes last | distinct on same history |
+|---|---|---|---|
+| 1 | 10/10 | 8/10 | 1/8 |
+| 3 | 8/10 | 0/10 | 5/8 |
+| 5 | 6/10 | 0/10 | 8/8 |
+| 8 | **5/10** | 0/10 | 7/8 |
+
+**The two ends fail in opposite directions:** shallow = legal but a deterministic
+mirror (drift impossible by construction); deep = varied but **validity collapses
+to 50 %** (drift confounded with validity-failure). The arena lives at growing
+depth.
+
+**EXCHANGE PROBE** — 40 turns, temp 0.9, criteria locked before the data:
+
+| | interacting | control (frozen partner) |
+|---|---|---|
+| validity last quarter | **40 %** | **50 %** |
+| root TTR | 0.12 → 0.12 | 0.12 → 0.12 |
+
+⭐ **BOTH ARMS DEGENERATE ⇒ IT IS THE MODEL, NOT THE EXCHANGE.** It falls apart
+against a partner that isn't even listening. **An intrusive-thought generator
+would paper over a speaker that cannot sustain generation alone.** Transcript:
+**6 distinct utterances in 18 legal turns**, mean 2.9 differing tokens of 14,
+mostly aspect-reduplication jitter.
+
+⛔⛔ **AND 2 OF MY 3 PRE-SPECIFIED CRITERIA FAILED TO FIRE ON IT.** TTR *decline*
+read **+0 %** because TTR was already 0.12 at the first window; the *exact*-cycle
+check missed near-repetition. Only validity caught it. **A decline-based or
+exact-match measure cannot see a speaker that starts degenerate and jitters —
+F4 HAS THE SAME SHAPE and σ_cp must not inherit it.**
+
+# HARDENING STATUS
+
+- ✅ **HARDEN 2** — Diagnosis C verdict re-keyed off the saturating `dependence`
+  onto `valid`; detects its own saturation. 12 tests.
+- ✅ **HARDEN 3 (structural)** — `falsify.arena_preconditions` RAISES below the
+  temperature floor and on a degenerate speaker at a legal temperature. 21 tests,
+  both ends red-proofed.
+- ⛔ **HARDEN 3 (empirical) — `MIN_ARENA_TEMPERATURE = 0.7` IS AN UNVALIDATED
+  PLACEHOLDER.** The sweep meant to derive it probed at depth 1 (the echo
+  regime), so its "no usable temperature" verdict is an artefact of the probe,
+  not a fact about the model. **Re-derive at realistic depth.**
+- ⛔ **HARDEN 1 — CONFIRMED NEEDED.** Render genuinely fails; targeted positives
+  on the small classes (`L→M`, `Q→A` dominate 48 confusions at n=256).
+- ⛔ **HARDEN 4 — BLOCKED.** Validating the arena harness against a speaker that
+  cannot hold 40 turns would validate it against noise.
+- ⏳ **HARDEN 5** — product ops, separate track, non-blocking.
+
+# ⭐ NEXT: THE DISCOURSE LAYER — `docs/SPEC_DISCOURSE_LAYER_v0.1_2026_08_25.md`
+
+Received 2026-08-25; recorded verbatim with a **verification pass** on top.
+Verified real: residue + Scene distance, the Turbulence σ_cp lane, the calibrated
+discrete-KM estimator, all 5 forces. **Four findings:**
+
+1. ⛔ **Five M-class form-names do not exist** — `sköl`→**`xöl`** · `xoth`→**`xos`**
+   · `nek`→**`nem`** · `dul̈`→**`hrin`** · `wir`→**`mir`**. The ten
+   ways-of-holding map one-for-one; only the spelling is off. **§8.1's table must
+   key on the lexicon.**
+2. ⭐ **§8.3 is largely PRE-PAID** by Turbulence — and its first closed form
+   `σ_cp ∝ dᵀKd` **FAILED a PSD gate 5000/5000**; the correct object
+   `σ_ex^MN − σ_ex^HS` passed 0/1500. **Peak EXISTENCE locked, peak LOCATION
+   HELD** (s*=0.45 was a placeholder artefact) ⇒ **pre-declare the SHAPE, never
+   the location.**
+3. ⛔⛔ **§3 ρ_wide HAS NO NON-VACUOUS VALUE.** Measured over 3,000 random scene
+   pairs (median 4.75, range 1.0–7.65): ρ=4.0 puts **16 %** of RANDOM pairs
+   in-region (proximity-coherence, forbidden by C-D2); ρ=6.0 puts **98 %**
+   in-region (criterion 1 **cannot fire**). **No ρ_wide is both wide-by-design
+   and falsifiable.** Design call: is the region decorative, self-calibrated to
+   what the model emits, or on a different substrate?
+4. ⏳ §8.1 base convention table **unbuilt** — the load-bearing derivation.
+
+**Build order:** §8.2 (render ≥0.90) is the only item with no open design
+question in front of it.
 
 ---
 

@@ -1,0 +1,32 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=runs/act2/adapter · battery 8d21aa635d5729fd · n=256
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   97.3%  (249/256)
+  render  82.0%  (210/256)
+  choose  71.1%  (182/256), 0 unanswered
+
+  speak confusions (3): {'∅→A': 2, 'R→A': 1}
+     · 'sas' is not a Tlön form at all.
+     · 'mim' is class R, not A — it cannot fill the aspect_root slot.
+     · 'melmel' is not a Tlön form at all.
+
+  render confusions (48): {'M→R': 7, 'L→M': 6, 'Q→A': 5, 'M→A': 3, 'O→M': 2, 'O→T': 2, 'T→A': 2, 'R→A': 2, 'O→A': 2, 'R→D': 2, 'R→Q': 2, 'R→O': 2, 'R→M': 1, 'L→R': 1, 'L→F': 1, 'O→Q': 1, 'L→Q': 1, 'R→T': 1, 'L→A': 1, 'Q→M': 1, 'T→Q': 1, 'D→M': 1, '∅→A': 1}
+     · 'nol' is class Q, not A — it cannot fill the aspect_root slot.
+     · 'xel' is class R, not M — it cannot fill the modal slot.
+     · 'sen' is class L, not M — it cannot fill the modal slot.
+     · 'hrix' is class M, not R — it cannot fill the root slot.
+     · 'nol' is class Q, not A — it cannot fill the aspect_root slot.
+     · 'hul' is class O, not M — it cannot fill the modal slot.
+     · 'sen' is class L, not M — it cannot fill the modal slot.
+     · 'fro' is class L, not M — it cannot fill the modal slot.
+     · 'fen' is class O, not T — it cannot fill the tense slot.
+     · 'kim' is class T, not A — it cannot fill the aspect_root slot.
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.820, speak 0.973 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 71.1% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl

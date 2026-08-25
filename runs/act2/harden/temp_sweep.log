@@ -1,0 +1,17 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TEMPERATURE SWEEP · n=16 per point · adapter=runs/act2/adapter
+⛔ the floor must clear BOTH: it can vary, AND it stays legal (>= 90%)
+
+   temp   distinct     valid  reading
+    0.0     1/16     16/16    too cold — cannot vary
+    0.2     1/16     16/16    too cold — cannot vary
+    0.4     1/16     16/16    too cold — cannot vary
+    0.6     1/16     16/16    too cold — cannot vary
+    0.7     1/16     16/16    too cold — cannot vary
+    0.8     1/16     16/16    too cold — cannot vary
+    1.0     1/16     16/16    too cold — cannot vary
+    1.2     1/16     16/16    too cold — cannot vary
+    1.5     1/16     16/16    too cold — cannot vary
+
+  ⛔⛔ NO USABLE TEMPERATURE ON THIS GRID. The arena cannot be run on this model: every setting either cannot vary or cannot stay legal. That is a finding about the model, not a config bug.
+  wrote runs/act2/logs/temp_sweep.json
