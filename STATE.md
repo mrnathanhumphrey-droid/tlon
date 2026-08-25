@@ -59,6 +59,28 @@ check missed near-repetition. Only validity caught it. **A decline-based or
 exact-match measure cannot see a speaker that starts degenerate and jitters —
 F4 HAS THE SAME SHAPE and σ_cp must not inherit it.**
 
+# ⛔⛔ F4 READ CLEAR ON THAT COLLAPSE — FIXED, D15
+
+**1,019 tests.** F4's two branches are both RELATIVE, and on the probe both read
+**+0.0 %**: the decline branch because TTR was *already* 0.125 at the first
+window, the level-vs-control branch because the control was equally degenerate
+(0.125 vs 0.125). ⭐⭐ **A RELATIVE MEASURE HAS NO OPINION WHEN BOTH ARMS ARE ON
+THE FLOOR** — and with a yoked design, both arms are the same weights, so that is
+the *likely* case, not a corner one.
+
+`falsify.degeneracy_guard` is the absolute third branch. Both thresholds come
+from **the corpus null alone and never saw the degeneration**:
+
+| | threshold | derived from | margin on the event |
+|---|---|---|---|
+| root-TTR floor | **0.50** | corpus min **0.700** over 2,500 windows | event 0.056; **0/2,500** near it |
+| near-repetition | **0.75** | random corpus pairs max **0.500** over 20,000 | **153/153** pairs above the corpus max |
+
+Red-proofed both ways: fires on the real transcript (both arms), **0/200 healthy
+corpus windows fire**, <2 utterances REFUSED. ⛔ **σ_cp MUST NOT INHERIT THE
+SHAPE** — a coupling term defined as a *change* reads 0 on a pair stuck from turn
+zero, and σ_cp = 0 is *defined* to mean "independent, no pact".
+
 # HARDENING STATUS
 
 - ✅ **HARDEN 2** — Diagnosis C verdict re-keyed off the saturating `dependence`
@@ -67,14 +89,65 @@ F4 HAS THE SAME SHAPE and σ_cp must not inherit it.**
   temperature floor and on a degenerate speaker at a legal temperature. 21 tests,
   both ends red-proofed.
 - ⛔ **HARDEN 3 (empirical) — `MIN_ARENA_TEMPERATURE = 0.7` IS AN UNVALIDATED
-  PLACEHOLDER.** The sweep meant to derive it probed at depth 1 (the echo
-  regime), so its "no usable temperature" verdict is an artefact of the probe,
-  not a fact about the model. **Re-derive at realistic depth.**
-- ⛔ **HARDEN 1 — CONFIRMED NEEDED.** Render genuinely fails; targeted positives
-  on the small classes (`L→M`, `Q→A` dominate 48 confusions at n=256).
+  PLACEHOLDER.** ✅ Now flagged **in the identifier**
+  (`MIN_ARENA_TEMPERATURE_PROVENANCE`, `..._IS_MEASURED = False`) and stamped
+  into every refusal. `act2_temp_sweep.py` **refuses `--depth < 3`** and splits
+  the two causes of "no usable temperature": *varies nowhere* (a sampler finding)
+  from ***legal* nowhere** — ⭐ **which is a DEPTH-COMPETENCE finding that belongs
+  to the multi-turn corpus, and no temperature can close it.**
+- ⏳ **HARDEN 1 / §8.2 — CORPUS BUILT, RETRAIN NOT RUN.** See below: the named
+  instrument was wrong.
 - ⛔ **HARDEN 4 — BLOCKED.** Validating the arena harness against a speaker that
   cannot hold 40 turns would validate it against noise.
 - ⏳ **HARDEN 5** — product ops, separate track, non-blocking.
+
+# ⛔⛔ §8.2 — THE NAMED INSTRUMENT WAS THE WRONG ONE (D16)
+
+⛔ **AND THE SUMMARY THIS FILE CARRIED MIS-RANKED ITS OWN RUN.** It said *"`L→M`,
+`Q→A` dominate 48 confusions"*. Read off the ledger: the top ordered pair is
+**`M→R` at 7**, and the right unit is not the pair at all — it is the **missed
+slot**, where no single pair dominates because `A` is missed from *six* different
+source classes. [[rule_zero]], eighth time.
+
+§8.2 asks for *"the small-class targeted positives"*. Per-form exposure was
+**already flat** — A 663 · M 663 · Q 662 · T 649 · D 670 — and 3 of the 4
+hand-targeted forms are **gone from the confusions entirely**.
+
+⭐⭐ **ERRORS TRACK SLOT RARITY, NOT FORM RARITY:**
+
+| slot | occupancy | missed-slot errors |
+|---|---|---|
+| `root` | 100.0 % | 8 — *156 forms, fewest errors per fill* |
+| `relator` | 61.1 % | 0 |
+| `orient` | 30.9 % | 2 |
+| `modal` | 6.4 % | 11 |
+| **`aspect_root`** | **3.9 %** | **16** — the biggest hole |
+| `quant` / `degree` | 3.9 % | 5 / 2 |
+
+**The model has seen every A-form 663 times and still has not learned which slot
+is an A-slot** — it has only seen one filled once every 26 nodes. And the rarity
+is by design: `_decoration_p` sets occupancy to `len(class)/len(R)` *precisely
+so per-form exposure evens out*. **The balancing worked, and it optimised away
+the thing that was missing.** ⇒ **exposure teaches the FORM; occupancy teaches
+the FUNCTION, and only one of them was ever reported.**
+
+Built, $0: **`slot_floor=0.30`** (from `orient` 30.9 %→2 errors and `relator`
+61.1 %→0) · **`contrastive_pairs`** — two legal scenes one slot apart, e.g.
+`nol mlang ko` *(oft, it dreams)* vs `mlang testesas ko` *(it dreams, again and
+again)*: same root, same force, and the only difference is whether repetition is
+a **Q** or an **A** · **`--from-ledger`** mines the confusions from the newest
+run, because ⛔ **the hand-kept list ROTTED** — `{pal, rän, plas, hul}` was still
+being boosted three runs after three of them were fixed.
+
+⚠️ **OPEN:** `aspect_root` is an outlier *even among* rare slots — 16 vs `quant`'s
+5 at identical occupancy. Two candidates, no measurement separating them: it is
+the only two-field slot (`aspect_root` + `aspect_reps`) and the only one whose
+surface is a reduplication; and Q/A collide in English (*oft* vs *habitual*).
+
+⛔ **"HOLD COMPUTE CONSTANT" MEANS TOKENS, NOT ROWS** — flooring lengthens every
+scene and contrastive pairs add rows. The builder prints the token total so `--n`
+can be trimmed, or the render delta is confounded with a longer run.
+**⏳ THE RETRAIN IS LAMBDA SPEND AND HAS NOT BEEN RUN.**
 
 # ⭐ NEXT: THE DISCOURSE LAYER — `docs/SPEC_DISCOURSE_LAYER_v0.1_2026_08_25.md`
 
@@ -95,12 +168,53 @@ discrete-KM estimator, all 5 forces. **Four findings:**
    pairs (median 4.75, range 1.0–7.65): ρ=4.0 puts **16 %** of RANDOM pairs
    in-region (proximity-coherence, forbidden by C-D2); ρ=6.0 puts **98 %**
    in-region (criterion 1 **cannot fire**). **No ρ_wide is both wide-by-design
-   and falsifiable.** Design call: is the region decorative, self-calibrated to
-   what the model emits, or on a different substrate?
+   and falsifiable.**
 4. ⏳ §8.1 base convention table **unbuilt** — the load-bearing derivation.
 
-**Build order:** §8.2 (render ≥0.90) is the only item with no open design
-question in front of it.
+# ⭐⭐ RULED 2026-08-25 — 7 RULINGS. THE REGION GATE IS WITHDRAWN.
+
+⭐⭐ **THE ρ_wide CONTRADICTION WAS NOT A BAD PARAMETER — IT WAS THE WRONG KIND OF
+CRITERION, AND THE SOURCE TEXT SAID SO ALL ALONG.** §1 of the spec quotes Borges:
+the world is *"successive, **temporal, not spatial**"* — and §3 then put a
+**spatial distance gate on it**. C-D2 finishes the argument: Tlönian criticism
+attributes *unrelated* works to one author and prizes contradiction, so
+unrelated-held-as-one is the **prized** case. If any two impressions can be held
+as one unfolding, there is **no out-of-region by content-distance**. The width was
+never "very wide" — it is **total**, and a total region is not a gate.
+
+⇒ **§3's region criterion is WITHDRAWN. ρ_wide is DELETED**, not re-tuned or
+re-based. Residue geometry is **demoted to description** (wide vs deep abiding),
+which it does honestly. **A parameter, a failure mode and a category error all
+leave at once.**
+
+⇒ **§5's oracle drops to TWO conditions**, both on axes that are *not content*
+and therefore *can* fail: **evidential smoothness** (the temporal axis the
+ontology endorses) **AND force = ABIDE**. ⛔ **BREAK is NOT "distant content" —
+that was the error.** You do not step out of an unfolding by saying something
+unrelated; *that is prized*. **BREAK is breaking the FLOW** — an evidential
+discontinuity, or a force driving at closure.
+
+| # | ruling | status |
+|---|---|---|
+| 1 | §8.1 keys on the **lexicon** M-column; ontology unchanged | ✅ `tlon/discourse/evidential.py`, 22 tests |
+| 2 | **§3's region gate WITHDRAWN**, ρ_wide deleted | ✅ spec RULINGS block |
+| 3 | §5 oracle → **two** conditions; BREAK redefined | ✅ spec RULINGS block |
+| 4 | §7-F2 pre-declares the peak's **shape**, never its **location** | ✅ spec RULINGS block |
+| 5 | σ_cp gets an **absolute floor + near-repetition guard** | ✅ D15, 21 tests |
+| 6 | `MIN_ARENA_TEMPERATURE` flagged **unvalidated** in the identifier | ✅ sweep refuses depth<3 |
+| 7 | **§8.2 starts now** | ⏳ corpus built $0; **retrain not run** |
+
+⭐ **RULING 1 — the ghosts now REFUSE WITH THEIR REPLACEMENT.** `sköl` → *"the
+form is `xöl`"*, not merely "not in class M": a stale name that only fails lookup
+teaches nothing. And **`base_convention` RAISES rather than returning a plausible
+default** — a default table would be consumed by the arena and reported as a
+measurement of ten forgotten guesses.
+
+⛔ **RULING 4 — pre-declaring the peak's LOCATION would be the fourth vacuous
+falsifier in this project, this one in a physics costume.** The Turbulence toy
+locks the shape (0 at both ends, single interior peak, 0/1500 negative) and
+**explicitly holds the location** — `s*=0.45` was the geometric peak of a
+placeholder.
 
 ---
 

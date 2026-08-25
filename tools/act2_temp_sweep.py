@@ -47,19 +47,42 @@ def main() -> int:
     ap.add_argument("--model", required=True)
     ap.add_argument("--adapter", required=True)
     ap.add_argument("--n", type=int, default=16)
+    ap.add_argument("--depth", type=int, default=F.MIN_SWEEP_HISTORY_DEPTH,
+                    help="history depth to probe at. ⛔ DEPTH 1 IS REFUSED.")
     ap.add_argument("--out", default="runs/act2/logs/temp_sweep.json")
     a = ap.parse_args()
+
+    # ⛔⛔ THE BUG THIS GUARD EXISTS FOR SHIPPED A VERDICT. The first version of
+    # this sweep built one-surface histories, and at depth 1 the model
+    # deterministically echoes `parse(history)` — 1/8 distinct at temperature
+    # 0.0 AND at 1.5. Every grid point therefore read "cannot vary", the tool
+    # concluded "NO USABLE TEMPERATURE ON THIS GRID", and that sentence was
+    # recorded as a fact about the model. It was a fact about the probe.
+    if a.depth < F.MIN_SWEEP_HISTORY_DEPTH:
+        raise SystemExit(
+            f"⛔ REFUSED: --depth {a.depth} is below {F.MIN_SWEEP_HISTORY_DEPTH}. "
+            "At depth 1 the model is a deterministic echo of parse(history), so "
+            "EVERY temperature reads 'cannot vary' and the sweep measures its "
+            "own prompt. A floor derived here would be an artefact wearing a "
+            "measurement's clothes — which is what happened the first time.")
 
     from act2_backends import LocalBackend
 
     battery = probes.build(seed=7, n_prod=64, n_comp=64)
-    one_history = (battery.comprehension[0].surface,)      # ONE fixed history
-    varied = [tuple(p.surface for p in battery.comprehension[i:i + 1])
+    pool = [p.surface for p in battery.comprehension]
+    #: ONE fixed history, at real conversational depth.
+    one_history = tuple(pool[:a.depth])
+    #: n DIFFERENT histories, each the same depth, none overlapping the above.
+    varied = [tuple(pool[a.depth + i * a.depth: a.depth + (i + 1) * a.depth])
               for i in range(a.n)]
+    varied = [h for h in varied if len(h) == a.depth]
 
-    print(f"TEMPERATURE SWEEP · n={a.n} per point · adapter={a.adapter}")
+    print(f"TEMPERATURE SWEEP · n={a.n} per point · depth={a.depth} · "
+          f"adapter={a.adapter}")
     print(f"⛔ the floor must clear BOTH: it can vary, AND it stays legal "
-          f"(>= {MIN_VALIDITY:.0%})\n")
+          f"(>= {MIN_VALIDITY:.0%})")
+    print(f"⛔ probing at depth {a.depth}, NOT depth 1 — at depth 1 the model is "
+          f"a deterministic echo and every point reads 'cannot vary'\n")
     print(f"  {'temp':>5}  {'distinct':>9}  {'valid':>8}  reading")
 
     rows = []
@@ -97,7 +120,26 @@ def main() -> int:
         torch.cuda.empty_cache()
 
     usable = [r for r in rows if r["reading"] == "USABLE"]
-    if usable:
+    # ⛔⛔ WRITE THE LOUD FALLBACK BEFORE THE HAPPY PATH. "No usable temperature"
+    # has TWO very different causes and the first version of this tool collapsed
+    # them into one sentence. If the speaker VARIES everywhere but is never
+    # legal, the sweep has not found a temperature fact at all — it has
+    # re-measured the depth-competence gap that F-LOCAL and the multi-turn
+    # corpus own. Saying "the arena cannot be run on this model" there would
+    # blame the sampler for the corpus's missing task.
+    can_vary_somewhere = [r for r in rows if r["can_vary"]]
+    legal_nowhere = not any(r["legal"] for r in rows)
+    if not usable and can_vary_somewhere and legal_nowhere:
+        floor = None
+        print(f"\n  ⚠️⚠️ NO USABLE TEMPERATURE — BUT THIS IS NOT A TEMPERATURE "
+              f"FINDING.\n  The speaker VARIES at "
+              f"{len(can_vary_somewhere)}/{len(rows)} grid points and is legal "
+              f"at NONE of them (bar {MIN_VALIDITY:.0%} at depth {a.depth}).\n"
+              "  ⇒ the binding constraint is DEPTH COMPETENCE, not the sampler. "
+              "That is the\n     multi-turn corpus's gap, and no temperature "
+              "setting can close it.\n  ⛔ A floor MUST NOT be declared from "
+              "this run.")
+    elif usable:
         floor = min(r["temp"] for r in usable)
         ceiling = max(r["temp"] for r in usable)
         print(f"\n  ⭐ USABLE BAND: {floor} .. {ceiling}")
@@ -120,10 +162,18 @@ def main() -> int:
 
     out = pathlib.Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps({"rows": rows, "measured_floor": floor,
-                               "declared_floor": F.MIN_ARENA_TEMPERATURE,
-                               "min_validity": MIN_VALIDITY}, indent=2),
-                   encoding="utf-8", newline="")
+    out.write_text(json.dumps(
+        {"rows": rows, "measured_floor": floor,
+         "declared_floor": F.MIN_ARENA_TEMPERATURE,
+         "declared_floor_provenance": F.MIN_ARENA_TEMPERATURE_PROVENANCE,
+         "declared_floor_is_measured": F.MIN_ARENA_TEMPERATURE_IS_MEASURED,
+         # ⛔ THE DEPTH IS RECORDED BESIDE THE RESULT, NOT ONLY IN THE COMMAND.
+         # The superseded sweep's JSON does not say what depth it ran at, which
+         # is why its verdict read as a fact about the model for a full day.
+         "history_depth": a.depth,
+         "min_sweep_history_depth": F.MIN_SWEEP_HISTORY_DEPTH,
+         "min_validity": MIN_VALIDITY}, indent=2, ensure_ascii=False),
+        encoding="utf-8", newline="")
     print(f"  wrote {out}")
     return 0
 

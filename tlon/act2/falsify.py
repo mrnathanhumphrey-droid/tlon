@@ -235,7 +235,147 @@ def f3_pact(delta_c: Delta, mde: float) -> Firing:
                      else " — the pair converged beyond control"))
 
 
-def f4_degeneration(interacting_cov: list[dict], control_cov: list[dict]) -> Firing:
+# ── THE DEGENERACY GUARD — an ABSOLUTE floor and a NEAR-repetition ceiling ──
+#: ⛔⛔ MEASURED, NOT REASONED: F4 READ "NO DEGENERATION SIGNATURE" ON A TRANSCRIPT
+#: OF 6 DISTINCT UTTERANCES IN 18 TURNS. Both of its branches read +0.0 %. The
+#: within-arm branch could not fire because root TTR was already 0.125 at the
+#: FIRST window — there was no decline left to see — and the level-vs-control
+#: branch could not fire because the control was degenerate too (0.125 vs 0.125,
+#: shortfall +0.0 %). ⭐ A RELATIVE MEASURE HAS NO OPINION WHEN BOTH ARMS ARE ON
+#: THE FLOOR, and "both arms degenerate" is the case we actually measured.
+#:
+#: ⭐⭐ THE SAME SHAPE ATE TWO OF THE EXCHANGE PROBE'S THREE PRE-SPECIFIED
+#: CRITERIA. A decline-based measure cannot see a speaker that STARTS degenerate,
+#: and an exact-match cycle check cannot see one that JITTERS: the six utterances
+#: share a byte-identical 8-token prefix and differ only in reduplication counts
+#: (`nimnimnimas` vs `nimnimnimnimas`) and sibling order. Only validity caught it.
+#: ⛔ σ_cp MUST NOT INHERIT THIS SHAPE — a coupling term defined as a CHANGE reads
+#: 0 on a pair that was stuck from turn zero, and 0 there means "independent, no
+#: pact", which is the opposite of the truth. That is why this guard is a
+#: standalone function and not an `if` inside F4.
+#:
+#: ⚠️ BOTH THRESHOLDS ARE DERIVED FROM THE CORPUS NULL ALONE AND NEVER SAW THE
+#: DEGENERATION, so neither is a threshold fitted to clear the case it catches.
+#: The measured event's distance from each is reported below as a margin, not
+#: used to place the line.
+
+#: Corpus root-TTR over 8-scene windows (n=2,500, seed 20620): **min 0.700**,
+#: p1 0.800, median 0.950. The floor sits a factor of 1.4 BELOW the corpus
+#: minimum, so a legitimately repetitive but healthy stretch cannot fire it.
+#: ⭐ MARGIN: the measured degeneration sits at 0.125 — 4× below this line, and
+#: **0 of 2,500 corpus windows** fall within 0.20 of it.
+DEGENERACY_TTR_FLOOR = 0.50
+
+#: ⛔ THE CAVEAT IS IN THE NAME BECAUSE IT WILL OTHERWISE DECAY INTO A BARE
+#: NUMBER. Calibrated against the SINGLE-TURN null: token overlap between random
+#: unrelated corpus utterances, max **0.500** over 20,000 pairs. This ceiling is
+#: 1.5× that maximum. ⚠️ Utterances that genuinely ABIDE together should be MORE
+#: similar than random, so the healthy multi-turn band is UNMEASURED — no
+#: multi-turn corpus exists yet. **RECALIBRATE against abiding chains the moment
+#: one does**, or this guard will eventually fire on real coherence.
+#: ⭐ MARGIN: every one of the 153 pairs in the measured transcript scores above
+#: the corpus maximum; the transcript's mean is 0.944 and its MINIMUM is 0.857.
+NEAR_REPETITION_CEILING_SINGLE_TURN_NULL = 0.75
+
+#: A pair counts as degenerate-by-repetition only if the near-repetition is the
+#: RULE rather than an incident; one repeated couplet in a long exchange is not a
+#: collapse. Measured: the degenerate transcript scores 1.00 on this.
+NEAR_REPETITION_SHARE = 0.50
+
+
+def token_overlap(a: str, b: str) -> float:
+    """Multiset token overlap, normalised by the longer utterance.
+
+    ⛔ NOT exact equality and NOT a cycle test — those are precisely what missed
+    the measured collapse. Reduplication jitter (`nimnimnimas` →
+    `nimnimnimnimas`) changes one token of fourteen and defeats an equality
+    check; sibling reordering defeats a positional one. A multiset overlap sees
+    through both, which is the whole point.
+    """
+    from collections import Counter
+    ta, tb = a.split(), b.split()
+    longest = max(len(ta), len(tb))
+    if not longest:
+        return 1.0
+    return sum((Counter(ta) & Counter(tb)).values()) / longest
+
+
+@dataclass(frozen=True)
+class Degeneracy:
+    ttr: float
+    near_repetition_share: float
+    n_utterances: int
+    floor_fired: bool
+    repetition_fired: bool
+
+    @property
+    def fired(self) -> bool:
+        return self.floor_fired or self.repetition_fired
+
+    def describe(self) -> str:
+        bits = []
+        if self.floor_fired:
+            bits.append(f"root TTR {self.ttr:.3f} is below the absolute floor "
+                        f"{DEGENERACY_TTR_FLOOR:.2f} (corpus minimum 0.700)")
+        if self.repetition_fired:
+            bits.append(f"{self.near_repetition_share:.0%} of utterance pairs "
+                        f"exceed token-overlap "
+                        f"{NEAR_REPETITION_CEILING_SINGLE_TURN_NULL:.2f} "
+                        "(random corpus pairs max 0.500)")
+        return ("DEGENERATE — " + "; ".join(bits)) if bits else (
+            f"no absolute degeneracy (TTR {self.ttr:.3f}, near-repetition share "
+            f"{self.near_repetition_share:.0%})")
+
+
+def degeneracy_guard(surfaces: list[str], *,
+                     roots_of=None) -> Degeneracy:
+    """⭐ AN ABSOLUTE READING, SO IT STILL HAS AN OPINION WHEN BOTH ARMS ARE ON
+    THE FLOOR. Takes the emitted surfaces of one arm and asks two questions that
+    no relative measure can ask: is the vocabulary itself impoverished, and is
+    the speaker saying the same thing over and over in slightly different words?
+
+    ⛔ Fewer than two utterances is REFUSED rather than scored 0 — a single
+    utterance has no repetition to measure, and returning "not degenerate" for it
+    would be a verdict the data cannot support.
+    """
+    if len(surfaces) < 2:
+        raise FalsifierError(
+            f"the degeneracy guard needs at least 2 utterances, got "
+            f"{len(surfaces)}. One utterance has no repetition to measure and "
+            "scoring it 'not degenerate' would be a verdict from no evidence.")
+
+    if roots_of is None:
+        def roots_of(surface: str) -> list[str]:
+            from ..grammar.parse import parse
+
+            def walk(node):
+                out = [node.root]
+                for _, child in node.edges:
+                    out.extend(walk(child))
+                return out
+            return walk(parse(surface).node)
+
+    toks: list[str] = []
+    for s in surfaces:
+        try:
+            toks.extend(roots_of(s))
+        except Exception:                                      # noqa: BLE001
+            continue
+    ttr = len(set(toks)) / len(toks) if toks else 0.0
+
+    pairs = [token_overlap(surfaces[i], surfaces[j])
+             for i in range(len(surfaces)) for j in range(i + 1, len(surfaces))]
+    share = (sum(p > NEAR_REPETITION_CEILING_SINGLE_TURN_NULL for p in pairs)
+             / len(pairs)) if pairs else 0.0
+
+    return Degeneracy(
+        ttr=ttr, near_repetition_share=share, n_utterances=len(surfaces),
+        floor_fired=bool(toks) and ttr < DEGENERACY_TTR_FLOOR,
+        repetition_fired=share > NEAR_REPETITION_SHARE)
+
+
+def f4_degeneration(interacting_cov: list[dict], control_cov: list[dict],
+                    *, interacting_surfaces: list[str] | None = None) -> Firing:
     """⭐ THE FALSIFIER THAT FIRES ON CONFABULATED DRIFT. A pair collapsing into
     repetition shows a large `D` -- and a huge `C` -- for the opposite of the
     claimed reason: they have not agreed on a language, they have stopped saying
@@ -256,6 +396,16 @@ def f4_degeneration(interacting_cov: list[dict], control_cov: list[dict]) -> Fir
     signature fires. Recorded as DEVIATIONS_ACT2 D2; the pre-registered test is
     not weakened, only supplemented, and the supplement is the paired form the
     rest of the design already uses.
+
+    ⛔⛔ AND D2 WAS STILL NOT ENOUGH — MEASURED, NOT ANTICIPATED (D15). Both
+    branches above are RELATIVE, and on the 40-turn exchange probe both read
+    **+0.0 %** on a transcript of 6 distinct utterances in 18 turns: the decline
+    branch because TTR was already 0.125 at the first window, the level branch
+    because the CONTROL was equally degenerate (0.125 vs 0.125). A relative
+    measure has no opinion when both arms are on the floor. `interacting_surfaces`
+    adds the ABSOLUTE reading (`degeneracy_guard`) that does. It is optional so
+    that no existing caller changes meaning silently — but a caller that has the
+    surfaces and does not pass them is choosing the blind version.
     """
     def decline(cov: list[dict]) -> float:
         first = cov[0].get("root_ttr", 0.0)
@@ -270,16 +420,26 @@ def f4_degeneration(interacting_cov: list[dict], control_cov: list[dict]) -> Fir
     shortfall = (lvl_c - lvl_i) / lvl_c if lvl_c else 0.0
     fast = shortfall > ROOT_DIVERSITY_DECLINE
 
-    fired = slow or fast
+    absolute = (degeneracy_guard(interacting_surfaces)
+                if interacting_surfaces else None)
+    absolute_fired = bool(absolute and absolute.fired)
+
+    fired = slow or fast or absolute_fired
     why = ("collapse within the arm" if slow else
-           "impoverished relative to control" if fast else "")
+           "impoverished relative to control" if fast else
+           "absolute degeneracy — BOTH ARMS ON THE FLOOR, which no relative "
+           "branch can see" if absolute_fired else "")
+    detail = (f"root diversity — decline: interacting {di:+.1%}, control "
+              f"{dc:+.1%}; final TTR: {lvl_i:.3f} vs control {lvl_c:.3f} "
+              f"({shortfall:+.1%} shortfall), threshold "
+              f"{ROOT_DIVERSITY_DECLINE:.0%}")
+    detail += ("; absolute: " + absolute.describe() if absolute
+               else "; ⚠️ absolute reading NOT RUN (no surfaces passed) — the "
+                    "two relative branches above are blind to a pair that was "
+                    "degenerate from turn zero")
     return Firing("F4", fired,
-                  f"root diversity — decline: interacting {di:+.1%}, control "
-                  f"{dc:+.1%}; final TTR: {lvl_i:.3f} vs control {lvl_c:.3f} "
-                  f"({shortfall:+.1%} shortfall), threshold "
-                  f"{ROOT_DIVERSITY_DECLINE:.0%}"
-                  + (f" — DEGENERATION, not convention ({why})" if fired
-                     else " — no degeneration signature"))
+                  detail + (f" — DEGENERATION, not convention ({why})" if fired
+                            else " — no degeneration signature"))
 
 
 def f5_leakage(report) -> Firing:
@@ -384,6 +544,34 @@ def verdict(results: list[AxisResult]) -> Verdict:
 #: from a measured sweep (`tools/act2_temp_sweep.py`), not from taste.
 MIN_ARENA_TEMPERATURE = 0.7
 
+#: ⛔⛔ AND IT HAS NOT BEEN MEASURED YET. The sweep meant to derive it probed at
+#: history-depth 1 — the regime where the model deterministically ECHOES
+#: `parse(history)` (8/10 exact, 1/8 distinct, identical at temperature 0.0 AND
+#: 1.5). An echo does not vary no matter how hot the sampler runs, so the sweep
+#: reported "NO USABLE TEMPERATURE ON THIS GRID" and dressed a probe artefact as
+#: a finding about the model. **0.7 is a placeholder that came from taste, which
+#: is exactly what the comment above forbids.**
+#:
+#: ⭐ THE CAVEAT LIVES IN AN IDENTIFIER, NOT IN PROSE, because a warning in a
+#: comment decays into a bare number the moment someone greps for the constant.
+#: `arena_preconditions` stamps this into every refusal, and any σ_cp result must
+#: carry it, so a claim made at an unvalidated floor is labelled as one.
+MIN_ARENA_TEMPERATURE_PROVENANCE = (
+    "PLACEHOLDER — UNVALIDATED. The derivation sweep probed at history-depth 1 "
+    "(the deterministic-echo regime) and its verdict is an artefact of the "
+    "probe, not a fact about the model. Re-derive at conversational depth "
+    "before any σ_cp claim rests on it.")
+
+#: True only when a depth-valid sweep has written the floor. ⛔ A σ_cp claim made
+#: while this is False must say so in its own words.
+MIN_ARENA_TEMPERATURE_IS_MEASURED = False
+
+#: ⛔ THE DEPTH THE SWEEP MUST PROBE AT. Measured decay of `speak` validity by
+#: history depth: 1 → 10/10 but 1/8 distinct (an echo); 3 → 8/10, 5/8 distinct;
+#: 5 → 6/10, 8/8; 8 → 5/10, 7/8. Depth 1 is the model's easiest point AND the one
+#: place it cannot vary, so it is the one depth a temperature sweep must not use.
+MIN_SWEEP_HISTORY_DEPTH = 3
+
 #: How many samples of ONE history the precondition draws, and how many must
 #: differ. ⭐ THE TEMPERATURE NUMBER ALONE IS NOT ENOUGH: a correctly-configured
 #: temperature on a degenerate model still cannot drift, so the guard measures
@@ -415,7 +603,9 @@ def arena_preconditions(*, temperature: float,
             f"{MIN_ARENA_TEMPERATURE}. At this temperature the speakers are "
             "effectively deterministic, so D_ctx is VACUOUS: the run would "
             "return a clean null that is indistinguishable from the boundary "
-            "finding. Refused rather than reported.")
+            "finding. Refused rather than reported."
+            + ("" if MIN_ARENA_TEMPERATURE_IS_MEASURED else
+               f"\n⚠️ NOTE ON THE FLOOR ITSELF: {MIN_ARENA_TEMPERATURE_PROVENANCE}"))
 
     if same_history_samples is None:
         return

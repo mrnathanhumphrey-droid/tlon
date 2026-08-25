@@ -7,6 +7,133 @@ sentence grammar nor the frozen lexicon `e2b8527010231a81fd31b6eeb9de3d8c`.**
 
 ---
 
+# ⭐⭐ RULINGS — 2026-08-25. THESE SUPERSEDE THE BODY. READ THEM FIRST.
+
+Nate's rulings on the verification pass below. **The spec body stays verbatim;
+these amend it.** Where a ruling and the body disagree, the ruling governs.
+
+| # | ruling | status |
+|---|---|---|
+| 1 | §8.1's table keys on the **lexicon** M-column; ontology unchanged | ✅ `tlon/discourse/evidential.py`, 22 tests |
+| 2 | **§3's region gate is WITHDRAWN.** ρ_wide is deleted as a parameter | ✅ below |
+| 3 | §5's oracle drops to **two** conditions; BREAK is redefined | ✅ below |
+| 4 | §7-F2 pre-declares the peak's **shape**, never its **location** | ✅ below |
+| 5 | σ_cp gets an **absolute floor + near-repetition guard** | ✅ `falsify.degeneracy_guard`, 21 tests |
+| 6 | `MIN_ARENA_TEMPERATURE = 0.7` is flagged **unvalidated** | ✅ provenance in the identifier; sweep fixed |
+| 7 | **§8.2 (render → ≥0.90) starts now** — no open design question | ⏳ in flight |
+
+## ⛔⛔ RULING 2 — §3's REGION GATE WAS A CATEGORY ERROR AGAINST THE SOURCE TEXT
+
+The measurement (finding 3 below) showed no ρ_wide is both wide-by-design and
+able to fail: at 4.0 it rejects most random pairs (proximity-coherence, forbidden
+by C-D2); at 6.0 it admits 98 % (criterion 1 cannot fire). **That contradiction
+is itself the information.** It is not a bad parameter — it is the wrong kind of
+criterion, and the tell was in the text the whole time:
+
+> *"not a concurrence of objects **in space**, but a heterogeneous series of
+> independent acts. It is successive, **temporal, not spatial**."* — CF p.73,
+> quoted in §1 of this very spec.
+
+§3 put a **spatial distance gate on a world the source explicitly says is not
+spatial.** And C-D2 finishes the argument: Tlönian criticism attributes unrelated
+works to one author and prizes contradiction, so *unrelated-held-as-one* is the
+**prized** case, not the edge case. If any two impressions can be held as one
+unfolding, then **there is no out-of-region by content-distance**. The wideness
+was never "very wide" — it is **total**, and a total region is not a gate.
+
+⇒ **The residue-distance region criterion is WITHDRAWN.** ρ_wide is deleted; it
+is not re-tuned, re-based, or moved to another substrate. The residue geometry is
+**demoted to description** — it still distinguishes a *wide* abiding from a *deep*
+one, which is a real and useful thing to say about a pair, and it says nothing
+about legality.
+
+⭐ **This removes a parameter, a failure mode, and a category error at once**, and
+the oracle gets more Tlön-faithful, not less. It also means §3's near-vacuity was
+never a defect in the measurement — **the ethos makes criterion 1 vacuous**, and
+the measurement is what surfaced that.
+
+## ⭐ RULING 3 — THE ORACLE SIMPLIFIES, AND BREAK IS REDEFINED
+
+Two conditions, both on axes that are **not content** and therefore **can** fail:
+
+A continuation `u_{n+1}` given `u_1…u_n` is **default-coherent** iff
+
+1. its evidential is a **smooth morph** of `u_n`'s (adjacency in the M-flow, §4)
+   — the *temporal/successive* axis, which is the one the ontology endorses —
+   **and**
+2. its move is **ABIDE** (§2).
+
+**No content-region test at all.** Evidential smoothness can be discontinuous (a
+shock: *seen* → *dreamt*). Force can be marked. Those gate. Content does not,
+because the ethos forbids content from gating.
+
+⛔ **BREAK IS NOT "DISTANT CONTENT" — THAT WAS THE ERROR.** §2 and §3 define BREAK
+as `d > ρ_wide`. Corrected: **BREAK is refusing the *flow*** — an evidential
+discontinuity, or a force that drives at closure. You do not step out of an
+unfolding by saying something unrelated; **that is prized.** You step out by
+breaking the epistemic continuity.
+
+⚠️ Consequence for §2's table: the "Region relation" column is withdrawn along
+with §3. ABIDE/CLOSE/BREAK are distinguished by **force and evidential
+continuity** alone.
+
+## ⛔ RULING 4 — §7-F2 PRE-DECLARES THE SHAPE, NEVER THE LOCATION
+
+As the verification pass found: the Turbulence toy locks σ_cpl = 0 at both ends
+with a single interior peak (theorem-backed, 0/1500 negative), and **explicitly
+holds the peak's location** — the swept `s* = 0.45` was the geometric peak of a
+placeholder, since only `d(s)` varied while A/D/Ω were held fixed.
+
+§7-F2 as written says *"pre-declare the σ_cp(coupling-strength) slope"*. Amended:
+**pre-declare that a peak EXISTS and its SHAPE — zero at both ends, positive
+interior, single maximum. Leave the location open, because it is open upstream.**
+
+⭐ Declaring a location we do not have would be **the fourth vacuous falsifier in
+this project, this one wearing a physics costume** — a pre-registered number that
+could only ever be checked against itself.
+
+## ⭐ RULING 5 — σ_cp MUST NOT INHERIT F4's DECLINE-BASED SHAPE
+
+Built, because the defect was demonstrable rather than hypothetical: **F4 read
+"no degeneration signature" on the 40-turn probe.** Both its branches are
+relative and both read **+0.0 %** — the within-arm decline because TTR was
+already 0.125 at the *first* window, the level-vs-control branch because the
+control was equally degenerate (0.125 vs 0.125).
+
+⛔⛔ **A RELATIVE MEASURE HAS NO OPINION WHEN BOTH ARMS ARE ON THE FLOOR** — and
+both-arms-degenerate is the case actually measured. A σ_cp defined as a *change*
+reads 0 on a pair stuck from turn zero, and **0 there means "independent, no
+pact", the exact opposite of the truth.**
+
+`falsify.degeneracy_guard` is the absolute reading, and both thresholds come from
+the **corpus null alone** so neither was fitted to the event it catches:
+
+| | threshold | derived from | margin on the measured event |
+|---|---|---|---|
+| root-TTR floor | **0.50** | corpus min **0.700** over 2,500 8-scene windows | event at 0.056 — **0/2,500** corpus windows come near it |
+| near-repetition | **0.75** | random corpus pairs max **0.500** over 20,000 | **153/153** transcript pairs above the corpus max |
+
+⚠️ The near-repetition ceiling is calibrated against the **single-turn** null —
+utterances that genuinely abide should be *more* similar than random, so the
+healthy multi-turn band is unmeasured. **The caveat is in the identifier**
+(`NEAR_REPETITION_CEILING_SINGLE_TURN_NULL`) and must be recalibrated the moment
+an abiding-chain corpus exists.
+
+## ⭐ RULING 6 — THE TEMPERATURE FLOOR IS FLAGGED, AND THE SWEEP IS FIXED
+
+`MIN_ARENA_TEMPERATURE = 0.7` is a placeholder. `MIN_ARENA_TEMPERATURE_PROVENANCE`
+and `MIN_ARENA_TEMPERATURE_IS_MEASURED = False` now sit beside it and are stamped
+into every refusal, so the caveat cannot decay into a bare number.
+
+`tools/act2_temp_sweep.py` **refuses `--depth < 3`** — its original depth-1 probe
+measured the deterministic-echo regime, where no temperature can produce
+variation, and reported "NO USABLE TEMPERATURE ON THIS GRID" as a fact about the
+model. It also now separates the two causes of that verdict: *varies nowhere*
+(a real sampler finding) from *legal nowhere* (**a depth-competence finding that
+belongs to the multi-turn corpus, and no temperature can close it**).
+
+---
+
 # ⛔ VERIFICATION PASS — RUN BEFORE ANY BUILD, RECORDED HERE
 
 The spec asserts things about code and about other projects. Every assertion was

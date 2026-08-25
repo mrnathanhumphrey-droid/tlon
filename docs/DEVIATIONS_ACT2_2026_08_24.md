@@ -406,3 +406,140 @@ measured rather than argued.
 ⛔ And the mutual-collapse row is the mirror: **ΔC = +100.00 pts**, the largest
 convergence in the table, from a pair that has stopped saying anything. Without
 F4 it would be the headline.
+
+---
+
+## D15 — ⛔⛔ D2 WAS STILL NOT ENOUGH. F4 READ CLEAR ON A TEXTBOOK COLLAPSE.
+
+**2026-08-25.** D2 added a level-vs-control branch to F4 because the
+pre-registered decline branch reads +0.0 % on a *fast* collapse. Both branches
+were then run against the 40-turn exchange probe — the first real degeneration
+this project has measured rather than synthesised — and **both read +0.0 %.**
+
+```
+F4 on the measured degeneration:  fired = False
+  "root diversity — decline: interacting +0.0%, control +0.0%;
+   final TTR: 0.125 vs control 0.125 (+0.0% shortfall) — no degeneration signature"
+```
+
+The transcript it called clear: **6 distinct utterances in 18 legal turns**, all
+six sharing a byte-identical 8-token prefix.
+
+| branch | why it could not fire |
+|---|---|
+| within-arm decline (pre-registered) | TTR was **already 0.125 at the FIRST window**. There was no decline left to see. |
+| level vs control (D2) | the control was **equally degenerate** — 0.125 vs 0.125, shortfall +0.0 %. |
+
+⭐⭐ **THE GENERAL LESSON, AND IT IS THE POINT OF THE ENTRY: BOTH BRANCHES ARE
+RELATIVE, AND A RELATIVE MEASURE HAS NO OPINION WHEN BOTH ARMS ARE ON THE
+FLOOR.** "Both arms degenerate" is not a corner case — it is the case the probe
+actually returned, and it is the one the yoked design makes *most* likely, since
+both arms are the same weights.
+
+⛔ **THE SAME SHAPE ATE TWO OF THE EXCHANGE PROBE'S OWN THREE CRITERIA.** Its TTR
+*decline* test read +0 % for the same reason, and its *exact*-cycle test missed
+near-repetition: the six utterances differ only in reduplication counts
+(`nimnimnimas` → `nimnimnimnimas`) and sibling order, so no equality check fires
+and no positional check fires. **Only validity caught it — 1 of 3.**
+
+### The supplement
+
+`falsify.degeneracy_guard`, a third branch, passed via `interacting_surfaces`.
+Optional, so no existing caller changes meaning silently — but a caller that has
+the surfaces and does not pass them is choosing the blind version, and F4 now
+**says so in its own detail string** rather than reporting a clean null.
+
+⛔ **THE PRE-REGISTERED BRANCH IS UNTOUCHED.** The supplement may only ADD
+firings; a test asserts a slow within-arm collapse still fires with and without
+surfaces.
+
+**Both thresholds come from the corpus null alone and never saw the
+degeneration**, so neither is a threshold fitted to clear the case it catches:
+
+| | threshold | derived from | margin on the measured event |
+|---|---|---|---|
+| root-TTR floor | **0.50** | corpus min **0.700** over 2,500 8-scene windows | event 0.056; **0/2,500** windows come near it |
+| near-repetition | **0.75** | random corpus pairs max **0.500** over 20,000 | **153/153** transcript pairs above the corpus max |
+
+Red-proofed both ways: fires on the real transcript (both arms), **0/200 healthy
+corpus windows fire**, and fewer than 2 utterances is REFUSED rather than scored
+clean. 21 tests.
+
+⚠️ **CARRIED CAVEAT, IN THE IDENTIFIER NOT THE PROSE.**
+`NEAR_REPETITION_CEILING_SINGLE_TURN_NULL` is calibrated against the single-turn
+null. Utterances that genuinely *abide* should be more similar than random, so
+the healthy multi-turn band is **unmeasured**. Recalibrate the moment an
+abiding-chain corpus exists.
+
+⛔⛔ **AND THE REASON THIS MATTERS BEYOND F4: σ_cp MUST NOT INHERIT THE SHAPE.**
+A coupling term defined as a *change* reads 0 on a pair stuck from turn zero —
+and σ_cp = 0 is defined to mean *"the two flows act on independent DOF, no
+pact"*. A degenerate pair would be reported as an independent one. That is why
+the guard is a standalone function and not an `if` inside F4.
+
+---
+
+## D16 — §8.2's named instrument was the wrong one, and the corpus said so
+
+**2026-08-25.** §8.2 asks for *"the small-class targeted positives"*. Measured on
+the corpus that trained run 3:
+
+- per-form exposure is **already flat** — A 663 · M 663 · Q 662 · T 649 · D 670
+- the four forms targeted after the hosted pre-flight (`pal` `rän` `plas` `hul`)
+  account for **1 of 48** confusions at n=256; three are gone entirely
+
+⭐⭐ **ERRORS TRACK SLOT RARITY, NOT FORM RARITY.**
+
+| slot | occupancy | missed-slot errors |
+|---|---|---|
+| `root` | 100.0 % | 8 — *156 forms, fewest errors per fill* |
+| `relator` | 61.1 % | 0 |
+| `orient` | 30.9 % | 2 |
+| `modal` | 6.4 % | 11 |
+| `tense` | 5.1 % | 3 |
+| **`aspect_root`** | **3.9 %** | **16** — the biggest hole |
+| `quant` | 3.9 % | 5 |
+| `degree` | 3.9 % | 2 |
+
+**The model has seen every A-form 663 times and still has not learned which slot
+is an A-slot**, because it has only seen one filled once every 26 nodes. And the
+rarity is not accidental: `_decoration_p` sets a class's occupancy to
+`len(class)/len(R)` *precisely so that per-form exposure evens out*. The
+balancing worked, and it optimised away the thing that was missing.
+
+⇒ **`slot_floor`** (0.30, taken from `orient`'s 30.9 %-and-2-errors and
+`relator`'s 61.1 %-and-0) decouples the two: the round-robin keeps per-form
+exposure balanced, the slot gets exercised often enough to be learnable.
+
+⇒ **`contrastive_pairs`** — the claim that targeted positives are *"the only form
+a contrastive signal can take in supervised fine-tuning"* is true of a *negative*
+and false of a **pair**. Two legal scenes differing in exactly one slot put the
+competing readings side by side:
+
+```
+nol mlang ko        oft, it dreams (wondering)
+mlang testesas ko   it dreams, again and again (×2) (wondering)
+```
+
+Same root, same force; the only difference is whether repetition is a **Q** or an
+**A** — which is exactly the `nol`-in-the-aspect-slot error, taught as two
+correct sentences rather than as an error string.
+
+⛔ **THE HAND-KEPT LIST ROTTED AND NOTHING NOTICED.** `CONFUSED = {pal, rän,
+plas, hul}` was mined from the hosted pre-flight and was still being boosted
+three runs later, spending itself on solved problems while `nol` `nem` `xom`
+`sen` went untargeted. `--from-ledger` mines the newest run instead; the frozen
+list survives only as `--stale-list`, an ablation that reproduces run 3's corpus
+exactly (verified: 102,842 nodes and all five per-form min/max pairs identical).
+
+⚠️ **OPEN, NOT RESOLVED:** `aspect_root` is an outlier *even among* the rare
+slots — 16 errors against `quant`'s 5 at identical occupancy. Two candidates and
+no measurement separating them: aspect is the only two-field slot
+(`aspect_root` + `aspect_reps`) and the only one whose surface is a
+reduplication rather than the bare morpheme; and Q/A collide semantically in
+English (*oft* vs *habitual*).
+
+⛔ **"HOLD COMPUTE CONSTANT" MEANS TOKENS, NOT ROWS**, and the two come apart
+here: flooring occupancy lengthens every scene and contrastive pairs add rows.
+The builder now prints the token total so `--n` can be trimmed to match run 3's
+budget — otherwise a render improvement is confounded with a longer run.

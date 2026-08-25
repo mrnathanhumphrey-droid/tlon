@@ -35,7 +35,7 @@ from ..grammar.parse import Scene
 from ..product import schema as PS
 from ..product.compat import impression
 from . import probes
-from .negatives import ClassError, slot_class_map
+from .negatives import ClassError, MiningError, slot_class_map
 
 CLASSES = ("R", "O", "L", "A", "M", "D", "Q", "T", "F")
 
@@ -145,7 +145,8 @@ def _weights(focus: dict[str, float] | None) -> dict[str, float]:
 
 def build(n: int, *, seed: int = 20620, balanced: bool = True,
           focus: dict[str, float] | None = None,
-          focus_forms: dict[str, int] | None = None) -> list[Pair]:
+          focus_forms: dict[str, int] | None = None,
+          slot_floor: float | None = None) -> list[Pair]:
     """Sample `n` pairs. `balanced=True` forces per-form exposure to even out
     across classes instead of following the lexicon's own shape.
 
@@ -172,7 +173,7 @@ def build(n: int, *, seed: int = 20620, balanced: bool = True,
                 "shown in. An invented form is a different failure from a "
                 "misassignment and is not fixed by more exposure.")
         bal.counts[cls][form] -= int(boost)
-    probs = _decoration_p(lex)
+    probs = _decoration_p(lex, slot_floor=slot_floor)
     out: list[Pair] = []
     guard = 0
     while len(out) < n and guard < n * 50:
@@ -264,13 +265,198 @@ def _balanced_node(rng, lex, k, bal: "_Balancer", probs, weights,
     return node
 
 
-def _decoration_p(lex) -> dict[str, float]:
-    """How often a class should decorate a node, so that PER-FORM exposure
-    evens out: a class with n forms needs n times the slot-occupancy of a
-    one-form class to give each of its forms the same number of sightings.
-    Normalised against R, the class that sets the pace."""
+#: ⭐ THE SLOT-OCCUPANCY FLOOR, DERIVED FROM THE SLOTS THE MODEL GETS RIGHT.
+#: `relator` sits at 61.1 % occupancy and produced 0 missed-slot errors at n=256;
+#: `orient` at 30.9 % produced 2. `aspect_root` at 3.9 % produced 16. 0.30 is the
+#: lowest occupancy at which the model demonstrably learns a slot, taken from the
+#: measurement rather than chosen.
+SLOT_OCCUPANCY_FLOOR = 0.30
+
+#: ⛔ APPLIED TO THE SINGLE-FILL MODIFIER SLOTS ONLY. `O` is excluded because it
+#: is already at 30.9 % EFFECTIVE occupancy (its probability is multiplied by
+#: MAX_ORIENT_PER_PRED) and accounts for 2 of 48 errors — it does not need help,
+#: and raising it would spend tokens on a slot that is already learned.
+FLOORED_CLASSES = ("A", "M", "D", "Q", "T")
+
+
+def _decoration_p(lex, *, slot_floor: float | None = None) -> dict[str, float]:
+    """How often a class should decorate a node.
+
+    ⛔⛔ THE DEFAULT OPTIMISES PER-FORM EXPOSURE, AND THAT IS WHY THE RARE SLOTS
+    ARE RARE. A class with n forms is given `n/|R|` decoration probability so
+    that each of its forms is seen as often as each root — which lands a 6-form
+    class at 3.9 % slot occupancy. It worked: A/M/Q/T/D all landed within 3 % of
+    663 sightings per form. It also meant the model saw an aspect slot filled
+    once every 26 nodes, and 16 of 48 render errors are aspect-slot errors.
+
+    ⭐ `slot_floor` decouples the two: per-form exposure stays balanced by the
+    round-robin, and the SLOT gets exercised often enough to be learnable.
+    """
     r = len(lex["R"])
-    return {c: min(1.0, len(lex[c]) / r) for c in CLASSES}
+    out = {c: min(1.0, len(lex[c]) / r) for c in CLASSES}
+    if slot_floor is not None:
+        for c in FLOORED_CLASSES:
+            out[c] = max(out[c], slot_floor)
+    return out
+
+
+# ══ §8.2 — CLOSING THE RENDER GAP ════════════════════════════════════════
+# ⛔⛔ THE INSTRUMENT THE BRIEF NAMED IS THE WRONG ONE, AND THE CORPUS SAYS SO.
+# §8.2 asks for "the small-class targeted positives". Measured on the corpus that
+# actually trained run 3:
+#
+#     per-form exposure   A 663 · M 663 · Q 662 · T 649 · D 670
+#
+# The balancing WORKED — exposure is flat to within 3 %, and the four forms
+# targeted after the hosted pre-flight (`pal` `rän` `plas` `hul`) appear NOWHERE
+# in the n=256 confusions. More positives on forms that already have 663
+# sightings apiece cannot be what is missing.
+#
+# ⭐⭐ WHAT IS MISSING IS SLOT OCCUPANCY, WHICH THE PER-FORM BALANCING OPTIMISED
+# AWAY BY CONSTRUCTION. `_decoration_p` sets a class's decoration probability to
+# `len(class)/len(R)` precisely so that per-form exposure evens out — which means
+# a 6-form class fills its slot in 3.9 % of nodes. Errors track slot RARITY, not
+# form rarity:
+#
+#     slot        occupancy   missed-slot errors (n=256)
+#     root           100.0 %    8      ← 156 forms and the FEWEST errors per fill
+#     relator         61.1 %    0
+#     orient          30.9 %    2
+#     modal            6.4 %   11
+#     tense            5.1 %    3
+#     aspect_root      3.9 %   16      ← the single biggest hole
+#     quant            3.9 %    5
+#     degree           3.9 %    2
+#
+# ⛔ The model has seen every A-form 663 times and has still not learned WHICH
+# SLOT IS AN A-SLOT, because it has only seen an A-slot filled once every 26
+# nodes. Exposure teaches the form; occupancy teaches the function.
+#
+# ⚠️ `aspect_root` is an outlier even among the rare slots — 16 errors against
+# `quant`'s 5 at identical occupancy — so occupancy is not the whole story. Two
+# candidates, NOT distinguished by any measurement we have: aspect is the only
+# two-field slot (`aspect_root` + `aspect_reps`) and the only one whose surface
+# form is a reduplication rather than the bare morpheme; and Q/A collide
+# semantically in English (`nol` "oft" was put in the aspect slot 4×, where the
+# wanted form is `sor` "habitual"). Recorded as open, not resolved.
+
+
+def mined_confusions(ledger_path) -> list[ClassError]:
+    """Read the class confusions out of a run ledger. ⭐ THE CORPUS IS DRIVEN BY
+    THE LAST RUN'S EVIDENCE, NOT BY A LIST SOMEBODY MAINTAINS.
+
+    ⛔⛔ THE HAND-KEPT LIST WENT STALE AND NOBODY NOTICED. `CONFUSED = {"pal",
+    "rän", "plas", "hul"}` was mined from the hosted pre-flight and was still
+    being boosted three runs later — by which point all four were fixed and the
+    live offenders were `nol` `nem` `xom` `sen` `fral` `hrix`. The boost was
+    spending itself on solved problems. A list read from the newest ledger cannot
+    do that.
+    """
+    import json
+    import pathlib
+
+    path = pathlib.Path(ledger_path)
+    if not path.exists():
+        raise MiningError(
+            f"no ledger at {path}. The confusions must come from a run; "
+            "inventing them would train against a guess.")
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()]
+    runs = [r for r in rows if r.get("event") == "f_local"]
+    if not runs:
+        raise MiningError(f"{path} has no f_local rows to mine.")
+    latest = runs[-1]
+    out: list[ClassError] = []
+    for kind in ("render", "speak"):
+        for failure in latest.get("results", {}).get(kind, {}).get("failures", []):
+            for e in failure.get("class_errors", []):
+                if not e.get("actual") or not e.get("form"):
+                    continue          # an absent field has no true class to teach
+                out.append(ClassError(form=e["form"], used_as=e["used_as"],
+                                      expected=e["expected"], actual=e["actual"]))
+    return out
+
+
+def boundaries(errors: list[ClassError]) -> Counter:
+    """The class boundaries the model actually confuses, most-confused first.
+
+    ⛔ Unordered pairs: `M` used where `R` belongs and `R` used where `M` belongs
+    are one boundary seen from two sides, and a contrastive pair teaches both
+    directions at once.
+    """
+    out: Counter = Counter()
+    for e in errors:
+        if e.actual and e.expected and e.actual != e.expected:
+            out[tuple(sorted((e.actual, e.expected)))] += 1
+    return out
+
+
+def contrastive_pairs(errors: list[ClassError], *, per_confusion: int = 24,
+                      seed: int = 20620) -> list[Pair]:
+    """⭐⭐ THE MINIMAL PAIR — the contrastive signal a causal LM CAN receive.
+
+    The module used to assert that targeted positives are *"the only form a
+    contrastive signal can take in supervised fine-tuning"*. That is true of a
+    negative — there is no loss for a token you did not emit — but it is NOT true
+    of a **pair**. Two rows whose scenes are byte-identical except for one slot
+    put the two competing readings side by side, and the only thing that varies
+    between them is the class assignment. That is contrast, and it is exactly the
+    distinction the model is failing to draw.
+
+    For a confusion "`form` (really class X) was put in slot S, which wants Y":
+
+        row A — an otherwise-identical scene with `form` in ITS OWN slot
+        row B — an otherwise-identical scene with a real Y-form in slot S
+
+    ⛔ Both rows are legal Tlön with a true gloss. Nothing here is a negative
+    example, an error string, or a repair; they are two correct sentences chosen
+    so that the difference between them is the lesson.
+    """
+    lex = C.load()["classes"]
+    slots = {v: k for k, v in slot_class_map().items()}
+    rng = random.Random(seed)
+    k = C.constraints()
+    out: list[Pair] = []
+
+    for err in errors:
+        if not err.actual or err.actual not in slots or err.expected not in slots:
+            continue
+        own_slot, wrong_slot = slots[err.actual], err.used_as
+        if own_slot == wrong_slot:
+            continue
+        for _ in range(per_confusion):
+            base = {"root": rng.choice(sorted(lex["R"]))}
+            if rng.random() < 0.5:
+                base["edges"] = [{"relator": rng.choice(sorted(lex["L"])),
+                                  "node": {"root": rng.choice(sorted(lex["R"]))}}]
+            force = rng.choice(sorted(lex["F"]))
+
+            for slot, form in ((own_slot, err.form),
+                               (wrong_slot, rng.choice(sorted(lex[err.expected])))):
+                node = {kk: (list(vv) if isinstance(vv, list) else vv)
+                        for kk, vv in base.items()}
+                if slot == "root":
+                    node["root"] = form
+                elif slot == "force":
+                    force = form
+                elif slot == "relator":
+                    node["edges"] = [{"relator": form,
+                                      "node": {"root": rng.choice(sorted(lex["R"]))}}]
+                elif slot == "orient":
+                    node["orient"] = [form]
+                elif slot == "aspect_root":
+                    node["aspect_root"] = form
+                    node["aspect_reps"] = rng.randint(1, k["MAX_ASPECT_REPS"])
+                else:
+                    node[slot] = form
+                got = probes._validate(node, force)            # noqa: SLF001
+                if got is None:
+                    continue
+                scene, _ = got
+                out.append(Pair(english=gloss(scene), scene=scene,
+                                impression=impression(scene), source="contrastive",
+                                direction="write", surface=render(scene)))
+    return out
 
 
 def negative_examples(errors: list[ClassError]) -> list[dict]:
