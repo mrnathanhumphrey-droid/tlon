@@ -1,0 +1,63 @@
+=== [1/4] test suite in the venv 02:25:27 ===
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+852 passed, 11 warnings in 42.18s
+=== [2/4] BEFORE baseline, bf16, cardless+unconstrained 02:26:52 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=NONE (baseline) · battery d9ecdf9fbf2caa8a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   0.0%  (0/64)
+  render  0.0%  (0/64)
+  choose  39.1%  (25/64), 0 unanswered
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.000, speak 0.000 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 39.1% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl
+=== [3/4] fine-tune, bf16 LoRA 02:29:33 ===
+ 86%|████████▌ | 107/125 [00:13<00:02,  7.98it/s][A
+ 86%|████████▋ | 108/125 [00:13<00:02,  7.94it/s][A
+ 87%|████████▋ | 109/125 [00:13<00:01,  8.07it/s][A
+ 88%|████████▊ | 110/125 [00:13<00:01,  8.15it/s][A
+ 89%|████████▉ | 111/125 [00:13<00:01,  8.10it/s][A
+ 90%|████████▉ | 112/125 [00:14<00:01,  8.15it/s][A
+ 90%|█████████ | 113/125 [00:14<00:01,  8.15it/s][A
+ 91%|█████████ | 114/125 [00:14<00:01,  8.06it/s][A
+ 92%|█████████▏| 115/125 [00:14<00:01,  8.15it/s][A
+ 93%|█████████▎| 116/125 [00:14<00:01,  8.33it/s][A
+ 94%|█████████▎| 117/125 [00:14<00:00,  8.29it/s][A
+ 94%|█████████▍| 118/125 [00:14<00:00,  8.10it/s][A
+ 95%|█████████▌| 119/125 [00:14<00:00,  7.96it/s][A
+ 96%|█████████▌| 120/125 [00:14<00:00,  8.05it/s][A
+ 97%|█████████▋| 121/125 [00:15<00:00,  8.09it/s][A
+ 98%|█████████▊| 122/125 [00:15<00:00,  8.15it/s][A
+ 98%|█████████▊| 123/125 [00:15<00:00,  8.18it/s][A
+ 99%|█████████▉| 124/125 [00:15<00:00,  8.08it/s][A
+100%|██████████| 125/125 [00:15<00:00,  8.17it/s][A                                                     
+100%|██████████| 125/125 [00:15<00:00,  8.17it/s][A
+{'eval_loss': '0.2579', 'eval_runtime': '15.73', 'eval_samples_per_second': '63.56', 'eval_steps_per_second': '7.945', 'epoch': '2'}
+{'train_runtime': '4477', 'train_samples_per_second': '17.87', 'train_steps_per_second': '1.117', 'train_loss': '0.2756', 'epoch': '2'}
+
+⭐ adapter → runs/act2/adapter
+⛔ NOT a result. Next: tools/act2_flocal.py measures F-LOCAL unconstrained and cardless. That is the gate.
+=== [4/4] THE GATE, bf16, cardless+unconstrained 03:44:51 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=runs/act2/adapter · battery d9ecdf9fbf2caa8a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   100.0%  (64/64)
+Traceback (most recent call last):
+  File "/home/ubuntu/tlon/tools/act2_flocal.py", line 179, in <module>
+    raise SystemExit(main())
+  File "/home/ubuntu/tlon/tools/act2_flocal.py", line 121, in main
+    render = _rate(speaker, [p.stimulus for p in battery.production], "render")
+  File "/home/ubuntu/tlon/tools/act2_flocal.py", line 82, in _rate
+    PS.validate(proposal)
+  File "/home/ubuntu/tlon/tlon/product/schema.py", line 244, in validate
+    scene = Scene(node=_node(proposal.get("node")), force=force)
+  File "/home/ubuntu/tlon/tlon/product/schema.py", line 194, in _node
+    rel = check("relator", "L", (e or {}).get("relator"))
+AttributeError: 'list' object has no attribute 'get'
+⛔ STAGE FAILED: gate

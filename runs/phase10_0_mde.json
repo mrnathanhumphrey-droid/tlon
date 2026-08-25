@@ -1,0 +1,37 @@
+{
+  "variance_prior": {
+    "gaps_pts": [
+      5.3888888888888875,
+      13.185185185185189,
+      9.037037037037043,
+      4.555555555555568,
+      10.14814814814815
+    ],
+    "mean": 8.462962962962967,
+    "sample_sd": 3.5421235483568903,
+    "source": "runs/reset_dynamics.json, ARCHIVE set"
+  },
+  "n": 5,
+  "mde_pts": 4.397422202357733,
+  "subquestions": {
+    "10.2": {
+      "branch1_equivalence": true,
+      "mde_pts": 4.397422202357733,
+      "ci_halfwidth_pct_of_gap": 51.96078751144802,
+      "n_for_25pct_equivalence": 14,
+      "n_for_50pct_equivalence": 6,
+      "verdict": "BRANCH 1 UNDERPOWERED-BY-CONSTRUCTION at n=5; branches 2/4 detectable"
+    },
+    "10.3": {
+      "frozen_bound_pts": 3.73,
+      "mde_pts": 4.397422202357733,
+      "direct_measure": "UNDERPOWERED-BY-CONSTRUCTION for a DIRECT measure at n=5",
+      "status": "narrowed-by-10.2 only"
+    },
+    "10.4": {
+      "b_gap_level_mde_pts": 4.397422202357733,
+      "b_verdict": "UNDERPOWERED at n=5, same prior as 10.2",
+      "a_entropy_spike": "MDE NOT PRE-COMPUTABLE -- no paired variance estimate exists; report from the run"
+    }
+  }
+}

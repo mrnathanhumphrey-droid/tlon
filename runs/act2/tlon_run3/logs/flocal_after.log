@@ -1,0 +1,27 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=runs/act2/adapter · battery a2b318d6d2e6b98a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   98.4%  (63/64)
+  render  84.4%  (54/64)
+  choose  68.0%  (174/64), 0 unanswered
+
+  render confusions (11): {'L→M': 3, 'Q→A': 2, 'O→M': 1, 'Q→R': 1, 'O→T': 1, 'T→A': 1, 'L→R': 1, 'M→T': 1}
+     · 'nol' is class Q, not A — it cannot fill the aspect_root slot.
+     · 'sen' is class L, not M — it cannot fill the modal slot.
+     · 'nol' is class Q, not A — it cannot fill the aspect_root slot.
+     · 'hul' is class O, not M — it cannot fill the modal slot.
+     · 'tren' is class Q, not R — it cannot fill the root slot.
+     · 'sen' is class L, not M — it cannot fill the modal slot.
+     · 'fro' is class L, not M — it cannot fill the modal slot.
+     · 'fen' is class O, not T — it cannot fill the tense slot.
+     · 'kim' is class T, not A — it cannot fill the aspect_root slot.
+     · 'sen' is class L, not R — it cannot fill the root slot.
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.844, speak 0.984 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 68.0% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl

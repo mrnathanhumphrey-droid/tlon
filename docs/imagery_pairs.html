@@ -1,0 +1,216 @@
+<title>Tlön Minimal Pairs</title>
+<style>
+:root{--ground:#f3f0ea;--raised:#fffdf9;--line:#d8d2c6;--ink:#221e28;
+--muted:#6a6272;--sage:#5f6b57;--sage-dim:#8a9481;--ochre:#8a6a24;
+--rose:#9c4f4a;--chip:#e8e3d8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--ground:#1e1a22;--raised:#262130;--line:#3a3345;--ink:#ded9d0;--muted:#948da2;
+--sage:#c2c7b7;--sage-dim:#8b937f;--ochre:#c8a45c;--rose:#c58a86;--chip:#2f2939}}
+:root[data-theme="dark"]{--ground:#1e1a22;--raised:#262130;--line:#3a3345;
+--ink:#ded9d0;--muted:#948da2;--sage:#c2c7b7;--sage-dim:#8b937f;
+--ochre:#c8a45c;--rose:#c58a86;--chip:#2f2939}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+font-size:16px;line-height:1.6}
+.wrap{max-width:78ch;margin:0 auto;padding:3rem 1.25rem 6rem}
+h1,h2,h3{font-family:"Iowan Old Style",Palatino,Georgia,serif;
+text-wrap:balance;margin:0;font-weight:600}
+h1{font-size:2.1rem;letter-spacing:-.01em}
+h2{font-size:1.2rem;margin:3rem 0 1rem;padding-bottom:.5rem;
+border-bottom:1px solid var(--line)}
+.eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.16em;
+color:var(--muted);margin-bottom:.6rem}
+.lede{color:var(--muted);margin:.75rem 0 0}
+.status{display:inline-block;margin-top:1.25rem;padding:.3rem .7rem;
+border:1px solid var(--ochre);color:var(--ochre);border-radius:2px;
+font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}
+.pair{background:var(--raised);border:1px solid var(--line);border-radius:2px;
+margin-top:1.25rem;overflow:hidden}
+.phead{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;
+padding:.7rem 1.1rem;border-bottom:1px solid var(--line);background:var(--chip)}
+.pid{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;
+color:var(--sage-dim);font-variant-numeric:tabular-nums}
+.contrast{font-size:.68rem;text-transform:uppercase;letter-spacing:.11em;
+color:var(--sage);border:1px solid currentColor;padding:.15rem .45rem;
+border-radius:2px}
+.bor{margin-left:auto;font-size:.74rem;color:var(--muted);
+font-variant-numeric:tabular-nums}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+@media (max-width:720px){.cols{grid-template-columns:1fr}}
+.side{background:var(--raised);padding:1rem 1.1rem}
+.nm{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:1.05rem;
+margin-bottom:.5rem}
+.spec{font-family:ui-monospace,Consolas,monospace;font-size:1rem;
+color:var(--sage);overflow-x:auto;white-space:nowrap;padding-bottom:.2rem}
+.gl{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-style:italic;
+font-size:.97rem;margin:.5rem 0 0}
+.diff{color:var(--rose);font-weight:600}
+.note{font-size:.85rem;color:var(--muted);margin:0;padding:.8rem 1.1rem;
+border-top:1px solid var(--line)}
+footer{margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid var(--line);
+color:var(--muted);font-size:.85rem}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;
+background:var(--chip);padding:.1rem .3rem;border-radius:2px}
+</style>
+<div class="wrap">
+<p class="eyebrow">Tlön · phase 2b · perspective pairs</p>
+<h1>One scene, told from both sides of it</h1>
+<p class="lede">Each pair is a single situation rendered from the vantage of each thing
+inside it. Both sides hold <b>all the same happenings</b> — only which one is the
+matrix, and the orientation, change hands. That is what keeps them honest: a
+bag-of-roots classifier, which sees only which roots occur, is left at chance across
+all ten (mean <b>50.8%</b>). A listener has to read structure or guess.</p>
+<p class="lede">Highlighted morphemes are the ones that differ. What to judge:
+<b>are these two genuinely different impressions, and does each line read as its
+name?</b> If a pair reads as one thing said twice, it is not a contrast and I replace it.</p>
+<span class="status">review_status: unreviewed — execution blocked</span>
+
+<h2>The pairs</h2>
+<section class="pair">
+<div class="phead"><span class="pid">J1 · 51/52</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 56.1% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the light&#x27;s side — going out into the dark</div>
+<div class="spec"><span class="diff">pox</span> hlin säx u flex hräx ka</div>
+<p class="gl">“outward, as ⟨it bounds, ends abruptly⟩, beyond ⟨it darkens to night⟩, it glows.”</p></div>
+<div class="side"><div class="nm">the night&#x27;s side — pressed against a bounded brightness</div>
+<div class="spec"><span class="diff">kon</span> hlin säx u hräx flex ka</div>
+<p class="gl">“against, as ⟨it bounds, ends abruptly⟩, beyond ⟨it glows⟩, it darkens to night.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> flex <span style='opacity:.6'>it darkens to night</span>, hräx <span style='opacity:.6'>it glows</span>, säx <span style='opacity:.6'>it bounds, ends abruptly</span><br>The original survivor and the template for the rest. Glowing, darkening and bounding are all present to both; only the vantage turns.</p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J2 · 53/54</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 45.6% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the sound&#x27;s side — breaking out into stillness</div>
+<div class="spec"><span class="diff">pox</span> hlin rön u nöl hlax ka</div>
+<p class="gl">“outward, as ⟨it interrupts⟩, beyond ⟨it stills, silences⟩, it sounds, resonates.”</p></div>
+<div class="side"><div class="nm">the stillness&#x27;s side — broken into</div>
+<div class="spec"><span class="diff">kon</span> hlin rön u hlax nöl ka</div>
+<p class="gl">“against, as ⟨it interrupts⟩, beyond ⟨it sounds, resonates⟩, it stills, silences.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> hlax <span style='opacity:.6'>it sounds, resonates</span>, nöl <span style='opacity:.6'>it stills, silences</span>, rön <span style='opacity:.6'>it interrupts</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J3 · 55/56</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 45.6% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the speaking&#x27;s side — going out, not knowing if it lands</div>
+<div class="spec"><span class="diff">pox</span> hlin hlax u leng los ka</div>
+<p class="gl">“outward, as ⟨it sounds, resonates⟩, beyond ⟨it hears⟩, it speaks.”</p></div>
+<div class="side"><div class="nm">the hearing&#x27;s side — something arriving from elsewhere</div>
+<div class="spec"><span class="diff">tim</span> hlin hlax u los leng ka</div>
+<p class="gl">“inward, as ⟨it sounds, resonates⟩, beyond ⟨it speaks⟩, it hears.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> hlax <span style='opacity:.6'>it sounds, resonates</span>, leng <span style='opacity:.6'>it hears</span>, los <span style='opacity:.6'>it speaks</span><br>The project&#x27;s own subject. Both sides hold speaking, hearing, sounding.</p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J4 · 57/58</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 57.2% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the weight&#x27;s side — bearing down</div>
+<div class="spec"><span class="diff">nar</span> hlin plon u tang nos ka</div>
+<p class="gl">“downward, as ⟨it bends⟩, beyond ⟨it rests, holds⟩, it weighs, is heavy.”</p></div>
+<div class="side"><div class="nm">the holding&#x27;s side — taking the load without giving</div>
+<div class="spec"><span class="diff">hlör</span> hlin plon u nos tang ka</div>
+<p class="gl">“upward, as ⟨it bends⟩, beyond ⟨it weighs, is heavy⟩, it rests, holds.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> nos <span style='opacity:.6'>it weighs, is heavy</span>, plon <span style='opacity:.6'>it bends</span>, tang <span style='opacity:.6'>it rests, holds</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J5 · 59/60</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 50.6% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the moving&#x27;s side — going by</div>
+<div class="spec"><span class="diff">nong</span> hlin kor u kön xir ka</div>
+<p class="gl">“past, as ⟨it trembles⟩, beyond ⟨it halts⟩, it moves, displaces.”</p></div>
+<div class="side"><div class="nm">the halted thing&#x27;s side — being gone past</div>
+<div class="spec"><span class="diff">har</span> hlin kor u xir kön ka</div>
+<p class="gl">“amid, as ⟨it trembles⟩, beyond ⟨it moves, displaces⟩, it halts.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> kor <span style='opacity:.6'>it trembles</span>, kön <span style='opacity:.6'>it halts</span>, xir <span style='opacity:.6'>it moves, displaces</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J6 · 61/62</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 45.0% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the warmth&#x27;s side — spreading into what is colder</div>
+<div class="spec"><span class="diff">pox</span> hlin hram u fes mun ka</div>
+<p class="gl">“outward, as ⟨it breathes⟩, beyond ⟨it chills⟩, it warms.”</p></div>
+<div class="side"><div class="nm">the cold&#x27;s side — met, and giving ground</div>
+<div class="spec"><span class="diff">kon</span> hlin hram u mun fes ka</div>
+<p class="gl">“against, as ⟨it breathes⟩, beyond ⟨it warms⟩, it chills.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> fes <span style='opacity:.6'>it chills</span>, hram <span style='opacity:.6'>it breathes</span>, mun <span style='opacity:.6'>it warms</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J7 · 63/64</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 53.9% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the rising&#x27;s side</div>
+<div class="spec"><span class="diff">hlör</span> hlin xir u nur pel ka</div>
+<p class="gl">“upward, as ⟨it moves, displaces⟩, beyond ⟨it falls⟩, it rises.”</p></div>
+<div class="side"><div class="nm">the falling&#x27;s side</div>
+<div class="spec"><span class="diff">nar</span> hlin xir u pel nur ka</div>
+<p class="gl">“downward, as ⟨it moves, displaces⟩, beyond ⟨it rises⟩, it falls.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> nur <span style='opacity:.6'>it falls</span>, pel <span style='opacity:.6'>it rises</span>, xir <span style='opacity:.6'>it moves, displaces</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J8 · 65/66</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 53.3% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the wet&#x27;s side — being taken away</div>
+<div class="spec"><span class="diff">fen</span> hlin tlan u pem mör ka</div>
+<p class="gl">“beneath, as ⟨it winds, blows⟩, beyond ⟨it dries⟩, it wets, damps.”</p></div>
+<div class="side"><div class="nm">the drying&#x27;s side — pulling the damp out</div>
+<div class="spec"><span class="diff">pox</span> hlin tlan u mör pem ka</div>
+<p class="gl">“outward, as ⟨it winds, blows⟩, beyond ⟨it wets, damps⟩, it dries.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> mör <span style='opacity:.6'>it wets, damps</span>, pem <span style='opacity:.6'>it dries</span>, tlan <span style='opacity:.6'>it winds, blows</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J9 · 67/68</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 50.0% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the blooming&#x27;s side</div>
+<div class="spec"><span class="diff">pox</span> hlin kem u kam höm ka</div>
+<p class="gl">“outward, as ⟨it sows⟩, beyond ⟨it withers⟩, it blooms.”</p></div>
+<div class="side"><div class="nm">the withering&#x27;s side</div>
+<div class="spec"><span class="diff">nar</span> hlin kem u höm kam ka</div>
+<p class="gl">“downward, as ⟨it sows⟩, beyond ⟨it blooms⟩, it withers.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> höm <span style='opacity:.6'>it blooms</span>, kam <span style='opacity:.6'>it withers</span>, kem <span style='opacity:.6'>it sows</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">J10 · 69/70</span>
+<span class="contrast">perspective</span>
+<span class="bor">bag-of-roots 51.1% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">the sleep&#x27;s side — going under</div>
+<div class="spec"><span class="diff">nar</span> hlin mlang u mim max ka</div>
+<p class="gl">“downward, as ⟨it dreams⟩, beyond ⟨it wakes⟩, it sleeps.”</p></div>
+<div class="side"><div class="nm">the waking&#x27;s side — surfacing</div>
+<div class="spec"><span class="diff">hlör</span> hlin mlang u max mim ka</div>
+<p class="gl">“upward, as ⟨it dreams⟩, beyond ⟨it sleeps⟩, it wakes.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> max <span style='opacity:.6'>it sleeps</span>, mim <span style='opacity:.6'>it wakes</span>, mlang <span style='opacity:.6'>it dreams</span></p>
+</section>
+
+<h2>What this cost</h2>
+<p class="lede">An earlier draft used richer scenes — a stone worn by water against a
+current broken by a stone; a moth's compulsion against a lamp's indifference. Nine of
+ten leaked, bag-of-roots scoring <b>94–100%</b>, because each side had private business
+the other could not see. The stone's rounding is invisible from the water's side.
+Those are genuinely different events, so the roots correctly differed and the pairs
+correctly failed. The vivid ones were the ones that leaked hardest.</p>
+
+<footer>
+<p>Generated from <code>tlon/referents/imagery_pairs.draft.yaml</code> against lexicon
+<code>e2b8527010231a81fd31b6eeb9de3d8c</code>. Bag-of-roots figures are read from
+<code>runs/imagery_pairs_bor.json</code>, written by the verify script that fits the
+classifier on each pair — so this page cannot disagree with the run it reports.</p>
+</footer>
+</div>

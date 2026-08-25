@@ -1,0 +1,44 @@
+# ── WEIGHTS AND RUN ARTIFACTS ────────────────────────────────────────────
+# ⛔ Each adapter_model.safetensors is 308 MB and every checkpoint carries an
+# optimizer.pt beside it. GitHub HARD-REJECTS any file over 100 MB, and a large
+# blob committed even once stays in the history forever — the repair is a history
+# rewrite, so this file has to exist before the first commit, not after.
+#
+# Nothing of scientific value is lost: the ledger, the logs and the measured
+# numbers ARE committed (runs/act2/*/logs, *.jsonl below), and the adapters are
+# reproducible from the corpus builder plus the pinned training command in
+# docs/RUNBOOK_ACT2_PILOT.md.
+runs/act2/tlon_run*/adapter/
+runs/act2/adapter/
+**/checkpoint-*/
+*.safetensors
+*.bin
+optimizer.pt
+scheduler.pt
+
+# ── THE CORPUS ───────────────────────────────────────────────────────────
+# ⭐ 80,000 rows / ~36 MB, and FULLY REGENERABLE:
+#     python tools/act2_build_corpus.py --n 40000
+# Deterministic at seed 20620 against the frozen lexicon, so the builder plus the
+# recorded sha256 is a stronger artifact than the file — anyone can rebuild it
+# and check they got the identical bytes.
+runs/act2/corpus/*.jsonl
+
+# ── PYTHON ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# ── LOCAL / EDITOR ───────────────────────────────────────────────────────
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# ── KEPT ON PURPOSE (documenting the exceptions, so they are not "missed") ──
+# !runs/act2/**/logs/          the measured output of every run
+# !runs/act2/**/ledger.jsonl   the spend + result ledger
+# !runs/act2/corpus/meta.json  the exposure report the corpus was built to

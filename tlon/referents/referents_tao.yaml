@@ -1,0 +1,390 @@
+# Tlön referent set TAO — Taoist worldview. PHASE 11 baseline.
+#
+# ⛔ review_status gates execution. Nate sets it. Review tooling may read it.
+#
+# ─── PROVENANCE AND EXPRESSION-STRIP ──────────────────────────────────────
+#
+# SOURCE CONSULTED: none. This set was compiled ONLY from the distilled
+# philosophical positions Nate wrote in the Phase 11 brief — "the uncarved
+# block, water taking every shape, named-vs-unnamed, wu wei, dissolution of
+# object-boundaries". No text was read, recalled or reconstructed at the
+# compilation step, so no expression enters the pipeline at all. That is
+# stronger than stripping expression after ingestion: there was none to strip.
+# (The Tao Te Ching is public domain regardless; the discipline is applied
+# uniformly across both Phase 11 sets so the CR set's stricter requirement is
+# not a special case.)
+#
+# TRACEABILITY: every referent's note opens with the position it derives from,
+# P1–P5. `tools/expression_check.py` audits that every referent traces to a
+# declared position and that no name or note carries quoted material.
+#
+#   P1  the uncarved block
+#   P2  water taking every shape
+#   P3  named vs unnamed
+#   P4  wu wei
+#   P5  dissolution of object-boundaries
+#
+# ─── THE DESIGN CONSTRAINT, AND IT IS THE INVERSE OF COSMICOMICS ──────────
+#
+# ⛔⛔ v2 FAILED ITS GATE BECAUSE DEPTH BACKFIRES COMBINATORIALLY. A signature
+# with d dependents has 2^d subsets and only ONE of them (keep=0) is strongly
+# ambiguous, so every dependent added makes the ambiguous case RARER faster
+# than it makes it more ambiguous. v2 sat at mean 3.10 patterns and f₂ = 10.5 %.
+#
+# ⭐⭐ SO THIS SET IS DELIBERATELY FLAT: **every signature has exactly ONE
+# dependent** (2 patterns, d=1), which puts HALF of all subsets at keep=0.
+# Collision comes from SHARED VOCABULARY ACROSS A COHERENT WORLDVIEW, not from
+# depth: `fox` heads 6 referents, `hrun` 5, `klung` 5, `tang` 5, `los` 4,
+# `rän` 4. Adjacent positions in one worldview describe the same happenings.
+#
+# The mechanism prediction, stated before measuring: keep=0 (bare head) is
+# ambiguous because the head is shared; keep=1 disambiguates because the
+# dependent root AND its relator differ. High f₂ at LOW depth — the inverse of
+# v2's profile. ⛔ If this is wrong it will show as Outcome A again, or as
+# Outcome C if the sharing is so heavy that keep=1 fails to separate either.
+#
+# ⛔ `forbid` and `matrix` UNUSED (0/36), as in both previous sets, so Phase 6's
+# isolation claim carries over unchanged and 9.3 owes no re-run.
+# ⛔ No `at_depth` — nesting is exactly the thing being avoided here.
+#
+# Roots quoted from lexicon.yaml `e2b8527010231a81fd31b6eeb9de3d8c`.
+
+review_status: UNREVIEWED     # ⛔ Nate sets this. Nothing runs until then.
+schema_version: 2
+grammar_family: southern
+
+referents:
+
+  # ═══ WATER (P2) — head `fox` / `fang`, six and two ════════════════════════
+  - id: "T01"
+    name: still water finding its level
+    tier: 1
+    notes: >
+      P2. A pooling, while a flattening. The most literal reading of water
+      taking every shape: it does not choose a form, it takes the one it is in.
+    signature:
+      contains: [{root_any: [fox]}, {root_any: [plen], via: [mil]}]
+
+  - id: "T02"
+    name: water taking the shape of the hollow
+    tier: 1
+    notes: >
+      P2, P5. A pooling, at a hollowing. The boundary belongs to the hollow,
+      not to the water — which is the dissolution position stated as an image.
+    signature:
+      contains: [{root_any: [fox]}, {root_any: [klung], via: [sen]}]
+
+  - id: "T03"
+    name: water wearing the stone
+    tier: 1
+    notes: >
+      P2. A pooling, amid an enduring. Soft outlasts hard, and neither is
+      predicated as a thing — both are happenings that overlap.
+    signature:
+      contains: [{root_any: [fox]}, {root_any: [hrun], via: [hlim]}]
+
+  - id: "T04"
+    name: water yielding and not broken
+    tier: 1
+    notes: >
+      P2, P4. A pooling, while a bending. Yielding as the active thing, which
+      is wu wei read into the water image.
+    signature:
+      contains: [{root_any: [fox]}, {root_any: [plon], via: [mil]}]
+
+  - id: "T05"
+    name: water going to the low place
+    tier: 1
+    notes: >
+      P2, P4. A pooling, toward a falling. It seeks what everyone else avoids
+      and does not strive to.
+    signature:
+      contains: [{root_any: [fox]}, {root_any: [nur], via: [sul]}]
+
+  - id: "T06"
+    name: the soft overcoming the hard
+    tier: 1
+    notes: >
+      P2. A pooling, part of which a softening. Deliberately confusable with
+      T03 and T04 once the dependent is withheld — that is the point of the set.
+    signature:
+      contains: [{root_any: [fox]}, {root_any: [nax], via: [nix]}]
+
+  - id: "T07"
+    name: the stream that does not strive
+    tier: 1
+    notes: >
+      P4. A streaming, despite a resting. `xom` (CONC) carries the paradox
+      without asserting a contradiction.
+    signature:
+      contains: [{root_any: [fang]}, {root_any: [tang], via: [xom]}]
+
+  - id: "T08"
+    name: the stream finding its way around
+    tier: 1
+    notes: >
+      P2, P4. A streaming, while a twisting. Route as consequence, not choice.
+    signature:
+      contains: [{root_any: [fang]}, {root_any: [plin], via: [mil]}]
+
+  - id: "T09"
+    name: the flood that takes everything
+    tier: 1
+    notes: >
+      P2, P5. A flooding, while a scattering. Water dissolving boundaries by
+      force rather than by patience — the same position, the loud version.
+    signature:
+      contains: [{root_any: [fum]}, {root_any: [krön], via: [mil]}]
+
+  - id: "T10"
+    name: the ebb that gives it back
+    tier: 1
+    notes: >
+      P2. An ebbing, while a repeating. The counterpart to T09; both are
+      water, neither is a thing.
+    signature:
+      contains: [{root_any: [fäm]}, {root_any: [rän], via: [mil]}]
+
+  # ═══ THE UNCARVED BLOCK (P1) — head `hrun`, five ══════════════════════════
+  - id: "T11"
+    name: the uncarved block
+    tier: 1
+    notes: >
+      P1. An enduring, despite a sharpening. The block is not an object that
+      lacks carving; it is an enduring that a sharpening has not happened to.
+      ⛔ `forbid` would have been the obvious encoding and does not denote.
+    signature:
+      contains: [{root_any: [hrun]}, {root_any: [krax], via: [xom]}]
+
+  - id: "T12"
+    name: the wood before the cut
+    tier: 1
+    notes: >
+      P1. An enduring, ERE a bounding. `tan` puts the cut in the future without
+      a tense morpheme — π strips tense, so order must ride on a relator.
+    signature:
+      contains: [{root_any: [hrun]}, {root_any: [säx], via: [tan]}]
+
+  - id: "T13"
+    name: what has no name yet
+    tier: 1
+    notes: >
+      P1, P3. An enduring, despite a speaking. The unnamed is not the
+      un-referred-to; it is what persists while speaking goes on around it.
+    signature:
+      contains: [{root_any: [hrun]}, {root_any: [los], via: [xom]}]
+
+  - id: "T14"
+    name: the wood that could still be anything
+    tier: 1
+    notes: >
+      P1. An enduring, while a changing. Potential as a happening rather than
+      a property, because properties need bearers.
+    signature:
+      contains: [{root_any: [hrun]}, {root_any: [run], via: [mil]}]
+
+  - id: "T15"
+    name: the stone left alone
+    tier: 1
+    notes: >
+      P1, P4. An enduring, while a resting. Shares its head with T11–T14 and
+      its dependent with T07 — a two-way collision by construction.
+    signature:
+      contains: [{root_any: [hrun]}, {root_any: [tang], via: [mil]}]
+
+  # ═══ EMPTINESS (P5) — head `klung`, five ══════════════════════════════════
+  - id: "T16"
+    name: the hollow that makes it useful
+    tier: 1
+    notes: >
+      P5. A hollowing, causing a resting. The use is in the emptiness, so the
+      emptiness is what gets predicated.
+    signature:
+      contains: [{root_any: [klung]}, {root_any: [tang], via: [kra]}]
+
+  - id: "T17"
+    name: the empty room
+    tier: 1
+    notes: >
+      P5. A hollowing, part of which a bounding. Walls as an aspect of the
+      emptiness rather than the emptiness as an absence between walls.
+    signature:
+      contains: [{root_any: [klung]}, {root_any: [säx], via: [nix]}]
+
+  - id: "T18"
+    name: the space between the spokes
+    tier: 1
+    notes: >
+      P5. A hollowing, between, part of which a rounding. The wheel turns on
+      what is not there.
+    signature:
+      contains:
+        - {root_any: [klung], orient_any: [sir]}
+        - {root_any: [hom], via: [nix]}
+
+  - id: "T19"
+    name: the valley
+    tier: 1
+    notes: >
+      P5, P4. A hollowing, while a sloping. Low and receptive; the valley does
+      nothing and everything arrives.
+    signature:
+      contains: [{root_any: [klung]}, {root_any: [hler], via: [mil]}]
+
+  - id: "T20"
+    name: the door that is only an opening
+    tier: 1
+    notes: >
+      P5. A hollowing, while an opening. Nothing is added by calling it a door.
+    signature:
+      contains: [{root_any: [klung]}, {root_any: [plung], via: [mil]}]
+
+  # ═══ WU WEI (P4) — head `tang`, five ══════════════════════════════════════
+  - id: "T21"
+    name: doing nothing, and nothing left undone
+    tier: 1
+    notes: >
+      P4. A resting, despite an ending. The canonical wu wei paradox, written
+      as concession rather than contradiction.
+    signature:
+      contains: [{root_any: [tang]}, {root_any: [ram], via: [xom]}]
+
+  - id: "T22"
+    name: the one who does not contend
+    tier: 1
+    notes: >
+      P4. A resting, despite a raging. No person is predicated; the not-
+      contending is the whole impression.
+    signature:
+      contains: [{root_any: [tang]}, {root_any: [sör], via: [xom]}]
+
+  - id: "T23"
+    name: acting without acting
+    tier: 1
+    notes: >
+      P4. A resting, despite a moving. Shares head with T15/T16/T21/T22 and
+      dependent with C-set motion referents — cross-set collision is expected
+      and is not controlled for, since the sets are measured separately.
+    signature:
+      contains: [{root_any: [tang]}, {root_any: [xir], via: [xom]}]
+
+  - id: "T24"
+    name: the still point of the turning
+    tier: 1
+    notes: >
+      P4, P5. A resting, amid a turning. `hlim` (AMID) rather than a spatial
+      orientation, because the stillness is not located, it is surrounded.
+    signature:
+      contains: [{root_any: [tang]}, {root_any: [kron], via: [hlim]}]
+
+  - id: "T25"
+    name: waiting that is not waiting for anything
+    tier: 1
+    notes: >
+      P4. A resting, despite a longing. The longing is admitted and not acted
+      on, which is the honest version of the position.
+    signature:
+      contains: [{root_any: [tang]}, {root_any: [sun], via: [xom]}]
+
+  # ═══ NAMED AND UNNAMED (P3) — head `los`, four, plus `nöl` ════════════════
+  - id: "T26"
+    name: the name that can be spoken
+    tier: 1
+    notes: >
+      P3. A speaking, while an ending. To name is to bound, and to bound is to
+      stop something.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [ram], via: [mil]}]
+
+  - id: "T27"
+    name: the nameless beginning
+    tier: 1
+    notes: >
+      P3, P1. A speaking, despite a beginning. What begins is prior to what is
+      said about it.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [pöl], via: [xom]}]
+
+  - id: "T28"
+    name: speaking that misses it
+    tier: 1
+    notes: >
+      P3. A speaking, while a vanishing. The saying and the losing are one
+      happening, not cause and effect.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [rim], via: [mil]}]
+
+  - id: "T29"
+    name: the word taken for the thing
+    tier: 1
+    notes: >
+      P3, P5. A speaking, as an appearing. `hlin` (CMP) carries the mistaking
+      without asserting that either side is an object.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [rom], via: [hlin]}]
+
+  - id: "T30"
+    name: the silence that says more
+    tier: 1
+    notes: >
+      P3, P4. A stilling, despite a speaking. Inverts T13's pairing — same two
+      roots, opposite head — so the two are separable only by which is matrix.
+    signature:
+      contains: [{root_any: [nöl]}, {root_any: [los], via: [xom]}]
+
+  # ═══ RETURNING (P5) — head `rän`, four, plus two ══════════════════════════
+  - id: "T31"
+    name: returning to the root
+    tier: 1
+    notes: >
+      P5. A repeating, toward a falling. Return as descent rather than as
+      travel back.
+    signature:
+      contains: [{root_any: [rän]}, {root_any: [nur], via: [sul]}]
+
+  - id: "T32"
+    name: the ten thousand things returning
+    tier: 1
+    notes: >
+      P5. A repeating, part of which a teeming. `fral` is how this grammar
+      says multiplicity without counting objects.
+    signature:
+      contains: [{root_any: [rän]}, {root_any: [fral], via: [nix]}]
+
+  - id: "T33"
+    name: what goes far comes back
+    tier: 1
+    notes: >
+      P5. A repeating, ERE a receding. The going is placed before the return
+      by the relator, not by tense.
+    signature:
+      contains: [{root_any: [rän]}, {root_any: [krän], via: [tan]}]
+
+  - id: "T34"
+    name: the turning that has no end
+    tier: 1
+    notes: >
+      P5. A repeating, unceasing, while a turning. `ax` is signature aspect
+      here because endlessness IS the image, not decoration on it.
+    signature:
+      contains:
+        - {root_any: [rän], aspect_root_any: [ax]}
+        - {root_any: [kron], via: [mil]}
+
+  - id: "T35"
+    name: the cycle seen from inside it
+    tier: 1
+    notes: >
+      P5. A turning, while a repeating. The exact inverse of T34's pairing;
+      like T13/T30, separable only by which happening is the matrix.
+    signature:
+      contains: [{root_any: [kron]}, {root_any: [rän], via: [mil]}]
+
+  - id: "T36"
+    name: dissolving into what has no boundary
+    tier: 1
+    notes: >
+      P5. A vanishing, despite a bounding. The clearest statement of the
+      dissolution position, and deliberately the last.
+    signature:
+      contains: [{root_any: [rim]}, {root_any: [säx], via: [xom]}]

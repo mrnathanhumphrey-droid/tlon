@@ -1,0 +1,33 @@
+﻿python : D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is 
+False because encoder_layer.norm_first was True
+At line:1 char:314
++ ... atch {} } }; cd D:\Tlon; python tools/null_band_seeds.py 2>&1 | Tee-O ...
++                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (D:\Tlon\tlon\li..._first was True:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False 
+because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+  seed 11 (1/5): orient_order +0.00  coda +0.03  degree -0.06  aspect_root +4.43  aspect_reps +0.08
+  seed 23 (2/5): orient_order +0.00  coda -0.06  degree -0.00  aspect_root +3.16  aspect_reps -0.02
+  seed 37 (3/5): orient_order +0.00  coda +0.03  degree +0.04  aspect_root +4.38  aspect_reps +0.09
+  seed 53 (4/5): orient_order +0.00  coda -0.06  degree -0.04  aspect_root +3.93  aspect_reps +0.02
+  seed 71 (5/5): orient_order +0.00  coda -0.03  degree -0.02  aspect_root +4.16  aspect_reps -0.09
+
+======================================================================
+NULL BAND — mean +/- sd over seeds (pts)
+======================================================================
+  orient_order    +0.00 +/- 0.00   worst |0.00|
+  coda            -0.02 +/- 0.04   worst |0.06|
+  degree          -0.02 +/- 0.04   worst |0.06|
+  aspect_root     +4.01 +/- 0.52   worst |4.43|
+  aspect_reps     +0.02 +/- 0.07   worst |0.09|
+
+  Widest honest excursion on a no-information channel: 0.09 pts
+  Largest sd among them:                                0.07 pts
+  => defensible KILL A threshold: 0.50 pts
+     (PREREG 3c49ad47 pre-set 1.0 pt; CONSISTENT)
+
+  wrote D:\Tlon\runs\null_band_seeds.json

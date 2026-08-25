@@ -1,0 +1,104 @@
+﻿============================================================================
+PHASE 3 — lambda sweep. PREREG 3c49ad47
+============================================================================
+
+  pre-training the listener on random-generator data (phase-2 style)
+python : D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is 
+False because encoder_layer.norm_first was True
+At line:1 char:482
++ ... 8; $env:PYTHONUNBUFFERED="1"; python tools/run_phase3.py 2>&1 | Tee-O ...
++                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (D:\Tlon\tlon\li..._first was True:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+    seeded listener ready (9074 examples)
+
+  ── lambda = 0.0 ─────────────────────────────────────────
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False 
+because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits 
+and faster downloads.
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 338/338 [00:00<00:00, 11198.51it/s]
+    83s   M 99.2%   R 0.193   auditor 48.5%
+    policy concentration (uniform -> collapsed):
+      aspect_root  0.352  (uniform 0.143)
+      aspect_reps  0.464  (uniform 0.250)
+      degree       0.360  (uniform 0.143)
+      coda         0.403  (uniform 0.200)
+      orient       0.204  (uniform 0.040)
+    scramble drops (pts):
+      aspect_root   +4.59
+      orient_order  +0.00
+      coda          +0.00
+      degree        +0.00
+      aspect_reps   +0.00
+
+  ── lambda = 0.25 ─────────────────────────────────────────
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False 
+because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+    71s   M 99.6%   R 0.194   auditor 48.5%
+    policy concentration (uniform -> collapsed):
+      aspect_root  0.560  (uniform 0.143)
+      aspect_reps  0.663  (uniform 0.250)
+      degree       0.568  (uniform 0.143)
+      coda         0.630  (uniform 0.200)
+      orient       0.341  (uniform 0.040)
+    scramble drops (pts):
+      aspect_root   +3.87
+      degree        +0.20
+      aspect_reps   -0.20
+      coda          +0.09
+      orient_order  +0.00
+
+  ── lambda = 0.5 ─────────────────────────────────────────
+    74s   M 99.6%   R 0.191   auditor 46.5%
+    policy concentration (uniform -> collapsed):
+      aspect_root  0.627  (uniform 0.143)
+      aspect_reps  0.771  (uniform 0.250)
+      degree       0.665  (uniform 0.143)
+      coda         0.715  (uniform 0.200)
+      orient       0.475  (uniform 0.040)
+    scramble drops (pts):
+      aspect_root   +3.69
+      aspect_reps   -0.10
+      coda          -0.08
+      orient_order  +0.00
+      degree        +0.00
+
+  ── lambda = 1.0 ─────────────────────────────────────────
+    72s   M 99.2%   R 0.213   auditor 48.0%
+    policy concentration (uniform -> collapsed):
+      aspect_root  0.692  (uniform 0.143)
+      aspect_reps  0.786  (uniform 0.250)
+      degree       0.694  (uniform 0.143)
+      coda         0.751  (uniform 0.200)
+      orient       0.594  (uniform 0.040)
+    scramble drops (pts):
+      aspect_root   +3.68
+      coda          -0.09
+      orient_order  +0.00
+      degree        +0.00
+      aspect_reps   +0.00
+
+  ── lambda = 2.0 ─────────────────────────────────────────
+    69s   M 99.6%   R 0.237   auditor 49.5%
+    policy concentration (uniform -> collapsed):
+      aspect_root  0.755  (uniform 0.143)
+      aspect_reps  0.845  (uniform 0.250)
+      degree       0.786  (uniform 0.143)
+      coda         0.826  (uniform 0.200)
+      orient       0.658  (uniform 0.040)
+    scramble drops (pts):
+      aspect_root   +3.01
+      orient_order  +0.00
+      coda          +0.00
+      degree        +0.00
+      aspect_reps   +0.00
+
+  wrote D:\Tlon\runs\phase3_sweep.json

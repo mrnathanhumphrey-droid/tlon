@@ -1,0 +1,13 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=NONE (baseline) · battery d9ecdf9fbf2caa8a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   0.0%  (0/64)
+  render  0.0%  (0/64)
+  choose  39.1%  (25/64), 0 unanswered
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.000, speak 0.000 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 39.1% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl

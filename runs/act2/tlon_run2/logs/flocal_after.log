@@ -1,0 +1,36 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=runs/act2/adapter · battery d9ecdf9fbf2caa8a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   9.4%  (6/64)
+  render  81.2%  (52/64)
+  choose  51.6%  (33/64), 0 unanswered
+
+  speak confusions (131): {'O→R': 30, 'M→R': 10, 'Q→R': 9, '∅→R': 8, 'F→L': 7, 'D→R': 7, 'F→R': 7, 'T→R': 6, 'R→L': 5, 'M→O': 5, 'O→L': 4, 'L→O': 4, 'L→R': 4, 'A→L': 4, 'D→O': 4, 'R→O': 3, 'A→O': 2, 'M→L': 2, 'D→L': 2, 'O→Q': 2, 'T→Q': 1, 'A→R': 1, 'F→O': 1, 'L→Q': 1, '∅→A': 1, '∅→L': 1}
+     · 'mring' is class R, not L — it cannot fill the relator slot.
+     · 'soras' is not a Tlön form at all.
+     · 'sil' is class O, not L — it cannot fill the relator slot.
+     · 'nol' is class Q, not R — it cannot fill the root slot.
+     · 'xun' is class O, not R — it cannot fill the root slot.
+     · 'u' is class L, not O — it cannot fill the orient slot.
+     · 'ko' is class F, not L — it cannot fill the relator slot.
+     · 'tesas' is not a Tlön form at all.
+     · 'nol' is class Q, not R — it cannot fill the root slot.
+     · 'hunhunhun' is not a Tlön form at all.
+
+  render confusions (7): {'M→R': 3, 'T→A': 2, 'R→Q': 1, 'D→Q': 1}
+     · 'hres' is class T, not A — it cannot fill the aspect_root slot.
+     · 'ram' is class R, not Q — it cannot fill the quant slot.
+     · 'xar' is class D, not Q — it cannot fill the quant slot.
+     · 'nem' is class M, not R — it cannot fill the root slot.
+     · 'nem' is class M, not R — it cannot fill the root slot.
+     · 'hrin' is class M, not R — it cannot fill the root slot.
+     · 'hres' is class T, not A — it cannot fill the aspect_root slot.
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.812, speak 0.094 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 51.6% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl

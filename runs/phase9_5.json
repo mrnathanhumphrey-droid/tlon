@@ -1,0 +1,20 @@
+{
+  "phase": "9.5",
+  "outcome": "3_INCONCLUSIVE_FROM_BANKED_DATA",
+  "precondition_failed": true,
+  "checkpoints_on_disk": 0,
+  "banked_selection_keys": [],
+  "effective_sample_size_per_referent": 0,
+  "structural_blocker": "phase-8 policy is a per-referent lookup table trained on the archive; 0 id overlap with v2",
+  "archive_direction_only": {
+    "uniform_frac_ambiguous": 0.25066666666666665,
+    "learned_frac_ambiguous_range": [
+      0.13266666666666665,
+      0.19066666666666668
+    ],
+    "seeds": 1,
+    "set": "archive",
+    "caveat": "wrong set, one seed, per-sample not per-utterance; direction only, not a policy-weighted f2"
+  },
+  "gate": 0.25
+}

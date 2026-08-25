@@ -1,0 +1,24 @@
+# ── CORE: the language, the gate, and the offline chatbot ────────────────
+# ⭐ This is the whole dependency list for reading, writing and checking Tlön.
+# The parser, the renderer, the schema gate and `python tools/chat.py --offline`
+# need nothing else — no GPU, no network, no API key.
+PyYAML>=6.0
+pytest>=8.0            # 928 tests, all offline
+
+# ── OPTIONAL: the live chatbot ───────────────────────────────────────────
+# Only for `python tools/chat.py` WITHOUT --offline, which sends the English to a
+# hosted model to propose a Scene. It costs money and needs ANTHROPIC_API_KEY.
+# The Tlön grammar gate still decides what is legal — the model only proposes.
+# anthropic>=0.40
+
+# ── OPTIONAL: the fine-tune and its evaluation gates ─────────────────────
+# Only for tools/act2_finetune.py, act2_flocal.py, act2_diagnose_c.py.
+# ⛔ Pinned to the versions the published results were produced with. The default
+# torch wheel targets a newer CUDA than many drivers support; install torch from
+# the index matching your driver (cu128 shown) before the rest.
+#   pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+# transformers==5.8.1
+# peft==0.19.1
+# datasets==4.8.5
+# accelerate==1.13.0
+# numpy==2.2.6

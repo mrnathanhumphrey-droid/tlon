@@ -1,0 +1,17 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=runs/act2/adapter · battery d9ecdf9fbf2caa8a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   100.0%  (64/64)
+Traceback (most recent call last):
+  File "/home/ubuntu/tlon/tools/act2_flocal.py", line 179, in <module>
+    raise SystemExit(main())
+  File "/home/ubuntu/tlon/tools/act2_flocal.py", line 121, in main
+    render = _rate(speaker, [p.stimulus for p in battery.production], "render")
+  File "/home/ubuntu/tlon/tools/act2_flocal.py", line 82, in _rate
+    PS.validate(proposal)
+  File "/home/ubuntu/tlon/tlon/product/schema.py", line 244, in validate
+    scene = Scene(node=_node(proposal.get("node")), force=force)
+  File "/home/ubuntu/tlon/tlon/product/schema.py", line 194, in _node
+    rel = check("relator", "L", (e or {}).get("relator"))
+AttributeError: 'list' object has no attribute 'get'

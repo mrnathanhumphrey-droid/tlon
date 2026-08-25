@@ -1,0 +1,24 @@
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+==============================================================================
+PHASE 5 -- pi + listener population. PREREG c09d0fb3
+==============================================================================
+  pool K=6, reset every 500 steps, advantage normalised, lambda in [0.0, 2.0] (0 is the primary read)
+  [raw] honest listeners trained on 12000 rows, naive held-out 93.2%
+  [pi] honest listeners trained on 12000 rows, naive held-out 92.6%
+  [raw] honest baseline aspect_root +7.69 pts (ambiguous stratum), M 74.4%
+  [pi] honest baseline aspect_root +6.63 pts (ambiguous stratum), M 79.6%
+
+  -- phase-4 replication  lambda=0.0 ---------------------
+    48s   M 99.7%  (own floor 92.8%)   R 0.240   decidedness 0.857   ambiguous 12.2%
+    NAIVE-LISTENER GAP  +6.40 pts   (co-trained 99.7 vs naive 93.3)
+Traceback (most recent call last):
+  File "D:\Tlon\tools\run_phase5.py", line 330, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "D:\Tlon\tools\run_phase5.py", line 283, in main
+    for ch in watch:
+              ^^^^^
+NameError: name 'watch' is not defined

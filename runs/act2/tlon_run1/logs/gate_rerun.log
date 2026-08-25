@@ -1,0 +1,22 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.94it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.55it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.14it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 151.69it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.75it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.80it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.26it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.29it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.24it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.83it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.20it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 189.63it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 186.11it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 186.90it/s]Loading weights:  89%|████████▉ | 303/339 [00:01<00:00, 185.56it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 198.32it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.04it/s]
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=runs/act2/adapter · battery d9ecdf9fbf2caa8a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   100.0%  (64/64)
+  render  31.2%  (20/64)
+  choose  64.1%  (41/64), 0 unanswered
+
+  render confusions (6): {'R→M': 5, 'L→M': 1}
+     · 'xom' is class L, not M — it cannot fill the modal slot.
+     · 'six' is class R, not M — it cannot fill the modal slot.
+     · 'san' is class R, not M — it cannot fill the modal slot.
+     · 'six' is class R, not M — it cannot fill the modal slot.
+     · 'six' is class R, not M — it cannot fill the modal slot.
+     · 'six' is class R, not M — it cannot fill the modal slot.
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.312, speak 1.000 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 64.1% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl

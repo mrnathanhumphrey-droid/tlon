@@ -1,0 +1,671 @@
+<title>Tlön Referents v2</title>
+<style>
+:root{
+  --ground:#f3f0ea; --raised:#fffdf9; --line:#d8d2c6;
+  --ink:#221e28; --muted:#6a6272;
+  --sage:#5f6b57; --sage-dim:#8a9481;
+  --ochre:#8a6a24; --rose:#9c4f4a;
+  --chip:#e8e3d8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#1e1a22; --raised:#262130; --line:#3a3345;
+    --ink:#ded9d0; --muted:#948da2;
+    --sage:#c2c7b7; --sage-dim:#8b937f;
+    --ochre:#c8a45c; --rose:#c58a86;
+    --chip:#2f2939;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#1e1a22; --raised:#262130; --line:#3a3345;
+  --ink:#ded9d0; --muted:#948da2;
+  --sage:#c2c7b7; --sage-dim:#8b937f;
+  --ochre:#c8a45c; --rose:#c58a86;
+  --chip:#2f2939;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px; line-height:1.6;
+}
+.wrap{max-width:74ch; margin:0 auto; padding:3rem 1.25rem 6rem}
+h1,h2,h3{font-family:"Iowan Old Style",Palatino,"Palatino Linotype",Georgia,serif;
+  text-wrap:balance; margin:0; font-weight:600}
+h1{font-size:2.1rem; letter-spacing:-.01em}
+h2{font-size:1.25rem; margin:3.5rem 0 1rem; padding-bottom:.5rem;
+  border-bottom:1px solid var(--line)}
+.eyebrow{font-size:.7rem; text-transform:uppercase; letter-spacing:.16em;
+  color:var(--muted); margin-bottom:.6rem}
+.lede{color:var(--muted); margin:.75rem 0 0}
+.status{display:inline-block; margin-top:1.25rem; padding:.3rem .7rem;
+  border:1px solid var(--ochre); color:var(--ochre); border-radius:2px;
+  font-size:.72rem; letter-spacing:.12em; text-transform:uppercase}
+
+.calls{display:flex; flex-direction:column; gap:1rem; margin-top:1.25rem}
+.call{background:var(--raised); border:1px solid var(--line);
+  border-left:3px solid var(--ochre); padding:1rem 1.15rem; border-radius:2px}
+.call h3{font-size:1rem; margin-bottom:.35rem}
+.call p{margin:0; color:var(--muted); font-size:.92rem}
+
+.grid{display:flex; flex-direction:column; gap:1.1rem; margin-top:1.5rem}
+.card{background:var(--raised); border:1px solid var(--line);
+  border-radius:2px; padding:1.15rem 1.25rem}
+.card.flagged{border-left:3px solid var(--rose)}
+.card.weak{border-left:3px solid var(--ochre)}
+.chead{display:flex; align-items:baseline; gap:.7rem; flex-wrap:wrap}
+.pid{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  font-size:.8rem; color:var(--sage-dim); background:var(--chip);
+  padding:.15rem .45rem; border-radius:2px; font-variant-numeric:tabular-nums}
+.pname{font-family:"Iowan Old Style",Palatino,Georgia,serif; font-size:1.15rem}
+.spec{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  font-size:1.05rem; color:var(--sage); margin:.9rem 0 .5rem;
+  overflow-x:auto; white-space:nowrap; padding-bottom:.2rem}
+.gloss{font-family:"Iowan Old Style",Palatino,Georgia,serif;
+  font-style:italic; font-size:1.02rem; color:var(--ink); margin:0 0 .9rem}
+.meta{display:flex; gap:1.1rem; flex-wrap:wrap; font-size:.76rem;
+  color:var(--muted); border-top:1px solid var(--line); padding-top:.7rem;
+  font-variant-numeric:tabular-nums}
+.meta b{color:var(--ink); font-weight:600}
+.note{font-size:.86rem; color:var(--muted); margin:.7rem 0 0;
+  padding-left:.8rem; border-left:2px solid var(--line)}
+.tags{display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.7rem}
+.tag{font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+  padding:.2rem .5rem; border-radius:2px; border:1px solid currentColor}
+.t-unval{color:var(--rose)} .t-weak{color:var(--ochre)}
+.t-over{color:var(--sage-dim)}
+details{margin-top:1rem; border:1px solid var(--line); border-radius:2px;
+  background:var(--raised); padding:.8rem 1rem}
+summary{cursor:pointer; font-size:.9rem; color:var(--sage)}
+summary:focus-visible{outline:2px solid var(--sage); outline-offset:2px}
+.mini{font-family:ui-monospace,Consolas,monospace; font-size:.82rem;
+  color:var(--sage-dim); margin:.5rem 0 0; overflow-x:auto}
+footer{margin-top:4rem; padding-top:1.25rem; border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem}
+code{font-family:ui-monospace,Consolas,monospace; font-size:.9em;
+  background:var(--chip); padding:.1rem .3rem; border-radius:2px}
+</style>
+<div class="wrap">
+<p class="eyebrow">Tlön · phase 9.1 · The Distance of the Moon</p>
+<h1>Referent set v2, awaiting your pass</h1>
+<p class="lede">Fifty referents from one Calvino story. Each shows the
+<em>minimal</em> legal utterance satisfying its signature — the loosest thing the
+gate accepts. <b>The italic gloss is the thing to judge:</b> if the minimum
+already reads as the referent, the signature holds; if it reads as anything at
+all, it is too loose.</p>
+<span class="status">review_status: unreviewed — execution
+blocked · 46 live + 4 held back · 211/222 selection subsets buildable</span>
+
+<h2>The matrix rule, applied</h2>
+<p class="lede">You approved the fix. <b>The matrix predication is the world's
+persisting event; the distinguishing happening is a dependent.</b> This story
+has exactly two persisting events — the mooning and the sea — and Calvino
+narrates every human action as subordinate to the cosmological one. Applied to
+eleven: M03 M04 M06 M07 M08 M09 M12 M23 M31 M32 M43.</p>
+<div class="calls">
+<div class="call"><h3>Two came out better as images, not just as structure</h3>
+<p>M06's pores used to nest inside the mooning; they now nest inside the
+<em>roughened underside</em>, which is where they are. M07's curd now sits in
+the pore, in the moon — three levels, and each one true. The linguistic reason
+came first: the matrix verb is <em>what is happening</em>, everything else is
+<em>how</em>. The collision gain follows from it.</p></div>
+<div class="call"><h3>Where I refused it, and why</h3>
+<p><b>M10</b> — the nesting <em>is</em> the image; the referent is that the moon
+sits at depth 2, inside the water, and matrix-<code>mlö</code> puts it at depth 0.
+<b>M45</b> — the causation would <em>invert</em>: <code>kra</code> is CAUS one
+way only, so “a weighing because of a mooning” is true and matrix-<code>mlö</code>
+forces “a mooning because of a weighing,” which is false. <b>M17, M29, M40</b> —
+no cosmological body is in the impression; the unburdening, the bending and the
+recalling are the events. <b>M41</b> — the deliberate shallow control.</p></div>
+<div class="call"><h3>Eleven, not the nine I predicted</h3>
+<p>Moving <code>säx</code> off M12's head and <code>kron</code> off M23's made
+<b>M26 and M46 — previously shared — newly unique</b>. The count is a property of
+the whole set, not of the referents changed. I did not chase them: neither has a
+cosmological body in its impression, and applying a rule where it does not hold
+in order to move a number is the thing this ordering exists to prevent.
+<b>11/50 = 22 %, down from 26/60 = 43 %.</b></p></div>
+<div class="call"><h3>Still open: breadth, and it is 9.2's to answer</h3>
+<p>Three of the eleven needed a fourth pattern to keep their content once the
+head moved, so 4-pattern referents went 4 → 6 and mean breadth 3.06 → 3.10. That
+fell out of faithfulness, not targeting. It is still small, so <b>Phase 7's
+complaint stands</b>: nesting does not add a dependent, it moves one deeper, and
+the omission ceiling may not move much.</p></div>
+</div>
+
+<h2>What I ruled on myself, and why</h2>
+<div class="calls">
+<div class="call"><h3>No <code>forbid</code>, three negations written as “despite”</h3>
+<p>The deaf cousin (M18), the tide that does not return (M32), the pole that
+bends anyway (M29). <code>forbid</code> was the obvious encoding and it does
+<em>not</em> denote — using it would have narrowed Phase 6's isolation claim for
+the whole set. Written as CONC <code>xom</code> instead, which denotes and is
+truer: he does not lack the senses, he does not need them.</p></div>
+<div class="call"><h3>Two near-misses where the meaning would have evaporated at π</h3>
+<p>M32 wanted <code>pän</code> (never) and M45 wanted the modal <code>ten</code>
+(felt). <b>π strips quant and modal.</b> Both referents would have projected down
+to something indistinguishable from a plain ebbing and a plain weighing — a
+silent semantic leak, caught while writing rather than in a verdict. Carried by
+<code>xom</code> and <code>lis</code> instead.</p></div>
+<div class="call"><h3>M38 and M50 are held back for a reason beyond abstraction</h3>
+<p>They state Calvino's engine flat — the relation surviving its objects — which
+is the conservation claim <b>Phase 8 retracted</b>. A referent that says the
+thesis out loud, sitting in the live set while we measure the thesis, is a
+compositional pressure toward believing it. Declared so the world is complete,
+withheld so they cannot whisper into a measurement.</p></div>
+<div class="call"><h3>The ladder is the hardest thing here</h3>
+<p>M05, M22. Tlön has no way to say “carrying” that does not imply a carried
+thing; M22 uses the instrumental <code>fro</code> and the strain is real. If the
+gloss reads as mush, that is the one I would cut first.</p></div>
+</div>
+
+<h2>I. The standing world</h2><p class="lede">The moon so low the sea humps up under it. Most concrete, most interlocking, and the vocabulary every later section reuses. Nine of the eleven matrix-rule changes are here.</p><div class="grid"><article class="card">
+<div class="chead"><span class="pid">M01</span>
+<span class="pname">the moon standing low, almost touching</span></div>
+<div class="spec">nar mil krun sen fox mlö ka</div>
+<p class="gloss">“downward, while ⟨it approaches⟩, at ⟨it pools, lies still and level⟩, it moons, lunates.”</p>
+<p class="note">The opening condition of the story and the anchor of the set. Not &quot;the moon is close&quot; — Tlön has no moon to be anywhere. A mooning, downward, approaching, at a pooling. `krun` (approaches) carries &quot;almost&quot;: the approach is the whole of it, arrival never predicated.</p>
+<div class="tags"><span class="tag t-over">shares roots with 28 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, krun <span style='opacity:.65'>it approaches</span>, fox <span style='opacity:.65'>it pools, lies still and level</span>, föm <span style='opacity:.65'>it laps</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M02</span>
+<span class="pname">the sea drawn up into a hump beneath it</span></div>
+<div class="spec">hlör nix hlim hom fox sul mlö pel ka</div>
+<p class="gloss">“upward, out of ⟨amid ⟨it rounds, curves⟩, it pools, lies still and level⟩, toward ⟨it moons, lunates⟩, it rises.”</p>
+<p class="note">The tide standing in a dome. A rising, part of a pooling, toward a mooning, within which a rounding — the curve is nested inside the rise because the hump IS the rise seen as shape. Four patterns, the clause cap; one of the few that spends all of it.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-weak">4 patterns · clause cap</span><span class="tag t-over">shares roots with 29 others</span><span class="tag t-over">7/8 subsets buildable</span></div>
+<div class="meta"><span><b>9</b> morphemes</span>
+<span><b>4</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">pel <span style='opacity:.65'>it rises</span>, fox <span style='opacity:.65'>it pools, lies still and level</span>, fum <span style='opacity:.65'>it floods</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, hom <span style='opacity:.65'>it rounds, curves</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M03</span>
+<span class="pname">the water swollen and holding its shape</span></div>
+<div class="spec">mil tang nix näx fox ka</div>
+<p class="gloss">“while ⟨it rests, holds⟩, out of ⟨it thickens⟩, it pools, lies still and level.”</p>
+<p class="note">MATRIX RULE APPLIED. What the hump does once it has risen: a pooling, part of which a thickening, while a resting. `näx` (thickens) rather than `hom` keeps it from collapsing into M02 — same world, different happening. Deliberately confusable with M02 and M04 under selection; that is the point of the set.</p>
+<div class="tags"><span class="tag t-over">shares roots with 22 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">fox <span style='opacity:.65'>it pools, lies still and level</span>, fum <span style='opacity:.65'>it floods</span>, näx <span style='opacity:.65'>it thickens</span>, hom <span style='opacity:.65'>it rounds, curves</span>, tang <span style='opacity:.65'>it rests, holds</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M04</span>
+<span class="pname">the boat rocking on the risen water</span></div>
+<div class="spec">kra pel nix kor fox ka</div>
+<p class="gloss">“because of ⟨it rises⟩, out of ⟨it trembles⟩, it pools, lies still and level.”</p>
+<p class="note">MATRIX RULE APPLIED, and it improved the image. No boat: a pooling, part of which a trembling, because of a rising. `kor` (trembles) and `frim` (undulates) are disjunctive because the impression does not distinguish the boat&#x27;s motion from the water&#x27;s — in the story it cannot, and making the pooling the matrix says exactly that.</p>
+<div class="tags"><span class="tag t-over">shares roots with 18 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">fox <span style='opacity:.65'>it pools, lies still and level</span>, fum <span style='opacity:.65'>it floods</span>, kor <span style='opacity:.65'>it trembles</span>, frim <span style='opacity:.65'>it waves, undulates</span>, pel <span style='opacity:.65'>it rises</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M05</span>
+<span class="pname">the ladder standing up out of the boat</span></div>
+<div class="spec">hlör mil prax sen tang pel ka</div>
+<p class="gloss">“upward, while ⟨it points⟩, at ⟨it rests, holds⟩, it rises.”</p>
+<p class="note">The hardest concrete object in the story to say without nouns, and the test of whether this world is sayable at all. A lengthening upward, resting at, pointing. Object-permanence is never asserted: the ladder is only ever the lengthening, and when nobody is climbing it there is nothing to predicate.</p>
+<div class="tags"><span class="tag t-over">shares roots with 21 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">pel <span style='opacity:.65'>it rises</span>, plam <span style='opacity:.65'>it lengthens</span>, tang <span style='opacity:.65'>it rests, holds</span>, prax <span style='opacity:.65'>it points</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M06</span>
+<span class="pname">the moon&#x27;s underside, scaled and pored</span></div>
+<div class="spec">nix flar sen klung mär mlö ka</div>
+<p class="gloss">“out of ⟨under, at ⟨it hollows, voids⟩, it roughens⟩, it moons, lunates.”</p>
+<p class="note">MATRIX RULE APPLIED, and the nesting got BETTER for it: a mooning, part of which ⟨a roughening, under, at which a hollowing⟩. Before, the pores hung inside the mooning; now they hang inside the roughened underside, which is where they actually are. Shares `mlö`+`klung` with M07 and M19, and now shares its HEAD with them too.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-over">shares roots with 22 others</span><span class="tag t-over">3/4 subsets buildable</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, mär <span style='opacity:.65'>it roughens</span>, klung <span style='opacity:.65'>it hollows, voids</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M07</span>
+<span class="pname">moon-milk, a curd in the pores</span></div>
+<div class="spec">nix sen näx klung mlö ka</div>
+<p class="gloss">“out of ⟨at ⟨it thickens⟩, it hollows, voids⟩, it moons, lunates.”</p>
+<p class="note">Calvino&#x27;s central substance. MATRIX RULE APPLIED, and this one also came out truer: a mooning, part of which ⟨a hollowing, at which a thickening⟩ — the curd is inside the pore and the pore is in the moon, which is now what the nesting says. `klin` (ferments) is disjunctive with `näx` because the story&#x27;s milk is both at once.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-over">shares roots with 24 others</span><span class="tag t-over">3/4 subsets buildable</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, klung <span style='opacity:.65'>it hollows, voids</span>, näx <span style='opacity:.65'>it thickens</span>, klin <span style='opacity:.65'>it ferments</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M08</span>
+<span class="pname">the smell of it — fermented, sweetish, vegetal</span></div>
+<div class="spec">hlin xel mil nel nix klin mlö ka</div>
+<p class="gloss">“as ⟨it greens, vegetates⟩, while ⟨it sweetens⟩, out of ⟨it ferments⟩, it moons, lunates.”</p>
+<p class="note">MATRIX RULE APPLIED — and it needed the fourth pattern to keep its content: a mooning, part of which a fermenting, while a sweetening, as a greening. `hlin` (CMP) does the work an adjective would: the vegetal quality is a comparison, not a property, because properties need bearers. No smell root exists and none is minted — option C, the mirror/map precedent.</p>
+<div class="tags"><span class="tag t-weak">4 patterns · clause cap</span><span class="tag t-over">shares roots with 21 others</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>4</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, klin <span style='opacity:.65'>it ferments</span>, nel <span style='opacity:.65'>it sweetens</span>, xel <span style='opacity:.65'>it greens, vegetates</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M09</span>
+<span class="pname">the moon&#x27;s light silvering the swell</span></div>
+<div class="spec">nix pux sen frim mlö ka</div>
+<p class="gloss">“out of ⟨it silvers⟩, at ⟨it waves, undulates⟩, it moons, lunates.”</p>
+<p class="note">MATRIX RULE APPLIED. A mooning, part of which a silvering, at an undulating. `pux` (silvers) and `flox` (shimmers) disjunctive — the story does not separate the colour from the movement of it on water.</p>
+<div class="tags"><span class="tag t-over">shares roots with 23 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, pux <span style='opacity:.65'>it silvers</span>, flox <span style='opacity:.65'>it shimmers</span>, frim <span style='opacity:.65'>it waves, undulates</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M10</span>
+<span class="pname">the shadow the moon lays on the water</span></div>
+<div class="spec">sen sen mlö fox flux ka</div>
+<p class="gloss">“at ⟨at ⟨it moons, lunates⟩, it pools, lies still and level⟩, it shades, cools without touching.”</p>
+<p class="note">⭐ THE CLEAREST CASE FOR NESTING. A dimming at ⟨a pooling within which a mooning⟩ — the reflection is a mooning INSIDE the pooling, and the scope contrast is the one thing the grammar&#x27;s recursion buys. Said flat (&quot;a dimming, a pooling, and a mooning&quot;) it becomes three things in a row and the image is gone. ⛔ MATRIX RULE NOT APPLIED, deliberately. Promoting `mlö` to matrix would put the moon at depth 0, and the whole referent is that the moon is at depth 2 — inside the water. The rule loses to the image here.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-over">shares roots with 26 others</span><span class="tag t-over">3/4 subsets buildable</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">flux <span style='opacity:.65'>it shades, cools without touching</span>, flöx <span style='opacity:.65'>it dims</span>, fox <span style='opacity:.65'>it pools, lies still and level</span>, mlö <span style='opacity:.65'>it moons, lunates</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M11</span>
+<span class="pname">the sea lifting in a spout toward the moon</span></div>
+<div class="spec">nix hlim plöng fum sul mlö pel ka</div>
+<p class="gloss">“out of ⟨amid ⟨it narrows⟩, it floods⟩, toward ⟨it moons, lunates⟩, it rises.”</p>
+<p class="note">A rising, part of a flooding, toward a mooning, within which a narrowing. The spout&#x27;s taper nests inside the rise for the same reason M02&#x27;s dome does. Four patterns.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-weak">4 patterns · clause cap</span><span class="tag t-over">shares roots with 27 others</span><span class="tag t-over">7/8 subsets buildable</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>4</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">pel <span style='opacity:.65'>it rises</span>, fum <span style='opacity:.65'>it floods</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, plöng <span style='opacity:.65'>it narrows</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M12</span>
+<span class="pname">the moon&#x27;s edge, sharp against nothing</span></div>
+<div class="spec">mil krax nix kon säx mlö ka</div>
+<p class="gloss">“while ⟨it sharpens, is acute⟩, out of ⟨against, it bounds, ends abruptly⟩, it moons, lunates.”</p>
+<p class="note">MATRIX RULE APPLIED for consistency (its head was already shared, so this one changes no count — it changes whether the rule is a rule). A mooning, part of which a bounding, against, while a sharpening. `säx` (bounds, ends abruptly) is the nearest Tlön comes to an edge — an ending, not a boundary line, because a line would be an object.</p>
+<div class="tags"><span class="tag t-over">shares roots with 23 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, säx <span style='opacity:.65'>it bounds, ends abruptly</span>, krax <span style='opacity:.65'>it sharpens, is acute</span></p></details>
+</article></div><h2>II. The climb</h2><p class="lede">Orientation-heavy. Up and down exchange places; weight leaves the body.</p><div class="grid"><article class="card">
+<div class="chead"><span class="pid">M13</span>
+<span class="pname">pushing off from the top of the ladder</span></div>
+<div class="spec">hlör sen plam tan tang klon ka</div>
+<p class="gloss">“upward, at ⟨it lengthens⟩, before ⟨it rests, holds⟩, it leaps.”</p>
+<p class="note">A leaping, upward and outward, ERE a resting, at a lengthening. `tan` (ERE) puts the rest BEFORE the leap without a tense morpheme — tense is stripped by π, so anything temporal that must survive projection has to be carried by a relator.</p>
+<div class="tags"><span class="tag t-over">shares roots with 18 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">klon <span style='opacity:.65'>it leaps</span>, tang <span style='opacity:.65'>it rests, holds</span>, plam <span style='opacity:.65'>it lengthens</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M14</span>
+<span class="pname">hanging in the moment between the two pulls</span></div>
+<div class="spec">sir hlim sen nux nos hrir nimas ka</div>
+<p class="gloss">“between, amid ⟨at ⟨it buoys, unburdens⟩, it weighs, is heavy⟩, it drifts, for an instant.”</p>
+<p class="note">⭐ The story&#x27;s hinge. A drifting, between, momentary, amid a weighing within which an unburdening — the buoying nests INSIDE the weighing because that is what the hesitation is: both gravities at once, not one after the other. `nim` (momentary) is signature aspect, not decoration.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-weak">signature aspect · nim</span><span class="tag t-over">shares roots with 15 others</span><span class="tag t-over">3/4 subsets buildable</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hrir <span style='opacity:.65'>it drifts</span>, tang <span style='opacity:.65'>it rests, holds</span>, nos <span style='opacity:.65'>it weighs, is heavy</span>, nux <span style='opacity:.65'>it buoys, unburdens</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M15</span>
+<span class="pname">up and down changing places</span></div>
+<div class="spec">tlas nix nur nix pel run ka</div>
+<p class="gloss">“askew, out of ⟨it rises⟩, out of ⟨it falls⟩, it changes.”</p>
+<p class="note">A changing, askew, part of a rising, part of a falling. Both directions predicated of the same change; `tlas` (askew) carries the disorientation that would otherwise need a perspective the grammar refuses.</p>
+<div class="tags"><span class="tag t-over">shares roots with 12 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">run <span style='opacity:.65'>it changes</span>, pel <span style='opacity:.65'>it rises</span>, nur <span style='opacity:.65'>it falls</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M16</span>
+<span class="pname">landing head-downward on the moon</span></div>
+<div class="spec">nar sen mlö tan kron hlux ka</div>
+<p class="gloss">“downward, at ⟨it moons, lunates⟩, before ⟨it turns⟩, it settles.”</p>
+<p class="note">A settling, downward, at a mooning, ERE a turning. The turn comes first in the world and second in the utterance — `tan` again, carrying order through π.</p>
+<div class="tags"><span class="tag t-over">shares roots with 27 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hlux <span style='opacity:.65'>it settles</span>, nur <span style='opacity:.65'>it falls</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, kron <span style='opacity:.65'>it turns</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M17</span>
+<span class="pname">weight going out of the body</span></div>
+<div class="spec">pox mil rim tan nos nux ka</div>
+<p class="gloss">“outward, while ⟨it vanishes⟩, before ⟨it weighs, is heavy⟩, it buoys, unburdens.”</p>
+<p class="note">An unburdening, outward, ERE a weighing, a vanishing alongside. No body: the weight leaving is the entire impression, and `rim` (vanishes) is predicated of the weighing, not of a person.</p>
+<div class="tags"><span class="tag t-over">shares roots with 10 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">nux <span style='opacity:.65'>it buoys, unburdens</span>, nos <span style='opacity:.65'>it weighs, is heavy</span>, rim <span style='opacity:.65'>it vanishes</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M18</span>
+<span class="pname">the deaf cousin leaping without looking</span></div>
+<div class="spec">xom lan xom leng klon ka</div>
+<p class="gloss">“despite ⟨it hears⟩, despite ⟨it sees, is beheld⟩, it leaps.”</p>
+<p class="note">⭐ WHERE `forbid` WOULD HAVE BEEN REACHED FOR, AND WAS NOT. Deafness is an absence, and absence is what `forbid` encodes — but forbid does not denote, so it would have narrowed Phase 6&#x27;s isolation scope for one referent. Written instead as CONC (`xom`): a leaping DESPITE a hearing, DESPITE a seeing. Denotes, and is truer to the story — he does not lack the senses, he does not need them.</p>
+<div class="tags"><span class="tag t-over">shares roots with 6 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">klon <span style='opacity:.65'>it leaps</span>, leng <span style='opacity:.65'>it hears</span>, lan <span style='opacity:.65'>it sees, is beheld</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M19</span>
+<span class="pname">his hands going into the pores</span></div>
+<div class="spec">tim nix sen klung mlö lis ka</div>
+<p class="gloss">“inward, out of ⟨at ⟨it hollows, voids⟩, it moons, lunates⟩, it touches.”</p>
+<p class="note">A touching, inward, part of a mooning, within which a hollowing. Same nested pore as M06 and M07; the three differ only in what is predicated of it — a roughening, a thickening, a touching. Maximum collision, by construction.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-over">shares roots with 21 others</span><span class="tag t-over">3/4 subsets buildable</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">lis <span style='opacity:.65'>it touches</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, klung <span style='opacity:.65'>it hollows, voids</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M20</span>
+<span class="pname">floating, having missed the ladder</span></div>
+<div class="spec">sil mil six pos plam hrir ka</div>
+<p class="gloss">“apart, while ⟨it dreads⟩, after ⟨it lengthens⟩, it drifts.”</p>
+<p class="note">A drifting, apart, POST a lengthening, a dreading alongside. `pos` (POST) is the only thing marking that the ladder was there and is not reachable — again a relator, because tense would not survive π.</p>
+<div class="tags"><span class="tag t-over">shares roots with 12 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hrir <span style='opacity:.65'>it drifts</span>, plam <span style='opacity:.65'>it lengthens</span>, six <span style='opacity:.65'>it dreads</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M21</span>
+<span class="pname">being drawn back down toward the boat</span></div>
+<div class="spec">nar kra nos sul kor nur ka</div>
+<p class="gloss">“downward, because of ⟨it weighs, is heavy⟩, toward ⟨it trembles⟩, it falls.”</p>
+<p class="note">A falling, downward and hither, toward a trembling, because of a weighing. `hlan` (hither) is the only place in the set that fixes a deictic centre, and it is doing the work &quot;back&quot; does in English.</p>
+<div class="tags"><span class="tag t-over">shares roots with 11 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">nur <span style='opacity:.65'>it falls</span>, kor <span style='opacity:.65'>it trembles</span>, frim <span style='opacity:.65'>it waves, undulates</span>, nos <span style='opacity:.65'>it weighs, is heavy</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M22</span>
+<span class="pname">climbing down with arms full of milk</span></div>
+<div class="spec">nar fro näx sen plam nur ka</div>
+<p class="gloss">“downward, by means of ⟨it thickens⟩, at ⟨it lengthens⟩, it falls.”</p>
+<p class="note">A moving, downward, BY a thickening, at a lengthening. `fro` (INSTR) is strained here and the strain is honest — Tlön has no way to say &quot;carrying&quot; that does not imply a carried thing. The instrumental is the least-bad reading and is flagged for Nate.</p>
+<div class="tags"><span class="tag t-over">shares roots with 15 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">nur <span style='opacity:.65'>it falls</span>, xir <span style='opacity:.65'>it moves, displaces</span>, näx <span style='opacity:.65'>it thickens</span>, plam <span style='opacity:.65'>it lengthens</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M23</span>
+<span class="pname">the moon turning slowly underfoot</span></div>
+<div class="spec">nix flar sen lis kron axas mlö ka</div>
+<p class="gloss">“out of ⟨under, at ⟨it touches⟩, it turns, unceasingly⟩, it moons, lunates.”</p>
+<p class="note">MATRIX RULE APPLIED for consistency. A mooning, part of which ⟨a turning, under, unceasing, at which a touching⟩ — and the touching now nests inside the turning, which is right: the contact is with the turning surface. `ax` (unceasing) stays signature aspect on the turning: it has no start or end in the impression, which is why it feels like ground rather than motion.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-weak">signature aspect · ax</span><span class="tag t-over">shares roots with 22 others</span><span class="tag t-over">3/4 subsets buildable</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, kron <span style='opacity:.65'>it turns</span>, lis <span style='opacity:.65'>it touches</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M24</span>
+<span class="pname">clinging to the scales, wet and heavy</span></div>
+<div class="spec">mil nos sen mär hin ka</div>
+<p class="gloss">“while ⟨it weighs, is heavy⟩, at ⟨it roughens⟩, it clings wet and heavy.”</p>
+<p class="note">A clinging, at a roughening, a weighing alongside. `hin` glosses &quot;it clings wet and heavy&quot; — one root for the whole impression, which is the kind of thing this lexicon is unusually good at and English is not.</p>
+<div class="tags"><span class="tag t-over">shares roots with 7 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hin <span style='opacity:.65'>it clings wet and heavy</span>, mär <span style='opacity:.65'>it roughens</span>, nos <span style='opacity:.65'>it weighs, is heavy</span></p></details>
+</article></div><h2>III. The recession</h2><p class="lede">The distance stops holding. This is the section the theme makes dangerous — it is a story about an invariant failing, and it is not a measurement.</p><div class="grid"><article class="card">
+<div class="chead"><span class="pid">M25</span>
+<span class="pname">the moon standing higher this month</span></div>
+<div class="spec">hlör hlim rän mil pel mlö soras ka</div>
+<p class="gloss">“upward, amid ⟨it repeats⟩, while ⟨it rises⟩, it moons, lunates, habitually.”</p>
+<p class="note">A mooning, upward, habitual, a rising alongside, amid a repeating. `sor` (habitual) is what makes it &quot;this month&quot; rather than &quot;tonight&quot; — the recurrence is in the aspect, and aspect roots survive π.</p>
+<div class="tags"><span class="tag t-weak">signature aspect · sor</span><span class="tag t-over">shares roots with 28 others</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, pel <span style='opacity:.65'>it rises</span>, rän <span style='opacity:.65'>it repeats</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M26</span>
+<span class="pname">the ladder no longer reaching</span></div>
+<div class="spec">nix plam tan krun säx melas ka</div>
+<p class="gloss">“out of ⟨it lengthens⟩, before ⟨it approaches⟩, it bounds, ends abruptly, guttering out.”</p>
+<p class="note">A bounding, terminative, part of a lengthening, ERE an approaching. `mel` (terminative) carries &quot;no longer&quot;; the approach is placed BEFORE by `tan`, so what is said is that the reaching has ended, not that it is absent.</p>
+<div class="tags"><span class="tag t-weak">signature aspect · mel</span><span class="tag t-over">shares roots with 14 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">säx <span style='opacity:.65'>it bounds, ends abruptly</span>, plam <span style='opacity:.65'>it lengthens</span>, krun <span style='opacity:.65'>it approaches</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M27</span>
+<span class="pname">the gap widening between the two</span></div>
+<div class="spec">sir nix fox nix mlö pong ka</div>
+<p class="gloss">“between, out of ⟨it moons, lunates⟩, out of ⟨it pools, lies still and level⟩, it widens.”</p>
+<p class="note">A widening, between, part of a mooning, part of a pooling. The gap is not a thing between two things — it is a widening OF both, which is why each gets `nix` (PART) rather than an orientation.</p>
+<div class="tags"><span class="tag t-over">shares roots with 35 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">pong <span style='opacity:.65'>it widens</span>, plam <span style='opacity:.65'>it lengthens</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, fox <span style='opacity:.65'>it pools, lies still and level</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M28</span>
+<span class="pname">the last leap, falling short</span></div>
+<div class="spec">mil säx pos nur klon melas ka</div>
+<p class="gloss">“while ⟨it bounds, ends abruptly⟩, after ⟨it falls⟩, it leaps, guttering out.”</p>
+<p class="note">A leaping, terminative, POST which a falling, a bounding alongside. The three most collision-prone roots in section II and III at once — this should be confusable with M13 and M21 under selection, and if it is not, the set is more separable than intended.</p>
+<div class="tags"><span class="tag t-weak">signature aspect · mel</span><span class="tag t-over">shares roots with 9 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">klon <span style='opacity:.65'>it leaps</span>, nur <span style='opacity:.65'>it falls</span>, säx <span style='opacity:.65'>it bounds, ends abruptly</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M29</span>
+<span class="pname">the pole bending and not carrying</span></div>
+<div class="spec">kra nos xom tang plon ka</div>
+<p class="gloss">“because of ⟨it weighs, is heavy⟩, despite ⟨it rests, holds⟩, it bends.”</p>
+<p class="note">A bending, DESPITE a resting, because of a weighing. Second use of CONC for a negation (see M18): the pole does hold, and it is not enough.</p>
+<div class="tags"><span class="tag t-over">shares roots with 12 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">plon <span style='opacity:.65'>it bends</span>, tang <span style='opacity:.65'>it rests, holds</span>, nos <span style='opacity:.65'>it weighs, is heavy</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M30</span>
+<span class="pname">the sea settling flat again</span></div>
+<div class="spec">mil rän nix fox plen ka</div>
+<p class="gloss">“while ⟨it repeats⟩, out of ⟨it pools, lies still and level⟩, it flattens.”</p>
+<p class="note">A flattening, part of a pooling, a repeating alongside. Reads as the undoing of M02 and shares `fox` with it — the set&#x27;s before/after pairs are built from the same roots on purpose.</p>
+<div class="tags"><span class="tag t-over">shares roots with 14 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">plen <span style='opacity:.65'>it flattens</span>, hlux <span style='opacity:.65'>it settles</span>, fox <span style='opacity:.65'>it pools, lies still and level</span>, rän <span style='opacity:.65'>it repeats</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M31</span>
+<span class="pname">the moon shrinking to a disc</span></div>
+<div class="spec">hlin hom kra krän nix plöng mlö ka</div>
+<p class="gloss">“as ⟨it rounds, curves⟩, because of ⟨it recedes⟩, out of ⟨it narrows⟩, it moons, lunates.”</p>
+<p class="note">MATRIX RULE APPLIED. A mooning, part of which a narrowing, as a rounding, because of a receding. Four patterns. `hlin` (CMP) gives &quot;to a disc&quot; without asserting the moon IS one — the rounding is a comparison, and the comparison is all Tlön allows.</p>
+<div class="tags"><span class="tag t-weak">4 patterns · clause cap</span><span class="tag t-over">shares roots with 23 others</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>4</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, plöng <span style='opacity:.65'>it narrows</span>, hom <span style='opacity:.65'>it rounds, curves</span>, krän <span style='opacity:.65'>it recedes</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M32</span>
+<span class="pname">the tide going out and not returning</span></div>
+<div class="spec">nix fäm xom krun xom rän fox ka</div>
+<p class="gloss">“out of ⟨it drains, ebbs⟩, despite ⟨it approaches⟩, despite ⟨it repeats⟩, it pools, lies still and level.”</p>
+<p class="note">MATRIX RULE APPLIED, fourth pattern needed to keep the content: a pooling, part of which an ebbing, DESPITE an approaching, DESPITE a repeating. Third CONC negation. Note what is NOT used: `pän` (never, QUANT) would have been the obvious way to say it and π STRIPS quant — the meaning would have evaporated at projection and the referent would have become indistinguishable from a plain ebbing. Caught while writing, recorded here because it is the exact shape of a silent semantic leak.</p>
+<div class="tags"><span class="tag t-weak">4 patterns · clause cap</span><span class="tag t-over">shares roots with 16 others</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>4</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">fox <span style='opacity:.65'>it pools, lies still and level</span>, fum <span style='opacity:.65'>it floods</span>, fäm <span style='opacity:.65'>it drains, ebbs</span>, krun <span style='opacity:.65'>it approaches</span>, rän <span style='opacity:.65'>it repeats</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M33</span>
+<span class="pname">the water no longer rising to meet it</span></div>
+<div class="spec">sul mlö tan pel kön melas ka</div>
+<p class="gloss">“toward ⟨it moons, lunates⟩, before ⟨it rises⟩, it halts, guttering out.”</p>
+<p class="note">A halting, terminative, ERE a rising, toward a mooning. The mirror of M11 — same `pel` and `mlö` and `sul`, opposite outcome — and therefore the pair most likely to collide once the rising is withheld.</p>
+<div class="tags"><span class="tag t-weak">signature aspect · mel</span><span class="tag t-over">shares roots with 32 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">kön <span style='opacity:.65'>it halts</span>, tang <span style='opacity:.65'>it rests, holds</span>, pel <span style='opacity:.65'>it rises</span>, mlö <span style='opacity:.65'>it moons, lunates</span></p></details>
+</article></div><h2>IV. What remains</h2><p class="lede">Abstractions. Concrete-weighted first was the ruling, so the four most abstract are declared and held back until the listener is calibrated.</p><div class="grid"><article class="card">
+<div class="chead"><span class="pid">M34</span>
+<span class="pname">someone stranded, becoming part of it</span></div>
+<div class="spec">mil tang nix hlim rim mlö run ka</div>
+<p class="gloss">“while ⟨it rests, holds⟩, out of ⟨amid ⟨it vanishes⟩, it moons, lunates⟩, it changes.”</p>
+<p class="note">Mrs Vhd Vhd. A changing, part of a mooning, a resting alongside, within which a vanishing. The vanishing nests inside the change because she does not disappear and then become moon — the becoming IS the disappearing.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-weak">4 patterns · clause cap</span><span class="tag t-over">shares roots with 32 others</span><span class="tag t-over">7/8 subsets buildable</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>4</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">run <span style='opacity:.65'>it changes</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, tang <span style='opacity:.65'>it rests, holds</span>, rim <span style='opacity:.65'>it vanishes</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M35</span>
+<span class="pname">belonging to neither, drifting between</span></div>
+<div class="spec">sir xom fox xom mlö hrir ka</div>
+<p class="gloss">“between, despite ⟨it moons, lunates⟩, despite ⟨it pools, lies still and level⟩, it drifts.”</p>
+<p class="note">A drifting, between, DESPITE a mooning, DESPITE a pooling. Fourth CONC. The deaf cousin after the moon goes — he is not excluded from both, he persists in spite of both.</p>
+<div class="tags"><span class="tag t-over">shares roots with 29 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hrir <span style='opacity:.65'>it drifts</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, fox <span style='opacity:.65'>it pools, lies still and level</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M36</span>
+<span class="pname">looking up, always, at the same place</span></div>
+<div class="spec">hlör mil rän sul mlö lan axas ka</div>
+<p class="gloss">“upward, while ⟨it repeats⟩, toward ⟨it moons, lunates⟩, it sees, is beheld, unceasingly.”</p>
+<p class="note">A seeing, upward, unceasing, toward a mooning, a repeating alongside. Qfwfq&#x27;s last posture. `ax` is signature aspect and is the whole of &quot;always&quot;; the repetition count that would have carried it is stripped by π.</p>
+<div class="tags"><span class="tag t-weak">signature aspect · ax</span><span class="tag t-over">shares roots with 26 others</span></div>
+<div class="meta"><span><b>8</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">lan <span style='opacity:.65'>it sees, is beheld</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, rän <span style='opacity:.65'>it repeats</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">M37</span>
+<span class="pname">a longing with nothing left to long toward</span></div>
+<div class="spec">pos rim xom rem sun ka</div>
+<p class="gloss">“after ⟨it vanishes⟩, despite ⟨it persists⟩, it longs.”</p>
+<p class="note">HELD BACK — abstraction, folded in after the listener is calibrated on I–III. A longing, POST a vanishing, DESPITE a persisting.</p>
+<div class="tags"><span class="tag t-unval">held back · seed_2a: false</span><span class="tag t-over">shares roots with 5 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">sun <span style='opacity:.65'>it longs</span>, rim <span style='opacity:.65'>it vanishes</span>, rem <span style='opacity:.65'>it persists</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">M38</span>
+<span class="pname">the distance persisting after the bodies</span></div>
+<div class="spec">nix plam pos rim rem ka</div>
+<p class="gloss">“out of ⟨it lengthens⟩, after ⟨it vanishes⟩, it persists.”</p>
+<p class="note">⛔⛔ HELD BACK, AND NOT ONLY FOR ABSTRACTION. This is Calvino&#x27;s engine stated flat — the relation surviving its objects — which is the conservation claim Phase 8 RETRACTED. A referent that says the thesis out loud, sitting in the live set while we measure the thesis, is a compositional pressure toward believing it. It is declared so the world is complete and withheld so it cannot whisper into a measurement. ⛔ Nothing about this entry is evidence for conservation.</p>
+<div class="tags"><span class="tag t-unval">held back · seed_2a: false</span><span class="tag t-over">shares roots with 13 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">rem <span style='opacity:.65'>it persists</span>, plam <span style='opacity:.65'>it lengthens</span>, rim <span style='opacity:.65'>it vanishes</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M39</span>
+<span class="pname">a face no longer distinguishable from the surface</span></div>
+<div class="spec">hlin sen rim mlö lan melas ka</div>
+<p class="gloss">“as ⟨at ⟨it vanishes⟩, it moons, lunates⟩, it sees, is beheld, guttering out.”</p>
+<p class="note">A seeing, terminative, as a mooning, within which a vanishing. The nesting is the image: she is not beside the moon, she is inside the seeing of it.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-weak">signature aspect · mel</span><span class="tag t-over">shares roots with 26 others</span><span class="tag t-over">3/4 subsets buildable</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">lan <span style='opacity:.65'>it sees, is beheld</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, rim <span style='opacity:.65'>it vanishes</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M40</span>
+<span class="pname">remembering the climb, unable to make it again</span></div>
+<div class="spec">nix pel xom klon mling ka</div>
+<p class="gloss">“out of ⟨it rises⟩, despite ⟨it leaps⟩, it recalls.”</p>
+<p class="note">A recalling, part of a rising, DESPITE a leaping. `mling` (recalls) is one of the few roots in the lexicon that takes a whole event as its content, which is why the climb can be `nix` (PART) of it.</p>
+<div class="tags"><span class="tag t-over">shares roots with 10 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mling <span style='opacity:.65'>it recalls</span>, pel <span style='opacity:.65'>it rises</span>, klon <span style='opacity:.65'>it leaps</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M41</span>
+<span class="pname">the same night returning and returning</span></div>
+<div class="spec">mil rän flex tesas ka</div>
+<p class="gloss">“while ⟨it repeats⟩, it darkens to night, again and again.”</p>
+<p class="note">A darkening, punctual-iterated, a repeating alongside. Two patterns — deliberately the shallowest referent in the set, as a control on whether depth is what moves consistency-set size.</p>
+<div class="tags"><span class="tag t-weak">signature aspect · tes</span><span class="tag t-over">shares roots with 4 others</span></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">flex <span style='opacity:.65'>it darkens to night</span>, rän <span style='opacity:.65'>it repeats</span></p></details>
+</article></div><h2>V. The water and the waiting</h2><p class="lede">More of section I&#x27;s world, added for collision density: every root here already appears above, which is the point.</p><div class="grid"><article class="card">
+<div class="chead"><span class="pid">M42</span>
+<span class="pname">the milk clinging to the rungs</span></div>
+<div class="spec">nix näx sen plam hin ka</div>
+<p class="gloss">“out of ⟨it thickens⟩, at ⟨it lengthens⟩, it clings wet and heavy.”</p>
+<p class="note">A clinging, part of a thickening, at a lengthening. Shares `hin` with M24 and `plam` with M05/M13/M20/M26 — four-way collision once the dependents are withheld.</p>
+<div class="tags"><span class="tag t-over">shares roots with 12 others</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hin <span style='opacity:.65'>it clings wet and heavy</span>, näx <span style='opacity:.65'>it thickens</span>, plam <span style='opacity:.65'>it lengthens</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M43</span>
+<span class="pname">boats scattered across the water, waiting</span></div>
+<div class="spec">mil tang nix krel krön fox ka</div>
+<p class="gloss">“while ⟨it rests, holds⟩, out of ⟨across, it scatters⟩, it pools, lies still and level.”</p>
+<p class="note">MATRIX RULE APPLIED. A pooling, part of which a scattering, across, while a resting. `krön` (scatters) against `kun` (converges) in M49 is the set&#x27;s one clean antonym pair. Now collides hard with M03 — same head, same `mil`+`tang` dependent, separable only by the other dependent. Intended.</p>
+<div class="tags"><span class="tag t-over">shares roots with 17 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">fox <span style='opacity:.65'>it pools, lies still and level</span>, krön <span style='opacity:.65'>it scatters</span>, tang <span style='opacity:.65'>it rests, holds</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M44</span>
+<span class="pname">the oars shipped, everyone looking up</span></div>
+<div class="spec">mil hlör lan nix fral kön ka</div>
+<p class="gloss">“while ⟨upward, it sees, is beheld⟩, out of ⟨it crowds, teems⟩, it halts.”</p>
+<p class="note">A halting, alongside a seeing upward, part of a teeming. `fral` (crowds, teems) is how Tlön says &quot;everyone&quot; — a teeming, not a set of people.</p>
+<div class="tags"><span class="tag t-over">shares roots with 4 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">kön <span style='opacity:.65'>it halts</span>, lan <span style='opacity:.65'>it sees, is beheld</span>, fral <span style='opacity:.65'>it crowds, teems</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M45</span>
+<span class="pname">the moon&#x27;s pull felt in the arms</span></div>
+<div class="spec">kra sen lis mlö nos ka</div>
+<p class="gloss">“because of ⟨at ⟨it touches⟩, it moons, lunates⟩, it weighs, is heavy.”</p>
+<p class="note">A weighing, because of a mooning, within which a touching. ⛔ The obvious encoding was the MODAL `ten` (felt) — and modals are stripped by π, so the felt-ness would have vanished at projection. Carried by `lis` (touches) instead, which denotes. Same trap as M32. ⛔ MATRIX RULE NOT APPLIED: `kra` is CAUS in one direction only. &quot;A weighing because of a mooning&quot; is the truth; mlö-as-matrix would force &quot;a mooning because of a weighing&quot;, which is false. The rule would have reversed the causation to gain a shared head, so it does not run here.</p>
+<div class="tags"><span class="tag t-weak">nested · at_depth 2</span><span class="tag t-over">shares roots with 26 others</span><span class="tag t-over">3/4 subsets buildable</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">nos <span style='opacity:.65'>it weighs, is heavy</span>, mlö <span style='opacity:.65'>it moons, lunates</span>, lis <span style='opacity:.65'>it touches</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M46</span>
+<span class="pname">a body turning over slowly in the air</span></div>
+<div class="spec">kra nux mil hrir kron axas ka</div>
+<p class="gloss">“because of ⟨it buoys, unburdens⟩, while ⟨it drifts⟩, it turns, unceasingly.”</p>
+<p class="note">A turning, unceasing, a drifting alongside, because of an unburdening. Shares `kron` with M23 and `hrir` with M20/M35 — three-way.</p>
+<div class="tags"><span class="tag t-weak">signature aspect · ax</span><span class="tag t-over">shares roots with 6 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">kron <span style='opacity:.65'>it turns</span>, hrir <span style='opacity:.65'>it drifts</span>, nux <span style='opacity:.65'>it buoys, unburdens</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M47</span>
+<span class="pname">the sea and the moon touching for a moment</span></div>
+<div class="spec">nix fox nix mlö lis nimas ka</div>
+<p class="gloss">“out of ⟨it pools, lies still and level⟩, out of ⟨it moons, lunates⟩, it touches, for an instant.”</p>
+<p class="note">A touching, momentary, part of a pooling, part of a mooning. The story&#x27;s premise in one predication, and the referent most likely to be consistent with everything in section I once its dependents are dropped.</p>
+<div class="tags"><span class="tag t-weak">signature aspect · nim</span><span class="tag t-over">shares roots with 26 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">lis <span style='opacity:.65'>it touches</span>, fox <span style='opacity:.65'>it pools, lies still and level</span>, fum <span style='opacity:.65'>it floods</span>, mlö <span style='opacity:.65'>it moons, lunates</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">M48</span>
+<span class="pname">the crossing made in one breath</span></div>
+<div class="spec">krel hlim hram tan plam xir ka</div>
+<p class="gloss">“across, amid ⟨it breathes⟩, before ⟨it lengthens⟩, it moves, displaces.”</p>
+<p class="note">A moving, across, amid a breathing, ERE a lengthening. `hram` (breathes) amid the crossing is how the duration gets said without a measure.</p>
+<div class="tags"><span class="tag t-over">shares roots with 9 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">xir <span style='opacity:.65'>it moves, displaces</span>, hram <span style='opacity:.65'>it breathes</span>, plam <span style='opacity:.65'>it lengthens</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">M49</span>
+<span class="pname">nothing yet separated into near and far</span></div>
+<div class="spec">hul xom krun xom krän kun ka</div>
+<p class="gloss">“together, despite ⟨it approaches⟩, despite ⟨it recedes⟩, it converges.”</p>
+<p class="note">HELD BACK — the most abstract in the set, and pre-object in the strict Cosmicomics sense. A converging, together, DESPITE an approaching, DESPITE a receding. Clean antonym of M43.</p>
+<div class="tags"><span class="tag t-unval">held back · seed_2a: false</span><span class="tag t-over">shares roots with 4 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">kun <span style='opacity:.65'>it converges</span>, krun <span style='opacity:.65'>it approaches</span>, krän <span style='opacity:.65'>it recedes</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">M50</span>
+<span class="pname">two things holding a distance between them</span></div>
+<div class="spec">sir mil rem nix plam tang ka</div>
+<p class="gloss">“between, while ⟨it persists⟩, out of ⟨it lengthens⟩, it rests, holds.”</p>
+<p class="note">⛔⛔ HELD BACK FOR THE SAME REASON AS M38 — this is conservation stated as an image, and Phase 8 retracted conservation. Declared for completeness of the world; withheld from every live measurement. ⛔ Not evidence for conservation.</p>
+<div class="tags"><span class="tag t-unval">held back · seed_2a: false</span><span class="tag t-over">shares roots with 16 others</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">tang <span style='opacity:.65'>it rests, holds</span>, plam <span style='opacity:.65'>it lengthens</span>, rem <span style='opacity:.65'>it persists</span></p></details>
+</article></div>
+
+<footer>
+<p>Generated from <code>tlon/referents/referents_v2.yaml</code> against lexicon
+<code>e2b8527010231a81fd31b6eeb9de3d8c</code>. The page cannot drift from the file — it is built
+from it. Coverage from <code>runs/coverage_v2.json</code>.</p>
+<p>Not on this page, deliberately: consistency-set size, the omission ceiling,
+the RSA frontier. Those are 9.2 under a locked prereg. Showing a detector
+reading next to an artistic choice is how the detector ends up making it.</p>
+</footer>
+</div>

@@ -1,0 +1,394 @@
+# Tlön referent set CR — conscious-rap worldview. PHASE 11.
+#
+# ⛔ review_status gates execution. Nate sets it. Review tooling may read it.
+#
+# ─── PROVENANCE AND EXPRESSION-STRIP: THE PRECONDITION, AND HOW IT IS MET ──
+#
+# ⭐⭐ NO SOURCE TEXT WAS CONSULTED, RECALLED OR RECONSTRUCTED AT THE
+# COMPILATION STEP. This set was built ONLY from the distilled philosophical
+# positions Nate wrote in the Phase 11 brief, in his own words:
+#
+#   P1  knowledge-of-self / continuous self-creation
+#   P2  the cipher as collective meaning-making-in-motion
+#   P3  identity-as-enacted-not-possessed
+#   P4  the word as world-building act
+#   P5  meaning-collapse-as-operation (identity as operation, not noun)
+#
+# The brief IS the distillation. So the expression-strip is not something
+# performed on ingested text — no expression was ingested. That is a stronger
+# position than stripping: there was nothing to strip. Provenance of whatever
+# Nate read to produce those five lines is his to confirm and keep confirmable;
+# nothing downstream of this file depends on it, because nothing downstream ever
+# saw it.
+#
+# TRACEABILITY IS THE RED-CHECK. Every note opens with the position(s) it
+# derives from. `tools/expression_check.py` audits that every referent traces to
+# a declared position, that no name or note carries quoted material, and that
+# names are descriptions of impressions rather than titles or phrases. A
+# referent that could be reconstructed back to a recognisable line would be
+# expression, not idea — and would be rejected.
+#
+# ⛔⛔ THE MISREPORT THIS SET IS MOST EXPOSED TO, NAMED HERE.
+# P5 — "identity as operation, not noun" — is LITERALLY THIS GRAMMAR'S CENTRAL
+# RULE. The thematic fit is exact, and that is why the worldview was chosen.
+# ⛔ IT IS NOT EVIDENCE THAT THE SET COLLIDES. Thematic 1:1 and structural
+# underdetermination are different quantities; only f₂ measures the second. A
+# set can fit Borges perfectly and still fail the gate, exactly as Cosmicomics
+# did — that world was also a perfect thematic fit and came back at 10.5 %.
+#
+# ─── DESIGN: FLAT AND SHARED, THE INVERSE OF COSMICOMICS ──────────────────
+#
+# v2 failed because depth backfires combinatorially: d dependents give 2^d
+# subsets and only keep=0 is strongly ambiguous, so each dependent added makes
+# the ambiguous case rarer faster than it makes it more ambiguous.
+#
+# ⭐⭐ EVERY SIGNATURE HERE HAS EXACTLY ONE DEPENDENT (d=1), putting HALF of all
+# subsets at keep=0. Collision comes from a cohort sharing one dense image-world:
+# `los` heads 6, `kän` 6, `run` 5, `xir` 5, `rim` 4, `mreng` 3.
+#
+# ⛔ `forbid` 0/36, `matrix` 0/36 — Phase 6's isolation claim carries over.
+# ⛔ No `at_depth` — nesting is the thing being avoided.
+#
+# Roots quoted from lexicon.yaml `e2b8527010231a81fd31b6eeb9de3d8c`.
+
+review_status: UNREVIEWED     # ⛔ Nate sets this. Nothing runs until then.
+schema_version: 2
+grammar_family: southern
+
+referents:
+
+  # ═══ SELF-CREATION (P1) — head `run`, five ════════════════════════════════
+  - id: "C01"
+    name: knowing yourself as something still being made
+    tier: 1
+    notes: >
+      P1. A changing, while a seeing. Knowledge-of-self is not inspection of a
+      fixed thing — the seeing and the changing are simultaneous, which `mil`
+      says exactly.
+    signature:
+      contains: [{root_any: [run]}, {root_any: [lan], via: [mil]}]
+
+  - id: "C02"
+    name: becoming what you said you were
+    tier: 1
+    notes: >
+      P1, P4. A changing, because of a speaking. The word is causal here, not
+      descriptive — which is the world-building position applied to the self.
+    signature:
+      contains: [{root_any: [run]}, {root_any: [los], via: [kra]}]
+
+  - id: "C03"
+    name: the self that is never finished
+    tier: 1
+    notes: >
+      P1. A changing, despite an ending. Continuous self-creation stated as
+      concession: endings happen and the changing does not stop.
+    signature:
+      contains: [{root_any: [run]}, {root_any: [ram], via: [xom]}]
+
+  - id: "C04"
+    name: remaking it every time
+    tier: 1
+    notes: >
+      P1, P3. A changing, while a repeating. Shares its dependent with C10,
+      C14, C28 and C33 — repetition is the cohort's densest shared root.
+    signature:
+      contains: [{root_any: [run]}, {root_any: [rän], via: [mil]}]
+
+  - id: "C05"
+    name: waking up a different person
+    tier: 1
+    notes: >
+      P1. A changing, POST a waking. `pos` puts the waking first without tense,
+      which π would strip.
+    signature:
+      contains: [{root_any: [run]}, {root_any: [mim], via: [pos]}]
+
+  # ═══ THE CIPHER (P2) — head `kän`, six ════════════════════════════════════
+  - id: "C06"
+    name: the circle making meaning while it turns
+    tier: 1
+    notes: >
+      P2. A circling, amid a speaking. The meaning is not produced by the
+      circle and then held; it exists only in the turning, which is what
+      `hlim` (AMID) carries.
+    signature:
+      contains: [{root_any: [kän]}, {root_any: [los], via: [hlim]}]
+
+  - id: "C07"
+    name: passing it around and it grows
+    tier: 1
+    notes: >
+      P2. A circling, while a rising. Collective meaning-making as accretion
+      with no owner of the increment.
+    signature:
+      contains: [{root_any: [kän]}, {root_any: [pel], via: [mil]}]
+
+  - id: "C08"
+    name: the circle with no one at its head
+    tier: 1
+    notes: >
+      P2. A circling, despite a halting. No leader is predicated because no
+      person is; the absence is written as concession, not as `forbid`.
+    signature:
+      contains: [{root_any: [kän]}, {root_any: [kön], via: [xom]}]
+
+  - id: "C09"
+    name: everyone in it, no one holding it
+    tier: 1
+    notes: >
+      P2, P3. A circling, part of which a teeming. `fral` is how this grammar
+      says a collective without counting members.
+    signature:
+      contains: [{root_any: [kän]}, {root_any: [fral], via: [nix]}]
+
+  - id: "C10"
+    name: the turn that comes back around to you
+    tier: 1
+    notes: >
+      P2. A circling, while a repeating. Deliberately near-identical to C04
+      and C14 once the dependent is withheld.
+    signature:
+      contains: [{root_any: [kän]}, {root_any: [rän], via: [mil]}]
+
+  - id: "C11"
+    name: stepping in without being asked
+    tier: 1
+    notes: >
+      P2, P3. A circling, while an approaching. Entry as an act, not a
+      permission.
+    signature:
+      contains: [{root_any: [kän]}, {root_any: [krun], via: [mil]}]
+
+  # ═══ IDENTITY ENACTED (P3) — head `xir`, five ═════════════════════════════
+  - id: "C12"
+    name: who you are is what you just did
+    tier: 1
+    notes: >
+      P3. A moving, causing a seeing. The identity is downstream of the act,
+      which `kra` (CAUS) states directly.
+    signature:
+      contains: [{root_any: [xir]}, {root_any: [lan], via: [kra]}]
+
+  - id: "C13"
+    name: nothing underneath the doing
+    tier: 1
+    notes: >
+      P3, P5. A moving, despite a resting. The strongest form of the position:
+      there is no substrate that persists between acts.
+    signature:
+      contains: [{root_any: [xir]}, {root_any: [tang], via: [xom]}]
+
+  - id: "C14"
+    name: proving it again every time
+    tier: 1
+    notes: >
+      P3. A moving, while a repeating. Identity as something that has to be
+      re-enacted rather than retained.
+    signature:
+      contains: [{root_any: [xir]}, {root_any: [rän], via: [mil]}]
+
+  - id: "C15"
+    name: stopping, and being no one
+    tier: 1
+    notes: >
+      P3. A halting, ERE a moving. Inverts C13 — same two roots, opposite
+      head — so the pair is separable only by which happening is matrix.
+    signature:
+      contains: [{root_any: [kön]}, {root_any: [xir], via: [tan]}]
+
+  - id: "C16"
+    name: the name you earn by moving
+    tier: 1
+    notes: >
+      P3, P4. A moving, POST which a speaking. The name arrives after the act
+      and because of it; `pos` orders them without tense.
+    signature:
+      contains: [{root_any: [xir]}, {root_any: [los], via: [pos]}]
+
+  # ═══ THE WORD AS WORLD-BUILDING (P4) — head `los`, six ════════════════════
+  - id: "C17"
+    name: saying it into being there
+    tier: 1
+    notes: >
+      P4. A speaking, causing an appearing. The plainest form of the position.
+      Shares its head with C18–C22 and its dependent with T29's `rom`.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [rom], via: [kra]}]
+
+  - id: "C18"
+    name: the word that opens a place
+    tier: 1
+    notes: >
+      P4. A speaking, causing an opening. Space made by utterance rather than
+      described by it.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [plung], via: [kra]}]
+
+  - id: "C19"
+    name: building with breath
+    tier: 1
+    notes: >
+      P4. A speaking, by means of a breathing. `fro` (INSTR) is the only
+      relator that gives the medium without making it a material.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [hram], via: [fro]}]
+
+  - id: "C20"
+    name: what is said becomes ground to stand on
+    tier: 1
+    notes: >
+      P4. A speaking, causing a resting. The built world is something you can
+      then be still in — the position's practical end.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [tang], via: [kra]}]
+
+  - id: "C21"
+    name: speaking a world where there was none
+    tier: 1
+    notes: >
+      P4, P5. A speaking, ERE a hollowing. The emptiness is placed BEFORE the
+      speaking, so the utterance does not fill a space, it precedes one.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [klung], via: [tan]}]
+
+  - id: "C22"
+    name: the line that changes the room
+    tier: 1
+    notes: >
+      P4, P1. A speaking, causing a changing. Inverts C02's pairing — same two
+      roots, opposite head and opposite causal direction.
+    signature:
+      contains: [{root_any: [los]}, {root_any: [run], via: [kra]}]
+
+  # ═══ MEANING-COLLAPSE AS OPERATION (P5) — head `rim`, four, plus `hlix` ═══
+  - id: "C23"
+    name: the word breaking open and working
+    tier: 1
+    notes: >
+      P5. A splitting-open, part of which a speaking. The breaking is not
+      damage; it is the mechanism.
+    signature:
+      contains: [{root_any: [hlix]}, {root_any: [los], via: [nix]}]
+
+  - id: "C24"
+    name: meaning that exists only in the doing
+    tier: 1
+    notes: >
+      P5, P3. A vanishing, despite a moving. The clearest statement that sense
+      is an operation and not a held thing.
+    signature:
+      contains: [{root_any: [rim]}, {root_any: [xir], via: [xom]}]
+
+  - id: "C25"
+    name: a name that stops being a name
+    tier: 1
+    notes: >
+      P5. A vanishing, part of which a speaking. Shares both roots with C23
+      and differs only in head and relator — a two-way collision by design.
+    signature:
+      contains: [{root_any: [rim]}, {root_any: [los], via: [nix]}]
+
+  - id: "C26"
+    name: sense collapsing into motion
+    tier: 1
+    notes: >
+      P5. A vanishing, while a turning. The collapse is not loss; it is a
+      change of kind, from state to operation.
+    signature:
+      contains: [{root_any: [rim]}, {root_any: [kron], via: [mil]}]
+
+  - id: "C27"
+    name: the thing that is only its operation
+    tier: 1
+    notes: >
+      P5. A vanishing, despite a resting. ⛔ This is the referent that states
+      the grammar's own rule as content. Thematic fit, not evidence — see the
+      header. It is kept live because withholding it would be theatre; the
+      claim it resembles is not one Phase 11 measures.
+    signature:
+      contains: [{root_any: [rim]}, {root_any: [tang], via: [xom]}]
+
+  # ═══ VOICE AND RHYTHM (P2, the cohort's medium) ═══════════════════════════
+  - id: "C28"
+    name: the echo that answers itself
+    tier: 1
+    notes: >
+      P2. An echoing, while a repeating. The call and response collapsed into
+      one happening.
+    signature:
+      contains: [{root_any: [mröng]}, {root_any: [rän], via: [mil]}]
+
+  - id: "C29"
+    name: a voice carrying past the room
+    tier: 1
+    notes: >
+      P2, P4. A singing, across, toward a hearing. The only orientation in the
+      set that fixes a direction of travel.
+    signature:
+      contains:
+        - {root_any: [lus], orient_any: [krel]}
+        - {root_any: [leng], via: [sul]}
+
+  - id: "C30"
+    name: rhythm pulling people together
+    tier: 1
+    notes: >
+      P2. A ringing, causing a converging. `kun` against C09's `fral`: one is
+      the coming-together, the other the already-together.
+    signature:
+      contains: [{root_any: [mreng]}, {root_any: [kun], via: [kra]}]
+
+  - id: "C31"
+    name: the beat everyone finds at once
+    tier: 1
+    notes: >
+      P2. A ringing, part of which a teeming. Shares its dependent with C09.
+    signature:
+      contains: [{root_any: [mreng]}, {root_any: [fral], via: [nix]}]
+
+  - id: "C32"
+    name: sound making a space
+    tier: 1
+    notes: >
+      P2, P4. A ringing, causing a hollowing. The world-building position with
+      sound rather than word as the agent.
+    signature:
+      contains: [{root_any: [mreng]}, {root_any: [klung], via: [kra]}]
+
+  # ═══ LINEAGE (P1) ═════════════════════════════════════════════════════════
+  - id: "C33"
+    name: remembering who came before
+    tier: 1
+    notes: >
+      P1. A recalling, while a repeating. Lineage as a present act, not a
+      possession — the same move as C14 applied backwards in time.
+    signature:
+      contains: [{root_any: [mling]}, {root_any: [rän], via: [mil]}]
+
+  - id: "C34"
+    name: forgetting on purpose
+    tier: 1
+    notes: >
+      P1, P3. A forgetting, despite a longing. Self-creation requires
+      discarding, and the discarding costs something.
+    signature:
+      contains: [{root_any: [mleng]}, {root_any: [sun], via: [xom]}]
+
+  - id: "C35"
+    name: the young one who arrives already knowing
+    tier: 1
+    notes: >
+      P1, P2. A being-born, while a seeing. Knowledge-of-self as something
+      present from the start rather than acquired.
+    signature:
+      contains: [{root_any: [mlung]}, {root_any: [lan], via: [mil]}]
+
+  - id: "C36"
+    name: handing it on
+    tier: 1
+    notes: >
+      P1, P2. A moving, toward a recalling. Closes the set by pointing at the
+      next cohort; shares its head with C12–C16 and its dependent with C33.
+    signature:
+      contains: [{root_any: [xir]}, {root_any: [mling], via: [sul]}]

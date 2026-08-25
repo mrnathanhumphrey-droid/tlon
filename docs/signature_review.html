@@ -1,0 +1,443 @@
+<title>Tlön Referent Signatures</title>
+<style>
+:root{
+  --ground:#f3f0ea; --raised:#fffdf9; --line:#d8d2c6;
+  --ink:#221e28; --muted:#6a6272;
+  --sage:#5f6b57; --sage-dim:#8a9481;
+  --ochre:#8a6a24; --rose:#9c4f4a;
+  --chip:#e8e3d8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#1e1a22; --raised:#262130; --line:#3a3345;
+    --ink:#ded9d0; --muted:#948da2;
+    --sage:#c2c7b7; --sage-dim:#8b937f;
+    --ochre:#c8a45c; --rose:#c58a86;
+    --chip:#2f2939;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#1e1a22; --raised:#262130; --line:#3a3345;
+  --ink:#ded9d0; --muted:#948da2;
+  --sage:#c2c7b7; --sage-dim:#8b937f;
+  --ochre:#c8a45c; --rose:#c58a86;
+  --chip:#2f2939;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px; line-height:1.6;
+}
+.wrap{max-width:74ch; margin:0 auto; padding:3rem 1.25rem 6rem}
+h1,h2,h3{font-family:"Iowan Old Style",Palatino,"Palatino Linotype",Georgia,serif;
+  text-wrap:balance; margin:0; font-weight:600}
+h1{font-size:2.1rem; letter-spacing:-.01em}
+h2{font-size:1.25rem; margin:3.5rem 0 1rem; padding-bottom:.5rem;
+  border-bottom:1px solid var(--line)}
+.eyebrow{font-size:.7rem; text-transform:uppercase; letter-spacing:.16em;
+  color:var(--muted); margin-bottom:.6rem}
+.lede{color:var(--muted); margin:.75rem 0 0}
+.status{display:inline-block; margin-top:1.25rem; padding:.3rem .7rem;
+  border:1px solid var(--ochre); color:var(--ochre); border-radius:2px;
+  font-size:.72rem; letter-spacing:.12em; text-transform:uppercase}
+
+.calls{display:flex; flex-direction:column; gap:1rem; margin-top:1.25rem}
+.call{background:var(--raised); border:1px solid var(--line);
+  border-left:3px solid var(--ochre); padding:1rem 1.15rem; border-radius:2px}
+.call h3{font-size:1rem; margin-bottom:.35rem}
+.call p{margin:0; color:var(--muted); font-size:.92rem}
+
+.grid{display:flex; flex-direction:column; gap:1.1rem; margin-top:1.5rem}
+.card{background:var(--raised); border:1px solid var(--line);
+  border-radius:2px; padding:1.15rem 1.25rem}
+.card.flagged{border-left:3px solid var(--rose)}
+.card.weak{border-left:3px solid var(--ochre)}
+.chead{display:flex; align-items:baseline; gap:.7rem; flex-wrap:wrap}
+.pid{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  font-size:.8rem; color:var(--sage-dim); background:var(--chip);
+  padding:.15rem .45rem; border-radius:2px; font-variant-numeric:tabular-nums}
+.pname{font-family:"Iowan Old Style",Palatino,Georgia,serif; font-size:1.15rem}
+.spec{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  font-size:1.05rem; color:var(--sage); margin:.9rem 0 .5rem;
+  overflow-x:auto; white-space:nowrap; padding-bottom:.2rem}
+.gloss{font-family:"Iowan Old Style",Palatino,Georgia,serif;
+  font-style:italic; font-size:1.02rem; color:var(--ink); margin:0 0 .9rem}
+.meta{display:flex; gap:1.1rem; flex-wrap:wrap; font-size:.76rem;
+  color:var(--muted); border-top:1px solid var(--line); padding-top:.7rem;
+  font-variant-numeric:tabular-nums}
+.meta b{color:var(--ink); font-weight:600}
+.note{font-size:.86rem; color:var(--muted); margin:.7rem 0 0;
+  padding-left:.8rem; border-left:2px solid var(--line)}
+.tags{display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.7rem}
+.tag{font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+  padding:.2rem .5rem; border-radius:2px; border:1px solid currentColor}
+.t-unval{color:var(--rose)} .t-weak{color:var(--ochre)}
+.t-over{color:var(--sage-dim)}
+details{margin-top:1rem; border:1px solid var(--line); border-radius:2px;
+  background:var(--raised); padding:.8rem 1rem}
+summary{cursor:pointer; font-size:.9rem; color:var(--sage)}
+summary:focus-visible{outline:2px solid var(--sage); outline-offset:2px}
+.mini{font-family:ui-monospace,Consolas,monospace; font-size:.82rem;
+  color:var(--sage-dim); margin:.5rem 0 0; overflow-x:auto}
+footer{margin-top:4rem; padding-top:1.25rem; border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem}
+code{font-family:ui-monospace,Consolas,monospace; font-size:.9em;
+  background:var(--chip); padding:.1rem .3rem; border-radius:2px}
+</style>
+<div class="wrap">
+<p class="eyebrow">Tlön · phase 2a · southern hemisphere</p>
+<h1>Referent signatures, approved</h1>
+<p class="lede">Twenty Tier&nbsp;1 pegs. Each shows the <em>minimal</em> legal utterance that
+satisfies its signature — the loosest thing the gate will accept. The italic gloss is the
+thing to judge: if the minimum already reads as the referent, the signature holds; if it
+reads as anything at all, it's too loose.</p>
+<span class="status">review_status: reviewed — execution unblocked</span>
+
+<h2>Your rulings, applied</h2>
+<div class="calls">
+<div class="call"><h3>“beyond is used way way way too much” — fixed</h3>
+<p>That was my bug, not the signatures'. The witness builder handed out <code>u</code> (BEYOND)
+first every time, and no signature specified a relator at all — so twenty different pegs all
+rendered as “beyond ⟨something⟩,” injecting a spatial claim none of them made. Every peg now
+names <em>how</em> its parts relate, and that turned out to be real content: 20 is
+<code>kra</code> (because of) — worn <em>by</em> water; 17 is <code>xom</code> (despite) — a
+halting that holds <em>despite</em> a repeating. Without those they were just co-present verbs.</p></div>
+<div class="call"><h3>03 and 15 may match the same scene</h3>
+<p>Confirmed as you ruled — no <code>forbid</code> added. A moonlit river is honestly both, and the
+gate will sometimes take the other peg. That ambiguity is now a thing 2a measures rather than
+a thing the signatures hide.</p></div>
+<div class="call"><h3>02: tiger swapped out</h3>
+<p>Replaced with <em>wind moving through tall grass</em> — Thoreau territory, and every part of it
+is directly rooted (<code>tlan</code> winds, <code>xel</code> greens, <code>frim</code> undulates)
+rather than approximated.</p></div>
+<div class="call"><h3>Pattern roots minted, tiger not reinstated</h3>
+<p>Five new roots on your go: <code>tlex</code> stripes, <code>tlix</code> bands,
+<code>tlox</code> mottles, <code>tlux</code> dapples, <code>tläx</code> veins. Appended, so no
+existing root shifted — verified, 0 moved. A tiger peg is now expressible, but I did
+<em>not</em> swap it back in unreviewed; raise it as a fresh proposal if you want it.</p></div>
+<div class="call"><h3>Glosses de-nouned</h3>
+<p>You caught <code>fox</code> = “stands still as <em>water</em>”. There were eight, including
+<code>lan</code> “is seen-<em>ness</em>” and the aspect <code>ax</code> = “continuous_<em>flow</em>”.
+These are the grounding the frozen auditor reads in 2c, so nouns there would have quietly weakened
+the anti-cipher device. The rule now lives in a test, not in prose.</p></div>
+</div>
+
+<h2>The twenty</h2>
+<div class="grid"><article class="card flagged">
+<div class="chead"><span class="pid">01</span>
+<span class="pname">a mirror</span></div>
+<div class="spec">kon hlin lan lan ka</div>
+<p class="gloss">“against, as ⟨it sees, is beheld⟩, it sees, is beheld.”</p>
+<p class="note">Tlön denies the object, so a mirror cannot be a reflecting THING. It is a seeing that comes back: a perception set AGAINST itself and standing AS another perception. lan = &quot;it sees, is beheld&quot;. No new roots minted. Narrowed option A (doubling/facing verbs, never standing-for verbs) is held in reserve if this renders as mush.</p>
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span><span class="tag t-over">shares roots with 04, 12, 17</span></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">lan <span style='opacity:.65'>it sees, is beheld</span>, rän <span style='opacity:.65'>it repeats</span>, rom <span style='opacity:.65'>it appears</span></p></details>
+</article><article class="card weak">
+<div class="chead"><span class="pid">02</span>
+<span class="pname">wind moving through tall grass</span></div>
+<div class="spec">hlim xel mil frim tlan ka</div>
+<p class="gloss">“amid ⟨it greens, vegetates⟩, while ⟨it waves, undulates⟩, it winds, blows.”</p>
+<p class="note">REPLACES &quot;a tiger&quot; (Nate, 2026-08-18: weak, swap it). At the time the lexicon had no root for striping, so the tiger was carried by hunting amid a yellowing and a blackening — thin. This peg is Thoreau territory and every part of it is directly rooted: tlan winds, xel greens, frim undulates. The pattern/marking family (tlex tlix tlox tlux tläx) was minted the same day, so a tiger peg is now expressible — but it is NOT being swapped back in unreviewed. Raise it as a fresh proposal if you want it.</p>
+<div class="tags"><span class="tag t-weak">swapped in · replaces “a tiger”</span><span class="tag t-over">shares roots with 03, 09, 18, 20</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">tlan <span style='opacity:.65'>it winds, blows</span>, xel <span style='opacity:.65'>it greens, vegetates</span>, frim <span style='opacity:.65'>it waves, undulates</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">03</span>
+<span class="pname">the moon over water</span></div>
+<div class="spec">u fang mlö ka</div>
+<p class="gloss">“beyond ⟨it streams, flows on⟩, it moons, lunates.”</p>
+<p class="note">The golden peg — Borges&#x27; own line renders here. Deliberately does NOT pin the matrix root: the mooning may be matrix or subordinate. `u` (BEYOND) is earned here rather than defaulted — the relation really is spatial. Overlaps 15 by Nate&#x27;s ruling.</p>
+<div class="tags"><span class="tag t-over">shares roots with 02, 06, 08, 15, 20</span></div>
+<div class="meta"><span><b>4</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">mlö <span style='opacity:.65'>it moons, lunates</span>, fang <span style='opacity:.65'>it streams, flows on</span>, fox <span style='opacity:.65'>it pools, lies still and level</span>, frim <span style='opacity:.65'>it waves, undulates</span>, föm <span style='opacity:.65'>it laps</span>, mör <span style='opacity:.65'>it wets, damps</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">04</span>
+<span class="pname">a labyrinth</span></div>
+<div class="spec">hlin rän kron ka</div>
+<p class="gloss">“as ⟨it repeats⟩, it turns.”</p>
+
+<div class="tags"><span class="tag t-over">shares roots with 01, 12, 14, 17</span></div>
+<div class="meta"><span><b>4</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">kron <span style='opacity:.65'>it turns</span>, plin <span style='opacity:.65'>it twists</span>, rän <span style='opacity:.65'>it repeats</span>, säx <span style='opacity:.65'>it edges, is bounded</span>, klung <span style='opacity:.65'>it hollows, voids</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">05</span>
+<span class="pname">a single gold coin</span></div>
+<div class="spec">hlin flix hlin präx hom ka</div>
+<p class="gloss">“as ⟨it yellows⟩, as ⟨it gleams⟩, it rounds, curves.”</p>
+<p class="note">&quot;Single&quot; is not expressible as a count of objects — QUANT counts occasions, not things — so it is deliberately absent rather than faked.</p>
+<div class="tags"><span class="tag t-over">shares roots with 11, 13</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hom <span style='opacity:.65'>it rounds, curves</span>, präx <span style='opacity:.65'>it yellows</span>, flix <span style='opacity:.65'>it gleams</span>, pux <span style='opacity:.65'>it silvers</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">06</span>
+<span class="pname">a pond at dawn</span></div>
+<div class="spec">mil fis fox ka</div>
+<p class="gloss">“while ⟨it dawns⟩, it pools, lies still and level.”</p>
+<p class="note">fox = &quot;it pools, stands still as water&quot; — the stillness distinguishes it from 15.</p>
+<div class="tags"><span class="tag t-over">shares roots with 03, 08</span></div>
+<div class="meta"><span><b>4</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">fox <span style='opacity:.65'>it pools, lies still and level</span>, fis <span style='opacity:.65'>it dawns</span>, lir <span style='opacity:.65'>it lightens, dawns</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">07</span>
+<span class="pname">a train whistle heard from far off</span></div>
+<div class="spec">xun nix mreng leng ka</div>
+<p class="gloss">“thither, out of ⟨it rings⟩, it hears.”</p>
+<p class="note">Anchored on the HEARING, not the whistle — the impression is the reception. `nix` (PART, out of) rather than BEYOND: the hearing comes OUT OF the ringing. Distance carried by ORIENT, the only distance the grammar has.</p>
+<div class="tags"></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">leng <span style='opacity:.65'>it hears</span>, mreng <span style='opacity:.65'>it rings</span>, mräng <span style='opacity:.65'>it roars</span>, hlax <span style='opacity:.65'>it sounds, resonates</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">08</span>
+<span class="pname">ice cracking on a lake</span></div>
+<div class="spec">mil frum sen fox kris ka</div>
+<p class="gloss">“while ⟨it freezes⟩, at ⟨it pools, lies still and level⟩, it cracks, fissures.”</p>
+
+<div class="tags"><span class="tag t-over">shares roots with 03, 06</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">kris <span style='opacity:.65'>it cracks, fissures</span>, frum <span style='opacity:.65'>it freezes</span>, fox <span style='opacity:.65'>it pools, lies still and level</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">09</span>
+<span class="pname">a woodpile</span></div>
+<div class="spec">mil pem nix xel hlang ka</div>
+<p class="gloss">“while ⟨it dries⟩, out of ⟨it greens, vegetates⟩, it heaps.”</p>
+<p class="note">Heaped, out of a greening, while drying. No &quot;wood&quot; root exists; this is the encounter.</p>
+<div class="tags"><span class="tag t-over">shares roots with 02, 18</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hlang <span style='opacity:.65'>it heaps</span>, xel <span style='opacity:.65'>it greens, vegetates</span>, pem <span style='opacity:.65'>it dries</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">10</span>
+<span class="pname">an hourglass</span></div>
+<div class="spec">mil nur sen plöng ham ka</div>
+<p class="gloss">“while ⟨it falls⟩, at ⟨it narrows⟩, it sands, granulates.”</p>
+
+<div class="tags"><span class="tag t-over">shares roots with 16</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">ham <span style='opacity:.65'>it sands, granulates</span>, nur <span style='opacity:.65'>it falls</span>, plöng <span style='opacity:.65'>it narrows</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">11</span>
+<span class="pname">a knife</span></div>
+<div class="spec">hlin pux krax ka</div>
+<p class="gloss">“as ⟨it silvers⟩, it sharpens, is acute.”</p>
+
+<div class="tags"><span class="tag t-over">shares roots with 05, 13, 20</span></div>
+<div class="meta"><span><b>4</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">krax <span style='opacity:.65'>it sharpens, is acute</span>, pux <span style='opacity:.65'>it silvers</span>, hrun <span style='opacity:.65'>it stones, is mineral</span>, flix <span style='opacity:.65'>it gleams</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">12</span>
+<span class="pname">a map the size of its territory</span></div>
+<div class="spec">hlin rän hlin säx plen ka</div>
+<p class="gloss">“as ⟨it repeats⟩, as ⟨it edges, is bounded⟩, it flattens.”</p>
+<p class="note">&quot;Del rigor en la ciencia&quot; is ABOUT representation collapsing into the thing itself, so rendering it as an encounter rather than a representing-object is faithful, not a workaround. A flattening standing AS a repeating and AS a bounding. No standing-for root minted — that would smuggle object-permanence in at the lexical level.</p>
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span><span class="tag t-over">shares roots with 01, 04, 14, 17</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">plen <span style='opacity:.65'>it flattens</span>, rän <span style='opacity:.65'>it repeats</span>, säx <span style='opacity:.65'>it edges, is bounded</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">13</span>
+<span class="pname">a spider&#x27;s web strung with dew</span></div>
+<div class="spec">sir hlim from mil flox plam ka</div>
+<p class="gloss">“between, amid ⟨it drips⟩, while ⟨it shimmers⟩, it lengthens.”</p>
+<p class="note">No weaving root exists; carried by lengthening-between, amid dripping, while shimmering.</p>
+<div class="tags"><span class="tag t-over">shares roots with 05, 11</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">plam <span style='opacity:.65'>it lengthens</span>, from <span style='opacity:.65'>it drips</span>, flox <span style='opacity:.65'>it shimmers</span>, flix <span style='opacity:.65'>it gleams</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">14</span>
+<span class="pname">a lit window seen from outside at night</span></div>
+<div class="spec">mix hlin säx mil flex hräx ka</div>
+<p class="gloss">“within, as ⟨it edges, is bounded⟩, while ⟨it darkens to night⟩, it glows.”</p>
+
+<div class="tags"><span class="tag t-over">shares roots with 04, 12, 15, 16, 19</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hräx <span style='opacity:.65'>it glows</span>, säx <span style='opacity:.65'>it edges, is bounded</span>, flex <span style='opacity:.65'>it darkens to night</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">15</span>
+<span class="pname">a river at night</span></div>
+<div class="spec">mil flex fang ka</div>
+<p class="gloss">“while ⟨it darkens to night⟩, it streams, flows on.”</p>
+<p class="note">fang = &quot;it streams, flows on&quot; — the flowing distinguishes it from 06&#x27;s standing water. Overlaps 03 by Nate&#x27;s ruling: a moonlit river really is both.</p>
+<div class="tags"><span class="tag t-over">shares roots with 03, 14, 20</span></div>
+<div class="meta"><span><b>4</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">fang <span style='opacity:.65'>it streams, flows on</span>, flex <span style='opacity:.65'>it darkens to night</span>, pön <span style='opacity:.65'>it darkens</span>, flax <span style='opacity:.65'>it dusks</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">16</span>
+<span class="pname">a candle burning down</span></div>
+<div class="spec">hlim hräx mil nur tris ka</div>
+<p class="gloss">“amid ⟨it glows⟩, while ⟨it falls⟩, it burns.”</p>
+
+<div class="tags"><span class="tag t-over">shares roots with 10, 14, 19</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">tris <span style='opacity:.65'>it burns</span>, nur <span style='opacity:.65'>it falls</span>, plöng <span style='opacity:.65'>it narrows</span>, hräx <span style='opacity:.65'>it glows</span>, häm <span style='opacity:.65'>it flares</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">17</span>
+<span class="pname">a stopped clock</span></div>
+<div class="spec">xom rän kön ka</div>
+<p class="gloss">“despite ⟨it repeats⟩, it halts.”</p>
+<p class="note">`xom` (CONC, despite) is the whole peg: a halting that holds DESPITE a repeating. A clock that merely sits still is not a stopped clock.</p>
+<div class="tags"><span class="tag t-over">shares roots with 01, 04, 12</span></div>
+<div class="meta"><span><b>4</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">kön <span style='opacity:.65'>it halts</span>, rän <span style='opacity:.65'>it repeats</span>, rem <span style='opacity:.65'>it persists</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">18</span>
+<span class="pname">a road forking in a wood</span></div>
+<div class="spec">lang sen xel hlix ka</div>
+<p class="gloss">“along, at ⟨it greens, vegetates⟩, it splits open.”</p>
+
+<div class="tags"><span class="tag t-over">shares roots with 02, 09</span></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hlix <span style='opacity:.65'>it splits open</span>, xel <span style='opacity:.65'>it greens, vegetates</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">19</span>
+<span class="pname">a moth at a lamp</span></div>
+<div class="spec">sul hräx kän ka</div>
+<p class="gloss">“toward ⟨it glows⟩, it circles.”</p>
+<p class="note">`sul` (TOWARD) carries the compulsion; AT would make it incidental.</p>
+<div class="tags"><span class="tag t-over">shares roots with 14, 16</span></div>
+<div class="meta"><span><b>4</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">kän <span style='opacity:.65'>it circles</span>, kläng <span style='opacity:.65'>it flies</span>, hräx <span style='opacity:.65'>it glows</span>, tris <span style='opacity:.65'>it burns</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">20</span>
+<span class="pname">a stone worn smooth by water</span></div>
+<div class="spec">kra fang pos mös hrun ka</div>
+<p class="gloss">“because of ⟨it streams, flows on⟩, after ⟨it smooths⟩, it stones, is mineral.”</p>
+<p class="note">`kra` (CAUS) is the peg: worn BY water. Without it this is just a wet smooth stone.</p>
+<div class="tags"><span class="tag t-over">shares roots with 02, 03, 11, 15</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hrun <span style='opacity:.65'>it stones, is mineral</span>, mös <span style='opacity:.65'>it smooths</span>, fang <span style='opacity:.65'>it streams, flows on</span>, mör <span style='opacity:.65'>it wets, damps</span>, föm <span style='opacity:.65'>it laps</span>, frim <span style='opacity:.65'>it waves, undulates</span></p></details>
+</article></div>
+
+<h2>Declared but excluded from the seed</h2>
+<p class="lede">Tier&nbsp;2 (21–26) and Tier&nbsp;3 abstractions (27–30). Loaded and validated,
+not seeded. No verdict needed now — included so you can see where the representational gap
+bites again at 22 and 23.</p>
+<details><summary>Show 10 excluded pegs</summary>
+<div class="grid"><article class="card">
+<div class="chead"><span class="pid">21</span>
+<span class="pname">a city seen only by leaving it</span></div>
+<div class="spec">ung nix fral lan ka</div>
+<p class="gloss">“behind beyond, out of ⟨it crowds, teems⟩, it sees, is beheld.”</p>
+
+<div class="tags"></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">lan <span style='opacity:.65'>it sees, is beheld</span>, fral <span style='opacity:.65'>it crowds, teems</span>, krän <span style='opacity:.65'>it recedes</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">22</span>
+<span class="pname">a book that contains every book</span></div>
+<div class="spec">mix hlin klung hlin säx rän ka</div>
+<p class="gloss">“within, as ⟨it hollows, voids⟩, as ⟨it edges, is bounded⟩, it repeats.”</p>
+<p class="note">Hits the same representational gap as 01/12. Expect trouble.</p>
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span></div>
+<div class="meta"><span><b>7</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">rän <span style='opacity:.65'>it repeats</span>, klung <span style='opacity:.65'>it hollows, voids</span>, fral <span style='opacity:.65'>it crowds, teems</span>, säx <span style='opacity:.65'>it edges, is bounded</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">23</span>
+<span class="pname">a word that acts like a virus</span></div>
+<div class="spec">hlin mrang mil rän los ka</div>
+<p class="gloss">“as ⟨it sickens⟩, while ⟨it repeats⟩, it speaks.”</p>
+<p class="note">Hits the same representational gap as 01/12. Expect trouble.</p>
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">los <span style='opacity:.65'>it speaks</span>, mrang <span style='opacity:.65'>it sickens</span>, rän <span style='opacity:.65'>it repeats</span>, krön <span style='opacity:.65'>it scatters</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">24</span>
+<span class="pname">a photograph fading</span></div>
+<div class="spec">mil mleng flöx ka</div>
+<p class="gloss">“while ⟨it forgets⟩, it dims.”</p>
+
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span></div>
+<div class="meta"><span><b>4</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">flöx <span style='opacity:.65'>it dims</span>, mleng <span style='opacity:.65'>it forgets</span>, rim <span style='opacity:.65'>it vanishes</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">25</span>
+<span class="pname">a doorway between two rooms</span></div>
+<div class="spec">sir hlim säx plung ka</div>
+<p class="gloss">“between, amid ⟨it edges, is bounded⟩, it opens.”</p>
+
+<div class="tags"></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">plung <span style='opacity:.65'>it opens</span>, säx <span style='opacity:.65'>it edges, is bounded</span>, klung <span style='opacity:.65'>it hollows, voids</span></p></details>
+</article><article class="card">
+<div class="chead"><span class="pid">26</span>
+<span class="pname">a garden of forking paths</span></div>
+<div class="spec">hlim höm mil rän hlix ka</div>
+<p class="gloss">“amid ⟨it blooms⟩, while ⟨it repeats⟩, it splits open.”</p>
+
+<div class="tags"></div>
+<div class="meta"><span><b>6</b> morphemes</span>
+<span><b>3</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hlix <span style='opacity:.65'>it splits open</span>, höm <span style='opacity:.65'>it blooms</span>, xel <span style='opacity:.65'>it greens, vegetates</span>, rän <span style='opacity:.65'>it repeats</span>, krön <span style='opacity:.65'>it scatters</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">27</span>
+<span class="pname">solitude</span></div>
+<div class="spec">sil kra sun nöl ka</div>
+<p class="gloss">“apart, because of ⟨it longs⟩, it stills, silences.”</p>
+
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">nöl <span style='opacity:.65'>it stills, silences</span>, sun <span style='opacity:.65'>it longs</span>, tir <span style='opacity:.65'>it grieves</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">28</span>
+<span class="pname">lightness that resists gravity</span></div>
+<div class="spec">xom hlör pel nux ka</div>
+<p class="gloss">“despite ⟨upward, it rises⟩, it buoys, unburdens.”</p>
+
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">nux <span style='opacity:.65'>it buoys, unburdens</span>, pel <span style='opacity:.65'>it rises</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">29</span>
+<span class="pname">the cut between two images</span></div>
+<div class="spec">sir hlim lan rön ka</div>
+<p class="gloss">“between, amid ⟨it sees, is beheld⟩, it interrupts.”</p>
+
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">rön <span style='opacity:.65'>it interrupts</span>, lan <span style='opacity:.65'>it sees, is beheld</span></p></details>
+</article><article class="card flagged">
+<div class="chead"><span class="pid">30</span>
+<span class="pname">the exact moment a story forks</span></div>
+<div class="spec">nix los hlix nimas ka</div>
+<p class="gloss">“out of ⟨it speaks⟩, it splits open, for an instant.”</p>
+<p class="note">&quot;The exact moment&quot; is ASPECT, not a root — nim = momentary. Caught by the validator on the first run: an earlier draft put the TEMPORAL particle kim in root_any.</p>
+<div class="tags"><span class="tag t-unval">unvalidated · option C · you cleared it for now</span></div>
+<div class="meta"><span><b>5</b> morphemes</span>
+<span><b>2</b> required nodes</span></div>
+<details><summary>signature roots</summary><p class="mini">hlix <span style='opacity:.65'>it splits open</span>, los <span style='opacity:.65'>it speaks</span>, mling <span style='opacity:.65'>it recalls</span></p></details>
+</article></div></details>
+
+<footer>
+<p>Generated from <code>tlon/referents/referents.draft.yaml</code> against lexicon
+<code>49475a61a308a2beeb7434693eff5c44</code>. The page cannot drift from the file — it is built from it.</p>
+<p>One number in the terminal report is junk and I've left it out here: “45 co-satisfiable
+pairs” measures the clause cap, not the signatures — that test could not have come back
+negative. The meaningful one: <b>0 of 30</b> minimal witnesses match any referent but their own.</p>
+</footer>
+</div>

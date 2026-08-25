@@ -1,0 +1,27 @@
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+D:\Tlon\tlon\selfplay\phase3.py:234: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:837.)
+  win_e.append(float(choice.entropy))
+==============================================================================
+RESET DYNAMICS -- 8.2 conservation + 8.3 population. PREREG 269f78d7
+==============================================================================
+  5 seeds, 6000 steps, WHOLE-POOL reset at 3000, K=6
+
+  independent naive judge held-out 92.8%
+
+  seed 11: M 99.7%  naive 94.3%  gap +5.39   entropy 5.357->4.991 (-6.8%)   [87s]
+  seed 22: M 99.7%  naive 86.6%  gap +13.19   entropy 5.652->5.005 (-11.4%)   [87s]
+  seed 33: M 99.9%  naive 90.9%  gap +9.04   entropy 5.195->4.771 (-8.2%)   [84s]
+  seed 44: M 99.9%  naive 95.3%  gap +4.56   entropy 5.477->5.307 (-3.1%)   [84s]
+  seed 55: M 99.3%  naive 89.1%  gap +10.15   entropy 5.807->5.494 (-5.4%)   [84s]
+
+==============================================================================
+  8.3a TEACHABILITY SPIKE  entropy rise on simultaneous reset: mean -7.0%  (per-seed -7, -11, -8, -3, -5)
+  8.2/8.3b GAP after reset+reconvergence: mean +8.46 pts, sd 3.17  (per-seed +5.4, +13.2, +9.0, +4.6, +10.1)
+
+  8.3 outcome: 3 -- NEITHER fires => the config is still wrong; no conclusion about population.
+
+  wrote D:\Tlon\runs\reset_dynamics.json

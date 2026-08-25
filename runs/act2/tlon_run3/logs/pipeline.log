@@ -1,0 +1,95 @@
+=== [1/6] suite 14:31:16 ===
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+928 passed, 11 warnings in 41.90s
+=== [2/6] backbone 14:31:59 ===
+Fetching 11 files:  45%|████▌     | 5/11 [00:00<00:00, 47.32it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:20<00:00, 47.32it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:20<00:02,  2.42s/it]Fetching 11 files: 100%|██████████| 11/11 [00:23<00:00,  2.42s/it]Fetching 11 files: 100%|██████████| 11/11 [00:23<00:00,  2.09s/it]
+/home/ubuntu/.cache/huggingface/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28
+=== [3/6] BEFORE baseline (n=64, n_comp=256) 14:32:23 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=NONE (baseline) · battery a2b318d6d2e6b98a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   0.0%  (0/64)
+  render  0.0%  (0/64)
+  choose  46.9%  (120/64), 0 unanswered
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.000, speak 0.000 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 46.9% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl
+=== [4/6] fine-tune, 80k rows x 1 epoch 14:36:27 ===
+{'loss': '0.2507', 'grad_norm': '0.2493', 'learning_rate': '5.52e-06', 'epoch': '0.945'}
+{'loss': '0.251', 'grad_norm': '0.2299', 'learning_rate': '5.02e-06', 'epoch': '0.95'}
+{'loss': '0.2457', 'grad_norm': '0.2351', 'learning_rate': '4.52e-06', 'epoch': '0.955'}
+{'loss': '0.2481', 'grad_norm': '0.2369', 'learning_rate': '4.02e-06', 'epoch': '0.96'}
+{'loss': '0.2486', 'grad_norm': '0.2386', 'learning_rate': '3.52e-06', 'epoch': '0.965'}
+{'loss': '0.2483', 'grad_norm': '0.2397', 'learning_rate': '3.02e-06', 'epoch': '0.97'}
+{'loss': '0.2481', 'grad_norm': '0.2391', 'learning_rate': '2.52e-06', 'epoch': '0.975'}
+{'loss': '0.2463', 'grad_norm': '0.2518', 'learning_rate': '2.02e-06', 'epoch': '0.98'}
+{'loss': '0.2479', 'grad_norm': '0.2514', 'learning_rate': '1.52e-06', 'epoch': '0.985'}
+{'loss': '0.2475', 'grad_norm': '0.2477', 'learning_rate': '1.02e-06', 'epoch': '0.99'}
+{'loss': '0.2497', 'grad_norm': '0.2466', 'learning_rate': '5.2e-07', 'epoch': '0.995'}
+{'loss': '0.2447', 'grad_norm': '0.2503', 'learning_rate': '2e-08', 'epoch': '1'}
+
+{'eval_loss': '0.2448', 'eval_runtime': '33.56', 'eval_samples_per_second': '59.6', 'eval_steps_per_second': '7.45', 'epoch': '1'}
+{'train_runtime': '4994', 'train_samples_per_second': '16.02', 'train_steps_per_second': '1.001', 'train_loss': '0.2643', 'epoch': '1'}
+
+⭐ adapter → runs/act2/adapter
+⛔ NOT a result. Next: tools/act2_flocal.py measures F-LOCAL unconstrained and cardless. That is the gate.
+=== [5/6] THE GATE 16:00:45 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=runs/act2/adapter · battery a2b318d6d2e6b98a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   98.4%  (63/64)
+  render  84.4%  (54/64)
+  choose  68.0%  (174/64), 0 unanswered
+
+  render confusions (11): {'L→M': 3, 'Q→A': 2, 'O→M': 1, 'Q→R': 1, 'O→T': 1, 'T→A': 1, 'L→R': 1, 'M→T': 1}
+     · 'nol' is class Q, not A — it cannot fill the aspect_root slot.
+     · 'sen' is class L, not M — it cannot fill the modal slot.
+     · 'nol' is class Q, not A — it cannot fill the aspect_root slot.
+     · 'hul' is class O, not M — it cannot fill the modal slot.
+     · 'tren' is class Q, not R — it cannot fill the root slot.
+     · 'sen' is class L, not M — it cannot fill the modal slot.
+     · 'fro' is class L, not M — it cannot fill the modal slot.
+     · 'fen' is class O, not T — it cannot fill the tense slot.
+     · 'kim' is class T, not A — it cannot fill the aspect_root slot.
+     · 'sen' is class L, not R — it cannot fill the root slot.
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.844, speak 0.984 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 68.0% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl
+=== [6/6] PAIRED TEST + DIAGNOSIS C 16:12:16 ===
+PAIRED COMPARISON · battery a2b318d6d2e6b98a vs a2b318d6d2e6b98a
+  baseline  comprehension 46.9%  (per-item recorded: 256)
+  tuned     comprehension 68.0%  (per-item recorded: 256)
+
+  McNEMAR on 256 paired items
+    baseline right / tuned wrong : 34
+    baseline wrong / tuned right : 88
+    both agree (carry no signal) : 134
+
+  ⇒ B better on 88/122 discordant pairs, p=0.0000 SIGNIFICANT
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+DIAGNOSIS C — 6 checkpoints · n=12 · greedy
+
+     step  distinct  repeat response  depend    valid  verdict
+     1000        12    1.00     1.00   +1.00   12/12   input-dependent
+     2000        12    1.00     1.00   +1.00   11/12   input-dependent
+     3000        12    1.00     1.00   +1.00   12/12   input-dependent
+     4000        12    1.00     1.00   +1.00   12/12   input-dependent
+     5000        12    1.00     1.00   +1.00   12/12   input-dependent
+    final        12    1.00     1.00   +1.00   12/12   input-dependent
+
+  READING: ⛔ NEVER ROSE — not a training-duration problem
+  wrote runs/act2/logs/diagnosis_c.json
+=== PIPELINE DONE 16:19:43 ===

@@ -1,0 +1,325 @@
+# Tlön referent set — 13.2 CATEGORICAL ARM (the unstructured null).
+#
+# ⛔ GENERATED. Do not hand-edit — regenerate with
+#    `python tools/build_residue_arms.py`. Both arms are emitted from ONE
+#    in-memory inventory in a single run, so the expressible scaffold is shared
+#    byte-for-byte with the lyric arm and the arms cannot drift apart.
+#
+# ─── WHAT THIS ARM IS FOR ─────────────────────────────────────────────────
+#
+# The residue here is ONE-HOT, so every pair of distinct residues is exactly
+# EQUIDISTANT: the space has no 'nearby' at all. That is a free CATEGORICAL
+# residue expressed inside the integer-lattice type, so no second code path and
+# no second metric are needed — the arms differ only in their coordinates.
+#
+# ⭐⭐ AND IT MAKES A PREDICTION, WHICH IS BETTER THAN A CONVENIENCE: a one-hot
+# input into a linear layer IS a row lookup, so the residue-conditioned HEAD
+# degenerates to exactly the per-referent TABLE on this arm. `categorical x
+# head` should therefore land on `categorical x table`. If those two cells
+# disagree, the 2x2 is not measuring what it claims and the metric cells cannot
+# be read yet — an internal consistency check the design gets for free.
+
+review_status: REVIEWED       # Nate, 2026-08-23. See docs/REVIEW_13_2_ARMS_2026_08_23.md
+# ⛔ REGENERATING THIS FILE RESETS THIS TO UNREVIEWED, BY DESIGN -- the generator
+#    never writes REVIEWED, so a rebuilt roster cannot inherit an old blessing.
+schema_version: 2
+grammar_family: southern
+residue_arm: categorical
+
+referents:
+
+  # ═══ CLUSTER 1 — head `klung`, dependent `lan` via `sen` (3 mates, one expressible signature) ═══
+  - id: "C1M1"
+    name: a hollowing, AT a beholding — tender-holding
+    notes: >-
+      H1 anchor. Witnessing someone you love slip toward the hollow, held soft. Nearest the attractor.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["klung"]
+          residue_any: [[17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["lan"]
+          via: ["sen"]
+
+  - id: "C1M2"
+    name: a hollowing, AT a beholding — the ache without resolution
+    notes: >-
+      H1 anchor. The same witnessing, pulled to pressed-down; no turn, no relief.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["klung"]
+          residue_any: [[0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["lan"]
+          via: ["sen"]
+
+  - id: "C1M3"
+    name: a hollowing, AT a beholding — the systemic gaze
+    notes: >-
+      H1 anchor. The same witnessing, turned outward at what is taking them; pulled to material and outward.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["klung"]
+          residue_any: [[0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["lan"]
+          via: ["sen"]
+
+  # ═══ CLUSTER 2 — head `lan`, dependent `plung` via `mil` (3 mates, one expressible signature) ═══
+  - id: "C2M1"
+    name: a beholding, LIKE an opening — as refuge
+    notes: >-
+      Really seeing another person, and the seeing is where you go to be safe.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["lan"]
+          residue_any: [[0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["plung"]
+          via: ["mil"]
+
+  - id: "C2M2"
+    name: a beholding, LIKE an opening — as revelation
+    notes: >-
+      The recognition lands as light — lit-up, and the ineffable is what is real in it.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["lan"]
+          residue_any: [[0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["plung"]
+          via: ["mil"]
+
+  - id: "C2M3"
+    name: a beholding, LIKE an opening — as gift to the other
+    notes: >-
+      The seeing is given away; tenderness aimed outward rather than kept.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["lan"]
+          residue_any: [[0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["plung"]
+          via: ["mil"]
+
+  # ═══ CLUSTER 3 — head `lus`, dependent `tang` via `hlim` (3 mates, one expressible signature) ═══
+  - id: "C3M1"
+    name: a singing, AMID a holding — solitary refuge
+    notes: >-
+      The record as the room they cannot enter. Inward, un-takeable.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["lus"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["tang"]
+          via: ["hlim"]
+
+  - id: "C3M2"
+    name: a singing, AMID a holding — shared communion
+    notes: >-
+      The same refuge, but it is a cipher — the holding is collective.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["lus"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["tang"]
+          via: ["hlim"]
+
+  - id: "C3M3"
+    name: a singing, AMID a holding — defiant joy
+    notes: >-
+      Craft as gladness thrown back at the pressure; outward, lit, with force behind it.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["lus"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["tang"]
+          via: ["hlim"]
+
+  # ═══ CLUSTER 4 — head `los`, dependent `nin` via `xom` (3 mates, one expressible signature) ═══
+  - id: "C4M1"
+    name: a speaking, THOUGH a hardening — for the collective
+    notes: >-
+      Naming the machine on behalf of the room; outward, confronting the material.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["los"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["nin"]
+          via: ["xom"]
+
+  - id: "C4M2"
+    name: a speaking, THOUGH a hardening — as personal defiance
+    notes: >-
+      The same naming, but it is one person's refusal; intimate and force-side.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["los"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["nin"]
+          via: ["xom"]
+
+  - id: "C4M3"
+    name: a speaking, THOUGH a hardening — as grief at what it costs
+    notes: >-
+      Naming it and counting the cost; pressed-down, tender, inward.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["los"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["nin"]
+          via: ["xom"]
+
+  # ═══ CLUSTER 5 — head `mling`, dependent `nos` via `hlim` (3 mates, one expressible signature) ═══
+  - id: "C5M1"
+    name: a recalling, AMID a weighing — the gift
+    notes: >-
+      Inheritance received as knowledge; tender, ineffable.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["mling"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["nos"]
+          via: ["hlim"]
+
+  - id: "C5M2"
+    name: a recalling, AMID a weighing — the weight
+    notes: >-
+      The same inheritance as trauma carried; furthest pressed-down, and the material is undeniable.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["mling"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["nos"]
+          via: ["hlim"]
+
+  - id: "C5M3"
+    name: a recalling, AMID a weighing — the duty to pass it on
+    notes: >-
+      Inheritance as obligation forward; collective, outward.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["mling"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["nos"]
+          via: ["hlim"]
+
+  # ═══ CLUSTER 6 — head `mim`, dependent `rom` via `kra` (3 mates, one expressible signature) ═══
+  - id: "C6M1"
+    name: a waking, CAUSED-BY an appearing — liberation
+    notes: >-
+      Knowledge of self as the thing that frees. The attractor itself.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["mim"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["rom"]
+          via: ["kra"]
+
+  - id: "C6M2"
+    name: a waking, CAUSED-BY an appearing — the loneliness of it
+    notes: >-
+      Becoming who you are, and being alone in it; inward, and the material presses.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["mim"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["rom"]
+          via: ["kra"]
+
+  - id: "C6M3"
+    name: a waking, CAUSED-BY an appearing — the discipline it demands
+    notes: >-
+      Self-recognition as daily work; force turned on oneself, still intimate.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["mim"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0]]
+        - root_any: ["rom"]
+          via: ["kra"]
+
+  # ═══ CLUSTER 7 — head `tir`, dependent `run` via `sul` (3 mates, one expressible signature) ═══
+  - id: "C7M1"
+    name: a grieving, TOWARD a changing — the raw loss
+    notes: >-
+      Before the turn. Furthest from the attractor on the gross axis.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["tir"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0]]
+        - root_any: ["run"]
+          via: ["sul"]
+
+  - id: "C7M2"
+    name: a grieving, TOWARD a changing — the turn
+    notes: >-
+      The hinge itself, mid-way in every axis.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["tir"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0]]
+        - root_any: ["run"]
+          via: ["sul"]
+
+  - id: "C7M3"
+    name: a grieving, TOWARD a changing — the resolve
+    notes: >-
+      Grief metabolised into refusal; moving back toward the attractor.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["tir"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0]]
+        - root_any: ["run"]
+          via: ["sul"]
+
+  # ═══ CLUSTER 8 — head `sun`, dependent `six` via `hlin` (3 mates, one expressible signature) ═══
+  - id: "C8M1"
+    name: a longing, MORE-THAN a dreading — love as strength
+    notes: >-
+      Choosing the soft thing because it is the strong thing.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["sun"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0]]
+        - root_any: ["six"]
+          via: ["hlin"]
+
+  - id: "C8M2"
+    name: a longing, MORE-THAN a dreading — love as risk
+    notes: >-
+      The ledger is real and loving costs; nearest the material pole.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["sun"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0]]
+        - root_any: ["six"]
+          via: ["hlin"]
+
+  - id: "C8M3"
+    name: a longing, MORE-THAN a dreading — love as the only un-takeable thing
+    notes: >-
+      The ledger is real and love is outside it anyway.
+    tier: 1
+    signature:
+      contains:
+        - root_any: ["sun"]
+          residue_any: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17]]
+        - root_any: ["six"]
+          via: ["hlin"]

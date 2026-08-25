@@ -1,0 +1,51 @@
+==============================================================================
+FIX 1 — ENTROPY SWEEP on the CATEGORICAL (control, SELECTS) arm (head parameterisation)
+==============================================================================
+  device cuda · 24 referents · 8 clusters · 4000 steps · seeds [101, 202, 303] (disjoint from Part A)
+  PRE-REGISTERED CRITERION: minimum coefficient with mean headroom > 5.92 pts
+  (= 2 x MDE floor 2.96) AND mean M-rate >= 0.9 x the incumbent (0.01) M-rate.
+
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+D:\Tlon\tlon\selfplay\phase3.py:311: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:837.)
+  win_e.append(float(choice.entropy))
+    ent 0.01  seed  101  headroom   8.33 pts  ceiling  41.7%  M  42.4%  PARTIAL COLLAPSE  [58s]
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+    ent 0.01  seed  202  headroom   0.00 pts  ceiling  33.3%  M  31.2%  TOTAL COLLAPSE  [57s]
+    ent 0.01  seed  303  headroom   0.00 pts  ceiling  33.3%  M  31.6%  TOTAL COLLAPSE  [60s]
+              ent 0.01  MEAN headroom   2.78  M  35.1%
+
+    ent 0.03  seed  101  headroom   0.00 pts  ceiling  33.3%  M  34.8%  TOTAL COLLAPSE  [63s]
+    ent 0.03  seed  202  headroom   0.00 pts  ceiling  33.3%  M  30.4%  TOTAL COLLAPSE  [59s]
+    ent 0.03  seed  303  headroom   0.00 pts  ceiling  33.3%  M  32.0%  TOTAL COLLAPSE  [60s]
+              ent 0.03  MEAN headroom   0.00  M  32.4%
+
+    ent 0.1   seed  101  headroom   0.00 pts  ceiling  33.3%  M  36.0%  TOTAL COLLAPSE  [65s]
+    ent 0.1   seed  202  headroom   0.00 pts  ceiling  33.3%  M  32.4%  TOTAL COLLAPSE  [63s]
+    ent 0.1   seed  303  headroom   0.00 pts  ceiling  33.3%  M  32.8%  TOTAL COLLAPSE  [51s]
+              ent 0.1   MEAN headroom   0.00  M  33.7%
+
+    ent 0.3   seed  101  headroom   0.00 pts  ceiling  33.3%  M  34.8%  TOTAL COLLAPSE  [50s]
+    ent 0.3   seed  202  headroom   0.00 pts  ceiling  33.3%  M  30.8%  TOTAL COLLAPSE  [55s]
+    ent 0.3   seed  303  headroom   0.00 pts  ceiling  33.3%  M  32.0%  TOTAL COLLAPSE  [54s]
+              ent 0.3   MEAN headroom   0.00  M  32.5%
+
+    ent 1.0   seed  101  headroom   4.17 pts  ceiling  37.5%  M  40.8%  PARTIAL COLLAPSE  [52s]
+    ent 1.0   seed  202  headroom   0.00 pts  ceiling  33.3%  M  32.0%  TOTAL COLLAPSE  [54s]
+    ent 1.0   seed  303  headroom   0.00 pts  ceiling  33.3%  M  32.0%  TOTAL COLLAPSE  [56s]
+              ent 1.0   MEAN headroom   1.39  M  34.9%
+
+  ── SELECTION against the pre-registered criterion ──
+    ent 0.01  headroom   2.78 fail   M  35.1% PASS
+    ent 0.03  headroom   0.00 fail   M  32.4% PASS
+    ent 0.1   headroom   0.00 fail   M  33.7% PASS
+    ent 0.3   headroom   0.00 fail   M  32.5% PASS
+    ent 1.0   headroom   1.39 fail   M  34.9% PASS
+
+  ⛔⛔ NO COEFFICIENT IN THE GRID SATISFIES BOTH CRITERIA.
+     The collapse is not an entropy problem, or the grid is too narrow. Do NOT
+     widen the grid and re-pick silently — that is tuning to taste. Report and decide.
+
+  wrote D:\Tlon\runs\entropy_sweep_13_2.json

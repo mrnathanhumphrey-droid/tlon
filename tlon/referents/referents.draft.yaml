@@ -1,0 +1,348 @@
+# Tlön referent set — Tier 1 (2a seed), Tier 2 and Tier 3 declared but excluded.
+#
+# review_status gates execution. Nothing may run on this file until Nate sets it
+# to REVIEWED. Review tooling may read it as-is; the self-play loop may not.
+#
+# A signature is a PARTIAL GRAPH PATTERN, never a single root (PHASE2_DESIGN §6d).
+# `contains` patterns must each match a DISTINCT node anywhere in the scene.
+#
+# `via` names the relators a node may attach to the matrix by. It is REQUIRED
+# reading, not decoration: an earlier draft left every relator unspecified, the
+# witness builder defaulted to `u` (BEYOND), and all twenty pegs rendered as
+# "beyond ⟨something⟩" — injecting a spatial claim none of them made. If a
+# signature genuinely does not care how two happenings relate, omit `via`
+# deliberately and say so in the notes.
+#
+# Overlaps between referents are DELIBERATE — see the water cluster (03/06/08/
+# 15/20). Nate ruled 2026-08-18 that 03 and 15 may match the same scene.
+#
+# Roots quoted from lexicon.yaml `49475a61a308a2beeb7434693eff5c44`.
+
+review_status: REVIEWED     # Nate, 2026-08-18 — execution unblocked
+schema_version: 2
+grammar_family: southern
+
+referents:
+
+  - id: "01"
+    name: a mirror
+    tier: 1
+    validated: false        # option C — Nate: "alright for now", 2026-08-18
+    notes: >
+      Tlön denies the object, so a mirror cannot be a reflecting THING. It is a
+      seeing that comes back: a perception set AGAINST itself and standing AS
+      another perception. lan = "it sees, is beheld". No new roots minted.
+      Narrowed option A (doubling/facing verbs, never standing-for verbs) is
+      held in reserve if this renders as mush.
+    signature:
+      contains:
+        - {root_any: [lan], orient_any: [kon, hren]}
+        - {root_any: [lan, rän, rom], via: [hlin]}
+
+  - id: "02"
+    name: wind moving through tall grass
+    tier: 1
+    notes: >
+      REPLACES "a tiger" (Nate, 2026-08-18: weak, swap it). At the time the
+      lexicon had no root for striping, so the tiger was carried by hunting amid
+      a yellowing and a blackening — thin. This peg is Thoreau territory and
+      every part of it is directly rooted: tlan winds, xel greens, frim undulates.
+      The pattern/marking family (tlex tlix tlox tlux tläx) was minted the same
+      day, so a tiger peg is now expressible — but it is NOT being swapped back
+      in unreviewed. Raise it as a fresh proposal if you want it.
+    signature:
+      contains:
+        - {root_any: [tlan]}
+        - {root_any: [xel], via: [hlim]}
+        - {root_any: [frim], via: [mil]}
+
+  - id: "03"
+    name: the moon over water
+    tier: 1
+    notes: >
+      The golden peg — Borges' own line renders here. Deliberately does NOT pin
+      the matrix root: the mooning may be matrix or subordinate. `u` (BEYOND) is
+      earned here rather than defaulted — the relation really is spatial.
+      Overlaps 15 by Nate's ruling.
+    signature:
+      contains:
+        - {root_any: [mlö]}
+        - {root_any: [fang, fox, frim, föm, mör], via: [u]}
+
+  - id: "04"
+    name: a labyrinth
+    tier: 1
+    signature:
+      contains:
+        - {root_any: [kron, plin]}
+        - {root_any: [rän, säx, klung], via: [hlin]}
+
+  - id: "05"
+    name: a single gold coin
+    tier: 1
+    notes: >
+      "Single" is not expressible as a count of objects — QUANT counts occasions,
+      not things — so it is deliberately absent rather than faked.
+    signature:
+      contains:
+        - {root_any: [hom]}
+        - {root_any: [präx], via: [hlin]}
+        - {root_any: [flix, pux], via: [hlin]}
+
+  - id: "06"
+    name: a pond at dawn
+    tier: 1
+    notes: fox = "it pools, stands still as water" — the stillness distinguishes it from 15.
+    signature:
+      contains:
+        - {root_any: [fox]}
+        - {root_any: [fis, lir], via: [mil]}
+
+  - id: "07"
+    name: a train whistle heard from far off
+    tier: 1
+    notes: >
+      Anchored on the HEARING, not the whistle — the impression is the reception.
+      `nix` (PART, out of) rather than BEYOND: the hearing comes OUT OF the
+      ringing. Distance carried by ORIENT, the only distance the grammar has.
+    signature:
+      contains:
+        - {root_any: [leng], orient_any: [xun, ung, nong]}
+        - {root_any: [mreng, mräng, hlax], via: [nix]}
+
+  - id: "08"
+    name: ice cracking on a lake
+    tier: 1
+    signature:
+      contains:
+        - {root_any: [kris]}
+        - {root_any: [frum], via: [mil]}
+        - {root_any: [fox], via: [sen]}
+
+  - id: "09"
+    name: a woodpile
+    tier: 1
+    notes: Heaped, out of a greening, while drying. No "wood" root exists; this is the encounter.
+    signature:
+      contains:
+        - {root_any: [hlang]}
+        - {root_any: [xel], via: [nix]}
+        - {root_any: [pem], via: [mil]}
+
+  - id: "10"
+    name: an hourglass
+    tier: 1
+    signature:
+      contains:
+        - {root_any: [ham]}
+        - {root_any: [nur], via: [mil]}
+        - {root_any: [plöng], via: [sen]}
+
+  - id: "11"
+    name: a knife
+    tier: 1
+    signature:
+      contains:
+        - {root_any: [krax]}
+        - {root_any: [pux, hrun, flix], via: [hlin]}
+
+  - id: "12"
+    name: a map the size of its territory
+    tier: 1
+    validated: false        # option C — Nate: "alright for now", 2026-08-18
+    notes: >
+      "Del rigor en la ciencia" is ABOUT representation collapsing into the thing
+      itself, so rendering it as an encounter rather than a representing-object is
+      faithful, not a workaround. A flattening standing AS a repeating and AS a
+      bounding. No standing-for root minted — that would smuggle object-permanence
+      in at the lexical level.
+    signature:
+      contains:
+        - {root_any: [plen]}
+        - {root_any: [rän], via: [hlin]}
+        - {root_any: [säx], via: [hlin]}
+
+  - id: "13"
+    name: a spider's web strung with dew
+    tier: 1
+    notes: No weaving root exists; carried by lengthening-between, amid dripping, while shimmering.
+    signature:
+      contains:
+        - {root_any: [plam], orient_any: [sir, krel]}
+        - {root_any: [from], via: [hlim]}
+        - {root_any: [flox, flix], via: [mil]}
+
+  - id: "14"
+    name: a lit window seen from outside at night
+    tier: 1
+    signature:
+      contains:
+        - {root_any: [hräx], orient_any: [mix, ung]}
+        - {root_any: [säx], via: [hlin]}
+        - {root_any: [flex], via: [mil]}
+
+  - id: "15"
+    name: a river at night
+    tier: 1
+    notes: >
+      fang = "it streams, flows on" — the flowing distinguishes it from 06's
+      standing water. Overlaps 03 by Nate's ruling: a moonlit river really is both.
+    signature:
+      contains:
+        - {root_any: [fang]}
+        - {root_any: [flex, pön, flax], via: [mil]}
+
+  - id: "16"
+    name: a candle burning down
+    tier: 1
+    signature:
+      contains:
+        - {root_any: [tris]}
+        - {root_any: [nur, plöng], via: [mil]}
+        - {root_any: [hräx, häm], via: [hlim]}
+
+  - id: "17"
+    name: a stopped clock
+    tier: 1
+    notes: >
+      `xom` (CONC, despite) is the whole peg: a halting that holds DESPITE a
+      repeating. A clock that merely sits still is not a stopped clock.
+    signature:
+      contains:
+        - {root_any: [kön]}
+        - {root_any: [rän, rem], via: [xom]}
+
+  - id: "18"
+    name: a road forking in a wood
+    tier: 1
+    signature:
+      contains:
+        - {root_any: [hlix], orient_any: [lang, hren]}
+        - {root_any: [xel], via: [sen]}
+
+  - id: "19"
+    name: a moth at a lamp
+    tier: 1
+    notes: "`sul` (TOWARD) carries the compulsion; AT would make it incidental."
+    signature:
+      contains:
+        - {root_any: [kän, kläng]}
+        - {root_any: [hräx, tris], via: [sul]}
+
+  - id: "20"
+    name: a stone worn smooth by water
+    tier: 1
+    notes: "`kra` (CAUS) is the peg: worn BY water. Without it this is just a wet smooth stone."
+    signature:
+      contains:
+        - {root_any: [hrun]}
+        - {root_any: [mös], via: [pos]}
+        - {root_any: [fang, mör, föm, frim], via: [kra]}
+
+  # ── Tier 2 — declared, EXCLUDED from the 2a seed ───────────────────────────
+  - id: "21"
+    name: a city seen only by leaving it
+    tier: 2
+    seed_2a: false
+    signature:
+      contains:
+        - {root_any: [lan], orient_any: [ung, nong, xun]}
+        - {root_any: [fral, krän], via: [nix]}
+
+  - id: "22"
+    name: a book that contains every book
+    tier: 2
+    seed_2a: false
+    validated: false
+    notes: Hits the same representational gap as 01/12. Expect trouble.
+    signature:
+      contains:
+        - {root_any: [rän], orient_any: [mix]}
+        - {root_any: [klung, fral], via: [hlin]}
+        - {root_any: [säx], via: [hlin]}
+
+  - id: "23"
+    name: a word that acts like a virus
+    tier: 2
+    seed_2a: false
+    validated: false
+    notes: Hits the same representational gap as 01/12. Expect trouble.
+    signature:
+      contains:
+        - {root_any: [los]}
+        - {root_any: [mrang], via: [hlin]}
+        - {root_any: [rän, krön], via: [mil]}
+
+  - id: "24"
+    name: a photograph fading
+    tier: 2
+    seed_2a: false
+    validated: false
+    signature:
+      contains:
+        - {root_any: [flöx]}
+        - {root_any: [mleng, rim], via: [mil]}
+
+  - id: "25"
+    name: a doorway between two rooms
+    tier: 2
+    seed_2a: false
+    signature:
+      contains:
+        - {root_any: [plung], orient_any: [sir, plas]}
+        - {root_any: [säx, klung], via: [hlim]}
+
+  - id: "26"
+    name: a garden of forking paths
+    tier: 2
+    seed_2a: false
+    signature:
+      contains:
+        - {root_any: [hlix]}
+        - {root_any: [höm, xel], via: [hlim]}
+        - {root_any: [rän, krön], via: [mil]}
+
+  # ── Tier 3 — abstractions. HELD until the listener is calibrated. ──────────
+  - id: "27"
+    name: solitude
+    tier: 3
+    seed_2a: false
+    validated: false
+    signature:
+      contains:
+        - {root_any: [nöl], orient_any: [sil]}
+        - {root_any: [sun, tir], via: [kra]}
+
+  - id: "28"
+    name: lightness that resists gravity
+    tier: 3
+    seed_2a: false
+    validated: false
+    signature:
+      contains:
+        - {root_any: [nux]}
+        - {root_any: [pel], orient_any: [hlör], via: [xom]}
+
+  - id: "29"
+    name: the cut between two images
+    tier: 3
+    seed_2a: false
+    validated: false
+    signature:
+      contains:
+        - {root_any: [rön], orient_any: [sir]}
+        - {root_any: [lan], via: [hlim]}
+
+  - id: "30"
+    name: the exact moment a story forks
+    tier: 3
+    seed_2a: false
+    validated: false
+    notes: >
+      "The exact moment" is ASPECT, not a root — nim = momentary. Caught by the
+      validator on the first run: an earlier draft put the TEMPORAL particle kim
+      in root_any.
+    signature:
+      contains:
+        - {root_any: [hlix], aspect_root_any: [nim]}
+        - {root_any: [los, mling], via: [nix]}

@@ -1,0 +1,123 @@
+==============================================================================
+PHASE 13.2 -- the 2x2.
+==============================================================================
+  device cuda · arms ['lyric', 'random'] · lambdas [0.0] · 8 seeds · 4000 steps
+    seeds (Nate's ruling)                                8
+    MDE floor at n=8 (prior sd 3.54)                     2.96 pts
+    ⛔ the prior came from a CEILINGED M; treat as a FLOOR.
+
+  ── ARM LYRIC — 24 referents, 8 clusters, mates [3], residue dim 3 ──
+
+  PART 1 — scenes-per-form (BUILD CHECK, true by construction)
+    lyric      scenes/form (via consistent()) mean 3.000  max 3  >1 on 100.0% of utterances
+               (sampled surface-collision rate 1.007 — a DIFFERENT quantity, reported so it is not mistaken for the above)
+
+  CARRIED CONFIRMATIONS (landmine + unknown-as-ignorance)
+    lyric            landmine: 8/8 clusters give one medoid per mate   ·  scenes missing a residue: 0   OK
+
+  PART 2 — 2x2  (naive judge held-out 35.4% residue)
+    lyric   table λ=0.0  coadapt  seed  11  residue  98.8% vs naive  26.1%  gap +72.67  ⚠exp@ceiling  [42s]
+    lyric   table λ=0.0  coadapt  seed  22  residue  99.7% vs naive  30.3%  gap +69.33  ⚠exp@ceiling  [42s]
+    lyric   table λ=0.0  coadapt  seed  33  residue  99.6% vs naive  34.2%  gap +65.33  ⚠exp@ceiling  [42s]
+    lyric   table λ=0.0  coadapt  seed  44  residue  98.7% vs naive  34.2%  gap +64.44  ⚠exp@ceiling  [42s]
+    lyric   table λ=0.0  coadapt  seed  55  residue  99.8% vs naive  36.3%  gap +63.44  ⚠exp@ceiling  [42s]
+    lyric   table λ=0.0  coadapt  seed  66  residue  99.9% vs naive  32.2%  gap +67.67  ⚠exp@ceiling  [42s]
+    lyric   table λ=0.0  coadapt  seed  77  residue  96.0% vs naive  32.3%  gap +63.67  ⚠exp@ceiling  [42s]
+    lyric   table λ=0.0  coadapt  seed  88  residue  99.1% vs naive  32.0%  gap +67.11  ⚠exp@ceiling  [42s]
+            table λ=0.0  coadapt  MEAN +66.71 pts  sd 3.17  MDE@n=8 2.65
+    lyric   table λ=0.0  FROZEN   seed  11  residue  49.4% vs naive  33.2%  gap +16.22  ⚠exp@ceiling  [37s]
+    lyric   table λ=0.0  FROZEN   seed  22  residue  50.1% vs naive  35.2%  gap +14.89  ⚠exp@ceiling  [38s]
+    lyric   table λ=0.0  FROZEN   seed  33  residue  47.7% vs naive  33.4%  gap +14.22  ⚠exp@ceiling  [39s]
+    lyric   table λ=0.0  FROZEN   seed  44  residue  40.7% vs naive  32.8%  gap  +7.89  ⚠exp@ceiling  [38s]
+    lyric   table λ=0.0  FROZEN   seed  55  residue  45.0% vs naive  34.4%  gap +10.56  ⚠exp@ceiling  [38s]
+    lyric   table λ=0.0  FROZEN   seed  66  residue  46.9% vs naive  32.1%  gap +14.78  ⚠exp@ceiling  [38s]
+    lyric   table λ=0.0  FROZEN   seed  77  residue  49.2% vs naive  28.7%  gap +20.56  ⚠exp@ceiling  [38s]
+    lyric   table λ=0.0  FROZEN   seed  88  residue  44.8% vs naive  28.2%  gap +16.56  ⚠exp@ceiling  [37s]
+            table λ=0.0  FROZEN   MEAN +14.46 pts  sd 3.84  MDE@n=8 3.21
+    lyric   head  λ=0.0  coadapt  seed  11  residue  33.4% vs naive  35.2%  gap  -1.78  ⚠exp@ceiling  [51s]
+    lyric   head  λ=0.0  coadapt  seed  22  residue  33.8% vs naive  34.3%  gap  -0.56  ⚠exp@ceiling  [56s]
+    lyric   head  λ=0.0  coadapt  seed  33  residue  34.9% vs naive  33.3%  gap  +1.56  ⚠exp@ceiling  [54s]
+    lyric   head  λ=0.0  coadapt  seed  44  residue  33.2% vs naive  32.3%  gap  +0.89  ⚠exp@ceiling  [54s]
+    lyric   head  λ=0.0  coadapt  seed  55  residue  34.2% vs naive  35.2%  gap  -1.00  ⚠exp@ceiling  [54s]
+    lyric   head  λ=0.0  coadapt  seed  66  residue  33.1% vs naive  35.0%  gap  -1.89  ⚠exp@ceiling  [53s]
+    lyric   head  λ=0.0  coadapt  seed  77  residue  34.3% vs naive  32.4%  gap  +1.89  ⚠exp@ceiling  [51s]
+    lyric   head  λ=0.0  coadapt  seed  88  residue  33.4% vs naive  31.6%  gap  +1.89  ⚠exp@ceiling  [50s]
+            head  λ=0.0  coadapt  MEAN +0.13 pts  sd 1.62  MDE@n=8 1.35
+    lyric   head  λ=0.0  FROZEN   seed  11  residue  33.4% vs naive  35.2%  gap  -1.78  ⚠exp@ceiling  [45s]
+    lyric   head  λ=0.0  FROZEN   seed  22  residue  34.0% vs naive  34.3%  gap  -0.33  ⚠exp@ceiling  [45s]
+    lyric   head  λ=0.0  FROZEN   seed  33  residue  31.0% vs naive  33.3%  gap  -2.33  ⚠exp@ceiling  [45s]
+    lyric   head  λ=0.0  FROZEN   seed  44  residue  33.3% vs naive  32.3%  gap  +1.00  ⚠exp@ceiling  [45s]
+    lyric   head  λ=0.0  FROZEN   seed  55  residue  33.6% vs naive  35.2%  gap  -1.67  ⚠exp@ceiling  [45s]
+    lyric   head  λ=0.0  FROZEN   seed  66  residue  34.7% vs naive  35.0%  gap  -0.33  ⚠exp@ceiling  [45s]
+    lyric   head  λ=0.0  FROZEN   seed  77  residue  33.9% vs naive  32.4%  gap  +1.44  ⚠exp@ceiling  [45s]
+    lyric   head  λ=0.0  FROZEN   seed  88  residue  31.3% vs naive  32.1%  gap  -0.78  ⚠exp@ceiling  [45s]
+            head  λ=0.0  FROZEN   MEAN -0.60 pts  sd 1.33  MDE@n=8 1.11
+
+  ── ARM RANDOM — 24 referents, 8 clusters, mates [3], residue dim 24 ──
+
+  PART 1 — scenes-per-form (BUILD CHECK, true by construction)
+    random     scenes/form (via consistent()) mean 3.000  max 3  >1 on 100.0% of utterances
+               (sampled surface-collision rate 1.007 — a DIFFERENT quantity, reported so it is not mistaken for the above)
+
+  CARRIED CONFIRMATIONS (landmine + unknown-as-ignorance)
+    random           landmine: 8/8 clusters give one medoid per mate   ·  scenes missing a residue: 0   OK
+
+  PART 2 — 2x2  (naive judge held-out 35.4% residue)
+    random  table λ=0.0  coadapt  seed  11  residue  98.8% vs naive  26.1%  gap +72.67  ⚠exp@ceiling  [41s]
+    random  table λ=0.0  coadapt  seed  22  residue  99.7% vs naive  30.3%  gap +69.33  ⚠exp@ceiling  [41s]
+    random  table λ=0.0  coadapt  seed  33  residue  99.6% vs naive  34.2%  gap +65.33  ⚠exp@ceiling  [41s]
+    random  table λ=0.0  coadapt  seed  44  residue  98.7% vs naive  34.2%  gap +64.44  ⚠exp@ceiling  [41s]
+    random  table λ=0.0  coadapt  seed  55  residue  99.8% vs naive  36.3%  gap +63.44  ⚠exp@ceiling  [41s]
+    random  table λ=0.0  coadapt  seed  66  residue  99.9% vs naive  32.2%  gap +67.67  ⚠exp@ceiling  [41s]
+    random  table λ=0.0  coadapt  seed  77  residue  96.0% vs naive  32.3%  gap +63.67  ⚠exp@ceiling  [41s]
+    random  table λ=0.0  coadapt  seed  88  residue  99.1% vs naive  32.0%  gap +67.11  ⚠exp@ceiling  [41s]
+            table λ=0.0  coadapt  MEAN +66.71 pts  sd 3.17  MDE@n=8 2.65
+    random  table λ=0.0  FROZEN   seed  11  residue  49.4% vs naive  33.2%  gap +16.22  ⚠exp@ceiling  [37s]
+    random  table λ=0.0  FROZEN   seed  22  residue  50.1% vs naive  35.2%  gap +14.89  ⚠exp@ceiling  [36s]
+    random  table λ=0.0  FROZEN   seed  33  residue  47.7% vs naive  33.4%  gap +14.22  ⚠exp@ceiling  [36s]
+    random  table λ=0.0  FROZEN   seed  44  residue  40.7% vs naive  32.8%  gap  +7.89  ⚠exp@ceiling  [36s]
+    random  table λ=0.0  FROZEN   seed  55  residue  45.0% vs naive  34.4%  gap +10.56  ⚠exp@ceiling  [36s]
+    random  table λ=0.0  FROZEN   seed  66  residue  46.9% vs naive  32.1%  gap +14.78  ⚠exp@ceiling  [36s]
+    random  table λ=0.0  FROZEN   seed  77  residue  49.2% vs naive  28.7%  gap +20.56  ⚠exp@ceiling  [36s]
+    random  table λ=0.0  FROZEN   seed  88  residue  44.8% vs naive  28.2%  gap +16.56  ⚠exp@ceiling  [36s]
+            table λ=0.0  FROZEN   MEAN +14.46 pts  sd 3.84  MDE@n=8 3.21
+    random  head  λ=0.0  coadapt  seed  11  residue  66.8% vs naive  35.2%  gap +31.56  ⚠exp@ceiling  [50s]
+    random  head  λ=0.0  coadapt  seed  22  residue  56.6% vs naive  34.9%  gap +21.67  ⚠exp@ceiling  [50s]
+    random  head  λ=0.0  coadapt  seed  33  residue  68.7% vs naive  34.1%  gap +34.56  ⚠exp@ceiling  [50s]
+    random  head  λ=0.0  coadapt  seed  44  residue  72.3% vs naive  41.0%  gap +31.33  ⚠exp@ceiling  [50s]
+    random  head  λ=0.0  coadapt  seed  55  residue  65.3% vs naive  38.8%  gap +26.56  ⚠exp@ceiling  [50s]
+    random  head  λ=0.0  coadapt  seed  66  residue  75.8% vs naive  30.2%  gap +45.56  ⚠exp@ceiling  [50s]
+    random  head  λ=0.0  coadapt  seed  77  residue  87.9% vs naive  37.9%  gap +50.00  ⚠exp@ceiling  [50s]
+    random  head  λ=0.0  coadapt  seed  88  residue  83.3% vs naive  35.7%  gap +47.67  ⚠exp@ceiling  [50s]
+            head  λ=0.0  coadapt  MEAN +36.11 pts  sd 10.43  MDE@n=8 8.72
+    random  head  λ=0.0  FROZEN   seed  11  residue  37.6% vs naive  35.3%  gap  +2.22  ⚠exp@ceiling  [45s]
+    random  head  λ=0.0  FROZEN   seed  22  residue  33.9% vs naive  34.3%  gap  -0.44  ⚠exp@ceiling  [45s]
+    random  head  λ=0.0  FROZEN   seed  33  residue  31.8% vs naive  34.1%  gap  -2.33  ⚠exp@ceiling  [46s]
+    random  head  λ=0.0  FROZEN   seed  44  residue  32.4% vs naive  33.7%  gap  -1.22  ⚠exp@ceiling  [45s]
+    random  head  λ=0.0  FROZEN   seed  55  residue  33.4% vs naive  31.6%  gap  +1.89  ⚠exp@ceiling  [45s]
+    random  head  λ=0.0  FROZEN   seed  66  residue  37.0% vs naive  35.0%  gap  +2.00  ⚠exp@ceiling  [45s]
+    random  head  λ=0.0  FROZEN   seed  77  residue  33.9% vs naive  37.9%  gap  -4.00  ⚠exp@ceiling  [45s]
+    random  head  λ=0.0  FROZEN   seed  88  residue  41.0% vs naive  32.1%  gap  +8.89  ⚠exp@ceiling  [45s]
+            head  λ=0.0  FROZEN   MEAN +0.88 pts  sd 3.94  MDE@n=8 3.29
+
+  ⭐ λ=0 TABLE-IDENTITY CHECK (coadapt): PASS — bit-identical across arms
+
+  ⭐ λ=0 TABLE-IDENTITY CHECK (FROZEN): PASS — bit-identical across arms
+
+  ⚠ EXPRESSIBLE COMPONENT AT CEILING ON 64/64 RUNS. The signature core is always fully uttered and exactly
+    parseable, so cluster identification is 1.0000 for BOTH listeners from step 0. The specified
+    residue-vs-expressible paired control is therefore a comparison against a flat line and
+    CANNOT ADJUDICATE. The frozen arm carries that role. Recorded, not worked around.
+
+  ── THE FOUR-WAY READ, λ=0.0 ──
+    metric×head +0.13   categorical×head +36.11   metric×table +66.71   categorical×table +66.71
+    head contrast (metric - categorical): -35.99 pts, Welch t -9.64  [UNPAIRED by construction]
+    ⭐ consistency check — categorical×head vs categorical×table: -30.60 pts, t -7.94
+       (one-hot into a linear layer IS a row lookup, so these two cells should agree;
+        if they do not, the 2x2 is not measuring what it claims and the metric cells
+        cannot be read yet)
+SIDE BY SIDE (no pairing: different arms emit different utterances, so no item-level pairing exists; the seed-level Welch contrast above is the honest test)
+    metric×head gap                        0.13   seed-gap[n=8 9fbd45e4a6066cb4] arm=lyric param=head
+    categorical×head gap                  36.11   seed-gap[n=8 8f4d760bfc437f77] arm=random param=head
+
+  wrote D:\Tlon\runs\phase13_2_partA.json

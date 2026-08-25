@@ -1,0 +1,54 @@
+==============================================================================
+FIX 1 — ENTROPY SWEEP on the CATEGORICAL arm (head parameterisation)
+==============================================================================
+  device cuda · 24 referents · 8 clusters · 4000 steps · seeds [101, 202, 303] (disjoint from Part A)
+  PRE-REGISTERED CRITERION: minimum coefficient with mean headroom > 5.92 pts
+  (= 2 x MDE floor 2.96) AND mean M-rate >= 0.9 x the incumbent (0.01) M-rate.
+
+    ent 0.01  seed  101  headroom  29.17 pts  ceiling  62.5%  M  64.4%  PARTIAL COLLAPSE  [63s]
+    ent 0.01  seed  202  headroom  33.34 pts  ceiling  66.7%  M  59.2%  PARTIAL COLLAPSE  [63s]
+    ent 0.01  seed  303  headroom  58.17 pts  ceiling  91.5%  M  70.0%  PARTIALLY SEPARATED  [62s]
+             ==============================================================================
+FIX 1 — ENTROPY SWEEP on the CATEGORICAL arm (head parameterisation)
+==============================================================================
+  device cuda · 24 referents · 8 clusters · 4000 steps · seeds [101, 202, 303] (disjoint from Part A)
+  PRE-REGISTERED CRITERION: minimum coefficient with mean headroom > 5.92 pts
+  (= 2 x MDE floor 2.96) AND mean M-rate >= 0.9 x the incumbent (0.01) M-rate.
+
+    ent 0.01  seed  101  headroom  29.17 pts  ceiling  62.5%  M  64.4%  PARTIAL COLLAPSE  [91s]
+    ent 0.01  seed  202  headroom  33.34 pts  ceiling  66.7%  M  59.2%  PARTIAL COLLAPSE  [91s]
+    ent 0.01  seed  303  headroom  58.17 pts  ceiling  91.5%  M  70.0%  PARTIALLY SEPARATED  [93s]
+              ent 0.01  MEAN headroom  40.23  M  64.5%
+
+    ent 0.03  seed  101  headroom  20.84 pts  ceiling  54.2%  M  60.8%  PARTIAL COLLAPSE  [89s]
+    ent 0.03  seed  202  headroom  33.33 pts  ceiling  66.7%  M  68.8%  PARTIAL COLLAPSE  [85s]
+    ent 0.03  seed  303  headroom  58.33 pts  ceiling  91.7%  M  70.4%  PARTIALLY SEPARATED  [84s]
+              ent 0.03  MEAN headroom  37.50  M  66.7%
+
+    ent 0.1   seed  101  headroom  41.67 pts  ceiling  75.0%  M  71.2%  PARTIAL COLLAPSE  [84s]
+    ent 0.1   seed  202  headroom  54.17 pts  ceiling  87.5%  M  67.6%  PARTIALLY SEPARATED  [79s]
+    ent 0.1   seed  303  headroom  37.50 pts  ceiling  70.8%  M  65.6%  PARTIAL COLLAPSE  [60s]
+              ent 0.1   MEAN headroom  44.45  M  68.1%
+
+    ent 0.3   seed  101  headroom  54.17 pts  ceiling  87.5%  M  90.0%  PARTIALLY SEPARATED  [59s]
+    ent 0.3   seed  202  headroom  58.33 pts  ceiling  91.7%  M  73.2%  PARTIALLY SEPARATED  [62s]
+    ent 0.3   seed  303  headroom  45.83 pts  ceiling  79.2%  M  84.8%  PARTIALLY SEPARATED  [61s]
+              ent 0.3   MEAN headroom  52.78  M  82.7%
+
+    ent 1.0   seed  101  headroom  58.76 pts  ceiling  92.1%  M  91.6%  PARTIALLY SEPARATED  [60s]
+    ent 1.0   seed  202  headroom  62.50 pts  ceiling  95.8%  M  82.8%  PARTIALLY SEPARATED  [60s]
+    ent 1.0   seed  303  headroom  62.47 pts  ceiling  95.8%  M  79.2%  PARTIALLY SEPARATED  [60s]
+              ent 1.0   MEAN headroom  61.24  M  84.5%
+
+  ── SELECTION against the pre-registered criterion ──
+    ent 0.01  headroom  40.23 PASS   M  64.5% PASS  <-- CHOSEN
+    ent 0.03  headroom  37.50 PASS   M  66.7% PASS
+    ent 0.1   headroom  44.45 PASS   M  68.1% PASS
+    ent 0.3   headroom  52.78 PASS   M  82.7% PASS
+    ent 1.0   headroom  61.24 PASS   M  84.5% PASS
+
+  ⭐ FROZEN ENTROPY COEFFICIENT: 0.01
+     Chosen as the MINIMUM passing value on the CONTROL arm, on seeds disjoint from
+     Part A's. It is now applied BLIND and IDENTICALLY to both arms.
+
+  wrote D:\Tlon\runs\entropy_sweep_13_2.json

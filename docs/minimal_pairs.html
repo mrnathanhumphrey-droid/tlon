@@ -1,0 +1,215 @@
+<title>Tlön Minimal Pairs</title>
+<style>
+:root{--ground:#f3f0ea;--raised:#fffdf9;--line:#d8d2c6;--ink:#221e28;
+--muted:#6a6272;--sage:#5f6b57;--sage-dim:#8a9481;--ochre:#8a6a24;
+--rose:#9c4f4a;--chip:#e8e3d8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--ground:#1e1a22;--raised:#262130;--line:#3a3345;--ink:#ded9d0;--muted:#948da2;
+--sage:#c2c7b7;--sage-dim:#8b937f;--ochre:#c8a45c;--rose:#c58a86;--chip:#2f2939}}
+:root[data-theme="dark"]{--ground:#1e1a22;--raised:#262130;--line:#3a3345;
+--ink:#ded9d0;--muted:#948da2;--sage:#c2c7b7;--sage-dim:#8b937f;
+--ochre:#c8a45c;--rose:#c58a86;--chip:#2f2939}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+font-size:16px;line-height:1.6}
+.wrap{max-width:78ch;margin:0 auto;padding:3rem 1.25rem 6rem}
+h1,h2,h3{font-family:"Iowan Old Style",Palatino,Georgia,serif;
+text-wrap:balance;margin:0;font-weight:600}
+h1{font-size:2.1rem;letter-spacing:-.01em}
+h2{font-size:1.2rem;margin:3rem 0 1rem;padding-bottom:.5rem;
+border-bottom:1px solid var(--line)}
+.eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.16em;
+color:var(--muted);margin-bottom:.6rem}
+.lede{color:var(--muted);margin:.75rem 0 0}
+.status{display:inline-block;margin-top:1.25rem;padding:.3rem .7rem;
+border:1px solid var(--ochre);color:var(--ochre);border-radius:2px;
+font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}
+.pair{background:var(--raised);border:1px solid var(--line);border-radius:2px;
+margin-top:1.25rem;overflow:hidden}
+.phead{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;
+padding:.7rem 1.1rem;border-bottom:1px solid var(--line);background:var(--chip)}
+.pid{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;
+color:var(--sage-dim);font-variant-numeric:tabular-nums}
+.contrast{font-size:.68rem;text-transform:uppercase;letter-spacing:.11em;
+color:var(--sage);border:1px solid currentColor;padding:.15rem .45rem;
+border-radius:2px}
+.bor{margin-left:auto;font-size:.74rem;color:var(--muted);
+font-variant-numeric:tabular-nums}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+@media (max-width:720px){.cols{grid-template-columns:1fr}}
+.side{background:var(--raised);padding:1rem 1.1rem}
+.nm{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:1.05rem;
+margin-bottom:.5rem}
+.spec{font-family:ui-monospace,Consolas,monospace;font-size:1rem;
+color:var(--sage);overflow-x:auto;white-space:nowrap;padding-bottom:.2rem}
+.gl{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-style:italic;
+font-size:.97rem;margin:.5rem 0 0}
+.diff{color:var(--rose);font-weight:600}
+.note{font-size:.85rem;color:var(--muted);margin:0;padding:.8rem 1.1rem;
+border-top:1px solid var(--line)}
+footer{margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid var(--line);
+color:var(--muted);font-size:.85rem}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;
+background:var(--chip);padding:.1rem .3rem;border-radius:2px}
+</style>
+<div class="wrap">
+<p class="eyebrow">Tlön · phase 2b · minimal pairs</p>
+<h1>Ten pairs the roots cannot separate</h1>
+<p class="lede">Pre-reg <code>612f37ba</code> fired KILL&nbsp;1: bag-of-roots scored
+<b>99.94%</b> on the original twenty pegs, because their root sets barely overlap.
+These twenty referents are built so that <b>both members of a pair use exactly the
+same roots</b> — so that baseline is pinned at chance, by construction and by
+measurement. A listener must read structure or score 50%.</p>
+<p class="lede">Highlighted morphemes are the ones that differ. Judge whether the two
+glosses are genuinely different impressions — if they read as the same thing, the pair
+is not a real contrast and I should replace it.</p>
+<span class="status">review_status: unreviewed — execution blocked</span>
+
+<h2>The pairs</h2>
+<section class="pair">
+<div class="phead"><span class="pid">P1 · 31/32</span>
+<span class="contrast">direction</span>
+<span class="bor">bag-of-roots 46.1% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">a stone worn smooth by water</div>
+<div class="spec">kra fang hrun ka</div>
+<p class="gl">“because of ⟨it streams, flows on⟩, it stones, is mineral.”</p></div>
+<div class="side"><div class="nm">a current broken by a stone</div>
+<div class="spec">kra hrun fang ka</div>
+<p class="gl">“because of ⟨it stones, is mineral⟩, it streams, flows on.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> fang <span style='opacity:.6'>it streams, flows on</span>, hrun <span style='opacity:.6'>it stones, is mineral</span><br>The streaming is the cause; the stoning is what is being described.</p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P2 · 33/34</span>
+<span class="contrast">orientation</span>
+<span class="bor">bag-of-roots 51.1% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">moonrise over water</div>
+<div class="spec"><span class="diff">hlör</span> u fang mlö ka</div>
+<p class="gl">“upward, beyond ⟨it streams, flows on⟩, it moons, lunates.”</p></div>
+<div class="side"><div class="nm">moonset into water</div>
+<div class="spec"><span class="diff">nar</span> u fang mlö ka</div>
+<p class="gl">“downward, beyond ⟨it streams, flows on⟩, it moons, lunates.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> fang <span style='opacity:.6'>it streams, flows on</span>, mlö <span style='opacity:.6'>it moons, lunates</span><br>Borges&#x27; own line. Overlaps peg 03 (which fixes no orientation) — that is expected and does not affect within-pair scoring, since 34 requires `nar`.</p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P3 · 35/36</span>
+<span class="contrast">relator</span>
+<span class="bor">bag-of-roots 48.9% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">a fire burning because of wind</div>
+<div class="spec"><span class="diff">kra</span> tlan tris ka</div>
+<p class="gl">“because of ⟨it winds, blows⟩, it burns.”</p></div>
+<div class="side"><div class="nm">a fire burning despite wind</div>
+<div class="spec"><span class="diff">xom</span> tlan tris ka</div>
+<p class="gl">“despite ⟨it winds, blows⟩, it burns.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> tlan <span style='opacity:.6'>it winds, blows</span>, tris <span style='opacity:.6'>it burns</span><br>kra vs xom. The whole difference is one morpheme, and it inverts the scene.</p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P4 · 37/38</span>
+<span class="contrast">relator</span>
+<span class="bor">bag-of-roots 50.6% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">stillness before a storm</div>
+<div class="spec"><span class="diff">tan</span> tlan nöl ka</div>
+<p class="gl">“before ⟨it winds, blows⟩, it stills, silences.”</p></div>
+<div class="side"><div class="nm">stillness after a storm</div>
+<div class="spec"><span class="diff">pos</span> tlan nöl ka</div>
+<p class="gl">“after ⟨it winds, blows⟩, it stills, silences.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> nöl <span style='opacity:.6'>it stills, silences</span>, tlan <span style='opacity:.6'>it winds, blows</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P5 · 39/40</span>
+<span class="contrast">nesting</span>
+<span class="bor">bag-of-roots 49.4% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">a glow, and rain, both seen</div>
+<div class="spec">sen lan u frem hräx ka</div>
+<p class="gl">“at ⟨it sees, is beheld⟩, beyond ⟨it rains⟩, it glows.”</p></div>
+<div class="side"><div class="nm">a glow beyond rain that is being watched</div>
+<div class="spec">u sen lan frem hräx ka</div>
+<p class="gl">“beyond ⟨at ⟨it sees, is beheld⟩, it rains⟩, it glows.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> frem <span style='opacity:.6'>it rains</span>, hräx <span style='opacity:.6'>it glows</span>, lan <span style='opacity:.6'>it sees, is beheld</span><br>The seeing hangs off the MATRIX: a glowing, beyond a raining, at a seeing — three co-present happenings.</p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P6 · 41/42</span>
+<span class="contrast">orientation</span>
+<span class="bor">bag-of-roots 45.0% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">light going out from a window</div>
+<div class="spec"><span class="diff">pox</span> hlin säx hräx ka</div>
+<p class="gl">“outward, as ⟨it edges, is bounded⟩, it glows.”</p></div>
+<div class="side"><div class="nm">light falling into a room</div>
+<div class="spec"><span class="diff">tim</span> hlin säx hräx ka</div>
+<p class="gl">“inward, as ⟨it edges, is bounded⟩, it glows.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> hräx <span style='opacity:.6'>it glows</span>, säx <span style='opacity:.6'>it edges, is bounded</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P7 · 43/44</span>
+<span class="contrast">relator</span>
+<span class="bor">bag-of-roots 49.4% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">a bird flying while it rains</div>
+<div class="spec"><span class="diff">mil</span> frem kläng ka</div>
+<p class="gl">“while ⟨it rains⟩, it flies.”</p></div>
+<div class="side"><div class="nm">a bird flying after rain</div>
+<div class="spec"><span class="diff">pos</span> frem kläng ka</div>
+<p class="gl">“after ⟨it rains⟩, it flies.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> frem <span style='opacity:.6'>it rains</span>, kläng <span style='opacity:.6'>it flies</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P8 · 45/46</span>
+<span class="contrast">direction</span>
+<span class="bor">bag-of-roots 47.8% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">silence following a sound</div>
+<div class="spec">pos hlax nöl ka</div>
+<p class="gl">“after ⟨it sounds, resonates⟩, it stills, silences.”</p></div>
+<div class="side"><div class="nm">a sound breaking a silence</div>
+<div class="spec">pos nöl hlax ka</div>
+<p class="gl">“after ⟨it stills, silences⟩, it sounds, resonates.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> hlax <span style='opacity:.6'>it sounds, resonates</span>, nöl <span style='opacity:.6'>it stills, silences</span><br>Replicates P1&#x27;s contrast on unrelated roots, so the result is not one accident.</p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P9 · 47/48</span>
+<span class="contrast">orientation</span>
+<span class="bor">bag-of-roots 55.0% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">a scattering crowd</div>
+<div class="spec"><span class="diff">sil</span> mil fral xir ka</div>
+<p class="gl">“apart, while ⟨it crowds, teems⟩, it moves, displaces.”</p></div>
+<div class="side"><div class="nm">a gathering crowd</div>
+<div class="spec"><span class="diff">hul</span> mil fral xir ka</div>
+<p class="gl">“together, while ⟨it crowds, teems⟩, it moves, displaces.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> fral <span style='opacity:.6'>it crowds, teems</span>, xir <span style='opacity:.6'>it moves, displaces</span></p>
+</section><section class="pair">
+<div class="phead"><span class="pid">P10 · 49/50</span>
+<span class="contrast">aspect</span>
+<span class="bor">bag-of-roots 42.8% · chance 50%</span></div>
+<div class="cols">
+<div class="side"><div class="nm">a flickering light</div>
+<div class="spec">hräx <span class="diff">nimas</span> ka</div>
+<p class="gl">“it glows, for an instant.”</p></div>
+<div class="side"><div class="nm">a steady light</div>
+<div class="spec">hräx <span class="diff">axas</span> ka</div>
+<p class="gl">“it glows, unceasingly.”</p></div>
+</div>
+<p class="note"><b>shared roots:</b> hräx <span style='opacity:.6'>it glows</span><br>The purest pair: a SINGLE root, so bag-of-roots is at chance even in principle. Also the channel phase 3&#x27;s cipher control scrambles — so this doubles as an early read on whether aspect is legible at all.</p>
+</section>
+
+<h2>One call for you</h2>
+<p class="lede"><b>P2 overlaps peg 03.</b> "The moon over water" fixes no orientation,
+so it matches both moonrise and moonset — 03 is now the vaguer parent of two sharper
+children. That does not affect within-pair scoring. Leave it, or tighten 03?</p>
+
+<footer>
+<p>Generated from <code>tlon/referents/minimal_pairs.draft.yaml</code> against lexicon
+<code>49475a61a308a2beeb7434693eff5c44</code>. Bag-of-roots figures measured by
+<code>tools/verify_minimal_pairs.py</code>, which fits the classifier on each pair
+rather than arguing from the schema.</p>
+<p>Contrast coverage: relator ×3 · orientation ×3 · direction ×2 · nesting ×1 · aspect ×1.
+P8 replicates P1 on unrelated roots so a positive result is not one accident.</p>
+</footer>
+</div>

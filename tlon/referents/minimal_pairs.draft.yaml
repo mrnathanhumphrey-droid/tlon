@@ -1,0 +1,258 @@
+# Tlön — MINIMAL PAIRS. Ten pairs, twenty referents, IDs 31–50.
+#
+# WHY THESE EXIST. Pre-reg 612f37ba fired KILL 1: bag-of-roots scored 99.94 % on
+# the 20 Tier-1 pegs, because their root sets are near-disjoint and root identity
+# alone decides the answer. Adding merely "harder" pegs would leave us hoping.
+#
+# THE PROPERTY THAT MAKES THIS A TEST, NOT A HOPE:
+#   the two members of every pair below have IDENTICAL root multisets.
+# No root evidence distinguishes them, so bag-of-roots is pinned at 50 % WITHIN
+# a pair BY CONSTRUCTION, not by measurement. `tools/verify_minimal_pairs.py`
+# asserts the property rather than trusting this comment.
+#
+# Each pair differs by exactly ONE structural channel, and the channels are
+# spread so we learn WHICH ones a listener can read:
+#   direction (which happening is the matrix) · relator identity ·
+#   orientation · nesting depth (scope) · aspect kind
+#
+# ⚠️ The aspect pair (49/50) shares a SINGLE root, so bag-of-roots is at chance
+# there even in principle. It is also the channel the phase-3 cipher control
+# scrambles, so it doubles as an early read on whether that channel is legible.
+#
+# review_status gates execution. Nothing runs until Nate sets REVIEWED.
+# Roots quoted from lexicon.yaml `49475a61a308a2beeb7434693eff5c44`.
+
+review_status: REVIEWED     # Nate, 2026-08-20 — kept as CHANNEL DIAGNOSTICS
+schema_version: 3
+grammar_family: southern
+
+referents:
+
+  # ── P1 · direction — which happening is the matrix ────────────────────────
+  - id: "31"
+    name: a stone worn smooth by water
+    tier: 1
+    minimal_pair: P1
+    contrast: direction
+    notes: The streaming is the cause; the stoning is what is being described.
+    signature:
+      contains:
+        - {root_any: [hrun]}
+        - {root_any: [fang], via: [kra]}
+
+  - id: "32"
+    name: a current broken by a stone
+    tier: 1
+    minimal_pair: P1
+    contrast: direction
+    notes: Same two happenings, same relator, reversed. The streaming is now the subject.
+    signature:
+      contains:
+        - {root_any: [fang]}
+        - {root_any: [hrun], via: [kra]}
+
+  # ── P2 · orientation — up vs down ─────────────────────────────────────────
+  - id: "33"
+    name: moonrise over water
+    tier: 1
+    minimal_pair: P2
+    contrast: orientation
+    notes: >
+      Borges' own line. Overlaps peg 03 (which fixes no orientation) — that is
+      expected and does not affect within-pair scoring, since 34 requires `nar`.
+    signature:
+      contains:
+        - {root_any: [mlö], orient_any: [hlör]}
+        - {root_any: [fang], via: [u]}
+
+  - id: "34"
+    name: moonset into water
+    tier: 1
+    minimal_pair: P2
+    contrast: orientation
+    notes: The mirror of the attested line. Identical roots; only the orientation turns.
+    signature:
+      contains:
+        - {root_any: [mlö], orient_any: [nar]}
+        - {root_any: [fang], via: [u]}
+
+  # ── P3 · relator identity — because vs despite ────────────────────────────
+  - id: "35"
+    name: a fire burning because of wind
+    tier: 1
+    minimal_pair: P3
+    contrast: relator
+    signature:
+      contains:
+        - {root_any: [tris]}
+        - {root_any: [tlan], via: [kra]}
+
+  - id: "36"
+    name: a fire burning despite wind
+    tier: 1
+    minimal_pair: P3
+    contrast: relator
+    notes: kra vs xom. The whole difference is one morpheme, and it inverts the scene.
+    signature:
+      contains:
+        - {root_any: [tris]}
+        - {root_any: [tlan], via: [xom]}
+
+  # ── P4 · relator identity — before vs after ───────────────────────────────
+  - id: "37"
+    name: stillness before a storm
+    tier: 1
+    minimal_pair: P4
+    contrast: relator
+    signature:
+      contains:
+        - {root_any: [nöl]}
+        - {root_any: [tlan], via: [tan]}
+
+  - id: "38"
+    name: stillness after a storm
+    tier: 1
+    minimal_pair: P4
+    contrast: relator
+    signature:
+      contains:
+        - {root_any: [nöl]}
+        - {root_any: [tlan], via: [pos]}
+
+  # ── P5 · nesting depth — SCOPE ────────────────────────────────────────────
+  - id: "39"
+    name: a glow, and rain, both seen
+    tier: 1
+    minimal_pair: P5
+    contrast: nesting
+    notes: >
+      The seeing hangs off the MATRIX: a glowing, beyond a raining, at a seeing —
+      three co-present happenings.
+    signature:
+      contains:
+        - {root_any: [hräx]}
+        - {root_any: [frem], via: [u]}
+        - {root_any: [lan], at_depth: 1}
+
+  - id: "40"
+    name: a glow beyond rain that is being watched
+    tier: 1
+    minimal_pair: P5
+    contrast: nesting
+    notes: >
+      The seeing hangs off the RAIN, not the glow: a glowing, beyond ⟨a raining
+      at a seeing⟩. Same three roots; only the scope moves. This is the one
+      contrast the grammar's recursion buys and nothing else can express.
+    signature:
+      contains:
+        - {root_any: [hräx]}
+        - {root_any: [frem], via: [u]}
+        - {root_any: [lan], at_depth: 2}
+
+  # ── P6 · orientation — outward vs inward ──────────────────────────────────
+  - id: "41"
+    name: light going out from a window
+    tier: 1
+    minimal_pair: P6
+    contrast: orientation
+    signature:
+      contains:
+        - {root_any: [hräx], orient_any: [pox]}
+        - {root_any: [säx], via: [hlin]}
+
+  - id: "42"
+    name: light falling into a room
+    tier: 1
+    minimal_pair: P6
+    contrast: orientation
+    signature:
+      contains:
+        - {root_any: [hräx], orient_any: [tim]}
+        - {root_any: [säx], via: [hlin]}
+
+  # ── P7 · relator identity — while vs after ────────────────────────────────
+  - id: "43"
+    name: a bird flying while it rains
+    tier: 1
+    minimal_pair: P7
+    contrast: relator
+    signature:
+      contains:
+        - {root_any: [kläng]}
+        - {root_any: [frem], via: [mil]}
+
+  - id: "44"
+    name: a bird flying after rain
+    tier: 1
+    minimal_pair: P7
+    contrast: relator
+    signature:
+      contains:
+        - {root_any: [kläng]}
+        - {root_any: [frem], via: [pos]}
+
+  # ── P8 · direction — replication of P1 on different roots ─────────────────
+  - id: "45"
+    name: silence following a sound
+    tier: 1
+    minimal_pair: P8
+    contrast: direction
+    notes: Replicates P1's contrast on unrelated roots, so the result is not one accident.
+    signature:
+      contains:
+        - {root_any: [nöl]}
+        - {root_any: [hlax], via: [pos]}
+
+  - id: "46"
+    name: a sound breaking a silence
+    tier: 1
+    minimal_pair: P8
+    contrast: direction
+    signature:
+      contains:
+        - {root_any: [hlax]}
+        - {root_any: [nöl], via: [pos]}
+
+  # ── P9 · orientation — apart vs together ──────────────────────────────────
+  - id: "47"
+    name: a scattering crowd
+    tier: 1
+    minimal_pair: P9
+    contrast: orientation
+    signature:
+      contains:
+        - {root_any: [xir], orient_any: [sil]}
+        - {root_any: [fral], via: [mil]}
+
+  - id: "48"
+    name: a gathering crowd
+    tier: 1
+    minimal_pair: P9
+    contrast: orientation
+    signature:
+      contains:
+        - {root_any: [xir], orient_any: [hul]}
+        - {root_any: [fral], via: [mil]}
+
+  # ── P10 · aspect kind — ONE root, nothing else to go on ───────────────────
+  - id: "49"
+    name: a flickering light
+    tier: 1
+    minimal_pair: P10
+    contrast: aspect
+    notes: >
+      The purest pair: a SINGLE root, so bag-of-roots is at chance even in
+      principle. Also the channel phase 3's cipher control scrambles — so this
+      doubles as an early read on whether aspect is legible at all.
+    signature:
+      contains:
+        - {root_any: [hräx], aspect_root_any: [nim]}
+
+  - id: "50"
+    name: a steady light
+    tier: 1
+    minimal_pair: P10
+    contrast: aspect
+    signature:
+      contains:
+        - {root_any: [hräx], aspect_root_any: [ax]}

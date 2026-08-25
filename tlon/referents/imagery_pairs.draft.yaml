@@ -1,0 +1,261 @@
+# Tlön — IMAGERY PAIRS v2. Ten scenes, each from both participants' side.
+#
+# THE RULE, found by measurement not by argument:
+#   an imagery pair stays honest only when both perspectives are about ALL the
+#   same happenings. Only the VANTAGE moves.
+#
+# v1 drafted ten rich scenes and nine of them leaked -- bag-of-roots scored
+# 94-100%, because each side had private business the other could not see. The
+# stone's rounding exists only from the stone's side; the water's scattering
+# only from the water's. Those are genuinely different events, so the roots
+# correctly differed and the pair correctly failed.
+#
+# The one that survived (light/night, 51.1%) shared everything: the glowing is
+# in the night's view too, the darkening is in the light's. Same three
+# happenings, and only which is matrix plus the orientation change hands.
+#
+# Every pair below is built to that rule. It costs some of the richest scenes --
+# stone/water, moth/lamp -- and buys pairs that are two real images AND cannot
+# be told apart by roots.
+#
+# review_status gates execution. Roots quoted from lexicon `e2b8527010231a81fd31b6eeb9de3d8c`.
+
+review_status: REVIEWED     # Nate, 2026-08-20 — "yes much much better"
+schema_version: 3
+grammar_family: southern
+
+referents:
+
+  # ── J1 · a lit window, from outside, at night ─────────────────────────────
+  - id: "51"
+    name: the light's side — going out into the dark
+    tier: 1
+    minimal_pair: J1
+    contrast: perspective
+    notes: >
+      The original survivor and the template for the rest. Glowing, darkening
+      and bounding are all present to both; only the vantage turns.
+    signature:
+      contains:
+        - {root_any: [hräx], orient_any: [pox]}
+        - {root_any: [flex], via: [u]}
+        - {root_any: [säx], via: [hlin]}
+
+  - id: "52"
+    name: the night's side — pressed against a bounded brightness
+    tier: 1
+    minimal_pair: J1
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [flex], orient_any: [kon]}
+        - {root_any: [hräx], via: [u]}
+        - {root_any: [säx], via: [hlin]}
+
+  # ── J2 · a sound in a quiet room ──────────────────────────────────────────
+  - id: "53"
+    name: the sound's side — breaking out into stillness
+    tier: 1
+    minimal_pair: J2
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [hlax], orient_any: [pox]}
+        - {root_any: [nöl], via: [u]}
+        - {root_any: [rön], via: [hlin]}
+
+  - id: "54"
+    name: the stillness's side — broken into
+    tier: 1
+    minimal_pair: J2
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [nöl], orient_any: [kon]}
+        - {root_any: [hlax], via: [u]}
+        - {root_any: [rön], via: [hlin]}
+
+  # ── J3 · something said and heard ─────────────────────────────────────────
+  - id: "55"
+    name: the speaking's side — going out, not knowing if it lands
+    tier: 1
+    minimal_pair: J3
+    contrast: perspective
+    notes: The project's own subject. Both sides hold speaking, hearing, sounding.
+    signature:
+      contains:
+        - {root_any: [los], orient_any: [pox, xun]}
+        - {root_any: [leng], via: [u]}
+        - {root_any: [hlax], via: [hlin]}
+
+  - id: "56"
+    name: the hearing's side — something arriving from elsewhere
+    tier: 1
+    minimal_pair: J3
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [leng], orient_any: [tim, hlan]}
+        - {root_any: [los], via: [u]}
+        - {root_any: [hlax], via: [hlin]}
+
+  # ── J4 · a weight on something that holds ─────────────────────────────────
+  - id: "57"
+    name: the weight's side — bearing down
+    tier: 1
+    minimal_pair: J4
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [nos], orient_any: [nar]}
+        - {root_any: [tang], via: [u]}
+        - {root_any: [plon], via: [hlin]}
+
+  - id: "58"
+    name: the holding's side — taking the load without giving
+    tier: 1
+    minimal_pair: J4
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [tang], orient_any: [hlör, kon]}
+        - {root_any: [nos], via: [u]}
+        - {root_any: [plon], via: [hlin]}
+
+  # ── J5 · something passing something that stays ───────────────────────────
+  - id: "59"
+    name: the moving's side — going by
+    tier: 1
+    minimal_pair: J5
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [xir], orient_any: [nong, krel]}
+        - {root_any: [kön], via: [u]}
+        - {root_any: [kor], via: [hlin]}
+
+  - id: "60"
+    name: the halted thing's side — being gone past
+    tier: 1
+    minimal_pair: J5
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [kön], orient_any: [har, sil]}
+        - {root_any: [xir], via: [u]}
+        - {root_any: [kor], via: [hlin]}
+
+  # ── J6 · warm air meeting cold ────────────────────────────────────────────
+  - id: "61"
+    name: the warmth's side — spreading into what is colder
+    tier: 1
+    minimal_pair: J6
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [mun], orient_any: [pox]}
+        - {root_any: [fes], via: [u]}
+        - {root_any: [hram], via: [hlin]}
+
+  - id: "62"
+    name: the cold's side — met, and giving ground
+    tier: 1
+    minimal_pair: J6
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [fes], orient_any: [kon]}
+        - {root_any: [mun], via: [u]}
+        - {root_any: [hram], via: [hlin]}
+
+  # ── J7 · one thing rising as another falls ────────────────────────────────
+  - id: "63"
+    name: the rising's side
+    tier: 1
+    minimal_pair: J7
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [pel], orient_any: [hlör]}
+        - {root_any: [nur], via: [u]}
+        - {root_any: [xir], via: [hlin]}
+
+  - id: "64"
+    name: the falling's side
+    tier: 1
+    minimal_pair: J7
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [nur], orient_any: [nar]}
+        - {root_any: [pel], via: [u]}
+        - {root_any: [xir], via: [hlin]}
+
+  # ── J8 · wet ground under moving air ──────────────────────────────────────
+  - id: "65"
+    name: the wet's side — being taken away
+    tier: 1
+    minimal_pair: J8
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [mör], orient_any: [fen, nar]}
+        - {root_any: [pem], via: [u]}
+        - {root_any: [tlan], via: [hlin]}
+
+  - id: "66"
+    name: the drying's side — pulling the damp out
+    tier: 1
+    minimal_pair: J8
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [pem], orient_any: [pox, krel]}
+        - {root_any: [mör], via: [u]}
+        - {root_any: [tlan], via: [hlin]}
+
+  # ── J9 · a bloom and a withering on one stem ──────────────────────────────
+  - id: "67"
+    name: the blooming's side
+    tier: 1
+    minimal_pair: J9
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [höm], orient_any: [pox, hlör]}
+        - {root_any: [kam], via: [u]}
+        - {root_any: [kem], via: [hlin]}
+
+  - id: "68"
+    name: the withering's side
+    tier: 1
+    minimal_pair: J9
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [kam], orient_any: [nar, tim]}
+        - {root_any: [höm], via: [u]}
+        - {root_any: [kem], via: [hlin]}
+
+  # ── J10 · the edge of sleep ───────────────────────────────────────────────
+  - id: "69"
+    name: the sleep's side — going under
+    tier: 1
+    minimal_pair: J10
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [max], orient_any: [nar, tim]}
+        - {root_any: [mim], via: [u]}
+        - {root_any: [mlang], via: [hlin]}
+
+  - id: "70"
+    name: the waking's side — surfacing
+    tier: 1
+    minimal_pair: J10
+    contrast: perspective
+    signature:
+      contains:
+        - {root_any: [mim], orient_any: [hlör, pox]}
+        - {root_any: [max], via: [u]}
+        - {root_any: [mlang], via: [hlin]}

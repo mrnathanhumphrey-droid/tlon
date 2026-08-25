@@ -1,0 +1,53 @@
+{
+  "prereg": "a260481e",
+  "deviations": [
+    "D8",
+    "D9",
+    "D11"
+  ],
+  "chance": 0.25,
+  "arms": [
+    {
+      "tag": "FLOOR honest, random subset",
+      "keep_size": 0,
+      "code": null,
+      "adversarial": false,
+      "n_items": 250,
+      "auditor": 0.436,
+      "listener": 1.0,
+      "mean_ambiguity": 1.7703703703703704
+    },
+    {
+      "tag": "CEILING code + adversarial subset",
+      "keep_size": 0,
+      "code": "aspect_root",
+      "adversarial": true,
+      "n_items": 250,
+      "auditor": 0.428,
+      "listener": 1.0,
+      "mean_ambiguity": 1.7967592592592592
+    },
+    {
+      "tag": "FLOOR honest, random subset",
+      "keep_size": 1,
+      "code": null,
+      "adversarial": false,
+      "n_items": 250,
+      "auditor": 0.46,
+      "listener": 1.0,
+      "mean_ambiguity": 1.0996168582375478
+    },
+    {
+      "tag": "CEILING code + adversarial subset",
+      "keep_size": 1,
+      "code": "aspect_root",
+      "adversarial": true,
+      "n_items": 250,
+      "auditor": 0.46,
+      "listener": 1.0,
+      "mean_ambiguity": 1.128352490421456
+    }
+  ],
+  "best_ceiling_drop_pts": 0.8000000000000007,
+  "auditor_state": "FAILED_TO_RUN"
+}

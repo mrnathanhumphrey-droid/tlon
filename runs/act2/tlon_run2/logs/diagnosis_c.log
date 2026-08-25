@@ -1,0 +1,13 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+DIAGNOSIS C — 6 checkpoints · n=12 · greedy
+
+     step  distinct  repeat response  depend    valid  verdict
+     1000        11    1.00     0.91   +0.91    0/12   input-dependent
+     2000        12    1.00     1.00   +1.00    0/12   input-dependent
+     3000        12    1.00     1.00   +1.00    0/12   input-dependent
+     4000        12    1.00     1.00   +1.00    1/12   input-dependent
+     5000        12    1.00     1.00   +1.00    1/12   input-dependent
+    final        12    1.00     1.00   +1.00    1/12   input-dependent
+
+  READING: ⛔ NEVER ROSE — not a training-duration problem
+  wrote runs/act2/logs/diagnosis_c.json

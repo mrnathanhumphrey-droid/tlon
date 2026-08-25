@@ -1,0 +1,83 @@
+{
+  "n_train": 80000,
+  "n_eval": 2000,
+  "seed": 20620,
+  "balanced": true,
+  "focus_forms": {
+    "pal": 60,
+    "rän": 60,
+    "plas": 60,
+    "hul": 60
+  },
+  "lexicon": "e2b8527010231a81fd31b6eeb9de3d8c",
+  "exposure": {
+    "n_pairs": 41000,
+    "by_class": {
+      "R": {
+        "forms": 156,
+        "covered": 156,
+        "total": 105422,
+        "min_form_exposure": 675,
+        "max_form_exposure": 735
+      },
+      "O": {
+        "forms": 24,
+        "covered": 24,
+        "total": 48749,
+        "min_form_exposure": 2025,
+        "max_form_exposure": 2081
+      },
+      "L": {
+        "forms": 12,
+        "covered": 12,
+        "total": 64422,
+        "min_form_exposure": 5368,
+        "max_form_exposure": 5369
+      },
+      "A": {
+        "forms": 6,
+        "covered": 6,
+        "total": 4056,
+        "min_form_exposure": 676,
+        "max_form_exposure": 676
+      },
+      "M": {
+        "forms": 10,
+        "covered": 10,
+        "total": 6776,
+        "min_form_exposure": 677,
+        "max_form_exposure": 678
+      },
+      "D": {
+        "forms": 6,
+        "covered": 6,
+        "total": 4102,
+        "min_form_exposure": 683,
+        "max_form_exposure": 684
+      },
+      "Q": {
+        "forms": 6,
+        "covered": 6,
+        "total": 4078,
+        "min_form_exposure": 679,
+        "max_form_exposure": 680
+      },
+      "T": {
+        "forms": 8,
+        "covered": 8,
+        "total": 5317,
+        "min_form_exposure": 664,
+        "max_form_exposure": 665
+      },
+      "F": {
+        "forms": 5,
+        "covered": 5,
+        "total": 41000,
+        "min_form_exposure": 8200,
+        "max_form_exposure": 8200
+      }
+    },
+    "worst_form_exposure": 664,
+    "exposure_spread": 12.349397590361447
+  }
+}

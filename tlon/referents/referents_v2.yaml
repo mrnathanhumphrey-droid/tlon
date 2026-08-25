@@ -1,0 +1,860 @@
+# Tlön referent set v2 — THE DISTANCE OF THE MOON (Calvino, Cosmicomics).
+#
+# ⛔ review_status gates execution. Nothing runs on this file until Nate sets it
+# REVIEWED. Review tooling may read it as-is; the self-play loop may not.
+#
+# COMPILED BY CODE FOR NATE'S REVIEW, 2026-08-23. Nate's ruling this phase
+# reverses the standing "Nate authors the roster" rule for v2 only: Code
+# compiles, Nate reviews and vetoes. Every entry is a proposal.
+#
+# ─── WHY THIS WORLD, AND WHY IT IS CONSTRUCTED THIS WAY ────────────────────
+#
+# COHERENCE IS THE TECHNICAL REQUIREMENT, NOT THE FLAVOUR. Underdetermination
+# is a property of the SET: referents whose descriptions share vocabulary
+# collide, and collision is the room a pact lives in. In the old 60, 26 had a
+# head root UNIQUE to them, so selection could never make them ambiguous —
+# that scatter is why mean consistency-set size sat at 1.26 and the RSA
+# frontier came out identically zero. So v2 is drawn from ONE story, and the
+# head roots are deliberately SHARED: mlö heads or appears in 21 of 50, fox/
+# fum/föm/frim in 14, pel/nur in 11, lan in 6. A highlight reel would have
+# rebuilt the shallow set with prettier names.
+#
+# ⛔⛔ THE THEME EMBODIES THE RETRACTED THESIS. THAT IS NOT EVIDENCE FOR IT.
+# Calvino's engine is conservation-to-absurdity — the relation survives the
+# objects it held between. That is exactly the claim Phase 8 RETRACTED
+# (conservation of the pact across carriers). The set will therefore
+# thematically whisper conservation, which is a compositional pressure toward
+# believing a dead claim. M38 and M50 are that whisper made explicit and are
+# HELD BACK (seed_2a: false) partly for that reason. Conservation stays
+# retracted until the dynamic reset test earns it back ON THIS SET, executed
+# and five-branch-classified. Nothing in this file may be cited toward it.
+#
+# ─── CONSTRUCTION RULES APPLIED (Nate's locked rulings, 2026-08-23) ────────
+#
+# DEPTH BY NESTING, NOT BY CLAUSE CAP. MAX_CLAUSES_PER_PRED stays 3 — editing
+# lexicon.yaml would change the hash pinned in every locked prereg (3–8) and
+# silently void the immutability the record's trust rests on. Depth comes from
+# `at_depth: 2`, used by 2 of the old 60 and by 11 here. It is the more
+# Tlönian axis: an impression embedded in an impression. M10 is the clearest
+# case — "a dimming at ⟨a pooling within which a mooning⟩" is the moon's
+# reflection, and the grammar's recursion is the only thing that can say it.
+#
+# ⛔ BUILD CONSTRAINT DISCOVERED IN THE BUILDER, NOT ASSUMED: a depth-2 pattern
+# hangs off a depth-1 node (selfplay/phase3.py build_scene, scenes.py
+# _attempt), so every signature using at_depth: 2 ALSO carries a depth-1
+# dependent, listed FIRST. Under impression-selection, a subset that keeps the
+# deep dependent and drops every shallow one cannot build and is unreachable.
+# That is a real reduction in the selection space and it is MEASURED, not
+# waved at — see the reachability column of the coverage pass.
+#
+# `forbid` AND `matrix` ARE UNUSED — 0 of 50, as in the old set. Phase 6's
+# isolation claim ("structural + semantic drift impossible by construction")
+# is scoped to signature families WITHOUT them, so 9.3 carries it over
+# unchanged rather than re-running the 6.2 placement. Where the image wanted a
+# negation — the deaf cousin who needs neither hearing nor sight (M18), the
+# tide that does not return (M32) — it is written with the CONC relator `xom`
+# ("despite"), which denotes, instead of `forbid`, which does not.
+#
+# `aspect_root_any` IS USED BY 7 (old set: 2). It denotes — π keeps aspect.root
+# and strips only the repetition count — so it is safe signature material.
+# ⛔ IT IS NOT FREE: fixing a head's aspect removes that referent's free
+# `aspect_root` channel, which is where phases 4–5 found the code living. Used
+# only where the aspect IS the image (unceasing, terminative, momentary,
+# iterated), never for depth.
+#
+# ⛔ NO minimal_pair FIELDS. The old set's pairs (31–50) were built for 2b.2
+# and that history is preserved in the ARCHIVED set, per the replace-for-live/
+# archive-for-history ruling. Half-correct pairs here — members must share an
+# identical root multiset or bag-of-roots tells them apart — would be worse
+# than none. Flagged for Nate as an open item, not silently omitted.
+#
+# ─── THE MATRIX RULE (Nate's ruling, 2026-08-23: "apply the fix") ─────────
+#
+# ⭐⭐ THE MATRIX PREDICATION IS THE WORLD'S PERSISTING EVENT; THE
+# DISTINGUISHING HAPPENING IS A DEPENDENT. In this story there are exactly two
+# persisting events — the mooning and the sea — and Calvino narrates every human
+# action as subordinate to the cosmological one. So "the moon's underside,
+# scaled and pored" is not a roughening that happens to involve the moon; it is
+# A MOONING, part of which a roughening, at which a hollowing.
+#
+# Two reasons, and the linguistic one came first:
+#   1. It is truer to Tlön. The matrix verb is what is happening; everything
+#      else is HOW. A story about two bodies and the distance between them
+#      should have those two bodies as its matrix predications.
+#   2. The head is NEVER dropped by impression-selection, so a head root unique
+#      to one referent means that referent can never be made ambiguous — it
+#      never needs a pact and it dilutes every measurement. The old 60 had
+#      26/60 such referents and that is the mechanism behind its 1.26
+#      consistency-set size.
+#
+# APPLIED TO 11: M03 M04 M06 M07 M08 M09 M12 M23 M31 M32 M43.
+# ⇒ referents with a unique head root 18 → 11 (measured, runs/coverage_v2.json;
+#   I predicted 9 before running and that prediction was wrong).
+#
+# ⛔ WHY 11 AND NOT 7: moving `säx` off M12's head and `kron` off M23's head
+# made M26 and M46 — which were SHARED — newly unique. The count is a property
+# of the whole set, not of the referents changed. M26 and M46 are not chased,
+# because neither has a cosmological body in its impression: the bounding and
+# the turning ARE the events there, same category as M17/M29/M40. Applying the
+# rule where it does not hold, to move a number, is the thing this ordering
+# exists to prevent.
+#
+# ⛔ NOT APPLIED, and each refusal is a reason, not an oversight:
+#   M10  the nesting IS the image — a dimming at ⟨a pooling within which a
+#        mooning⟩ is the reflection. Promoting mlö to matrix destroys it.
+#   M45  the causation would INVERT. `kra` is CAUS in one direction only:
+#        "a weighing because of a mooning" is right, and mlö-as-matrix would
+#        force "a mooning because of a weighing", which is false.
+#   M17 M29 M40  no cosmological body is in the impression — the unburdening,
+#        the bending and the recalling ARE the events.
+#   M41  deliberately the shallowest referent, kept as a control on whether
+#        depth is what moves consistency-set size. Restructuring it would
+#        destroy the control.
+#   M37 M38 M49  held back; not in any live measurement.
+#
+# ⭐ SIDE EFFECT, NOT A TARGET: three of the eleven (M08, M31, M32) needed a
+# fourth pattern to keep their content once the head moved, so 4-pattern
+# referents went 4 → 6 and mean breadth rose. That came out of faithfulness.
+# It was not chosen to move the omission ceiling.
+#
+# ⭐ TUNING DISCIPLINE: signatures were iterated for SATISFIABILITY and
+# faithfulness to the image ONLY. Consistency-set size was not consulted while
+# writing them and is reported in 9.2 as whatever it turns out to be. A set
+# tuned against the detector is the failure mode this whole phase ordering
+# exists to prevent.
+#
+# Roots quoted from lexicon.yaml `e2b8527010231a81fd31b6eeb9de3d8c` (156 roots).
+
+review_status: REVIEWED       # Nate, 2026-08-23 ("locked. lets go") — execution
+                              # unblocked. Wilson passed the roster clean the
+                              # same day: coverage facts measured, matrix rule
+                              # sound, M38/M50 correctly declared and withheld.
+schema_version: 2
+grammar_family: southern
+
+referents:
+
+  # ═══ I. THE STANDING WORLD ═══════════════════════════════════════════════
+  # The moon so low the sea humps up under it. Most concrete, most
+  # interlocking, and the vocabulary every later section reuses.
+
+  - id: "M01"
+    name: the moon standing low, almost touching
+    tier: 1
+    notes: >
+      The opening condition of the story and the anchor of the set. Not "the
+      moon is close" — Tlön has no moon to be anywhere. A mooning, downward,
+      approaching, at a pooling. `krun` (approaches) carries "almost": the
+      approach is the whole of it, arrival never predicated.
+    signature:
+      contains:
+        - {root_any: [mlö], orient_any: [nar, flar]}
+        - {root_any: [krun], via: [mil]}
+        - {root_any: [fox, föm], via: [sen]}
+
+  - id: "M02"
+    name: the sea drawn up into a hump beneath it
+    tier: 1
+    notes: >
+      The tide standing in a dome. A rising, part of a pooling, toward a
+      mooning, within which a rounding — the curve is nested inside the rise
+      because the hump IS the rise seen as shape. Four patterns, the clause
+      cap; one of the few that spends all of it.
+    signature:
+      contains:
+        - {root_any: [pel], orient_any: [hlör]}
+        - {root_any: [fox, fum], via: [nix]}
+        - {root_any: [mlö], via: [sul]}
+        - {root_any: [hom], at_depth: 2}
+
+  - id: "M03"
+    name: the water swollen and holding its shape
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED. What the hump does once it has risen: a pooling,
+      part of which a thickening, while a resting. `näx` (thickens) rather than
+      `hom` keeps it from collapsing into M02 — same world, different
+      happening. Deliberately confusable with M02 and M04 under selection; that
+      is the point of the set.
+    signature:
+      contains:
+        - {root_any: [fox, fum]}
+        - {root_any: [näx, hom], via: [nix]}
+        - {root_any: [tang], via: [mil]}
+
+  - id: "M04"
+    name: the boat rocking on the risen water
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED, and it improved the image. No boat: a pooling, part
+      of which a trembling, because of a rising. `kor` (trembles) and `frim`
+      (undulates) are disjunctive because the impression does not distinguish
+      the boat's motion from the water's — in the story it cannot, and making
+      the pooling the matrix says exactly that.
+    signature:
+      contains:
+        - {root_any: [fox, fum]}
+        - {root_any: [kor, frim], via: [nix]}
+        - {root_any: [pel], via: [kra]}
+
+  - id: "M05"
+    name: the ladder standing up out of the boat
+    tier: 1
+    notes: >
+      The hardest concrete object in the story to say without nouns, and the
+      test of whether this world is sayable at all. A lengthening upward,
+      resting at, pointing. Object-permanence is never asserted: the ladder is
+      only ever the lengthening, and when nobody is climbing it there is
+      nothing to predicate.
+    signature:
+      contains:
+        - {root_any: [pel, plam], orient_any: [hlör]}
+        - {root_any: [tang], via: [sen]}
+        - {root_any: [prax], via: [mil]}
+
+  - id: "M06"
+    name: the moon's underside, scaled and pored
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED, and the nesting got BETTER for it: a mooning, part
+      of which ⟨a roughening, under, at which a hollowing⟩. Before, the pores
+      hung inside the mooning; now they hang inside the roughened underside,
+      which is where they actually are. Shares `mlö`+`klung` with M07 and M19,
+      and now shares its HEAD with them too.
+    signature:
+      contains:
+        - {root_any: [mlö]}
+        - {root_any: [mär], orient_any: [flar], via: [nix]}
+        - {root_any: [klung], at_depth: 2}
+
+  - id: "M07"
+    name: moon-milk, a curd in the pores
+    tier: 1
+    notes: >
+      Calvino's central substance. MATRIX RULE APPLIED, and this one also came
+      out truer: a mooning, part of which ⟨a hollowing, at which a thickening⟩
+      — the curd is inside the pore and the pore is in the moon, which is now
+      what the nesting says. `klin` (ferments) is disjunctive with `näx`
+      because the story's milk is both at once.
+    signature:
+      contains:
+        - {root_any: [mlö]}
+        - {root_any: [klung], via: [nix]}
+        - {root_any: [näx, klin], at_depth: 2}
+
+  - id: "M08"
+    name: the smell of it — fermented, sweetish, vegetal
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED — and it needed the fourth pattern to keep its
+      content: a mooning, part of which a fermenting, while a sweetening, as a
+      greening. `hlin` (CMP) does the work an adjective would: the vegetal
+      quality is a comparison, not a property, because properties need bearers.
+      No smell root exists and none is minted — option C, the mirror/map
+      precedent.
+    signature:
+      contains:
+        - {root_any: [mlö]}
+        - {root_any: [klin], via: [nix]}
+        - {root_any: [nel], via: [mil]}
+        - {root_any: [xel], via: [hlin]}
+
+  - id: "M09"
+    name: the moon's light silvering the swell
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED. A mooning, part of which a silvering, at an
+      undulating. `pux` (silvers) and `flox` (shimmers) disjunctive — the story
+      does not separate the colour from the movement of it on water.
+    signature:
+      contains:
+        - {root_any: [mlö]}
+        - {root_any: [pux, flox], via: [nix]}
+        - {root_any: [frim], via: [sen]}
+
+  - id: "M10"
+    name: the shadow the moon lays on the water
+    tier: 1
+    notes: >
+      ⭐ THE CLEAREST CASE FOR NESTING. A dimming at ⟨a pooling within which a
+      mooning⟩ — the reflection is a mooning INSIDE the pooling, and the scope
+      contrast is the one thing the grammar's recursion buys. Said flat ("a
+      dimming, a pooling, and a mooning") it becomes three things in a row and
+      the image is gone.
+      ⛔ MATRIX RULE NOT APPLIED, deliberately. Promoting `mlö` to matrix would
+      put the moon at depth 0, and the whole referent is that the moon is at
+      depth 2 — inside the water. The rule loses to the image here.
+    signature:
+      contains:
+        - {root_any: [flux, flöx]}
+        - {root_any: [fox], via: [sen]}
+        - {root_any: [mlö], at_depth: 2}
+
+  - id: "M11"
+    name: the sea lifting in a spout toward the moon
+    tier: 1
+    notes: >
+      A rising, part of a flooding, toward a mooning, within which a
+      narrowing. The spout's taper nests inside the rise for the same reason
+      M02's dome does. Four patterns.
+    signature:
+      contains:
+        - {root_any: [pel]}
+        - {root_any: [fum], via: [nix]}
+        - {root_any: [mlö], via: [sul]}
+        - {root_any: [plöng], at_depth: 2}
+
+  - id: "M12"
+    name: the moon's edge, sharp against nothing
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED for consistency (its head was already shared, so this
+      one changes no count — it changes whether the rule is a rule). A mooning,
+      part of which a bounding, against, while a sharpening. `säx` (bounds, ends
+      abruptly) is the nearest Tlön comes to an edge — an ending, not a boundary
+      line, because a line would be an object.
+    signature:
+      contains:
+        - {root_any: [mlö]}
+        - {root_any: [säx], orient_any: [kon], via: [nix]}
+        - {root_any: [krax], via: [mil]}
+
+  # ═══ II. THE CLIMB ═══════════════════════════════════════════════════════
+  # Orientation-heavy. Up and down exchange places; weight leaves the body.
+
+  - id: "M13"
+    name: pushing off from the top of the ladder
+    tier: 1
+    notes: >
+      A leaping, upward and outward, ERE a resting, at a lengthening. `tan`
+      (ERE) puts the rest BEFORE the leap without a tense morpheme — tense is
+      stripped by π, so anything temporal that must survive projection has to
+      be carried by a relator.
+    signature:
+      contains:
+        - {root_any: [klon], orient_any: [hlör, pox]}
+        - {root_any: [tang], via: [tan]}
+        - {root_any: [plam], via: [sen]}
+
+  - id: "M14"
+    name: hanging in the moment between the two pulls
+    tier: 1
+    notes: >
+      ⭐ The story's hinge. A drifting, between, momentary, amid a weighing
+      within which an unburdening — the buoying nests INSIDE the weighing
+      because that is what the hesitation is: both gravities at once, not one
+      after the other. `nim` (momentary) is signature aspect, not decoration.
+    signature:
+      contains:
+        - {root_any: [hrir, tang], orient_any: [sir], aspect_root_any: [nim]}
+        - {root_any: [nos], via: [hlim]}
+        - {root_any: [nux], at_depth: 2}
+
+  - id: "M15"
+    name: up and down changing places
+    tier: 1
+    notes: >
+      A changing, askew, part of a rising, part of a falling. Both directions
+      predicated of the same change; `tlas` (askew) carries the disorientation
+      that would otherwise need a perspective the grammar refuses.
+    signature:
+      contains:
+        - {root_any: [run], orient_any: [tlas]}
+        - {root_any: [pel], via: [nix]}
+        - {root_any: [nur], via: [nix]}
+
+  - id: "M16"
+    name: landing head-downward on the moon
+    tier: 1
+    notes: >
+      A settling, downward, at a mooning, ERE a turning. The turn comes first
+      in the world and second in the utterance — `tan` again, carrying order
+      through π.
+    signature:
+      contains:
+        - {root_any: [hlux, nur], orient_any: [nar]}
+        - {root_any: [mlö], via: [sen]}
+        - {root_any: [kron], via: [tan]}
+
+  - id: "M17"
+    name: weight going out of the body
+    tier: 1
+    notes: >
+      An unburdening, outward, ERE a weighing, a vanishing alongside. No body:
+      the weight leaving is the entire impression, and `rim` (vanishes) is
+      predicated of the weighing, not of a person.
+    signature:
+      contains:
+        - {root_any: [nux], orient_any: [pox]}
+        - {root_any: [nos], via: [tan]}
+        - {root_any: [rim], via: [mil]}
+
+  - id: "M18"
+    name: the deaf cousin leaping without looking
+    tier: 1
+    notes: >
+      ⭐ WHERE `forbid` WOULD HAVE BEEN REACHED FOR, AND WAS NOT. Deafness is
+      an absence, and absence is what `forbid` encodes — but forbid does not
+      denote, so it would have narrowed Phase 6's isolation scope for one
+      referent. Written instead as CONC (`xom`): a leaping DESPITE a hearing,
+      DESPITE a seeing. Denotes, and is truer to the story — he does not lack
+      the senses, he does not need them.
+    signature:
+      contains:
+        - {root_any: [klon]}
+        - {root_any: [leng], via: [xom]}
+        - {root_any: [lan], via: [xom]}
+
+  - id: "M19"
+    name: his hands going into the pores
+    tier: 1
+    notes: >
+      A touching, inward, part of a mooning, within which a hollowing. Same
+      nested pore as M06 and M07; the three differ only in what is predicated
+      of it — a roughening, a thickening, a touching. Maximum collision, by
+      construction.
+    signature:
+      contains:
+        - {root_any: [lis], orient_any: [tim]}
+        - {root_any: [mlö], via: [nix]}
+        - {root_any: [klung], at_depth: 2}
+
+  - id: "M20"
+    name: floating, having missed the ladder
+    tier: 1
+    notes: >
+      A drifting, apart, POST a lengthening, a dreading alongside. `pos`
+      (POST) is the only thing marking that the ladder was there and is not
+      reachable — again a relator, because tense would not survive π.
+    signature:
+      contains:
+        - {root_any: [hrir], orient_any: [sil]}
+        - {root_any: [plam], via: [pos]}
+        - {root_any: [six], via: [mil]}
+
+  - id: "M21"
+    name: being drawn back down toward the boat
+    tier: 1
+    notes: >
+      A falling, downward and hither, toward a trembling, because of a
+      weighing. `hlan` (hither) is the only place in the set that fixes a
+      deictic centre, and it is doing the work "back" does in English.
+    signature:
+      contains:
+        - {root_any: [nur], orient_any: [nar, hlan]}
+        - {root_any: [kor, frim], via: [sul]}
+        - {root_any: [nos], via: [kra]}
+
+  - id: "M22"
+    name: climbing down with arms full of milk
+    tier: 1
+    notes: >
+      A moving, downward, BY a thickening, at a lengthening. `fro` (INSTR) is
+      strained here and the strain is honest — Tlön has no way to say "carrying"
+      that does not imply a carried thing. The instrumental is the least-bad
+      reading and is flagged for Nate.
+    signature:
+      contains:
+        - {root_any: [nur, xir], orient_any: [nar]}
+        - {root_any: [näx], via: [fro]}
+        - {root_any: [plam], via: [sen]}
+
+  - id: "M23"
+    name: the moon turning slowly underfoot
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED for consistency. A mooning, part of which ⟨a turning,
+      under, unceasing, at which a touching⟩ — and the touching now nests inside
+      the turning, which is right: the contact is with the turning surface.
+      `ax` (unceasing) stays signature aspect on the turning: it has no start or
+      end in the impression, which is why it feels like ground rather than
+      motion.
+    signature:
+      contains:
+        - {root_any: [mlö]}
+        - {root_any: [kron], orient_any: [flar], aspect_root_any: [ax], via: [nix]}
+        - {root_any: [lis], at_depth: 2}
+
+  - id: "M24"
+    name: clinging to the scales, wet and heavy
+    tier: 1
+    notes: >
+      A clinging, at a roughening, a weighing alongside. `hin` glosses "it
+      clings wet and heavy" — one root for the whole impression, which is the
+      kind of thing this lexicon is unusually good at and English is not.
+    signature:
+      contains:
+        - {root_any: [hin]}
+        - {root_any: [mär], via: [sen]}
+        - {root_any: [nos], via: [mil]}
+
+  # ═══ III. THE RECESSION ══════════════════════════════════════════════════
+  # The distance stops holding. This is the section the theme makes dangerous:
+  # ⛔ it is a STORY about an invariant failing, and it is NOT a measurement.
+
+  - id: "M25"
+    name: the moon standing higher this month
+    tier: 1
+    notes: >
+      A mooning, upward, habitual, a rising alongside, amid a repeating.
+      `sor` (habitual) is what makes it "this month" rather than "tonight" —
+      the recurrence is in the aspect, and aspect roots survive π.
+    signature:
+      contains:
+        - {root_any: [mlö], orient_any: [hlör, tex], aspect_root_any: [sor]}
+        - {root_any: [pel], via: [mil]}
+        - {root_any: [rän], via: [hlim]}
+
+  - id: "M26"
+    name: the ladder no longer reaching
+    tier: 1
+    notes: >
+      A bounding, terminative, part of a lengthening, ERE an approaching. `mel`
+      (terminative) carries "no longer"; the approach is placed BEFORE by `tan`,
+      so what is said is that the reaching has ended, not that it is absent.
+    signature:
+      contains:
+        - {root_any: [säx], aspect_root_any: [mel]}
+        - {root_any: [plam], via: [nix]}
+        - {root_any: [krun], via: [tan]}
+
+  - id: "M27"
+    name: the gap widening between the two
+    tier: 1
+    notes: >
+      A widening, between, part of a mooning, part of a pooling. The gap is
+      not a thing between two things — it is a widening OF both, which is why
+      each gets `nix` (PART) rather than an orientation.
+    signature:
+      contains:
+        - {root_any: [pong, plam], orient_any: [sir]}
+        - {root_any: [mlö], via: [nix]}
+        - {root_any: [fox], via: [nix]}
+
+  - id: "M28"
+    name: the last leap, falling short
+    tier: 1
+    notes: >
+      A leaping, terminative, POST which a falling, a bounding alongside. The
+      three most collision-prone roots in section II and III at once — this
+      should be confusable with M13 and M21 under selection, and if it is not,
+      the set is more separable than intended.
+    signature:
+      contains:
+        - {root_any: [klon], aspect_root_any: [mel]}
+        - {root_any: [nur], via: [pos]}
+        - {root_any: [säx], via: [mil]}
+
+  - id: "M29"
+    name: the pole bending and not carrying
+    tier: 1
+    notes: >
+      A bending, DESPITE a resting, because of a weighing. Second use of CONC
+      for a negation (see M18): the pole does hold, and it is not enough.
+    signature:
+      contains:
+        - {root_any: [plon]}
+        - {root_any: [tang], via: [xom]}
+        - {root_any: [nos], via: [kra]}
+
+  - id: "M30"
+    name: the sea settling flat again
+    tier: 1
+    notes: >
+      A flattening, part of a pooling, a repeating alongside. Reads as the
+      undoing of M02 and shares `fox` with it — the set's before/after pairs
+      are built from the same roots on purpose.
+    signature:
+      contains:
+        - {root_any: [plen, hlux]}
+        - {root_any: [fox], via: [nix]}
+        - {root_any: [rän], via: [mil]}
+
+  - id: "M31"
+    name: the moon shrinking to a disc
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED. A mooning, part of which a narrowing, as a rounding,
+      because of a receding. Four patterns. `hlin` (CMP) gives "to a disc"
+      without asserting the moon IS one — the rounding is a comparison, and the
+      comparison is all Tlön allows.
+    signature:
+      contains:
+        - {root_any: [mlö]}
+        - {root_any: [plöng], via: [nix]}
+        - {root_any: [hom], via: [hlin]}
+        - {root_any: [krän], via: [kra]}
+
+  - id: "M32"
+    name: the tide going out and not returning
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED, fourth pattern needed to keep the content: a
+      pooling, part of which an ebbing, DESPITE an approaching, DESPITE a
+      repeating. Third CONC negation. Note what is NOT used: `pän` (never,
+      QUANT) would have been the obvious way to say it and π STRIPS quant — the
+      meaning would have evaporated at projection and the referent would have
+      become indistinguishable from a plain ebbing. Caught while writing,
+      recorded here because it is the exact shape of a silent semantic leak.
+    signature:
+      contains:
+        - {root_any: [fox, fum]}
+        - {root_any: [fäm], via: [nix]}
+        - {root_any: [krun], via: [xom]}
+        - {root_any: [rän], via: [xom]}
+
+  - id: "M33"
+    name: the water no longer rising to meet it
+    tier: 1
+    notes: >
+      A halting, terminative, ERE a rising, toward a mooning. The mirror of
+      M11 — same `pel` and `mlö` and `sul`, opposite outcome — and therefore
+      the pair most likely to collide once the rising is withheld.
+    signature:
+      contains:
+        - {root_any: [kön, tang], aspect_root_any: [mel]}
+        - {root_any: [pel], via: [tan]}
+        - {root_any: [mlö], via: [sul]}
+
+  # ═══ IV. WHAT REMAINS ════════════════════════════════════════════════════
+  # Abstractions. Concrete-weighted first was the ruling, so the four most
+  # abstract are DECLARED AND HELD BACK (seed_2a: false) until the listener is
+  # calibrated on I–III. The rest stay live because they are still enacted —
+  # a looking, a drifting — not stated.
+
+  - id: "M34"
+    name: someone stranded, becoming part of it
+    tier: 1
+    notes: >
+      Mrs Vhd Vhd. A changing, part of a mooning, a resting alongside, within
+      which a vanishing. The vanishing nests inside the change because she does
+      not disappear and then become moon — the becoming IS the disappearing.
+    signature:
+      contains:
+        - {root_any: [run]}
+        - {root_any: [mlö], via: [nix]}
+        - {root_any: [tang], via: [mil]}
+        - {root_any: [rim], at_depth: 2}
+
+  - id: "M35"
+    name: belonging to neither, drifting between
+    tier: 1
+    notes: >
+      A drifting, between, DESPITE a mooning, DESPITE a pooling. Fourth CONC.
+      The deaf cousin after the moon goes — he is not excluded from both, he
+      persists in spite of both.
+    signature:
+      contains:
+        - {root_any: [hrir], orient_any: [sir]}
+        - {root_any: [mlö], via: [xom]}
+        - {root_any: [fox], via: [xom]}
+
+  - id: "M36"
+    name: looking up, always, at the same place
+    tier: 1
+    notes: >
+      A seeing, upward, unceasing, toward a mooning, a repeating alongside.
+      Qfwfq's last posture. `ax` is signature aspect and is the whole of
+      "always"; the repetition count that would have carried it is stripped
+      by π.
+    signature:
+      contains:
+        - {root_any: [lan], orient_any: [hlör], aspect_root_any: [ax]}
+        - {root_any: [mlö], via: [sul]}
+        - {root_any: [rän], via: [mil]}
+
+  - id: "M37"
+    name: a longing with nothing left to long toward
+    tier: 2
+    seed_2a: false
+    notes: >
+      HELD BACK — abstraction, folded in after the listener is calibrated on
+      I–III. A longing, POST a vanishing, DESPITE a persisting.
+    signature:
+      contains:
+        - {root_any: [sun]}
+        - {root_any: [rim], via: [pos]}
+        - {root_any: [rem], via: [xom]}
+
+  - id: "M38"
+    name: the distance persisting after the bodies
+    tier: 2
+    seed_2a: false
+    notes: >
+      ⛔⛔ HELD BACK, AND NOT ONLY FOR ABSTRACTION. This is Calvino's engine
+      stated flat — the relation surviving its objects — which is the
+      conservation claim Phase 8 RETRACTED. A referent that says the thesis
+      out loud, sitting in the live set while we measure the thesis, is a
+      compositional pressure toward believing it. It is declared so the world
+      is complete and withheld so it cannot whisper into a measurement.
+      ⛔ Nothing about this entry is evidence for conservation.
+    signature:
+      contains:
+        - {root_any: [rem]}
+        - {root_any: [plam], via: [nix]}
+        - {root_any: [rim], via: [pos]}
+
+  - id: "M39"
+    name: a face no longer distinguishable from the surface
+    tier: 1
+    notes: >
+      A seeing, terminative, as a mooning, within which a vanishing. The
+      nesting is the image: she is not beside the moon, she is inside the
+      seeing of it.
+    signature:
+      contains:
+        - {root_any: [lan], aspect_root_any: [mel]}
+        - {root_any: [mlö], via: [hlin]}
+        - {root_any: [rim], at_depth: 2}
+
+  - id: "M40"
+    name: remembering the climb, unable to make it again
+    tier: 1
+    notes: >
+      A recalling, part of a rising, DESPITE a leaping. `mling` (recalls) is
+      one of the few roots in the lexicon that takes a whole event as its
+      content, which is why the climb can be `nix` (PART) of it.
+    signature:
+      contains:
+        - {root_any: [mling]}
+        - {root_any: [pel], via: [nix]}
+        - {root_any: [klon], via: [xom]}
+
+  - id: "M41"
+    name: the same night returning and returning
+    tier: 1
+    notes: >
+      A darkening, punctual-iterated, a repeating alongside. Two patterns —
+      deliberately the shallowest referent in the set, as a control on whether
+      depth is what moves consistency-set size.
+    signature:
+      contains:
+        - {root_any: [flex], aspect_root_any: [tes]}
+        - {root_any: [rän], via: [mil]}
+
+  # ═══ V. THE WATER AND THE WAITING ════════════════════════════════════════
+  # More of section I's world. Added for collision density: every root here
+  # already appears above, which is the point.
+
+  - id: "M42"
+    name: the milk clinging to the rungs
+    tier: 1
+    notes: >
+      A clinging, part of a thickening, at a lengthening. Shares `hin` with
+      M24 and `plam` with M05/M13/M20/M26 — four-way collision once the
+      dependents are withheld.
+    signature:
+      contains:
+        - {root_any: [hin]}
+        - {root_any: [näx], via: [nix]}
+        - {root_any: [plam], via: [sen]}
+
+  - id: "M43"
+    name: boats scattered across the water, waiting
+    tier: 1
+    notes: >
+      MATRIX RULE APPLIED. A pooling, part of which a scattering, across, while
+      a resting. `krön` (scatters) against `kun` (converges) in M49 is the set's
+      one clean antonym pair. Now collides hard with M03 — same head, same
+      `mil`+`tang` dependent, separable only by the other dependent. Intended.
+    signature:
+      contains:
+        - {root_any: [fox]}
+        - {root_any: [krön], orient_any: [krel], via: [nix]}
+        - {root_any: [tang], via: [mil]}
+
+  - id: "M44"
+    name: the oars shipped, everyone looking up
+    tier: 1
+    notes: >
+      A halting, alongside a seeing upward, part of a teeming. `fral` (crowds,
+      teems) is how Tlön says "everyone" — a teeming, not a set of people.
+    signature:
+      contains:
+        - {root_any: [kön]}
+        - {root_any: [lan], orient_any: [hlör], via: [mil]}
+        - {root_any: [fral], via: [nix]}
+
+  - id: "M45"
+    name: the moon's pull felt in the arms
+    tier: 1
+    notes: >
+      A weighing, because of a mooning, within which a touching. ⛔ The obvious
+      encoding was the MODAL `ten` (felt) — and modals are stripped by π, so
+      the felt-ness would have vanished at projection. Carried by `lis`
+      (touches) instead, which denotes. Same trap as M32.
+      ⛔ MATRIX RULE NOT APPLIED: `kra` is CAUS in one direction only. "A
+      weighing because of a mooning" is the truth; mlö-as-matrix would force
+      "a mooning because of a weighing", which is false. The rule would have
+      reversed the causation to gain a shared head, so it does not run here.
+    signature:
+      contains:
+        - {root_any: [nos]}
+        - {root_any: [mlö], via: [kra]}
+        - {root_any: [lis], at_depth: 2}
+
+  - id: "M46"
+    name: a body turning over slowly in the air
+    tier: 1
+    notes: >
+      A turning, unceasing, a drifting alongside, because of an unburdening.
+      Shares `kron` with M23 and `hrir` with M20/M35 — three-way.
+    signature:
+      contains:
+        - {root_any: [kron], aspect_root_any: [ax]}
+        - {root_any: [hrir], via: [mil]}
+        - {root_any: [nux], via: [kra]}
+
+  - id: "M47"
+    name: the sea and the moon touching for a moment
+    tier: 1
+    notes: >
+      A touching, momentary, part of a pooling, part of a mooning. The
+      story's premise in one predication, and the referent most likely to be
+      consistent with everything in section I once its dependents are dropped.
+    signature:
+      contains:
+        - {root_any: [lis], aspect_root_any: [nim]}
+        - {root_any: [fox, fum], via: [nix]}
+        - {root_any: [mlö], via: [nix]}
+
+  - id: "M48"
+    name: the crossing made in one breath
+    tier: 1
+    notes: >
+      A moving, across, amid a breathing, ERE a lengthening. `hram` (breathes)
+      amid the crossing is how the duration gets said without a measure.
+    signature:
+      contains:
+        - {root_any: [xir], orient_any: [krel]}
+        - {root_any: [hram], via: [hlim]}
+        - {root_any: [plam], via: [tan]}
+
+  - id: "M49"
+    name: nothing yet separated into near and far
+    tier: 2
+    seed_2a: false
+    notes: >
+      HELD BACK — the most abstract in the set, and pre-object in the strict
+      Cosmicomics sense. A converging, together, DESPITE an approaching,
+      DESPITE a receding. Clean antonym of M43.
+    signature:
+      contains:
+        - {root_any: [kun], orient_any: [hul]}
+        - {root_any: [krun], via: [xom]}
+        - {root_any: [krän], via: [xom]}
+
+  - id: "M50"
+    name: two things holding a distance between them
+    tier: 2
+    seed_2a: false
+    notes: >
+      ⛔⛔ HELD BACK FOR THE SAME REASON AS M38 — this is conservation stated
+      as an image, and Phase 8 retracted conservation. Declared for
+      completeness of the world; withheld from every live measurement.
+      ⛔ Not evidence for conservation.
+    signature:
+      contains:
+        - {root_any: [tang], orient_any: [sir]}
+        - {root_any: [plam], via: [nix]}
+        - {root_any: [rem], via: [mil]}

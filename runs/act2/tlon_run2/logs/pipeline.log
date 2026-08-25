@@ -1,0 +1,89 @@
+=== [1/5] suite 12:20:28 ===
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+915 passed, 11 warnings in 50.96s
+=== [2/5] backbone 12:21:20 ===
+Fetching 11 files:  36%|███▋      | 4/11 [00:00<00:00, 37.10it/s]Fetching 11 files:  73%|███████▎  | 8/11 [00:14<00:06,  2.09s/it]Fetching 11 files:  82%|████████▏ | 9/11 [00:15<00:03,  1.94s/it]Fetching 11 files: 100%|██████████| 11/11 [00:16<00:00,  1.46s/it]Fetching 11 files: 100%|██████████| 11/11 [00:16<00:00,  1.50s/it]
+/home/ubuntu/.cache/huggingface/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28
+=== [3/5] BEFORE baseline, bf16 12:21:37 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=NONE (baseline) · battery d9ecdf9fbf2caa8a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   0.0%  (0/64)
+  render  0.0%  (0/64)
+  choose  39.1%  (25/64), 0 unanswered
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.000, speak 0.000 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 39.1% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl
+=== [4/5] fine-tune bf16 LoRA, checkpoints every 1000 12:24:59 ===
+ 90%|████████▉ | 112/125 [00:15<00:01,  7.52it/s][A
+ 90%|█████████ | 113/125 [00:15<00:01,  7.52it/s][A
+ 91%|█████████ | 114/125 [00:15<00:01,  7.47it/s][A
+ 92%|█████████▏| 115/125 [00:15<00:01,  7.58it/s][A
+ 93%|█████████▎| 116/125 [00:15<00:01,  7.66it/s][A
+ 94%|█████████▎| 117/125 [00:15<00:01,  7.63it/s][A
+ 94%|█████████▍| 118/125 [00:15<00:00,  7.42it/s][A
+ 95%|█████████▌| 119/125 [00:16<00:00,  7.33it/s][A
+ 96%|█████████▌| 120/125 [00:16<00:00,  7.39it/s][A
+ 97%|█████████▋| 121/125 [00:16<00:00,  7.43it/s][A
+ 98%|█████████▊| 122/125 [00:16<00:00,  7.48it/s][A
+ 98%|█████████▊| 123/125 [00:16<00:00,  7.46it/s][A
+ 99%|█████████▉| 124/125 [00:16<00:00,  7.42it/s][A
+100%|██████████| 125/125 [00:16<00:00,  7.51it/s][A                                                     
+100%|██████████| 125/125 [00:16<00:00,  7.51it/s][A
+{'eval_loss': '0.2334', 'eval_runtime': '17', 'eval_samples_per_second': '58.83', 'eval_steps_per_second': '7.354', 'epoch': '2'}
+{'train_runtime': '4909', 'train_samples_per_second': '16.3', 'train_steps_per_second': '1.018', 'train_loss': '0.2492', 'epoch': '2'}
+
+⭐ adapter → runs/act2/adapter
+⛔ NOT a result. Next: tools/act2_flocal.py measures F-LOCAL unconstrained and cardless. That is the gate.
+=== [5/5] THE GATE + DIAGNOSIS C 13:47:30 ===
+  choose  51.6%  (33/64), 0 unanswered
+
+  speak confusions (131): {'O→R': 30, 'M→R': 10, 'Q→R': 9, '∅→R': 8, 'F→L': 7, 'D→R': 7, 'F→R': 7, 'T→R': 6, 'R→L': 5, 'M→O': 5, 'O→L': 4, 'L→O': 4, 'L→R': 4, 'A→L': 4, 'D→O': 4, 'R→O': 3, 'A→O': 2, 'M→L': 2, 'D→L': 2, 'O→Q': 2, 'T→Q': 1, 'A→R': 1, 'F→O': 1, 'L→Q': 1, '∅→A': 1, '∅→L': 1}
+     · 'mring' is class R, not L — it cannot fill the relator slot.
+     · 'soras' is not a Tlön form at all.
+     · 'sil' is class O, not L — it cannot fill the relator slot.
+     · 'nol' is class Q, not R — it cannot fill the root slot.
+     · 'xun' is class O, not R — it cannot fill the root slot.
+     · 'u' is class L, not O — it cannot fill the orient slot.
+     · 'ko' is class F, not L — it cannot fill the relator slot.
+     · 'tesas' is not a Tlön form at all.
+     · 'nol' is class Q, not R — it cannot fill the root slot.
+     · 'hunhunhun' is not a Tlön form at all.
+
+  render confusions (7): {'M→R': 3, 'T→A': 2, 'R→Q': 1, 'D→Q': 1}
+     · 'hres' is class T, not A — it cannot fill the aspect_root slot.
+     · 'ram' is class R, not Q — it cannot fill the quant slot.
+     · 'xar' is class D, not Q — it cannot fill the quant slot.
+     · 'nem' is class M, not R — it cannot fill the root slot.
+     · 'nem' is class M, not R — it cannot fill the root slot.
+     · 'hrin' is class M, not R — it cannot fill the root slot.
+     · 'hres' is class T, not A — it cannot fill the aspect_root slot.
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.812, speak 0.094 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 51.6% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+DIAGNOSIS C — 6 checkpoints · n=12 · greedy
+
+     step  distinct  repeat response  depend    valid  verdict
+     1000        11    1.00     0.91   +0.91    0/12   input-dependent
+     2000        12    1.00     1.00   +1.00    0/12   input-dependent
+     3000        12    1.00     1.00   +1.00    0/12   input-dependent
+     4000        12    1.00     1.00   +1.00    1/12   input-dependent
+     5000        12    1.00     1.00   +1.00    1/12   input-dependent
+    final        12    1.00     1.00   +1.00    1/12   input-dependent
+
+  READING: ⛔ NEVER ROSE — not a training-duration problem
+  wrote runs/act2/logs/diagnosis_c.json
+=== PIPELINE DONE 13:58:54 ===

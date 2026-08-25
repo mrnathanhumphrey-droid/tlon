@@ -1,0 +1,218 @@
+{
+  "grid": [
+    0.01,
+    0.03,
+    0.1,
+    0.3,
+    1.0
+  ],
+  "seeds": [
+    101,
+    202,
+    303
+  ],
+  "steps": 4000,
+  "restore_bar_pts": 5.92,
+  "stability_frac": 0.9,
+  "incumbent_m_rate": 0.3466666666666667,
+  "by_coefficient": {
+    "0.01": {
+      "headroom": 0.0014264409201177515,
+      "m_rate": 0.3466666666666667,
+      "verdicts": [
+        "TOTAL COLLAPSE",
+        "TOTAL COLLAPSE",
+        "TOTAL COLLAPSE"
+      ]
+    },
+    "0.03": {
+      "headroom": 11.11213538067195,
+      "m_rate": 0.3466666666666667,
+      "verdicts": [
+        "PARTIAL COLLAPSE",
+        "TOTAL COLLAPSE",
+        "TOTAL COLLAPSE"
+      ]
+    },
+    "0.1": {
+      "headroom": 8.333345669935655,
+      "m_rate": 0.36800000000000005,
+      "verdicts": [
+        "TOTAL COLLAPSE",
+        "PARTIAL COLLAPSE",
+        "TOTAL COLLAPSE"
+      ]
+    },
+    "0.3": {
+      "headroom": 0.00037245898283910783,
+      "m_rate": 0.34800000000000003,
+      "verdicts": [
+        "TOTAL COLLAPSE",
+        "TOTAL COLLAPSE",
+        "TOTAL COLLAPSE"
+      ]
+    },
+    "1.0": {
+      "headroom": 3.19312824699954e-06,
+      "m_rate": 0.3546666666666667,
+      "verdicts": [
+        "TOTAL COLLAPSE",
+        "TOTAL COLLAPSE",
+        "TOTAL COLLAPSE"
+      ]
+    }
+  },
+  "chosen": 0.03,
+  "runs": [
+    {
+      "seed": 101,
+      "entropy_bonus": 0.01,
+      "headroom_pts": 0.00025801629686128535,
+      "ceiling": 0.3333359134963019,
+      "m_rate": 0.356,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 59.63043260574341
+    },
+    {
+      "seed": 202,
+      "entropy_bonus": 0.01,
+      "headroom_pts": 0.003021527195656848,
+      "ceiling": 0.3333635486052899,
+      "m_rate": 0.364,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 54.928077697753906
+    },
+    {
+      "seed": 303,
+      "entropy_bonus": 0.01,
+      "headroom_pts": 0.0009997792678351214,
+      "ceiling": 0.33334333112601167,
+      "m_rate": 0.32,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 57.316965103149414
+    },
+    {
+      "seed": 101,
+      "entropy_bonus": 0.03,
+      "headroom_pts": 33.33609682252822,
+      "ceiling": 0.6666943015586155,
+      "m_rate": 0.364,
+      "verdict": "PARTIAL COLLAPSE",
+      "why": "2/8 clusters have all mates on one code; the rest separate. Per-cluster [3, 1, 2, 2, 3, 1, 2, 2].",
+      "secs": 55.996071100234985
+    },
+    {
+      "seed": 202,
+      "entropy_bonus": 0.03,
+      "headroom_pts": 0.0003090479955836223,
+      "ceiling": 0.33333642381328915,
+      "m_rate": 0.328,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 56.07378959655762
+    },
+    {
+      "seed": 303,
+      "entropy_bonus": 0.03,
+      "headroom_pts": 2.7149203996046367e-07,
+      "ceiling": 0.3333333360482537,
+      "m_rate": 0.348,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 55.99818134307861
+    },
+    {
+      "seed": 101,
+      "entropy_bonus": 0.1,
+      "headroom_pts": 3.7869830604719823e-07,
+      "ceiling": 0.3333333371203164,
+      "m_rate": 0.36,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 54.8502311706543
+    },
+    {
+      "seed": 202,
+      "entropy_bonus": 0.1,
+      "headroom_pts": 25.00003604835414,
+      "ceiling": 0.5833336938168747,
+      "m_rate": 0.416,
+      "verdict": "PARTIAL COLLAPSE",
+      "why": "2/8 clusters have all mates on one code; the rest separate. Per-cluster [2, 1, 2, 2, 2, 1, 2, 2].",
+      "secs": 55.5430965423584
+    },
+    {
+      "seed": 303,
+      "entropy_bonus": 0.1,
+      "headroom_pts": 5.827545168646253e-07,
+      "ceiling": 0.3333333391608785,
+      "m_rate": 0.328,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 56.09462928771973
+    },
+    {
+      "seed": 101,
+      "entropy_bonus": 0.3,
+      "headroom_pts": 0.0011132078479136887,
+      "ceiling": 0.33334446541181245,
+      "m_rate": 0.376,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 57.03829216957092
+    },
+    {
+      "seed": 202,
+      "entropy_bonus": 0.3,
+      "headroom_pts": 2.0225506602855603e-06,
+      "ceiling": 0.3333333535588399,
+      "m_rate": 0.344,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 57.17720127105713
+    },
+    {
+      "seed": 303,
+      "entropy_bonus": 0.3,
+      "headroom_pts": 2.146549943349285e-06,
+      "ceiling": 0.33333335479883275,
+      "m_rate": 0.324,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 56.7859890460968
+    },
+    {
+      "seed": 101,
+      "entropy_bonus": 1.0,
+      "headroom_pts": 6.322927487145691e-06,
+      "ceiling": 0.3333333965626082,
+      "m_rate": 0.36,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 58.11430525779724
+    },
+    {
+      "seed": 202,
+      "entropy_bonus": 1.0,
+      "headroom_pts": 5.696650706710216e-07,
+      "ceiling": 0.333333339029984,
+      "m_rate": 0.34,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 56.30642795562744
+    },
+    {
+      "seed": 303,
+      "entropy_bonus": 1.0,
+      "headroom_pts": 2.6867921831819075e-06,
+      "ceiling": 0.33333336020125515,
+      "m_rate": 0.364,
+      "verdict": "TOTAL COLLAPSE",
+      "why": "every referent converged to ONE code; the listener has nothing to read, so any gap here is ~0 for reasons about the optimiser.",
+      "secs": 59.476773262023926
+    }
+  ]
+}

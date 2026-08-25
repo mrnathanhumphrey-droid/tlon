@@ -1,0 +1,400 @@
+spec_version: '0.1'
+hemisphere: southern
+phonotactics:
+  onsets:
+  - ''
+  - p
+  - t
+  - k
+  - f
+  - s
+  - x
+  - h
+  - m
+  - n
+  - l
+  - r
+  - pl
+  - pr
+  - tl
+  - tr
+  - kl
+  - kr
+  - fl
+  - fr
+  - xl
+  - xr
+  - hl
+  - hr
+  - ml
+  - mr
+  nuclei:
+  - a
+  - e
+  - i
+  - o
+  - u
+  - ö
+  - ä
+  codas:
+  - ''
+  - n
+  - ng
+  - m
+  - r
+  - s
+  - l
+  - x
+  legal_syllable_count: 1456
+constraints:
+  MAX_DEPTH: 3
+  MAX_MORPHS: 24
+  MIN_MORPHS: 2
+  MAX_CLAUSES_PER_PRED: 3
+  MAX_ORIENT_PER_PRED: 2
+  MAX_ASPECT_REPS: 4
+classes:
+  R:
+    mlö: it moons, lunates
+    fang: it streams, flows on
+    hrun: it endures cold and unyielding
+    xel: it greens, vegetates
+    pön: it darkens
+    lir: it lightens, dawns
+    tlan: it winds, blows
+    kris: it cracks, fissures
+    mun: it warms
+    fes: it chills
+    hlax: it sounds, resonates
+    nöl: it stills, silences
+    tris: it burns
+    mör: it wets, damps
+    klung: it hollows, voids
+    fral: it crowds, teems
+    säx: it bounds, ends abruptly
+    hom: it rounds, curves
+    pel: it rises
+    nur: it falls
+    xir: it moves, displaces
+    tang: it rests, holds
+    nel: it sweetens
+    krax: it sharpens, is acute
+    fal: it blazes overhead
+    fem: it stars, pricks brightly
+    fis: it dawns
+    flax: it dusks
+    flex: it darkens to night
+    flix: it gleams
+    flox: it shimmers
+    flux: it shades, cools without touching
+    fläx: it dazzles
+    flöx: it dims
+    fox: it pools, lies still and level
+    frem: it rains
+    frim: it waves, undulates
+    from: it drips
+    frum: it freezes
+    främ: it thaws
+    fröm: it mists
+    fum: it floods
+    fäm: it drains, ebbs
+    föm: it laps
+    ham: it sands, granulates
+    hen: it sifts fine and dry
+    hin: it clings wet and heavy
+    hlang: it heaps
+    hler: it slopes
+    hlix: it splits open
+    hlox: it grinds
+    hlux: it settles
+    hläx: it stills, goes unbreathing
+    hol: it gusts
+    hram: it breathes
+    hrem: it whirls
+    hrir: it drifts
+    hros: it smokes
+    hrux: it crumbles grey
+    hräx: it glows
+    hröx: it smoulders
+    häm: it flares
+    höm: it blooms
+    kam: it withers
+    kem: it sows
+    kin: it rots
+    klan: it sprouts
+    klen: it ripens
+    klin: it ferments
+    klon: it leaps
+    klun: it crawls
+    kläng: it flies
+    klöng: it swims
+    kor: it trembles
+    kras: it flees
+    kril: it hunts
+    kron: it turns
+    krun: it approaches
+    krän: it recedes
+    krön: it scatters
+    kun: it converges
+    kän: it circles
+    kön: it halts
+    lan: it sees, is beheld
+    leng: it hears
+    lis: it touches
+    los: it speaks
+    lus: it sings
+    läs: it weeps
+    lös: it laughs
+    max: it sleeps
+    mim: it wakes
+    mlang: it dreams
+    mleng: it forgets
+    mling: it recalls
+    mlong: it dies
+    mlung: it is born
+    mläng: it breathes its last
+    mlöng: it quickens
+    mong: it heals
+    mrang: it sickens
+    mreng: it rings
+    mring: it thuds
+    mrong: it hisses
+    mrung: it whispers
+    mräng: it roars
+    mröng: it echoes
+    mur: it creaks
+    mär: it roughens
+    mös: it smooths
+    nax: it softens
+    nin: it hardens
+    nos: it weighs, is heavy
+    nux: it buoys, unburdens
+    näx: it thickens
+    pal: it thins
+    pem: it dries
+    pim: it slicks
+    plam: it lengthens
+    plen: it flattens
+    plin: it twists
+    plon: it bends
+    plung: it opens
+    pläng: it closes
+    plöng: it narrows
+    pong: it widens
+    prax: it points
+    prex: it reddens
+    prix: it blackens
+    prox: it whitens
+    prux: it blues
+    präx: it yellows
+    pröx: it browns
+    pux: it silvers
+    pöl: it begins
+    ram: it ends
+    rem: it persists
+    rim: it vanishes
+    rom: it appears
+    run: it changes
+    rän: it repeats
+    rön: it interrupts
+    san: it aches
+    seng: it eases
+    six: it dreads
+    sun: it longs
+    säng: it calms
+    sör: it rages
+    tel: it gladdens
+    tir: it grieves
+    tlax: it startles
+    tlex: it stripes, runs barred
+    tlix: it bands, girdles
+    tlox: it mottles, blotches
+    tlux: it dapples, flecks
+    tläx: it veins, threads through
+  O:
+    hlör: upward
+    nar: downward
+    tim: inward
+    pox: outward
+    krel: across
+    sung: around
+    flar: under
+    tex: over
+    hren: in_front
+    ung: behind_beyond
+    mix: within
+    lang: along
+    kon: against
+    sir: between
+    hlan: hither
+    xun: thither
+    tro: atop
+    fen: beneath
+    plas: through
+    nong: past
+    har: amid
+    sil: apart
+    hul: together
+    tlas: askew
+  L:
+    u: BEYOND
+    sen: AT
+    tan: ERE
+    pos: POST
+    kra: CAUS
+    xom: CONC
+    mil: SIM
+    hlin: CMP
+    fro: INSTR
+    nix: PART
+    sul: TOWARD
+    hlim: AMID
+  A:
+    ax: unceasing
+    tes: punctual_iterated
+    hun: inceptive
+    mel: terminative
+    sor: habitual
+    nim: momentary
+  M:
+    xöl: seen
+    hrix: heard
+    ten: felt
+    plun: inferred
+    mar: remembered
+    xos: dreamt
+    nem: denied
+    hrin: doubted
+    mir: wished
+    frax: feared
+  D:
+    fim: faint
+    les: slight
+    ron: marked
+    tos: strong
+    kral: extreme
+    xar: overwhelming
+  Q:
+    sim: once
+    tur: twice
+    tren: thrice
+    nol: oft
+    fer: ever
+    pän: never
+  T:
+    nu: now
+    pral: then_past
+    krin: then_future
+    tar: ere
+    song: since
+    hres: until
+    ol: always
+    kim: momentarily
+  F:
+    ka: ASSERT
+    ki: ASK
+    ko: WONDER
+    ku: URGE
+    kä: DENY
+aspect_closer: as
+deviations_from_spec_v0_1:
+- was: codas {n ng r s l x}
+  now: codas {n ng m r s l x}
+  why: 'SPEC CHANGE: admitted ''m'' to complete the nasal natural class n/ng/m. Rescues tim/sim/hom/fim.
+    Stop codas p/t/k stay ILLEGAL: no attested Borges form has one (hlör, fang, mlö all end in sonorant
+    or nothing).'
+- was: clusters {hl ml tl kl fl xl hr tr kr}
+  now: clusters {p t k f x h m} x {l r}
+  why: 'SPEC CHANGE: the 9-cluster list was ad hoc. Made it the full obstruent+liquid series (14). Rescues
+    plas/plun/frax/fro/fral/pral. Syllable space 21*7*7=1029 -> 26*7*8=1456.'
+- was: 'onsets: add d, v?'
+  now: REFUSED
+  why: Voiced obstruents are absent from every attested form. The inventory is deliberately voiceless;
+    dul/dur/ver were fixed instead of the table.
+- was: sköl
+  now: xöl
+  why: 'MODAL seen: ''sk'' is not a legal onset'
+- was: nok
+  now: nong
+  why: 'ORIENT past: ''k'' is not a legal coda'
+- was: dul
+  now: hul
+  why: 'ORIENT together: ''d'' is not an onset'
+- was: tek
+  now: tes
+  why: 'ASPECT punctual: ''k'' is not a legal coda'
+- was: nif
+  now: nim
+  why: 'ASPECT momentary: ''f'' is not a legal coda'
+- was: nek
+  now: nem
+  why: 'MODAL denied: ''k'' is not a legal coda'
+- was: lek
+  now: les
+  why: 'DEGREE slight: ''k'' is not a legal coda'
+- was: dur
+  now: tur
+  why: 'QUANT twice: ''d'' is not an onset'
+- was: ver
+  now: fer
+  why: 'QUANT ever: ''v'' is not an onset'
+- was: brek
+  now: hres
+  why: 'TEMPORAL until: ''b'' is not an onset, ''k'' not a coda'
+- was: sonk
+  now: song
+  why: 'TEMPORAL since: ''nk'' is not a legal coda'
+- was: tref
+  now: tren
+  why: 'QUANT thrice: ''f'' is not a legal coda'
+- was: kip
+  now: kim
+  why: 'TEMPORAL momentarily: ''p'' is not a legal coda'
+- was: wex
+  now: tlas
+  why: 'ORIENT askew: ''w'' is not an onset'
+- was: wir
+  now: mir
+  why: 'MODAL wished: ''w'' is not an onset'
+- was: zir
+  now: sir
+  why: 'ORIENT between: ''z'' is not an onset'
+- was: zul
+  now: sul
+  why: 'RELATOR TOWARD: ''z'' is not an onset'
+- was: zor
+  now: sor
+  why: 'ASPECT habitual: ''z'' is not an onset'
+- was: pök
+  now: pön
+  why: 'ROOT darkens: ''k'' is not a legal coda'
+- was: tosk
+  now: tos
+  why: 'DEGREE strong: ''sk'' is not a legal coda'
+- was: xarr
+  now: xar
+  why: 'DEGREE overwhelming: ''rr'' is not a legal coda'
+- was: xoth
+  now: xos
+  why: 'MODAL dreamt: ''th'' is not a legal coda'
+- was: u (ORIENT)
+  now: ung
+  why: 'spec §9 Q1 resolved: split the dual-class u; RELATOR keeps the attested ''u'''
+- was: hom̈
+  now: hlim
+  why: 'RELATOR AMID: diacritic hack removed (collided with ROOT hom)'
+- was: dul̈
+  now: hrin
+  why: 'MODAL doubted: diacritic hack removed'
+- was: sim̈
+  now: song
+  why: 'TEMPORAL since: diacritic hack removed (collided with QUANT sim)'
+- was: hlan̈
+  now: pral
+  why: 'TEMPORAL then_past: collided with ORIENT hlan'
+- was: xun̈
+  now: krin
+  why: 'TEMPORAL then_future: collided with ORIENT xun'
+- was: mel (ROOT)
+  now: nel
+  why: 'ROOT sweetens: collided with ASPECT root ''mel'''

@@ -1,0 +1,93 @@
+{
+  "max_depth": 3,
+  "lexicon_hash": "e2b8527010231a81fd31b6eeb9de3d8c",
+  "raising_moves_hash": true,
+  "attachment": {
+    "cases": [
+      {
+        "label": "flat (a<b, a<c)",
+        "surface": "fro fox hlim lan ml\u00f6 ka",
+        "roundtrip_exact": true
+      },
+      {
+        "label": "nested (a<b<c)",
+        "surface": "fro hlim lan fox ml\u00f6 ka",
+        "roundtrip_exact": true
+      },
+      {
+        "label": "nested (a<c<b)",
+        "surface": "fro hlim fox lan ml\u00f6 ka",
+        "roundtrip_exact": true
+      }
+    ],
+    "all_surfaces_distinct": true,
+    "all_roundtrip_exact": true
+  },
+  "ambiguity_by_nodecount": {
+    "archive": {
+      "1": {
+        "n": 60,
+        "mean": 1.7833333333333334,
+        "max": 5
+      },
+      "2": {
+        "n": 89,
+        "mean": 1.0786516853932584,
+        "max": 2
+      },
+      "3": {
+        "n": 32,
+        "mean": 1.0,
+        "max": 1
+      }
+    },
+    "v2": {
+      "1": {
+        "n": 46,
+        "mean": 2.6956521739130435,
+        "max": 8
+      },
+      "2": {
+        "n": 86,
+        "mean": 1.0232558139534884,
+        "max": 2
+      },
+      "3": {
+        "n": 57,
+        "mean": 1.0,
+        "max": 1
+      },
+      "4": {
+        "n": 6,
+        "mean": 1.0,
+        "max": 1
+      }
+    },
+    "cr": {
+      "1": {
+        "n": 36,
+        "mean": 4.277777777777778,
+        "max": 6
+      },
+      "2": {
+        "n": 36,
+        "mean": 1.0,
+        "max": 1
+      }
+    },
+    "tao": {
+      "1": {
+        "n": 36,
+        "mean": 4.027777777777778,
+        "max": 6
+      },
+      "2": {
+        "n": 36,
+        "mean": 1.0,
+        "max": 1
+      }
+    }
+  },
+  "monotone_decreasing": true,
+  "verdict": "DEAD_ON_PART_1_STRUCTURAL"
+}

@@ -1,0 +1,137 @@
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+D:\Tlon\tlon\listener\model.py:30: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.enc = nn.TransformerEncoder(layer, num_layers=n_layers)
+==============================================================================
+PHASE 5 -- pi + listener population. PREREG c09d0fb3
+==============================================================================
+  pool K=6, reset every 500 steps, advantage normalised, lambda in [0.0, 2.0] (0 is the primary read)
+  [raw] honest listeners trained on 12000 rows, naive held-out 93.2%
+  [pi] honest listeners trained on 12000 rows, naive held-out 92.6%
+  [raw] honest baseline aspect_root +7.69 pts (ambiguous stratum), M 74.4%
+  [pi] honest baseline aspect_root +6.63 pts (ambiguous stratum), M 79.6%
+
+  -- FROZEN ctrl  lambda=0.0 -----------------------------
+    43s   M 96.3%  (own floor 90.2%)   R nan   decidedness 0.867   ambiguous 16.3%
+    NAIVE-LISTENER GAP  +0.00 pts   (co-trained 96.3 vs naive 96.3)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          overall  -0.33   ambiguous  -4.08   excess  -4.08
+      degree        overall  +0.99   ambiguous  +1.94   excess  +1.94  <- KILL A
+      aspect_reps   overall  -0.07   ambiguous  -0.44   excess  -0.44
+      aspect_root   overall  +4.81   ambiguous +24.89   excess +17.20  <- KILL A
+
+  -- FROZEN ctrl  lambda=2.0 -----------------------------
+    43s   M 92.9%  (own floor 88.6%)   R nan   decidedness 0.797   ambiguous 19.2%
+    NAIVE-LISTENER GAP  +0.00 pts   (co-trained 92.9 vs naive 92.9)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          overall  -0.20   ambiguous  -1.04   excess  -1.04
+      degree        overall  -0.30   ambiguous  -1.60   excess  -1.60
+      aspect_reps   overall  +0.39   ambiguous  +1.59   excess  +1.59  <- KILL A
+      aspect_root   overall  +2.33   ambiguous +11.95   excess  +4.26  <- KILL A
+
+  -- FROZEN ctrl pi  lambda=0.0 --------------------------
+    43s   M 96.1%  (own floor 91.5%)   R nan   decidedness 0.880   ambiguous 14.4%
+    NAIVE-LISTENER GAP  +0.00 pts   (co-trained 96.1 vs naive 96.1)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      degree        -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_reps   -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_root   overall  +2.98   ambiguous +17.65   excess +11.02  <- KILL A
+
+  -- FROZEN ctrl pi  lambda=2.0 --------------------------
+    43s   M 96.8%  (own floor 88.7%)   R nan   decidedness 0.768   ambiguous 19.3%
+    NAIVE-LISTENER GAP  +0.00 pts   (co-trained 96.8 vs naive 96.8)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      degree        -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_reps   -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_root   overall  +3.70   ambiguous +18.92   excess +12.29  <- KILL A
+
+  -- phase-4 replication  lambda=0.0 ---------------------
+    48s   M 99.7%  (own floor 92.8%)   R 0.240   decidedness 0.857   ambiguous 12.2%
+    NAIVE-LISTENER GAP  +6.40 pts   (co-trained 99.7 vs naive 93.3)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          overall  +0.07   ambiguous  +0.55   excess  +0.55
+      degree        overall  +0.00   ambiguous  +0.00   excess  +0.00
+      aspect_reps   overall  +0.15   ambiguous  +1.18   excess  +1.18  <- KILL A
+      aspect_root   overall  +4.63   ambiguous +35.50   excess +27.81  <- KILL A
+
+  -- phase-4 replication  lambda=2.0 ---------------------
+    48s   M 99.8%  (own floor 90.6%)   R 0.181   decidedness 0.803   ambiguous 15.8%
+    NAIVE-LISTENER GAP  +12.33 pts   (co-trained 99.8 vs naive 87.5)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          overall  +0.07   ambiguous  +0.42   excess  +0.42
+      degree        overall  +0.15   ambiguous  +0.90   excess  +0.90
+      aspect_reps   overall  +0.00   ambiguous  +0.53   excess  +0.53
+      aspect_root   overall  +4.21   ambiguous +27.37   excess +19.68  <- KILL A
+
+  -- pi only  lambda=0.0 ---------------------------------
+    48s   M 99.7%  (own floor 92.8%)   R 0.366   decidedness 0.867   ambiguous 12.1%
+    NAIVE-LISTENER GAP  +8.13 pts   (co-trained 99.7 vs naive 91.5)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      degree        -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_reps   -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_root   overall  +5.26   ambiguous +40.00   excess +33.37  <- KILL A
+
+  -- pi only  lambda=2.0 ---------------------------------
+    47s   M 99.3%  (own floor 91.9%)   R 0.282   decidedness 0.767   ambiguous 14.1%
+    NAIVE-LISTENER GAP  +15.47 pts   (co-trained 99.3 vs naive 83.8)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      degree        -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_reps   -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_root   overall  +3.97   ambiguous +24.51   excess +17.88  <- KILL A
+
+  -- population only  lambda=0.0 -------------------------
+    72s   M 99.7%  (own floor 90.5%)   R 0.267   decidedness 0.870   ambiguous 16.5%
+    NAIVE-LISTENER GAP  +7.07 pts   (co-trained 99.7 vs naive 92.6)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          overall  +0.08   ambiguous  +0.20   excess  +0.20
+      degree        overall  +0.03   ambiguous  -0.19   excess  -0.19
+      aspect_reps   overall  +0.12   ambiguous  +0.33   excess  +0.33
+      aspect_root   overall  +3.09   ambiguous +17.89   excess +10.20  <- KILL A
+
+  -- population only  lambda=2.0 -------------------------
+    72s   M 97.7%  (own floor 89.7%)   R 0.231   decidedness 0.813   ambiguous 17.4%
+    NAIVE-LISTENER GAP  +10.44 pts   (co-trained 97.7 vs naive 87.3)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          overall  +0.39   ambiguous  +2.04   excess  +2.04  <- KILL A
+      degree        overall  +0.39   ambiguous  +1.82   excess  +1.82  <- KILL A
+      aspect_reps   overall  +0.47   ambiguous  +2.02   excess  +2.02  <- KILL A
+      aspect_root   overall  +2.04   ambiguous +11.47   excess  +3.78  <- KILL A
+
+  -- BOTH  lambda=0.0 ------------------------------------
+    72s   M 98.8%  (own floor 89.6%)   R 0.411   decidedness 0.864   ambiguous 17.8%
+    NAIVE-LISTENER GAP  +12.09 pts   (co-trained 98.8 vs naive 86.7)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      degree        -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_reps   -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_root   overall  +2.90   ambiguous +14.96   excess  +8.33  <- KILL A
+
+  -- BOTH  lambda=2.0 ------------------------------------
+    68s   M 98.1%  (own floor 89.7%)   R 0.244   decidedness 0.809   ambiguous 17.3%
+    NAIVE-LISTENER GAP  +10.00 pts   (co-trained 98.1 vs naive 88.1)
+      orient_order  -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      coda          -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      degree        -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_reps   -- pi holds this constant; probe undefined (scrambling it is a distribution shift)
+      aspect_root   overall  +3.44   ambiguous +21.11   excess +14.48  <- KILL A
+
+==============================================================================
+  arm                     lam       M      gap   shift    CODE   KILL A  KILL E
+  FROZEN ctrl             0.0   96.3%   +0.00   +0.00    FIRED      ok
+  FROZEN ctrl             2.0   92.9%   +0.00   +0.00    FIRED      ok
+  FROZEN ctrl pi          0.0   96.1%   +0.00   +0.00    FIRED      ok
+  FROZEN ctrl pi          2.0   96.8%   +0.00   +0.00    FIRED      ok
+  phase-4 replication     0.0   99.7%   +6.40   +0.00   +6.40    FIRED      ok
+  phase-4 replication     2.0   99.8%  +12.33   +0.00  +12.33    FIRED      ok
+  pi only                 0.0   99.7%   +8.13   +0.00   +8.13    FIRED      ok
+  pi only                 2.0   99.3%  +15.47   +0.00  +15.47    FIRED      ok
+  population only         0.0   99.7%   +7.07   +0.00   +7.07    FIRED      ok
+  population only         2.0   97.7%  +10.44   +0.00  +10.44    FIRED      ok
+  BOTH                    0.0   98.8%  +12.09   +0.00  +12.09    FIRED      ok
+  BOTH                    2.0   98.1%  +10.00   +0.00  +10.00    FIRED      ok
+
+  wrote D:\Tlon\runs\phase5.json

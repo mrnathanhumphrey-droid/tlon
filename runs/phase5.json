@@ -1,0 +1,712 @@
+{
+  "prereg": "c09d0fb3",
+  "pool_k": 6,
+  "reset_every": 500,
+  "honest_baseline": {
+    "false": {
+      "orient_order": {
+        "overall": 0.0,
+        "n": 687,
+        "ambiguous": 0.0
+      },
+      "coda": {
+        "overall": 0.0033333333333332993,
+        "n": 1500,
+        "ambiguous": -0.0025839793281653423
+      },
+      "degree": {
+        "overall": 0.002358490566037763,
+        "n": 1272,
+        "ambiguous": 0.006060606060606044
+      },
+      "aspect_root": {
+        "overall": 0.017384731670445963,
+        "n": 1323,
+        "ambiguous": 0.05830903790087466
+      },
+      "aspect_reps": {
+        "overall": 0.0007558578987151288,
+        "n": 1323,
+        "ambiguous": 0.005830903790087494
+      }
+    },
+    "true": {
+      "orient_order": {
+        "overall": 0.0,
+        "n": 707,
+        "ambiguous": 0.0
+      },
+      "coda": {
+        "overall": 0.009333333333333416,
+        "n": 1500,
+        "ambiguous": 0.022922636103151817
+      },
+      "degree": {
+        "overall": NaN,
+        "ambiguous": NaN,
+        "n": 0,
+        "unavailable": true
+      },
+      "aspect_root": {
+        "overall": 0.01806755695208173,
+        "n": 1273,
+        "ambiguous": 0.08591065292096223
+      },
+      "aspect_reps": {
+        "overall": 0.013354281225451792,
+        "n": 1273,
+        "ambiguous": 0.01718213058419249
+      }
+    }
+  },
+  "results": [
+    {
+      "arm": "FROZEN ctrl",
+      "lam": 0.0,
+      "pi": false,
+      "pop": false,
+      "m": 0.9626666666666667,
+      "naive": 0.9753333333333334,
+      "gap": -0.012666666666666715,
+      "own_floor": 0.9015333333333333,
+      "r": NaN,
+      "decidedness": 0.8674470318688287,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 663,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": -0.0033333333333332993,
+          "n": 1500,
+          "ambiguous": -0.04081632653061229
+        },
+        "degree": {
+          "overall": 0.009931245225362928,
+          "n": 1309,
+          "ambiguous": 0.01941747572815533
+        },
+        "aspect_root": {
+          "overall": 0.04807692307692302,
+          "n": 1352,
+          "ambiguous": 0.24890829694323147
+        },
+        "aspect_reps": {
+          "overall": -0.0007396449704142327,
+          "n": 1352,
+          "ambiguous": -0.004366812227074246
+        }
+      },
+      "kill_a": [
+        [
+          "degree",
+          1.94
+        ],
+        [
+          "aspect_root",
+          19.06
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": false,
+      "excess": {
+        "coda": -0.04081632653061229,
+        "degree": 0.01941747572815533,
+        "aspect_reps": -0.004366812227074246,
+        "aspect_root": 0.1905992590423568
+      }
+    },
+    {
+      "arm": "FROZEN ctrl",
+      "lam": 2.0,
+      "pi": false,
+      "pop": false,
+      "m": 0.9293333333333333,
+      "naive": 0.942,
+      "gap": -0.012666666666666604,
+      "own_floor": 0.8863,
+      "r": NaN,
+      "decidedness": 0.7972347656885783,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 647,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": -0.0020000000000000018,
+          "n": 1500,
+          "ambiguous": -0.01041666666666663
+        },
+        "degree": {
+          "overall": -0.0029761904761904656,
+          "n": 1344,
+          "ambiguous": -0.016000000000000014
+        },
+        "aspect_root": {
+          "overall": 0.023310023310023298,
+          "n": 1287,
+          "ambiguous": 0.11952191235059761
+        },
+        "aspect_reps": {
+          "overall": 0.0038850038850037905,
+          "n": 1287,
+          "ambiguous": 0.015936254980079667
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_reps",
+          1.59
+        ],
+        [
+          "aspect_root",
+          6.12
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": false,
+      "excess": {
+        "coda": -0.01041666666666663,
+        "degree": -0.016000000000000014,
+        "aspect_reps": 0.015936254980079667,
+        "aspect_root": 0.061212874449722954
+      }
+    },
+    {
+      "arm": "FROZEN ctrl pi",
+      "lam": 0.0,
+      "pi": true,
+      "pop": false,
+      "m": 0.9773333333333334,
+      "naive": 0.9613333333333334,
+      "gap": 0.016000000000000014,
+      "own_floor": 0.9201222222222223,
+      "r": NaN,
+      "decidedness": 0.8421898298793369,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 632,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0,
+          "n": 1500,
+          "ambiguous": -0.004761904761904745
+        },
+        "degree": {
+          "overall": NaN,
+          "ambiguous": NaN,
+          "n": 0,
+          "unavailable": true
+        },
+        "aspect_root": {
+          "overall": 0.04258675078864349,
+          "n": 1268,
+          "ambiguous": 0.2621359223300971
+        },
+        "aspect_reps": {
+          "overall": 0.030757097791798027,
+          "n": 1268,
+          "ambiguous": 0.07281553398058249
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_root",
+          17.62
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": false,
+      "excess": {
+        "aspect_root": 0.17622526940913485
+      }
+    },
+    {
+      "arm": "FROZEN ctrl pi",
+      "lam": 2.0,
+      "pi": true,
+      "pop": false,
+      "m": 0.9466666666666667,
+      "naive": 0.9093333333333333,
+      "gap": 0.03733333333333333,
+      "own_floor": 0.8857555555555556,
+      "r": NaN,
+      "decidedness": 0.7875136488013798,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 763,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.013333333333333308,
+          "n": 1500,
+          "ambiguous": 0.05673758865248224
+        },
+        "degree": {
+          "overall": NaN,
+          "ambiguous": NaN,
+          "n": 0,
+          "unavailable": true
+        },
+        "aspect_root": {
+          "overall": 0.03647416413373861,
+          "n": 1316,
+          "ambiguous": 0.18823529411764706
+        },
+        "aspect_reps": {
+          "overall": 0.02735562310030404,
+          "n": 1316,
+          "ambiguous": 0.10588235294117654
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_root",
+          10.23
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": false,
+      "excess": {
+        "aspect_root": 0.10232464119668483
+      }
+    },
+    {
+      "arm": "phase-4 replication",
+      "lam": 0.0,
+      "pi": false,
+      "pop": false,
+      "m": 0.9966666666666667,
+      "naive": 0.9293333333333333,
+      "gap": 0.06733333333333336,
+      "own_floor": 0.9277666666666667,
+      "r": 0.2398513892548157,
+      "decidedness": 0.8571556806564331,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 667,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0006666666666667043,
+          "n": 1500,
+          "ambiguous": 0.005464480874316946
+        },
+        "degree": {
+          "overall": 0.0,
+          "n": 1183,
+          "ambiguous": 0.0
+        },
+        "aspect_root": {
+          "overall": 0.04633204633204635,
+          "n": 1295,
+          "ambiguous": 0.3550295857988166
+        },
+        "aspect_reps": {
+          "overall": 0.001544401544401497,
+          "n": 1295,
+          "ambiguous": 0.011834319526627168
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_reps",
+          1.18
+        ],
+        [
+          "aspect_root",
+          29.67
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": true,
+      "excess": {
+        "coda": 0.005464480874316946,
+        "degree": 0.0,
+        "aspect_reps": 0.011834319526627168,
+        "aspect_root": 0.29672054789794194
+      }
+    },
+    {
+      "arm": "phase-4 replication",
+      "lam": 2.0,
+      "pi": false,
+      "pop": false,
+      "m": 0.998,
+      "naive": 0.8886666666666667,
+      "gap": 0.10933333333333328,
+      "own_floor": 0.9055777777777777,
+      "r": 0.18142606676274198,
+      "decidedness": 0.8032365236017439,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 716,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0006666666666667043,
+          "n": 1500,
+          "ambiguous": 0.0042194092827004814
+        },
+        "degree": {
+          "overall": 0.0015337423312883347,
+          "n": 1304,
+          "ambiguous": 0.009049773755656076
+        },
+        "aspect_root": {
+          "overall": 0.04209690230341534,
+          "n": 1259,
+          "ambiguous": 0.27368421052631575
+        },
+        "aspect_reps": {
+          "overall": 0.0,
+          "n": 1259,
+          "ambiguous": 0.0052631578947368585
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_root",
+          21.54
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": true,
+      "excess": {
+        "coda": 0.0042194092827004814,
+        "degree": 0.009049773755656076,
+        "aspect_reps": 0.0052631578947368585,
+        "aspect_root": 0.2153751726254411
+      }
+    },
+    {
+      "arm": "pi only",
+      "lam": 0.0,
+      "pi": true,
+      "pop": false,
+      "m": 0.998,
+      "naive": 0.898,
+      "gap": 0.09999999999999998,
+      "own_floor": 0.9202777777777779,
+      "r": 0.35998151120012595,
+      "decidedness": 0.8612135582500033,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 680,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0013333333333332975,
+          "n": 1500,
+          "ambiguous": 0.009708737864077666
+        },
+        "degree": {
+          "overall": NaN,
+          "ambiguous": NaN,
+          "n": 0,
+          "unavailable": true
+        },
+        "aspect_root": {
+          "overall": 0.05195911413969345,
+          "n": 1174,
+          "ambiguous": 0.46923076923076934
+        },
+        "aspect_reps": {
+          "overall": 0.0017035775127768327,
+          "n": 1174,
+          "ambiguous": 0.0
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_root",
+          38.33
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": true,
+      "excess": {
+        "aspect_root": 0.3833201163098071
+      }
+    },
+    {
+      "arm": "pi only",
+      "lam": 2.0,
+      "pi": true,
+      "pop": false,
+      "m": 0.9913333333333333,
+      "naive": 0.8633333333333333,
+      "gap": 0.128,
+      "own_floor": 0.9121888888888888,
+      "r": 0.251120161020493,
+      "decidedness": 0.7887450794378916,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 730,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0020000000000000018,
+          "n": 1500,
+          "ambiguous": 0.013100436681222738
+        },
+        "degree": {
+          "overall": NaN,
+          "ambiguous": NaN,
+          "n": 0,
+          "unavailable": true
+        },
+        "aspect_root": {
+          "overall": 0.027006751687921993,
+          "n": 1333,
+          "ambiguous": 0.16000000000000003
+        },
+        "aspect_reps": {
+          "overall": 0.0007501875468867159,
+          "n": 1333,
+          "ambiguous": 0.004444444444444473
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_root",
+          7.41
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": true,
+      "excess": {
+        "aspect_root": 0.0740893470790378
+      }
+    },
+    {
+      "arm": "population only",
+      "lam": 0.0,
+      "pi": false,
+      "pop": true,
+      "m": 0.9966666666666666,
+      "naive": 0.876,
+      "gap": 0.12066666666666659,
+      "own_floor": 0.9047777777777778,
+      "r": 0.26745159550256153,
+      "decidedness": 0.8701518370045556,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 660,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0007777777777776551,
+          "n": 1500,
+          "ambiguous": 0.0020161290322582293
+        },
+        "degree": {
+          "overall": 0.0002660281989890212,
+          "n": 1253,
+          "ambiguous": -0.0019157088122605526
+        },
+        "aspect_root": {
+          "overall": 0.030933333333333257,
+          "n": 1250,
+          "ambiguous": 0.1789215686274509
+        },
+        "aspect_reps": {
+          "overall": 0.0011999999999999789,
+          "n": 1250,
+          "ambiguous": 0.0032679738562091387
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_root",
+          12.06
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": true,
+      "excess": {
+        "coda": 0.0020161290322582293,
+        "degree": -0.0019157088122605526,
+        "aspect_reps": 0.0032679738562091387,
+        "aspect_root": 0.12061253072657624
+      }
+    },
+    {
+      "arm": "population only",
+      "lam": 2.0,
+      "pi": false,
+      "pop": true,
+      "m": 0.9771111111111112,
+      "naive": 0.9013333333333333,
+      "gap": 0.07577777777777783,
+      "own_floor": 0.8967777777777778,
+      "r": 0.23105698503445873,
+      "decidedness": 0.8129982577429877,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 754,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0038888888888889417,
+          "n": 1500,
+          "ambiguous": 0.020434227330779042
+        },
+        "degree": {
+          "overall": 0.003869541182974112,
+          "n": 1206,
+          "ambiguous": 0.01819505094614271
+        },
+        "aspect_root": {
+          "overall": 0.020430906389301673,
+          "n": 1346,
+          "ambiguous": 0.11471861471861466
+        },
+        "aspect_reps": {
+          "overall": 0.004705299653293693,
+          "n": 1346,
+          "ambiguous": 0.02020202020202022
+        }
+      },
+      "kill_a": [
+        [
+          "coda",
+          2.04
+        ],
+        [
+          "degree",
+          1.82
+        ],
+        [
+          "aspect_reps",
+          2.02
+        ],
+        [
+          "aspect_root",
+          5.64
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": true,
+      "excess": {
+        "coda": 0.020434227330779042,
+        "degree": 0.01819505094614271,
+        "aspect_reps": 0.02020202020202022,
+        "aspect_root": 0.056409576817740004
+      }
+    },
+    {
+      "arm": "BOTH",
+      "lam": 0.0,
+      "pi": true,
+      "pop": true,
+      "m": 0.9947777777777778,
+      "naive": 0.862,
+      "gap": 0.13277777777777777,
+      "own_floor": 0.9010222222222222,
+      "r": 0.4252914919345942,
+      "decidedness": 0.8729066305690342,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 728,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0,
+          "n": 1500,
+          "ambiguous": 0.0006640106241699861
+        },
+        "degree": {
+          "overall": NaN,
+          "ambiguous": NaN,
+          "n": 0,
+          "unavailable": true
+        },
+        "aspect_root": {
+          "overall": 0.039037854889589996,
+          "n": 1268,
+          "ambiguous": 0.21011058451816744
+        },
+        "aspect_reps": {
+          "overall": 0.0006572029442691862,
+          "n": 1268,
+          "ambiguous": 0.004739336492891044
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_root",
+          12.42
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": true,
+      "excess": {
+        "aspect_root": 0.12419993159720522
+      }
+    },
+    {
+      "arm": "BOTH",
+      "lam": 2.0,
+      "pi": true,
+      "pop": true,
+      "m": 0.9805555555555555,
+      "naive": 0.8413333333333334,
+      "gap": 0.13922222222222214,
+      "own_floor": 0.8951111111111112,
+      "r": 0.2807379378399428,
+      "decidedness": 0.7851789057254791,
+      "drops": {
+        "orient_order": {
+          "overall": 0.0,
+          "n": 760,
+          "ambiguous": 0.0
+        },
+        "coda": {
+          "overall": 0.0022222222222221255,
+          "n": 1500,
+          "ambiguous": 0.004166666666666541
+        },
+        "degree": {
+          "overall": NaN,
+          "ambiguous": NaN,
+          "n": 0,
+          "unavailable": true
+        },
+        "aspect_root": {
+          "overall": 0.04090447154471555,
+          "n": 1312,
+          "ambiguous": 0.19308176100628938
+        },
+        "aspect_reps": {
+          "overall": 0.001016260162601701,
+          "n": 1312,
+          "ambiguous": -0.0031446540880503138
+        }
+      },
+      "kill_a": [
+        [
+          "aspect_root",
+          10.72
+        ]
+      ],
+      "kill_e": false,
+      "co_adapting": true,
+      "excess": {
+        "aspect_root": 0.10717110808532715
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "prereg": "c1f7d06c",
+  "channel": "aspect_reps",
+  "no_code": {
+    "acc": 0.9205128205128205,
+    "drop": 0.0017094017094017033,
+    "drop_ambiguous": 0.007207207207207134,
+    "drop_unambiguous": 0.0,
+    "n_test": 2340,
+    "mean_ambiguity": 1.3811965811965812,
+    "frac_ambiguous": 0.23717948717948717
+  },
+  "coded": {
+    "acc": 0.9910256410256411,
+    "drop": 0.27051282051282055,
+    "drop_ambiguous": 0.6666666666666667,
+    "drop_unambiguous": 0.14293785310734464,
+    "n_test": 2340,
+    "mean_ambiguity": 1.402991452991453,
+    "frac_ambiguous": 0.24358974358974358
+  },
+  "verdict": "DETECTION FLOOR ESTABLISHED. The code was learned (+7.1 pts accuracy), the probe fired on it (+27.05 pts), and stayed quiet without it (+0.17 pts). KILL A can fire in this regime. PHASE 4 IS CLEARED TO RUN."
+}
