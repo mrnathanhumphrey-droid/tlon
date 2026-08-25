@@ -362,3 +362,78 @@ def verdict(results: list[AxisResult]) -> Verdict:
         "decomposition — every cell informative. A real finding about the "
         "constraint's expressive geometry.",
         tuple(results))
+
+
+# ── HARDEN 3 · THE ARENA TEMPERATURE FLOOR (a VACUITY PRECONDITION) ───────
+#: ⛔⛔ GREEDY DECODING MAKES DRIFT IMPOSSIBLE BY CONSTRUCTION. Two deterministic
+#: speakers, given a history, each emit exactly one thing. They can be identical
+#: or not, but they cannot DRIFT — there is no distribution for a convention to
+#: move within. This is not theoretical: it is precisely why `speak` read 1/12
+#: distinct on a constant prompt while the same prompt at temperature 0.8 read
+#: 11/12. The weights were never collapsed; the decoder was.
+#:
+#: ⛔⛔ AND THE FAILURE LOOKS LIKE THE MOST HONEST RESULT AVAILABLE. A drift run
+#: at temperature 0 returns a CLEAN NULL — ΔD ≈ 0, ΔC ≈ 0, no pact — which is
+#: indistinguishable from the pre-registered BOUNDARY FINDING ("the constraint is
+#: not internalizable / no private language forms"). A null produced by the
+#: sampler would be written up as a discovery. That is the worst failure this
+#: project can produce, so it is refused STRUCTURALLY rather than remembered.
+#:
+#: ⚠️ THE VALUE IS A PRE-REGISTERED PARAMETER, NOT A KNOB. It is locked before
+#: the arena runs and must not be tuned after seeing arena results. It is set
+#: from a measured sweep (`tools/act2_temp_sweep.py`), not from taste.
+MIN_ARENA_TEMPERATURE = 0.7
+
+#: How many samples of ONE history the precondition draws, and how many must
+#: differ. ⭐ THE TEMPERATURE NUMBER ALONE IS NOT ENOUGH: a correctly-configured
+#: temperature on a degenerate model still cannot drift, so the guard measures
+#: the actual variability instead of trusting the setting.
+PRECONDITION_SAMPLES = 12
+PRECONDITION_MIN_DISTINCT = 3
+
+
+def arena_preconditions(*, temperature: float,
+                        same_history_samples: list | None = None) -> None:
+    """Refuse to measure drift in a configuration where drift cannot appear.
+
+    ⛔ RAISES `VacuousFalsifier`; it never returns a null. A null from a
+    too-cold sampler and a null from a real boundary are the same number, and
+    only one of them is a finding.
+
+    `same_history_samples` — optional, and it is the half that actually bites:
+    N continuations of ONE identical history at the configured temperature. If
+    they are all the same, this speaker cannot drift no matter what the
+    temperature says.
+    """
+    if temperature is None:
+        raise VacuousFalsifier(
+            "no decoding temperature was recorded for the arena. It is a "
+            "pre-registered parameter and an unrecorded one cannot be checked.")
+    if temperature < MIN_ARENA_TEMPERATURE:
+        raise VacuousFalsifier(
+            f"arena temperature {temperature} is below the pre-registered floor "
+            f"{MIN_ARENA_TEMPERATURE}. At this temperature the speakers are "
+            "effectively deterministic, so D_ctx is VACUOUS: the run would "
+            "return a clean null that is indistinguishable from the boundary "
+            "finding. Refused rather than reported.")
+
+    if same_history_samples is None:
+        return
+    n = len(same_history_samples)
+    if n < PRECONDITION_SAMPLES:
+        raise VacuousFalsifier(
+            f"the variability precondition needs {PRECONDITION_SAMPLES} samples "
+            f"of one history, got {n}. Too few to tell a stuck speaker from a "
+            "varying one.")
+    import json as _json
+    distinct = len({_json.dumps(s, sort_keys=True, ensure_ascii=False)
+                    if not isinstance(s, str) else s
+                    for s in same_history_samples})
+    if distinct < PRECONDITION_MIN_DISTINCT:
+        raise VacuousFalsifier(
+            f"the speaker produced {distinct} distinct continuation(s) from "
+            f"{n} samples of the SAME history at temperature {temperature}. "
+            "The temperature is above the floor but this speaker still cannot "
+            "vary, so it cannot drift — the setting was right and the speaker "
+            "is degenerate anyway. This is the check the temperature number "
+            "alone would have passed.")

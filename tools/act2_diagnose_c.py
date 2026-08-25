@@ -38,6 +38,86 @@ from tlon.act2.llm import LLMSpeaker                           # noqa: E402
 from tlon.product import schema as PS                          # noqa: E402
 
 
+#: ⛔ TWO DIFFERENT THRESHOLDS, BECAUSE THEY ANSWER TWO DIFFERENT QUESTIONS.
+#:
+#: `_PINNED` is for a metric that is ALGEBRAICALLY stuck — `dependence` computes
+#: to exactly 1.00 under greedy decoding, so exact equality is the right test.
+#:
+#: `_CEILING_BAND` is for a SAMPLED rate. Diagnosis C measures 12 probes per
+#: checkpoint, so one item is ±8 %: run 3's real curve was [12, 11, 12, 12, 12,
+#: 12], and a rigid 0.999 threshold called that "not at ceiling" over a
+#: single-sample dip. A threshold finer than the sampling granularity of the
+#: thing it reads is measuring noise.
+_PINNED = 0.999
+_CEILING_BAND = 0.90
+
+
+def _saturated(curve: list[float]) -> bool:
+    """Algebraically pinned — for `dependence`, which computes to exactly 1.00."""
+    return bool(curve) and min(curve) >= _PINNED
+
+
+def _at_ceiling(curve: list[float]) -> bool:
+    """Already at the top when the first checkpoint was taken, and never left."""
+    return bool(curve) and curve[0] >= _CEILING_BAND and min(curve) >= _CEILING_BAND
+
+
+def read_curve(rows: list[dict]) -> str:
+    """The automatic reading. ⛔ COMPUTED, NOT EYEBALLED — a curve a human squints
+    at is a curve two humans read differently.
+
+    ⛔⛔ THIS KEYED ON `dependence` AND WAS THEREFORE ALWAYS WRONG. Under greedy
+    decoding `dependence` is +1.00 for any functioning model, so it had no
+    variance to read and the verdict printed "NEVER ROSE" forever regardless of
+    what the run did. On run 3 the informative curve was `valid`, which moved
+    **0–1/12 → 12/12**, and the verdict never looked at it.
+
+    ⭐ SO THE PRIMARY METRIC IS `valid`, AND THE VERDICT NOW DETECTS ITS OWN
+    SATURATION. A verdict that keys on a pinned metric is the vacuity trap one
+    level up — a check that can only ever return one value — and the fix is not
+    "pick a better metric once", it is "notice when the metric cannot vary".
+    """
+    scoreable = [r for r in rows if r.get("valid") is not None]
+    if len(scoreable) < 2:
+        return "⛔ too few scoreable checkpoints to read a curve"
+
+    n = scoreable[0].get("n") or 1
+    curve = [r["valid"] / n for r in scoreable]
+    steps = [r.get("step", -1) for r in scoreable]
+
+    # ⛔ The old metric is still REPORTED as saturated rather than silently
+    # dropped, so its uselessness stays visible instead of being forgotten.
+    dep = [r["dependence"] for r in scoreable if r.get("dependence") is not None]
+    dep_note = (" · ⚠️ `dependence` is SATURATED at its ceiling here and carries "
+                "no information — this is why it cannot be the verdict metric"
+                if _saturated(dep) else "")
+
+    peak = max(range(len(curve)), key=lambda i: curve[i])
+    rose = curve[peak] > curve[0] + 0.1
+    fell = curve[-1] < curve[peak] - 0.1
+
+    if _at_ceiling(curve):
+        first = steps[0]
+        return (f"✅ AT CEILING FROM THE FIRST CHECKPOINT (step {first}) — the "
+                f"task was already learned before anything was saved. Nothing to "
+                f"read from the curve, and nothing to fix by training longer or "
+                f"stopping earlier.{dep_note}")
+    if rose and fell:
+        return (f"⛔ OVERTRAINED — rose to {curve[peak]:.0%} at step "
+                f"{steps[peak]}, fell to {curve[-1]:.0%}. Stop near the "
+                f"peak.{dep_note}")
+    if rose:
+        return (f"✅ ROSE AND HELD — {curve[0]:.0%} → {curve[-1]:.0%} "
+                f"(peak {curve[peak]:.0%} at step {steps[peak]}). No duration "
+                f"problem to fix.{dep_note}")
+    if max(curve) <= 0.1:
+        return (f"⛔ NEVER ROSE, AND STAYED ON THE FLOOR ({curve[0]:.0%} → "
+                f"{curve[-1]:.0%}) — the task is not in the training data at "
+                f"all. Not a duration problem.{dep_note}")
+    return (f"⛔ NEVER ROSE — {curve[0]:.0%} → {curve[-1]:.0%}, no rise beyond "
+            f"noise. Not a training-duration problem.{dep_note}")
+
+
 def _valid(proposals) -> int:
     ok = 0
     for p in proposals:
@@ -104,20 +184,7 @@ def main() -> int:
         gc.collect()
         torch.cuda.empty_cache()
 
-    # ⛔ THE READING IS COMPUTED, NOT EYEBALLED. A curve a human squints at is a
-    # curve two humans read differently.
-    curve = [r["dependence"] for r in rows if r["dependence"] is not None]
-    if len(curve) < 2:
-        reading = "⛔ too few scoreable checkpoints to read a curve"
-    else:
-        peak = max(range(len(curve)), key=lambda i: curve[i])
-        rose = curve[peak] > curve[0] + 0.1
-        fell = curve[-1] < curve[peak] - 0.1
-        reading = ("⛔ OVERTRAINED — diversity rose then fell; stop near the peak"
-                   if rose and fell else
-                   "⛔ NEVER ROSE — not a training-duration problem"
-                   if not rose else
-                   "✅ ROSE AND HELD — no duration problem to fix")
+    reading = read_curve(rows)
     print(f"\n  READING: {reading}")
 
     out = pathlib.Path(a.out)
