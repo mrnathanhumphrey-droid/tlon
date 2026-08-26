@@ -543,3 +543,114 @@ English (*oft* vs *habitual*).
 here: flooring occupancy lengthens every scene and contrastive pairs add rows.
 The builder now prints the token total so `--n` can be trimmed to match run 3's
 budget — otherwise a render improvement is confounded with a longer run.
+
+---
+
+## D17 — ⛔⛔ RUN 4: THE FIX WORKED ON ITS TARGET AND THE ERRORS MOVED
+
+**2026-08-25.** The §8.2 corrected corpus (slot_floor 0.30 + contrastive minimal
+pairs), tokens held to **−0.13 %**, battery `8d21aa635d5729fd` identical, greedy,
+same hardware, baseline re-verified at **25/64 = 39.1 %** three times on the box.
+
+| | run 3 | run 4 | Δ |
+|---|---|---|---|
+| render | 82.0 % (210/256) | **81.6 %** (209/256) | **−1 item** |
+| speak | 97.3 % (249/256) | **76.2 %** (195/256) | **−54 items** |
+| comprehension | 71.1 % (182/256) | **60.2 %** (154/256) | **−28 items** |
+
+**F-LOCAL FIRED.** The gate is not cleared and the model is not arena-ready.
+
+### ⭐⭐ THE FINDING: THE ERRORS DID NOT DISAPPEAR, THEY RELOCATED
+
+| slot group | run 3 | run 4 | Δ |
+|---|---|---|---|
+| **FLOORED** (aspect/modal/quant/tense/degree) | 37 | **26** | **−11** |
+| **UNFLOORED** (root/orient/relator/force) | 11 | **24** | **+13** |
+| total | 48 | 50 | +2 |
+
+The intervention did **exactly what it was designed to do** on the slots it
+treated, and the displaced probability mass landed in the one slot it did not:
+
+| confusion | run 3 | run 4 | |
+|---|---|---|---|
+| `Q→A` | 5 | **0** | ⭐ the contrastive pairs' own target — eliminated |
+| `L→M` | 6 | **1** | ⭐ the second targeted boundary |
+| **`M→R`** | 7 | **19** | ⛔ |
+| **`R→M`** | 1 | **6** | ⛔ |
+
+⇒ **Raising modifier occupancy 3.9 % → 29.9 % raised the model's PRIOR on
+modifier forms, and it now spends that prior in the ROOT slot** — the one slot
+that is 100 % occupied, was never floored, and therefore always available to be
+wrong in. The M/R boundary went **8 → 25**. Net render change: **one item.**
+
+### ⭐ THE PRE-REGISTERED aspect_root TEST — `PREREG_ASPECT_ROOT_MECHANISM`
+
+**Count test: UNDERPOWERED, exactly as pre-declared.** `k` = 0.286 from the
+held-out fit slots ⇒ predicted 11.4, observed **11**, z = **−0.09**. This is the
+instrument declining to answer, **not** "the mechanisms are the same".
+
+**Composition test — the observable the prereg named as informative at low N —
+FIRED:**
+
+| | run 3 | run 4 | |
+|---|---|---|---|
+| non-Q real sources into A | 10 | 7 | **−30.0 %** (dose-response predicted −28.6 %) |
+| **`Q→A`** | 5 | **0** | **−100 %**, Poisson p = **0.028** |
+
+Everything except Q fell at exactly the occupancy dose-response; **Q→A vanished.**
+That is the H-COLLIDE signature, pre-declared before the data, and the
+preferential-targeting confound was ruled out in advance (modal received **21**
+units of contrastive attention to aspect's **16**).
+⛔ **One pre-declared cell at small n. SUGGESTIVE, NOT ESTABLISHED.**
+⚠️ H-REDUP is **not** refuted: invented forms in the aspect slot went **1 → 4**,
+and they are reduplication fragments (`xas`, `un`, `sas`, `melmel`).
+
+### ⛔⛔ THE SPEAK COLLAPSE IS UNDIAGNOSED, AND THE HARNESS IS WHY
+
+**60 of 61 speak failures are `no parseable JSON`** — only 1 is a class error.
+This is not a class-discipline failure at all.
+
+Two hypotheses were formed and **both refuted against the data**:
+
+1. *"denser output ⇒ conjunctive validity penalty"* — **REFUTED.** Modifier slots
+   per node in failed render proposals: **1.38 (run 3) vs 1.39 (run 4)**.
+2. *"targets outgrew `max_new_tokens=220`"* — **REFUTED.** Longest target is
+   **163** tokens; **0.00 %** of either corpus exceeds the cap.
+
+⛔⛔ **AND THE THIRD ATTEMPT HIT AN INSTRUMENT WALL: `act2_flocal._rate` STORES
+`proposal: null` AND DISCARDS THE RAW GENERATION WHEN PARSING FAILS.** The
+failure mode that accounts for **98 % of the speak regression** is the one the
+ledger records the least about. ⭐ This is the project's own rule —
+*dump the raw output before believing a number* — violated by the harness at
+exactly the point it matters. **Fix before any re-run: record the raw text on
+parse failure.** Until then the speak collapse has no diagnosis, and none should
+be invented.
+
+### ⚠️ DIAGNOSTIC C's VERDICT IS OVER-READING NOISE AT n=12
+
+Curve (valid/12): **9, 12, 12, 9, 12, 7, 10, 10**. The tool reports
+*"OVERTRAINED — rose to 100 % at step 1000, fell to 83 %."*
+
+⛔ **NOT SUPPORTED.** Binomial sd at p≈0.84, n=12 is **1.27**; the observed
+scatter is 1.81. The series is consistent with noise around a flat ~84 % and is
+not monotone in either direction. This is the SAME shape HARDEN 2 fixed one level
+up — a verdict keyed to a metric that cannot resolve the difference it reports.
+
+### ⛔ MY OWN ERRORS THIS RUN, RECORDED
+
+- **I did not pull the checkpoints.** Diagnostic C exists to identify a better
+  checkpoint; I then discarded the 7.4 GB of checkpoints it evaluates to save
+  ~$0.25 of meter, and terminated. If an earlier checkpoint is better, **that is
+  now unrecoverable without retraining.** Running the diagnostic and throwing
+  away its subject was a mistake, not a trade-off.
+- **I claimed invented forms were "a new category not in run 3 at all."** Wrong:
+  run 3 had **3**, run 4 has **10**. I read run 4's printed summary against my
+  memory of run 3's instead of against run 3's ledger.
+- **I asserted numpy 1.21.5 "worked"** in `requirements-lambda.txt` when it had
+  merely never been exercised — the gate path never imports the collator.
+
+### COST
+
+**~3.05 h × $1.99 = ≈ $6.1**, of which ~45 min was four environment failures
+(Pillow, jinja2, numpy, plus a relaunch). Act 2 total **≈ $29**.
+**The $1,500 contingency is still untouched.** Instance TERMINATED, verified.

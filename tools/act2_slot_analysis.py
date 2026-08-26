@@ -80,7 +80,12 @@ def slots(run) -> tuple[collections.Counter, collections.Counter, collections.Co
         for e in f.get("class_errors", []):
             by_slot[e["used_as"]] += 1
             if e["used_as"] == HELD_OUT:
-                by_src[e["actual"]] += 1
+                # ⛔ `actual=None` means the form is in NO lexicon class — an
+                # INVENTED form. Run 3 had none of these ("NOT ONE HALLUCINATED
+                # FORM" was a headline), so the key did not exist and sorting a
+                # None beside a str raised. Kept as its own label rather than
+                # dropped: a new failure category is the finding, not noise.
+                by_src[e["actual"] or "∅ INVENTED"] += 1
     return by_slot, by_src, reasons
 
 

@@ -101,6 +101,58 @@ zero, and σ_cp = 0 is *defined* to mean "independent, no pact".
   cannot hold 40 turns would validate it against noise.
 - ⏳ **HARDEN 5** — product ops, separate track, non-blocking.
 
+# ⛔⛔ RUN 4 RAN. THE FIX WORKED ON ITS TARGET AND THE ERRORS MOVED. (D17)
+
+**F-LOCAL FIRED. Not arena-ready.** Tokens held to **−0.13 %**, battery
+identical, baseline re-verified **25/64** three times on the box.
+
+| | run 3 | run 4 | |
+|---|---|---|---|
+| render | 82.0 % | **81.6 %** | −1 item |
+| speak | 97.3 % | **76.2 %** | **−54** |
+| comprehension | 71.1 % | **60.2 %** | **−28** |
+
+⭐⭐ **THE ERRORS RELOCATED — THEY DID NOT DISAPPEAR.** Floored slots **37 → 26**;
+unfloored slots **11 → 24**; total **48 → 50**.
+
+| | run 3 | run 4 | |
+|---|---|---|---|
+| `Q→A` | 5 | **0** | ⭐ the contrastive pairs' own target, eliminated |
+| `L→M` | 6 | **1** | ⭐ second targeted boundary |
+| `M→R` | 7 | **19** | ⛔ |
+| `R→M` | 1 | **6** | ⛔ |
+
+⇒ **Raising modifier occupancy raised the PRIOR on modifier forms, and the model
+spends it in the ROOT slot** — always present, never floored, always available to
+be wrong in. M/R boundary **8 → 25**. Net render: one item.
+
+⭐ **THE PRE-REGISTERED TEST SPLIT CLEANLY.** Count test **UNDERPOWERED** (z =
+−0.09), exactly as declared. The composition observable **fired**: non-Q sources
+into A fell **−30.0 %** against a predicted **−28.6 %**, while **`Q→A` went 5 → 0**
+(p = 0.028). H-COLLIDE **suggestive, not established** — one pre-declared cell.
+⚠️ H-REDUP not refuted: invented aspect forms **1 → 4**, all reduplication
+fragments (`xas`, `un`, `sas`).
+
+⛔⛔ **THE SPEAK COLLAPSE IS UNDIAGNOSED AND THE HARNESS IS WHY.** 60 of 61 speak
+failures are **`no parseable JSON`** — one is a class error. Two hypotheses tested
+and **both refuted**: density (1.38 vs **1.39** modifier slots/node) and the
+`max_new_tokens=220` cap (longest target **163**, 0.00 % over). Then:
+**`act2_flocal._rate` stores `proposal: null` and DISCARDS THE RAW GENERATION ON
+PARSE FAILURE.** The mode responsible for 98 % of the regression is the one the
+ledger records least about. ⛔ **FIX BEFORE ANY RE-RUN.** No diagnosis exists and
+none should be invented.
+
+⚠️ **DIAGNOSTIC C's "OVERTRAINED" IS OVER-READING NOISE.** Curve 9,12,12,9,12,
+7,10,10 of 12; binomial sd 1.27 vs observed scatter 1.81 — consistent with a flat
+~84 %. Same shape HARDEN 2 fixed one level up.
+
+⛔ **AND I DISCARDED THE CHECKPOINTS.** Diagnostic C exists to find a better
+checkpoint; I dropped its 7.4 GB subject to save $0.25 and terminated. If an
+earlier checkpoint is better, that is **unrecoverable without retraining.**
+
+**Cost ≈ $6.1** (~45 min of it four environment failures). Act 2 ≈ **$29**.
+**$1,500 contingency untouched.** Instance TERMINATED.
+
 # ⛔⛔ §8.2 — THE NAMED INSTRUMENT WAS THE WRONG ONE (D16)
 
 ⛔ **AND THE SUMMARY THIS FILE CARRIED MIS-RANKED ITS OWN RUN.** It said *"`L→M`,
