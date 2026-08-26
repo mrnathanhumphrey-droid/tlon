@@ -84,13 +84,32 @@ def _find_cycle(surfaces: list[str]) -> tuple[int, int]:
     return best
 
 
-def exchange(speaker_a, speaker_b, *, turns: int, seed_history: tuple):
-    """Alternating turns. Each speaker sees only TLÖN — never a gloss."""
+def exchange(speaker_a, speaker_b, *, turns: int, seed_history: tuple,
+             history_window: int | None = None):
+    """Alternating turns. Each speaker sees only TLÖN — never a gloss.
+
+    ⛔⛔ `history_window` IS THE LOCALITY ARCHITECTURE'S LOAD-BEARING KNOB. At
+    `window=1` the speaker is handed exactly one prior surface, so turn 40 is
+    structurally identical to turn 1 and the OOD-at-depth collapse has no
+    substrate. **The truncation applies from turn 0, including into the seed
+    history** — a version that truncated only after the seed had accumulated
+    would silently give early turns full context and the run would be
+    uninterpretable in exactly the direction that flatters the hypothesis.
+
+    ⭐ RED-PROOFED IN `tests/test_exchange_history_window.py` WITH A SPY SPEAKER
+    THAT RECORDS WHAT IT ACTUALLY RECEIVED. A knob that silently no-ops returns
+    "locality works" for the worst possible reason: the model saw everything and
+    happened not to collapse, which says nothing about depth-1.
+    """
+    if history_window is not None and history_window < 1:
+        raise ValueError("history_window must be >= 1 (a speaker provoked by "
+                         "nothing is not a depth-1 painter, it is a cold start)")
     hist = list(seed_history)
     log = []
     for t in range(turns):
         sp = speaker_a if t % 2 == 0 else speaker_b
-        proposal = sp.speak(tuple(hist), t + 1)
+        shown = hist if history_window is None else hist[-history_window:]
+        proposal = sp.speak(tuple(shown), t + 1)
         entry = {"turn": t, "speaker": "A" if t % 2 == 0 else "B",
                  "proposal": proposal, "valid": False, "surface": None}
         if proposal is not None:
@@ -147,6 +166,10 @@ def main() -> int:
     ap.add_argument("--model", required=True)
     ap.add_argument("--adapter", required=True)
     ap.add_argument("--turns", type=int, default=40)
+    ap.add_argument("--history-window", type=int, default=None,
+                    help="truncate what each speaker sees to the last N "
+                         "surfaces. 1 = the locality architecture. "
+                         "OMITTED = accumulate (the measured null).")
     ap.add_argument("--temperature", type=float,
                     default=F.MIN_ARENA_TEMPERATURE)
     ap.add_argument("--out", default="runs/act2/logs/exchange_probe.json")
@@ -178,7 +201,8 @@ def main() -> int:
           "temperature\n")
 
     print("  ── INTERACTING: A and B, each adapting to the other ──")
-    inter = exchange(A, B, turns=a.turns, seed_history=seed_history)
+    inter = exchange(A, B, turns=a.turns, seed_history=seed_history,
+                     history_window=a.history_window)
     ri = analyse(inter)
 
     # ⭐ THE CONTROL. Each speaker against a PRE-RECORDED, non-adaptive partner:
@@ -199,7 +223,9 @@ def main() -> int:
         from tlon.act2 import schema_bridge as SB
         return SB.scene_to_proposal(scene)
 
-    ctrl = exchange(A, _Frozen(frozen), turns=a.turns, seed_history=seed_history)
+    ctrl = exchange(A, _Frozen(frozen), turns=a.turns,
+                    seed_history=seed_history,
+                    history_window=a.history_window)
     rc = analyse(ctrl)
 
     for name, r in (("INTERACTING", ri), ("CONTROL", rc)):
