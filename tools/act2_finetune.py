@@ -30,6 +30,9 @@ CORPUS = pathlib.Path(__file__).resolve().parents[1] / "runs" / "act2" / "corpus
 #: ⛔⛔ ONE PROMPT PER DIRECTION. Training both tasks under a single instruction
 #: would force the model to GUESS which one it is on from the input alone, and
 #: the two inputs are the two languages — exactly the discrimination that failed.
+from tlon.discourse.provocation import DIRECTION as _PROVOKE
+from tlon.discourse.provocation import PROVOCATION as _PROVOCATION
+
 SYSTEM = {
     "write": ("You render English into Tlön. Tlön has no nouns. Emit ONLY a "
               "JSON Scene object."),
@@ -38,6 +41,12 @@ SYSTEM = {
     # the model had just been shown — it was copying tokens it could not parse.
     "read":  ("You read Tlön. Tlön has no nouns. Given a Tlön utterance, emit "
               "ONLY the JSON Scene object it means."),
+    # ⛔⛔ THE THIRD DIRECTION, AND THE ONE THE ARENA ACTUALLY SERVES UNDER.
+    # Before this, the trainer knew "write"/"read" and the arena spoke under a
+    # prompt in another module that was NEVER a training direction — run 3 is
+    # prompted at arena time under a framing it has never seen. Imported, not
+    # re-spelled, so trainer and arena cannot drift apart again.
+    _PROVOKE: _PROVOCATION,
 }
 
 # ⛔ NO LEXICON CARD IN THE TRAINING PROMPT. The whole bar is cardless emission;

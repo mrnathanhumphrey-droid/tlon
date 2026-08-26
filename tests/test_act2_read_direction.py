@@ -68,7 +68,9 @@ def test_the_two_directions_get_DIFFERENT_system_prompts():
     import sys
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
     import act2_finetune as FT
-    assert set(FT.SYSTEM) == {"write", "read"}
+    assert set(FT.SYSTEM) == {"write", "read", "provoke"}, (
+        "a direction was added or removed; the arena serves under 'provoke' "
+        "and the trainer must know it")
     assert FT.SYSTEM["write"] != FT.SYSTEM["read"]
     assert "render English into Tlön" in FT.SYSTEM["write"]
     assert "read Tlön" in FT.SYSTEM["read"]

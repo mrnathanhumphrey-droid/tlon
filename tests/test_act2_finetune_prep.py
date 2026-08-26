@@ -76,10 +76,16 @@ def test_the_no_card_speaker_really_omits_the_lexicon():
         if not flag:
             body = back.calls[0]["system"]
             assert C.load()["_hash"] not in body
-            for form in list(C.load()["classes"]["R"])[:20]:
-                assert f"{form} =" not in body
+            # ⛔⛔ WAS `list(...)["R"][:20]` PLUS `len < 700`. The length bound
+            # was a PROXY for "no table inline" and it ROTTED the moment the
+            # prompt legitimately grew (the shared provocation is longer than
+            # the CONVERSE string it replaced). Replaced with the property it
+            # was standing in for, over EVERY class rather than 20 roots — a
+            # strictly stronger check with no free constant left to rot.
+            for cls in C.load()["classes"].values():
+                for form in cls:
+                    assert f"{form} =" not in body, form
     assert lengths[True] - lengths[False] >= card
-    assert lengths[False] < 700, "the no-card prompt still carries a table"
 
 
 @pytest.mark.parametrize("kind", ["speak", "render", "choose"])

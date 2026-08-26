@@ -70,16 +70,14 @@ class Backend(Protocol):
         ...
 
 
-CONVERSE = """You are speaking Tlön with one other speaker. Tlön has no nouns: \
-every root is an impersonal verb, and there are no words for objects, for people, \
-or for a self.
+# ⛔⛔ THE ARENA AND THE TRAINER NOW SHARE ONE STRING. This used to be a
+# local triple-quoted prompt that no training direction had ever seen, and
+# it asked for content continuity ("say something that FOLLOWS FROM what
+# was said") — which C-D1 denies and a content-free corpus cannot supply.
+# Defined once in tlon/discourse/provocation.py so the two cannot drift.
+from ..discourse.provocation import PROVOCATION
 
-You will be shown the conversation so far, as Tlön utterances and nothing else. \
-Read them using the lexicon below. Then say the next thing.
-
-Say something that follows from what was said. Do not translate, do not explain, \
-do not comment on the language. Emit ONLY the JSON object for one Scene. Every \
-form must come from the lexicon."""
+CONVERSE = PROVOCATION   # back-compat alias; the object is defined ONCE
 
 RENDER = """You translate English into Tlön. Tlön has no nouns: you never render \
 the OBJECTS in a sentence, you render the impression underneath them.
