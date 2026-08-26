@@ -395,3 +395,73 @@ def test_render_speak_stability_is_pre_declared_NEUTRAL():
     EXPECTED and proves nothing — crediting a number that did not move is the
     dual of every failure in this ledger."""
     assert _ff().RENDER_SPEAK_STABILITY_IS_NEUTRAL is True
+
+
+# ══ THE CORPUS WRITER ════════════════════════════════════════════════════
+def _builder():
+    import importlib.util
+    import pathlib
+    spec = importlib.util.spec_from_file_location(
+        "bmt", pathlib.Path(__file__).parents[1] / "tools/act2_build_multiturn.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def test_a_provoke_row_resolves_to_the_SHARED_provocation(pairs):
+    """⛔⛔ THE TRAIN/SERVE SEAM, ASSERTED END-TO-END. The written row must fold
+    into the identical string the arena serves under — not an equal-looking copy."""
+    import sys
+    sys.path.insert(0, str(__import__("pathlib").Path(__file__).parents[1]
+                          / "tools"))
+    from act2_finetune import row_messages
+    from tlon.discourse import provocation as PV
+    # ⚠️ MT.chain, not MT.build — a 4-chain corpus legitimately STARVES cells and
+    # build() correctly refuses it. The refusal is not what this test is about.
+    pool = MT._pool_by_force(pairs)
+    rows = _builder().rows_from(
+        [MT.chain(pool, turns=6, rng=random.Random(k)) for k in range(4)])
+    msgs = row_messages(rows[0])
+    assert msgs[0]["content"] is PV.PROVOCATION or \
+        msgs[0]["content"] == PV.PROVOCATION
+    assert msgs[1]["content"] == rows[0]["prompt"]
+
+
+def test_the_provocation_row_is_provoked_by_the_PRIOR_surface(pairs):
+    """One row per TRANSITION; a painting with no provocation is a cold start."""
+    pool = MT._pool_by_force(pairs)
+    chains = [MT.chain(pool, turns=8, rng=random.Random(k)) for k in range(3)]
+    rows = _builder().rows_from(chains)
+    assert len(rows) == 3 * 7
+    for ch in chains:
+        for prev, cur in zip(ch, ch[1:]):
+            assert any(r["prompt"] == prev.surface and r["surface"] == cur.surface
+                       for r in rows)
+
+
+def test_every_written_target_ROUND_TRIPS(pairs):
+    from tlon.grammar.parse import parse, render
+    pool = MT._pool_by_force(pairs)
+    chains = [MT.chain(pool, turns=8, rng=random.Random(k)) for k in range(6)]
+    for r in _builder().rows_from(chains):
+        assert render(parse(r["surface"])) == r["surface"]
+
+
+def test_the_forced_cell_survives_SERIALISATION_not_just_generation(pairs):
+    """⭐ The generator obeying the map is not the same claim as the WRITTEN
+    corpus obeying it."""
+    rows = _builder().rows_from(MT.build(60, turns=10, pairs=pairs, seed=2))
+    ki = [r for r in rows if r["prior_force"] == "ki"]
+    assert ki
+    assert all(r["force"] == "ka" for r in ki)
+
+
+def test_the_builder_REFUSES_a_fraction_outside_the_open_unit_interval():
+    """Mix, don't replace — 0 and 1 are both 'replace'."""
+    import subprocess
+    import sys
+    for bad in ("0", "1", "1.5"):
+        r = subprocess.run([sys.executable, "tools/act2_build_multiturn.py",
+                            "--multiturn-fraction", bad, "--chains", "2"],
+                           capture_output=True, text=True)
+        assert r.returncode != 0, bad
