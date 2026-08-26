@@ -25,7 +25,13 @@ for _s in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
-CORPUS = pathlib.Path(__file__).resolve().parents[1] / "runs" / "act2" / "corpus"
+#: ⛔⛔ WAS HARDCODED, AND THE MULTI-TURN PIPELINE WOULD HAVE DIED ON IT AFTER
+#: THE TOKEN GATE PASSED — burning box time to discover a missing flag. The
+#: trainer, the token counter and the pipeline must all point at the SAME
+#: corpus, and the only way to guarantee that is to make it an argument.
+_DEFAULT_CORPUS = (pathlib.Path(__file__).resolve().parents[1]
+                   / "runs" / "act2" / "corpus")
+CORPUS = _DEFAULT_CORPUS
 
 #: ⛔⛔ ONE PROMPT PER DIRECTION. Training both tasks under a single instruction
 #: would force the model to GUESS which one it is on from the input alone, and
@@ -189,6 +195,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", help="HF id or local path. NO DEFAULT — Nate's call.")
     ap.add_argument("--out", default="runs/act2/adapter")
+    ap.add_argument("--corpus", default=str(_DEFAULT_CORPUS),
+                    help="corpus directory holding train.jsonl / eval.jsonl")
     ap.add_argument("--plan", action="store_true")
     ap.add_argument("--params", type=float, default=7.0, help="billions, for --plan")
     ap.add_argument("--dtype", default="bf16", choices=["bf16", "fp16", "4bit"])
@@ -206,6 +214,8 @@ def main() -> int:
     ap.add_argument("--save-steps", type=int, default=0,
                     help="checkpoint every N steps for the diversity-vs-step curve")
     a = ap.parse_args()
+    global CORPUS
+    CORPUS = pathlib.Path(a.corpus)
 
     if a.plan:
         print(f"VRAM PLAN — {a.params}B params, budget {a.vram} GiB "
