@@ -866,3 +866,68 @@ be CLAIMED, not what happens next.
   untouched. Instance TERMINATED, verified.
 - ⛔ **I left the box idle while analysing locally.** Nate caught it. The rule is:
   pull, terminate, THEN analyse — nothing in the analysis needed the machine.
+
+---
+
+## D21 — THREE RULINGS MECHANISED, AND MY FIX HAD THE BUG IT WAS FIXING
+
+**2026-08-26.** Nate's rulings on D19/D20.
+
+### 1 · THE GATE STAYS STRICT. TWO NUMBERS, NEVER MERGED.
+
+*"If you credit bare-but-valid nodes, you're loosening the gate to make the
+number look better."* F-LOCAL scores emission of a legal **proposal**, because
+the proposal schema is what the parser-as-safety-boundary consumes. A bare node
+is a failure **at the level the gate measures**, every field legal or not.
+
+⭐ But 16/16 valid round-tripping Tlön is real information, so `_rate` now emits
+`valid_surface_rate` **beside** the gate score — never folded into it. Strict
+number = the gate. Diagnostic number = the model knows Tlön even when it flubs
+the envelope.
+
+### 2 · THE BOOST — AND THE PART WORTH KEEPING
+
+Fixed. And then the fix **failed its own fairness test**, because I set an
+absolute cap of 240 (run 3's total) — which is harmless against 41,000 pairs and
+enormous against 1,500. **An absolute total is a constant coupled to CORPUS
+SIZE, exactly as `60 × count` was a constant coupled to LIST LENGTH.**
+
+⛔⛔ **I REPRODUCED THE BUG I WAS FIXING, ONE LEVEL DOWN, INSIDE THE FIX.** The
+lesson did not generalise on the first attempt. The test caught it, which is the
+only reason it is a footnote instead of run 6.
+
+⇒ `FOCUS_BOOST_FRACTION = 240 / 41_000` — a fraction of the corpus, invariant to
+both the mined list's length and the corpus's size. `n_pairs` is a **required**
+argument with no default, so a third hidden constant cannot grow back.
+
+⇒ `check_exposure_fairness` **REFUSES** a corpus whose least-seen form falls
+below 0.40 of its class mean, before anything is written. Run 3 sat at ~1.00;
+run 5 fell to **0.18** and nothing complained, because nothing measured it.
+15 tests, including the run-5-shaped boost as an explicit red-proof.
+
+### 3 · THE SCENE-WRAPPER FAILURE IS A KNOWN UNKNOWN, NOT A FORENSICS JOB
+
+113/132 render failures emit a bare node. **Hypothesis, recorded not tested: it
+is downstream of the focus-boost break** — the 22× boost massively over-exposed
+the *inner* forms, which live inside the node, and may have pulled the model's
+attention to node-content and off the envelope.
+
+⛔ **Do not run forensics on a symptom of a known confound before removing the
+confound.** The next clean run (bounded boost, flat exposure) re-measures this
+for free. **If it survives that, it is real and worth digging. If it vanishes, it
+was the boost.**
+
+### 4 · THE BOX RULE, FINAL FORM
+
+**The instant training hits DONE: pull the adapter AND every checkpoint, kill the
+box, then analyse.** Analysis never needs a GPU. Run 4 lost all 11 checkpoints;
+run 5 saved 7 of 11 and idled while I analysed locally. Next run: zero analysis
+on a live box.
+
+### ⛔ WHAT (b) DID AND DID NOT ESTABLISH
+
+**"Contrastive pairs alone do not fix render" is NOT a licensed conclusion.** What
+ran was *contrastive pairs AND a 22× boost AND a broken exposure balance*. The
+fork lands at **(d)** for the honest reason — **render tuning has now produced
+two uninterpretable runs and the arena blocker is waiting** — not the false one
+that (b) was cleanly tested and failed.

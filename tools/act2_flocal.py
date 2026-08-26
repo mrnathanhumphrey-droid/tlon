@@ -137,8 +137,41 @@ def _rate(speaker, stimuli, kind: str, histories=None) -> dict:
                              "proposal": proposal, "validator_crash": True,
                              "class_errors": _safe_errors(proposal)})
     n = len(stimuli)
+    # ⛔⛔ TWO NUMBERS, AND THEY ARE NEVER MERGED — NATE'S RULING, 2026-08-26.
+    #
+    # The recon found 16/16 unparseable `speak` generations were VALID,
+    # round-tripping Tlön: the model answered a Tlön history IN TLÖN and the gate
+    # scored it zero for lacking the `{force, node}` envelope.
+    #
+    # ⛔ THE GATE STAYS STRICT. F-LOCAL scores emission of a legal PROPOSAL,
+    # because the proposal schema is what the parser-as-safety-boundary consumes.
+    # A bare node is a failure AT THE LEVEL THE GATE MEASURES, even though every
+    # field in it is legal. Crediting it would be loosening the gate to match the
+    # model's current behaviour — the same "tolerant parser manufactures
+    # competence" trap as a comprehension parser that accepts hedging.
+    #
+    # ⭐ BUT THE FACT IS REAL INFORMATION, so it is reported BESIDE the gate as a
+    # DIAGNOSTIC: `valid_surface_rate` says the model knows Tlön even when it
+    # flubs the envelope. Merging them loosens the gate; reporting both is honest.
+    surf = 0
+    for f in failures:
+        raw = f.get("raw")
+        if not raw:
+            continue
+        try:
+            from tlon.grammar.parse import parse, render as _render
+            sc = parse(raw.strip())
+            f["is_valid_tlon"] = True
+            f["round_trips"] = _render(sc) == raw.strip()
+            surf += 1
+        except Exception:                                     # noqa: BLE001
+            f["is_valid_tlon"] = False
     return {"kind": kind, "n": n, "valid": ok, "rate": ok / n if n else 0.0,
+            # the GATE number — wrapper required
             "failures": failures, "produced": produced,
+            # the DIAGNOSTIC number — legal Tlön surface, envelope or not
+            "valid_surface": surf,
+            "valid_surface_rate": (ok + surf) / n if n else 0.0,
             "mined": N.mine([f["proposal"] for f in failures if f["proposal"]])}
 
 

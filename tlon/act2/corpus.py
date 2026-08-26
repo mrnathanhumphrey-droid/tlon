@@ -143,6 +143,97 @@ def _weights(focus: dict[str, float] | None) -> dict[str, float]:
     return base
 
 
+#: ⛔⛔ THE INVARIANT IS THE **TOTAL** BOOST, NOT THE PER-FORM BOOST — AND THIS IS
+#: A NEW ENTRY IN THIS PROJECT'S FAILURE CATALOG, NOT A REPEAT.
+#:
+#: Run 5 held tokens (+0.03 %), steps (+3.3 %), seq, batch, battery, decoding and
+#: hardware — every variable that LOOKS like a variable — and was still
+#: confounded, because `focus = {form: 60 × times_confused}` **is not a
+#: constant.** It is a FUNCTION OF THE CORPUS. Going from run 3's 4 hand-picked
+#: forms to run 5's 89 mined confusions multiplied the total boost **22×**:
+#:
+#:      run 3   4 forms ·   240 total · per-form exposure FLAT 663–664 (1.002×)
+#:      run 5  42 forms · 5,340 total · `nem` 2,563 = 34.9 % of ALL M exposure
+#:
+#: ⭐⭐ THAT IS THE HARDEST CONFOUND TO CATCH: not a variable someone forgot to
+#: hold, but a "constant" SECRETLY COUPLED TO THE THING THAT CHANGED. It moved
+#: because the DATA moved. Nothing in the held-variable list named it, so nothing
+#: could notice. A knob safe at 4 forms was a wrecking ball at 89.
+#:
+#: ⇒ The budget is fixed and DISTRIBUTED proportionally, so mining more
+#: confusions sharpens the targeting without inflating the distortion.
+#: ⛔⛔ AND THE FIRST VERSION OF THIS FIX HAD THE SAME BUG ONE LEVEL DOWN. I set
+#: an absolute cap of 240 — run 3's total — and the fairness test FAILED at
+#: n=1,500, because 240 is harmless against 41,000 pairs and enormous against
+#: 1,500. **An absolute total is a constant coupled to CORPUS SIZE**, exactly as
+#: `60 × count` was a constant coupled to LIST LENGTH. The lesson did not
+#: generalise on the first try; the test caught it.
+#:
+#: ⇒ The budget is expressed as a FRACTION OF THE CORPUS, so it is invariant to
+#: both the size of the mined list AND the size of the corpus. Run 3's ratio:
+#: 240 boost over 41,000 pairs.
+FOCUS_BOOST_FRACTION = 240 / 41_000      # ≈ 0.0059 boosts per pair
+
+#: The worst per-form exposure may not fall below this fraction of the mean.
+#: Run 3 sat at ~1.00; run 5 fell to 0.18 for the least-seen M form.
+MIN_EXPOSURE_FAIRNESS = 0.40
+
+
+class CorpusError(RuntimeError):
+    pass
+
+
+def focus_budget(counts: dict[str, int], *, n_pairs: int,
+                 fraction: float = FOCUS_BOOST_FRACTION) -> dict[str, int]:
+    """Distribute a boost budget PROPORTIONAL TO THE CORPUS, split by how often
+    each form was actually misplaced.
+
+    ⭐ Keeps the mechanism run 3 proved — targeted positives weighted by measured
+    confusion — and removes BOTH couplings: the total grows with neither the
+    length of the mined list (run 5's 22× break) nor the size of the corpus (the
+    break in my first attempt at this fix).
+
+    ⛔ `n_pairs` is REQUIRED and has no default. A default here would be a third
+    hidden constant, which is the whole thing this function exists to stop.
+    """
+    if not counts:
+        return {}
+    total = max(1, round(fraction * n_pairs))
+    denom = sum(counts.values())
+    return {f: max(1, round(total * c / denom)) for f, c in counts.items()}
+
+
+def check_exposure_fairness(pairs, *, minimum: float = MIN_EXPOSURE_FAIRNESS) -> dict:
+    """⛔⛔ REFUSES a corpus whose per-form exposure has collapsed.
+
+    The flat-exposure invariant is what the whole corpus design rests on, and run
+    5 broke it SILENTLY — nothing measured it, so nothing complained, and a
+    confounded corpus trained for 93 minutes. This is that check, made
+    structural.
+    """
+    lex = C.load()["classes"]
+    exp = class_exposure(pairs)
+    worst = None
+    for cls in CLASSES:
+        counts = [exp[cls].get(f, 0) for f in lex[cls]]
+        if not counts or not sum(counts):
+            continue
+        mean = sum(counts) / len(counts)
+        ratio = min(counts) / mean if mean else 0.0
+        if worst is None or ratio < worst[1]:
+            worst = (cls, ratio, min(counts), max(counts), mean)
+    if worst and worst[1] < minimum:
+        cls, ratio, lo, hi, mean = worst
+        raise CorpusError(
+            f"⛔ EXPOSURE COLLAPSE in class {cls}: least-seen form has {lo} "
+            f"sightings against a mean of {mean:.0f} (ratio {ratio:.2f} < "
+            f"{minimum}). Most-seen has {hi}. Run 3's classes were flat at "
+            "~1.00; run 5 fell to 0.18 and the run was confounded without "
+            "anyone noticing. Reduce FOCUS_BOOST_TOTAL or widen the corpus.")
+    return {"worst_class": worst[0] if worst else None,
+            "worst_ratio": worst[1] if worst else 1.0}
+
+
 def build(n: int, *, seed: int = 20620, balanced: bool = True,
           focus: dict[str, float] | None = None,
           focus_forms: dict[str, int] | None = None,

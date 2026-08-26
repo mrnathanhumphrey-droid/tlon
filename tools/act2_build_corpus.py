@@ -94,8 +94,10 @@ def main() -> int:
         counts = {}
         for e in mined:
             counts[e.form] = counts.get(e.form, 0) + 1
-        # boost in proportion to how often the form was actually misplaced
-        focus = {f: 60 * c for f, c in counts.items()} or None
+        # ⛔⛔ FIXED TOTAL, DISTRIBUTED — not 60× per form. The old rule was a
+        # "constant" coupled to the corpus: 4 forms → 240, 89 confusions →
+        # 5,340, and run 5 was confounded by a variable nobody had named.
+        focus = corpus.focus_budget(counts, n_pairs=a.n + a.eval) or None
         bounds = corpus.boundaries(mined)
         print(f"⭐ mined {len(mined)} class confusions from {a.from_ledger}")
         print(f"   forms to target: "
@@ -114,6 +116,14 @@ def main() -> int:
     pairs = corpus.build(a.n + a.eval, seed=a.seed, balanced=not a.naive,
                          focus_forms=focus, slot_floor=a.slot_floor)
     rep = corpus.exposure_report(pairs)
+    # ⛔ REFUSES before writing. Run 5's corpus passed every check it had and was
+    # still broken, because no check measured the thing that broke.
+    fair = corpus.check_exposure_fairness(pairs)
+    print(f"✅ exposure fairness: worst class {fair['worst_class']} at "
+          f"{fair['worst_ratio']:.2f} of mean (floor {corpus.MIN_EXPOSURE_FAIRNESS})")
+    if focus:
+        print(f"   focus budget: {sum(focus.values())} total across "
+              f"{len(focus)} forms (cap {round(corpus.FOCUS_BOOST_FRACTION*(a.n+a.eval))})")
 
     lex = C.load()["classes"]
     print(f"corpus {len(pairs):,} pairs · lexicon {C.load()['_hash'][:8]} · "
