@@ -36,7 +36,16 @@ EXPECT_EVAL=394234841b6d0f0e2858822b3d333a665092ca5472993b29a43df0d78277e085
 # ── 0 · PREFLIGHT — exercise every import AND the paths that broke before ──
 step preflight
 python - <<'PY' 2>&1 | tee -a $LOG
-import torch, transformers, peft, trl, numpy, jinja2, PIL
+# ⛔ IMPORT WHAT THE TRAINER ACTUALLY IMPORTS, NOTHING ELSE. The first version
+# of this preflight imported `trl`, which act2_finetune.py does not use and
+# requirements-lambda.txt does not pin — it would have failed the run at stage 0
+# on a package nothing needs. A preflight that checks the wrong things is worse
+# than none: it fails on absences that do not matter and passes over ones that do.
+import torch, transformers, peft, numpy, jinja2, PIL
+from datasets import load_dataset                       # noqa: F401
+from peft import LoraConfig, get_peft_model             # noqa: F401
+from transformers import (AutoModelForCausalLM, AutoTokenizer,   # noqa: F401
+                          DataCollatorForLanguageModeling, Trainer)
 print("  torch", torch.__version__, "cuda", torch.cuda.is_available())
 print("  transformers", transformers.__version__, "peft", peft.__version__)
 print("  numpy", numpy.__version__, "jinja2", jinja2.__version__)
