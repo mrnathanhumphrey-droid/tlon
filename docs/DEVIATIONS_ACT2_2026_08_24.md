@@ -779,3 +779,90 @@ Depth 1→5 is a **25-point fall ≈ 3.7 sd — REAL**. Depth 5→8 rising again
 
 ⚠️ **AND THE 35 `INVALID` ROWS ARE A DIFFERENT FAILURE** — those *were* JSON and
 failed the schema gate. They are not part of this finding.
+
+---
+
+## D20 — ⛔⛔ RUN 5 (b): F-LOCAL FIRED, AND THE RUN WAS NOT THE CLEAN TEST I CALLED IT
+
+**2026-08-26.** (b) = contrastive minimal pairs alone, no slot floor.
+
+| | run 3 | run 5 (b) | |
+|---|---|---|---|
+| render | 82.0 % | **48.4 %** (124/256) | ⛔ halved |
+| speak | 97.3 % | **98.0 %** (251/256) | ⭐ best recorded |
+| comprehension | 71.1 % | 62.9 % | ⛔ |
+
+### ⭐ THE HARNESS FIX PAID OFF AGAIN: THE CRASH IS ONE STRUCTURAL MISTAKE
+
+**Class errors FELL, 48 → 23.** Class discipline improved. What killed render is
+a single shape error, **113 of 132 failures**:
+
+```
+{"aspect_reps": 1, "aspect_root": "ax", "orient": ["pox","xun"],
+ "root": "rän", "tense": "tar"}
+```
+
+That is a **node emitted at the top level**. The `{"force": …, "node": {…}}`
+wrapper is gone — the model stopped emitting a *Scene* and started emitting the
+*inside* of one. Every field in it is legal; only the envelope is missing.
+Reason string, 113×: `force must be a form name, got NoneType`.
+
+⛔ **THE CORPUS IS NOT THE CAUSE.** 0 of 82,614 rows lack a force; distribution
+is **20.0 / 20.0 / 20.0 / 20.0 / 19.9 %**. The model learned this; it was not
+taught it. **The cause is UNKNOWN and is not guessed at here** — two hypotheses
+about run 4's speak collapse were already refuted by data in this arc, and the
+third turned out to be the opposite of what was assumed.
+
+### ⛔⛔ AND A CONFOUND I INTRODUCED AND DID NOT FLAG
+
+I wrote at length about holding tokens (+0.03 %), steps (+3.3 %), seq, batch,
+battery, decoding and hardware constant — and let a **third variable** move
+unmeasured. `focus` is `{form: 60 × times_confused}`, and switching from run 3's
+four hand-picked forms to (b)'s 89 mined confusions multiplied the total boost
+**22×**:
+
+| | run 3 | run 5 |
+|---|---|---|
+| boosted forms | 4 | **42** |
+| total boost | 240 | **5,340** |
+| worst-form exposure | 664 | **439** |
+| exposure spread | 12.7× | **17.3×** |
+
+**It broke the invariant the whole corpus design rests on.** M-class per-form
+exposure in run 3 was flat at **663–664 (1.002× spread)**. In (b):
+
+```
+nem 2,563 (34.9 %)   hrix 720   ten 658   …   mir 462
+```
+
+**`nem` alone is 34.9 % of all evidential exposure, 5.5× the least-seen form.**
+
+⇒ **(b) IS A CONFOUNDED RUN AND CANNOT REFUTE ITS OWN HYPOTHESIS.** "Contrastive
+pairs alone do not fix render" is **NOT** a licensed conclusion from it. The
+honest statement is: *a corpus with contrastive pairs AND a 22× boost AND a
+broken exposure balance produced render 48.4 %.*
+
+⭐ The boost is not new — it is the same mechanism as run 3's. What changed is
+that it became **proportional to a mined list that grew 22×**, so a knob that was
+safe at 4 forms became a wrecking ball at 89. **A parameter that scales with data
+volume is not a constant, and I treated it as one.**
+
+### THE DECISION IS UNCHANGED
+
+The pre-declared reading was: *(b) does not clear render ⇒ go to (d) the
+multi-turn corpus anyway; do not grind floor dosage.* It did not clear. **(d) is
+next**, with render banked at run 3's **82.0 %**. The confound changes what may
+be CLAIMED, not what happens next.
+
+### CARRIED
+
+- ✅ **Diagnostic C's hardened verdict worked on its first live run**: *"WITHIN
+  NOISE — the curve moves 83 %..100 % but n=12 cannot resolve a move smaller than
+  22 %. This is NOT 'flat' and NOT 'overtrained' — it is UNRESOLVED."* The old
+  code would have called it a trend.
+- ✅ **7 of 11 checkpoints saved** (5.6 GB) before terminate, per D18.
+- ⛔ **run 3 remains the best adapter.** It is what should go to HuggingFace.
+- **Cost:** Act 2 total ≈ **$16** across all runs (Nate's figure). Contingency
+  untouched. Instance TERMINATED, verified.
+- ⛔ **I left the box idle while analysing locally.** Nate caught it. The rule is:
+  pull, terminate, THEN analyse — nothing in the analysis needed the machine.

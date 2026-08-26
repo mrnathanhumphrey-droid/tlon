@@ -1,0 +1,191 @@
+=== [0-preflight] 03:44:02 ===
+/usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+  ✅ preflight: numpy 1.26.4 · torch 2.7.0 · cuda live · trainer imports · chat template renders
+=== [1-suite] 03:44:09 ===
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1042 passed, 1 skipped, 11 warnings in 348.19s (0:05:48)
+=== [2-corpus-integrity] 03:49:58 ===
+  train.jsonl sha256 043c8fd67fc061a9a957f5b4acce1a7f070335439e76e1b73604315997b0797a
+  rows 82,614 · {'sampled': 74070, 'contrastive': 8544}
+  tokens 9,542,574 vs run3 9,539,850 (+0.0286%) ⇒ HELD
+  slot_floor None · contrastive 24/confusion · pruned 0
+=== [3-backbone] 03:50:00 ===
+Fetching 14 files:  79%|███████▊  | 11/14 [00:11<00:03,  1.05s/it]Fetching 14 files:  86%|████████▌ | 12/14 [00:12<00:01,  1.00it/s]Fetching 14 files:  93%|█████████▎| 13/14 [00:12<00:00,  1.09it/s]Fetching 14 files: 100%|██████████| 14/14 [00:15<00:00,  1.18s/it]Fetching 14 files: 100%|██████████| 14/14 [00:15<00:00,  1.08s/it]
+/home/ubuntu/.cache/huggingface/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28
+=== [4-baseline] 03:50:16 ===
+/usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:17,  4.38it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.73it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.60it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.05it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 159.52it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 163.74it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 180.88it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.34it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 191.46it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 183.81it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 185.97it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 193.24it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 191.20it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 183.05it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 183.24it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 194.68it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 191.69it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 171.27it/s]
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=NONE (baseline) · battery d9ecdf9fbf2caa8a · n=64
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   0.0%  (0/64)
+  render  0.0%  (0/64)
+  choose  39.1%  (25/64), 0 unanswered
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.000, speak 0.000 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 39.1% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl
+=== [4.5-speak-recon] 03:53:33 ===
+/usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.94it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.75it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.06it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.45it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.86it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.80it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.62it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.10it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 191.80it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 184.74it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 183.38it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 192.15it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 191.14it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 182.67it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 186.77it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 194.72it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 191.76it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.60it/s]
+SPEAK RECON · adapter=runs/act2/run4_adapter · n=48 per depth · depths [1, 3, 5, 8]
+⛔ every raw generation is captured, parseable or not
+
+  depth 1: 41/48 valid (85 %)
+  depth 3: 37/48 valid (77 %)
+  depth 5: 29/48 valid (60 %)
+  depth 8: 34/48 valid (71 %)
+
+  ── 16 unparseable generations captured ──
+    ECHO   ≥50 % of tokens came from the history : 0/16  (0 %)
+           a VERBATIM history line was reproduced : 0/16
+    MUSH   emitted Tlön prose, no JSON at all     : 16/16  (100 %)
+           opened a brace and never closed it     : 0/16
+    EMPTY  produced nothing at all                : 0/16
+    length min 49 · median 68 · max 95
+
+  ⇒ DOMINANT SHAPE: MUSH (16/16)
+     ── first three raws, verbatim ──
+       depth 1: 'kra hlin nol nu plun klon axaxas tos mling hunhunas xar fröm ka'
+       depth 1: 'kra hlin nol nu plun krel pox mring axaxas tos fum hunhunas xar fröm ko'
+       depth 1: 'kra hres xos nix pän pral plun klon axaxaxas tos mling melmelmelas ron frum ku'
+
+  wrote runs/act2/logs/speak_recon.json
+=== [5-finetune] 04:08:46 ===
+ 88%|████████▊ | 219/250 [00:30<00:04,  7.28it/s][A
+ 88%|████████▊ | 220/250 [00:31<00:04,  7.36it/s][A
+ 88%|████████▊ | 221/250 [00:31<00:03,  7.38it/s][A
+ 89%|████████▉ | 222/250 [00:31<00:03,  7.16it/s][A
+ 89%|████████▉ | 223/250 [00:31<00:03,  7.17it/s][A
+ 90%|████████▉ | 224/250 [00:31<00:03,  6.96it/s][A
+ 90%|█████████ | 225/250 [00:31<00:03,  6.84it/s][A
+ 90%|█████████ | 226/250 [00:31<00:03,  6.94it/s][A
+ 91%|█████████ | 227/250 [00:32<00:03,  6.86it/s][A
+ 91%|█████████ | 228/250 [00:32<00:03,  6.91it/s][A
+ 92%|█████████▏| 229/250 [00:32<00:02,  7.03it/s][A
+ 92%|█████████▏| 230/250 [00:32<00:02,  7.06it/s][A
+ 92%|█████████▏| 231/250 [00:32<00:02,  7.11it/s][A
+ 93%|█████████▎| 232/250 [00:32<00:02,  7.08it/s][A
+ 93%|█████████▎| 233/250 [00:32<00:02,  6.98it/s][A
+ 94%|█████████▎| 234/250 [00:33<00:02,  7.01it/s][A
+ 94%|█████████▍| 235/250 [00:33<00:02,  7.10it/s][A
+ 94%|█████████▍| 236/250 [00:33<00:01,  7.17it/s][A
+ 95%|█████████▍| 237/250 [00:33<00:01,  7.14it/s][A
+ 95%|█████████▌| 238/250 [00:33<00:01,  7.22it/s][A
+ 96%|█████████▌| 239/250 [00:33<00:01,  7.08it/s][A
+ 96%|█████████▌| 240/250 [00:33<00:01,  7.07it/s][A
+ 96%|█████████▋| 241/250 [00:34<00:01,  7.12it/s][A
+ 97%|█████████▋| 242/250 [00:34<00:01,  7.20it/s][A
+ 97%|█████████▋| 243/250 [00:34<00:00,  7.32it/s][A
+ 98%|█████████▊| 244/250 [00:34<00:00,  7.43it/s][A
+ 98%|█████████▊| 245/250 [00:34<00:00,  7.33it/s][A
+ 98%|█████████▊| 246/250 [00:34<00:00,  7.24it/s][A
+ 99%|█████████▉| 247/250 [00:34<00:00,  7.31it/s][A
+ 99%|█████████▉| 248/250 [00:34<00:00,  7.33it/s][A
+100%|█████████▉| 249/250 [00:35<00:00,  7.35it/s][A
+100%|██████████| 250/250 [00:35<00:00,  7.40it/s][A                                                     
+                                                 [A100%|██████████| 5164/5164 [1:32:37<00:00,  1.21it/s]
+100%|██████████| 250/250 [00:35<00:00,  7.40it/s][A
+                                                 [A                                                     100%|██████████| 5164/5164 [1:32:39<00:00,  1.21it/s]100%|██████████| 5164/5164 [1:32:39<00:00,  1.08s/it]
+{'eval_loss': '0.2472', 'eval_runtime': '35.38', 'eval_samples_per_second': '56.52', 'eval_steps_per_second': '7.065', 'epoch': '1'}
+{'train_runtime': '5559', 'train_samples_per_second': '14.86', 'train_steps_per_second': '0.929', 'train_loss': '0.2606', 'epoch': '1'}
+
+⭐ adapter → runs/act2/adapter
+⛔ NOT a result. Next: tools/act2_flocal.py measures F-LOCAL unconstrained and cardless. That is the gate.
+=== [6-gate] 05:42:31 ===
+/usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.78it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 63.83it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.05it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 151.03it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 158.87it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 167.39it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 183.09it/s]Loading weights:  42%|████▏     | 144/339 [00:00<00:01, 180.71it/s]Loading weights:  48%|████▊     | 163/339 [00:01<00:01, 174.87it/s]Loading weights:  55%|█████▍    | 185/339 [00:01<00:00, 183.65it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 189.95it/s]Loading weights:  67%|██████▋   | 228/339 [00:01<00:00, 187.42it/s]Loading weights:  73%|███████▎  | 247/339 [00:01<00:00, 178.83it/s]Loading weights:  79%|███████▉  | 269/339 [00:01<00:00, 184.69it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 191.25it/s]Loading weights:  92%|█████████▏| 312/339 [00:01<00:00, 187.13it/s]Loading weights:  98%|█████████▊| 331/339 [00:02<00:00, 176.51it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 168.57it/s]
+F-LOCAL · local:Qwen2.5-7B-Instruct · adapter=runs/act2/adapter · battery 8d21aa635d5729fd · n=256
+⛔ cardless, unconstrained — the only configuration this gate accepts
+
+  speak   98.0%  (251/256)
+  render  48.4%  (124/256)
+  choose  62.9%  (161/256), 0 unanswered
+
+  speak confusions (5): {'R→A': 3, 'T→R': 1, '∅→A': 1}
+     · 'mur' is class R, not A — it cannot fill the aspect_root slot.
+     · 'krin' is class T, not R — it cannot fill the root slot.
+     · 'xel' is class R, not A — it cannot fill the aspect_root slot.
+     · 'mim' is class R, not A — it cannot fill the aspect_root slot.
+     · 'melmel' is not a Tlön form at all.
+
+  render confusions (23): {'R→A': 5, 'R→M': 3, 'M→A': 3, 'M→T': 2, 'D→Q': 2, 'L→Q': 1, 'A→Q': 1, 'A→D': 1, 'R→D': 1, 'L→M': 1, 'M→R': 1, '∅→A': 1, 'O→R': 1}
+     · 'sul' is class L, not Q — it cannot fill the quant slot.
+     · 'tes' is class A, not Q — it cannot fill the quant slot.
+     · 'nur' is class R, not A — it cannot fill the aspect_root slot.
+     · 'mel' is class A, not D — it cannot fill the degree slot.
+     · 'tir' is class R, not M — it cannot fill the modal slot.
+     · 'pal' is class R, not D — it cannot fill the degree slot.
+     · 'säx' is class R, not M — it cannot fill the modal slot.
+     · 'frim' is class R, not A — it cannot fill the aspect_root slot.
+     · 'xom' is class L, not M — it cannot fill the modal slot.
+     · 'pel' is class R, not A — it cannot fill the aspect_root slot.
+
+  diversity  distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent
+
+  F-LOCAL FIRED — native no-card first-attempt legal: render 0.484, speak 0.980 vs threshold 0.90 — the class system is not internalised at this scale; drift would be confounded with validity-failure
+  ⇒ pre-registered recovery set, in order: (1) more contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone
+  AMENDMENT A gate (0.35–0.95): 62.9% ⇒ clear — comprehension has room to move
+
+  ledgered → /home/ubuntu/tlon/runs/act2/ledger.jsonl
+=== [7-diagnosis-c] 06:13:43 ===
+/usr/lib/python3/dist-packages/scipy/__init__.py:146: UserWarning: A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+DIAGNOSIS C — 12 checkpoints · n=12 · greedy
+
+     step  distinct  repeat response  depend    valid  verdict
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.01it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:02, 112.50it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.30it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.82it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.03it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 178.11it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.18it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.10it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.47it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 179.16it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 189.51it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 193.78it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 190.60it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 183.16it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 186.44it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.10it/s]
+      500        12    1.00     1.00   +1.00   10/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.62it/s]Loading weights:   1%|          | 2/339 [00:00<00:46,  7.32it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.42it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 114.24it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 151.91it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 163.75it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 167.61it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 183.81it/s]Loading weights:  42%|████▏     | 143/339 [00:01<00:01, 182.75it/s]Loading weights:  48%|████▊     | 162/339 [00:01<00:01, 176.45it/s]Loading weights:  55%|█████▍    | 185/339 [00:01<00:00, 187.61it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 193.22it/s]Loading weights:  67%|██████▋   | 228/339 [00:01<00:00, 189.29it/s]Loading weights:  73%|███████▎  | 247/339 [00:01<00:00, 180.04it/s]Loading weights:  79%|███████▉  | 269/339 [00:01<00:00, 183.57it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 190.98it/s]Loading weights:  92%|█████████▏| 312/339 [00:01<00:00, 188.49it/s]Loading weights:  98%|█████████▊| 331/339 [00:02<00:00, 179.02it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 166.44it/s]
+     1000        12    1.00     1.00   +1.00   11/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.62it/s]Loading weights:   1%|          | 2/339 [00:00<00:45,  7.33it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.50it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 117.98it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 151.90it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 160.62it/s]Loading weights:  29%|██▉       | 100/339 [00:00<00:01, 166.12it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 177.03it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:00, 192.82it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.14it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 184.77it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 185.71it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 193.23it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 191.08it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 180.23it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 183.90it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 192.06it/s]Loading weights:  99%|█████████▉| 336/339 [00:02<00:00, 190.29it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 167.49it/s]
+     1500        12    1.00     1.00   +1.00   11/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.63it/s]Loading weights:   1%|          | 2/339 [00:00<00:45,  7.33it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.71it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:02, 112.15it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.91it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.14it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 166.30it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 180.84it/s]Loading weights:  43%|████▎     | 147/339 [00:01<00:01, 184.05it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 200.63it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 200.10it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 189.46it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 182.07it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 188.93it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 195.89it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.17it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.75it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 169.53it/s]
+     2000        12    1.00     1.00   +1.00   12/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.55it/s]Loading weights:   1%|          | 2/339 [00:00<00:46,  7.32it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 58.92it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 115.73it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.00it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 166.77it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 163.64it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.29it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:00, 193.01it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.34it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 184.87it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 186.56it/s]Loading weights:  68%|██████▊   | 231/339 [00:01<00:00, 191.28it/s]Loading weights:  74%|███████▍  | 251/339 [00:01<00:00, 191.68it/s]Loading weights:  80%|███████▉  | 271/339 [00:01<00:00, 179.15it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 177.22it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 187.17it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 167.95it/s]
+     2500        12    1.00     1.00   +1.00   12/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.64it/s]Loading weights:   1%|          | 2/339 [00:00<00:45,  7.33it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.64it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.13it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 152.21it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.05it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 159.81it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.88it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:00, 194.00it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 193.90it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 186.48it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 188.69it/s]Loading weights:  68%|██████▊   | 231/339 [00:01<00:00, 193.15it/s]Loading weights:  74%|███████▍  | 251/339 [00:01<00:00, 193.71it/s]Loading weights:  80%|███████▉  | 271/339 [00:01<00:00, 181.48it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 188.29it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 195.56it/s]Loading weights:  99%|█████████▉| 336/339 [00:02<00:00, 193.23it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 168.98it/s]
+     3000        12    1.00     1.00   +1.00   12/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.66it/s]Loading weights:   1%|          | 2/339 [00:00<00:45,  7.33it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.77it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.38it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 142.06it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 173.41it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:01, 178.29it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 172.50it/s]Loading weights:  44%|████▍     | 149/339 [00:01<00:01, 187.31it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 197.15it/s]Loading weights:  57%|█████▋    | 192/339 [00:01<00:00, 194.62it/s]Loading weights:  63%|██████▎   | 212/339 [00:01<00:00, 184.95it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 185.44it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 194.69it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 191.85it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.51it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.28it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 169.22it/s]
+     3500        12    1.00     1.00   +1.00   12/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.64it/s]Loading weights:   1%|          | 2/339 [00:00<00:46,  7.31it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.41it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 110.93it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 142.29it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 172.75it/s]Loading weights:  31%|███▏      | 106/339 [00:00<00:01, 173.66it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 178.02it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:01, 190.48it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 190.32it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 183.03it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 184.99it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 192.57it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 190.54it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 179.81it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 183.56it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 191.65it/s]Loading weights:  99%|█████████▉| 336/339 [00:02<00:00, 189.05it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 166.75it/s]
+     4000        12    1.00     1.00   +1.00   12/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.61it/s]Loading weights:   1%|          | 2/339 [00:00<00:46,  7.31it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.61it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.29it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 152.72it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 166.18it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 162.83it/s]Loading weights:  36%|███▋      | 123/339 [00:00<00:01, 174.77it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:00, 194.25it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.94it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 185.15it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 186.62it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 193.96it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 191.14it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 180.16it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 183.70it/s]Loading weights:  93%|█████████▎| 315/339 [00:01<00:00, 188.94it/s]Loading weights:  99%|█████████▊| 334/339 [00:02<00:00, 186.66it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 167.53it/s]
+     4500        12    1.00     1.00   +1.00   12/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:43,  7.70it/s]Loading weights:   1%|          | 2/339 [00:00<00:45,  7.34it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.60it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.10it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 151.61it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 160.38it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 168.98it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 184.71it/s]Loading weights:  42%|████▏     | 143/339 [00:01<00:01, 185.78it/s]Loading weights:  48%|████▊     | 162/339 [00:01<00:00, 177.16it/s]Loading weights:  55%|█████▍    | 185/339 [00:01<00:00, 188.37it/s]Loading weights:  61%|██████    | 207/339 [00:01<00:00, 191.81it/s]Loading weights:  67%|██████▋   | 227/339 [00:01<00:00, 188.47it/s]Loading weights:  73%|███████▎  | 246/339 [00:01<00:00, 179.66it/s]Loading weights:  79%|███████▉  | 269/339 [00:01<00:00, 185.76it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 192.83it/s]Loading weights:  92%|█████████▏| 312/339 [00:01<00:00, 190.70it/s]Loading weights:  98%|█████████▊| 332/339 [00:02<00:00, 183.28it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 167.28it/s]
+     5000        12    1.00     1.00   +1.00   12/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.62it/s]Loading weights:   1%|          | 2/339 [00:00<00:46,  7.29it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 58.64it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 112.07it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 150.00it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 172.39it/s]Loading weights:  31%|███▏      | 106/339 [00:00<00:01, 174.31it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 172.59it/s]Loading weights:  44%|████▍     | 149/339 [00:01<00:01, 187.15it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 186.55it/s]Loading weights:  58%|█████▊    | 196/339 [00:01<00:00, 179.00it/s]Loading weights:  65%|██████▍   | 219/339 [00:01<00:00, 186.31it/s]Loading weights:  72%|███████▏  | 244/339 [00:01<00:00, 199.80it/s]Loading weights:  78%|███████▊  | 265/339 [00:01<00:00, 195.32it/s]Loading weights:  84%|████████▍ | 285/339 [00:01<00:00, 186.98it/s]Loading weights:  90%|████████▉ | 305/339 [00:01<00:00, 185.75it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 193.84it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 167.76it/s]
+     5164        12    1.00     1.00   +1.00   12/12   input-dependent
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<00:44,  7.66it/s]Loading weights:   1%|          | 2/339 [00:00<00:46,  7.27it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 61.23it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 111.48it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 149.63it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 157.77it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 163.92it/s]Loading weights:  36%|███▌      | 122/339 [00:00<00:01, 171.95it/s]Loading weights:  41%|████▏     | 140/339 [00:01<00:01, 173.50it/s]Loading weights:  47%|████▋     | 161/339 [00:01<00:00, 180.77it/s]Loading weights:  54%|█████▍    | 183/339 [00:01<00:00, 188.97it/s]Loading weights:  60%|█████▉    | 203/339 [00:01<00:00, 188.85it/s]Loading weights:  65%|██████▌   | 222/339 [00:01<00:00, 175.93it/s]Loading weights:  72%|███████▏  | 245/339 [00:01<00:00, 186.61it/s]Loading weights:  79%|███████▉  | 268/339 [00:01<00:00, 190.36it/s]Loading weights:  85%|████████▍ | 288/339 [00:01<00:00, 188.38it/s]Loading weights:  91%|█████████ | 307/339 [00:01<00:00, 178.71it/s]Loading weights:  97%|█████████▋| 329/339 [00:02<00:00, 177.05it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 164.54it/s]
+    final        12    1.00     1.00   +1.00   12/12   input-dependent
+
+  READING: ⚠️ WITHIN NOISE — the curve moves 83%..100% but n=12 per point cannot resolve a move smaller than 22%. This is NOT 'flat' and NOT 'overtrained' — it is UNRESOLVED. Raise n to read it. · ⚠️ `dependence` is SATURATED at its ceiling here and carries no information — this is why it cannot be the verdict metric
+  wrote runs/act2/logs/diagnosis_c.json
+=== [8-checkpoint-manifest] 06:26:17 ===
+936M	runs/act2/adapter/checkpoint-1000
+936M	runs/act2/adapter/checkpoint-1500
+936M	runs/act2/adapter/checkpoint-2000
+936M	runs/act2/adapter/checkpoint-2500
+936M	runs/act2/adapter/checkpoint-3000
+936M	runs/act2/adapter/checkpoint-3500
+936M	runs/act2/adapter/checkpoint-4000
+936M	runs/act2/adapter/checkpoint-4500
+936M	runs/act2/adapter/checkpoint-500
+936M	runs/act2/adapter/checkpoint-5000
+936M	runs/act2/adapter/checkpoint-5164
+  ⛔ 11 checkpoints on disk — DO NOT TERMINATE until pulled or Diagnostic C's reading is banked
+=== [complete] 06:26:17 ===
+⭐ ALL STAGES PASSED
