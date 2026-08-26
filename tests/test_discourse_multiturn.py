@@ -233,3 +233,104 @@ def test_the_mix_fraction_is_ledgered_and_is_a_FRACTION():
 
 def test_the_coverage_floor_is_a_FRACTION_not_a_count():
     assert 0.0 < MT.FORCE_PAIR_FLOOR_FRACTION < 1.0
+
+
+# ══ Q1/Q2 COUPLING — INSTRUMENTED, NOT ANNOTATED ═════════════════════════
+def _ff():
+    import importlib.util
+    import pathlib
+    spec = importlib.util.spec_from_file_location(
+        "ff", pathlib.Path(__file__).parents[1] / "tools/act2_force_fidelity.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def _tcounts(chains):
+    c = {}
+    for ch in chains:
+        for t in ch:
+            if t.prior_force:
+                c[(t.prior_force, t.force)] = c.get((t.prior_force, t.force), 0) + 1
+    return c
+
+
+def _collapsed(pool, strength, seed, *, n=14, turns=40):
+    """A model that OBEYS ki→ka but collapses the uniform rows onto `ka`."""
+    rng = random.Random(seed)
+    out = []
+    for _ in range(n):
+        ch, prev = [], None
+        for _i in range(turns):
+            f = ("ka" if prev == "ki" else
+                 "ka" if rng.random() < strength else rng.choice(FM.ORDER))
+            ch.append(MT.Turn(rng.choice(pool[f]), f, prev))
+            prev = f
+        out.append(ch)
+    return out
+
+
+def test_Q1_clean_positive_on_a_faithful_corpus(pairs):
+    q1 = _ff().q1_two_null(_tcounts(MT.build(14, turns=40, pairs=pairs, seed=9)))
+    assert q1["verdict"] == "Q1 CLEAN POSITIVE", q1["verdict"]
+    assert q1["beats_design"] and q1["beats_realized"]
+
+
+def test_Q1_null_on_a_painter_that_ignores_the_prior(pairs):
+    pool = MT._pool_by_force(pairs)
+    rng = random.Random(5)
+    chains = []
+    for _ in range(14):
+        ch, prev = [], None
+        for _i in range(40):
+            f = rng.choice(FM.ORDER)
+            ch.append(MT.Turn(rng.choice(pool[f]), f, prev))
+            prev = f
+        chains.append(ch)
+    assert _ff().q1_two_null(_tcounts(chains))["verdict"] == "Q1 NULL"
+
+
+def test_Q1_reports_CONFOUNDED_when_mode_collapse_moved_the_marginal(pairs):
+    """⛔⛔ THE COUPLING, CAUGHT. This model obeys ki→ka perfectly, so a
+    design-null-only test would call it a clean force-transmission result. It
+    beats the design null and NOT the realized one, because the collapsed
+    marginal is what made ki→ka look distinctive."""
+    q1 = _ff().q1_two_null(_tcounts(_collapsed(MT._pool_by_force(pairs), .75, 8)))
+    assert q1["verdict"] == "⚠️ Q1 CONFOUNDED BY Q2", q1["verdict"]
+    assert q1["beats_design"] and not q1["beats_realized"]
+
+
+def test_Q2_says_the_uniform_rows_hold_on_a_faithful_corpus(pairs):
+    q2 = _ff().q2_rows(_tcounts(MT.build(14, turns=40, pairs=pairs, seed=9)))
+    assert q2["n_failed"] == 0, q2["rows"]
+    assert all(r["verdict"] == "HOLDS FLAT" for r in q2["rows"].values())
+    assert q2["foundation"].startswith("✅")
+
+
+def test_Q2_CATCHES_mode_collapse_and_does_not_call_it_chance(pairs):
+    """⛔⛔ RED-PROOF ON THE FALSE GREEN I SHIPPED FIRST. An earlier version
+    branched on the realized-marginal comparison and reported a 75 %-collapsed
+    model as CHANCE — "✅ the uniform rows hold flat". Mode-collapse had moved
+    the very baseline Q2 measures against, making itself invisible. The uniform
+    test must decide FIRST."""
+    q2 = _ff().q2_rows(_tcounts(_collapsed(MT._pool_by_force(pairs), .75, 8)))
+    assert q2["n_failed"] == 4, q2["rows"]
+    assert q2["foundation"].startswith("⚠️ FOUNDATION FINDING")
+    assert set(q2["collapsed_to_global_prior"]) == {"ka", "ko", "ku", "kä"}
+    for r in q2["rows"].values():
+        assert r["holds_flat"] is False
+
+
+def test_extreme_collapse_STARVES_Q1_and_it_says_so(pairs):
+    """⭐ At 95 % collapse there are almost no `ki` priors left. The honest
+    answer is UNDERPOWERED, never CHANCE — a null from a starved row is a
+    statement about the instrument."""
+    q1 = _ff().q1_two_null(_tcounts(_collapsed(MT._pool_by_force(pairs), .95, 8)))
+    assert q1["verdict"] == "UNDERPOWERED", q1["verdict"]
+
+
+def test_the_two_nulls_are_actually_DIFFERENT_objects(pairs):
+    """A two-null check whose nulls coincide is one null wearing two names."""
+    q1 = _ff().q1_two_null(_tcounts(_collapsed(MT._pool_by_force(pairs), .75, 8)))
+    assert q1["design_marginal"] != q1["realized_marginal"]
+    assert abs(q1["d_design"] - q1["d_realized"]) > 0.05
