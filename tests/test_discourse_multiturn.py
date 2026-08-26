@@ -334,3 +334,64 @@ def test_the_two_nulls_are_actually_DIFFERENT_objects(pairs):
     q1 = _ff().q1_two_null(_tcounts(_collapsed(MT._pool_by_force(pairs), .75, 8)))
     assert q1["design_marginal"] != q1["realized_marginal"]
     assert abs(q1["d_design"] - q1["d_realized"]) > 0.05
+
+
+def _biased_baseline(pool, ki_ka_rate, seed, *, n=30, turns=40):
+    """A stand-in 'run 3' carrying some pre-existing ki→ka regularity."""
+    rng = random.Random(seed)
+    out = []
+    for _ in range(n):
+        ch, prev = [], None
+        for _i in range(turns):
+            if prev == "ki":
+                f = "ka" if rng.random() < ki_ka_rate else rng.choice(FM.ORDER)
+            else:
+                f = rng.choice(FM.ORDER)
+            ch.append(MT.Turn(rng.choice(pool[f]), f, prev))
+            prev = f
+        out.append(ch)
+    return _tcounts(out)
+
+
+def test_Q1_without_a_baseline_is_CAPPED_at_unattributed(pairs):
+    """⛔⛔ A MISSING BASELINE IS EXACTLY HOW PRE-EXISTING STRUCTURE GETS
+    CREDITED TO A RUN. Real structure, unknown provenance — say so."""
+    q = _ff().q1(_tcounts(MT.build(14, turns=40, pairs=pairs, seed=9)))
+    assert q["verdict"] == "⚠️ Q1 POSITIVE (UNATTRIBUTED)", q["verdict"]
+    assert q["baseline"] is None
+
+
+def test_Q1_clean_positive_requires_beating_the_pre_training_baseline(pairs):
+    pool = MT._pool_by_force(pairs)
+    q = _ff().q1(_tcounts(MT.build(14, turns=40, pairs=pairs, seed=9)),
+                 baseline_counts=_biased_baseline(pool, 0.20, 21))
+    assert q["verdict"] == "Q1 CLEAN POSITIVE", q["verdict"]
+    assert q["beats_baseline"] and q["delta_ci"][0] > 0
+
+
+def test_Q1_reports_PRE_EXISTING_when_run3_already_had_the_structure(pairs):
+    """⭐⭐ THE ATTRIBUTION NULL EARNING ITS KEEP. The multi-turn model transmits
+    ki→ka perfectly — and so did the model before training. Nothing is
+    attributable to the run, and a chance-only test would have called it a win."""
+    pool = MT._pool_by_force(pairs)
+    q = _ff().q1(_tcounts(MT.build(14, turns=40, pairs=pairs, seed=9)),
+                 baseline_counts=_biased_baseline(pool, 0.97, 22))
+    assert q["verdict"] == "⚠️ Q1 PRE-EXISTING", q["verdict"]
+    assert q["beats_design"] and not q["beats_baseline"]
+
+
+def test_a_starved_BASELINE_is_underpowered_not_a_win(pairs):
+    """An attribution claim against a starved baseline is a statement about the
+    instrument — it must not read as beating it."""
+    pool = MT._pool_by_force(pairs)
+    q = _ff().q1(_tcounts(MT.build(14, turns=40, pairs=pairs, seed=9)),
+                 baseline_counts=_biased_baseline(pool, 0.2, 23, n=1, turns=12))
+    assert q["verdict"] == "UNDERPOWERED", q["verdict"]
+
+
+def test_render_speak_stability_is_pre_declared_NEUTRAL():
+    """⛔ The multi-turn row is nearly the single-turn speak row, so a 0.5 mix is
+    a small distribution shift and render/speak should barely move. That is
+    EXPECTED and proves nothing — crediting a number that did not move is the
+    dual of every failure in this ledger."""
+    assert _ff().RENDER_SPEAK_STABILITY_IS_NEUTRAL is True

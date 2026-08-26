@@ -387,3 +387,103 @@ def q2_rows(counts: dict, *, seed: int = 0) -> dict:
                 if failed else
                 "✅ every uniform row holds flat — RULING 12's foundation is "
                 "sound and emergent convention is measurable.")}
+
+
+def _boot_diff(a_hits: int, a_n: int, b_hits: int, b_n: int, *,
+               trials: int = 4000, seed: int = 0) -> tuple[float, float]:
+    """Bootstrap CI on (rate_a − rate_b). Two OBSERVED samples, not a model."""
+    import random as _r
+    rng = _r.Random(seed)
+    pa, pb = a_hits / a_n, b_hits / b_n
+    diffs = []
+    for _ in range(trials):
+        ra = sum(rng.random() < pa for _ in range(a_n)) / a_n
+        rb = sum(rng.random() < pb for _ in range(b_n)) / b_n
+        diffs.append(ra - rb)
+    diffs.sort()
+    return diffs[int(trials * 0.025)], diffs[int(trials * 0.975)]
+
+
+def q1(counts: dict, *, baseline_counts: dict | None = None,
+       prior: str = "ki", seed: int = 0) -> dict:
+    """Q1 WITH THREE NULLS. Chance · realized-marginal · **the model before this
+    training**.
+
+    ⭐⭐ THE THIRD NULL IS THE ATTRIBUTION ONE, AND IT IS THE EASIEST TO OMIT.
+    The multi-turn row is `(prior surface + force) → fresh painting`, which is
+    structurally close to the existing single-turn *speak* task — so run 3 may
+    ALREADY carry some `ki`→`ka` regularity from speak-conditioning alone. If it
+    does, beating chance proves the structure exists; it does **not** prove this
+    training put it there. The right null for *"did multi-turn training add
+    force-transmission"* is **the model before that training**, never random.
+
+    ⛔ WITHOUT A BASELINE THE VERDICT IS CAPPED. `Q1 POSITIVE (UNATTRIBUTED)` is
+    the ceiling — real structure, unknown provenance. A clean positive REQUIRES
+    all three, because a missing baseline is exactly how pre-existing structure
+    gets credited to a run.
+    """
+    out = q1_two_null(counts, prior=prior, seed=seed)
+    if out["verdict"] == "UNDERPOWERED":
+        return out
+
+    beats_chance = out["beats_design"]
+    beats_real = out["beats_realized"]
+    target = FM.FORCED_CELLS.get(prior)
+    hits = counts.get((prior, target), 0)
+    n = out["n"]
+    out["hit_rate"] = hits / n
+
+    if baseline_counts is None:
+        out["baseline"] = None
+        if beats_chance and beats_real:
+            out.update(
+                verdict="⚠️ Q1 POSITIVE (UNATTRIBUTED)",
+                why=f"{prior}→{target} beats chance and the realized marginal "
+                    f"(hit rate {hits / n:.3f}), but NO PRE-TRAINING BASELINE "
+                    "was supplied, so this cannot be attributed to the "
+                    "multi-turn training. Run 3 may already carry this "
+                    "structure from speak-conditioning. Supply "
+                    "`baseline_counts` for a clean positive.")
+        return out
+
+    b_hits = baseline_counts.get((prior, target), 0)
+    b_n = sum(baseline_counts.get((prior, f), 0) for f in FM.ORDER)
+    if b_n < MIN_FORCED_OBSERVATIONS:
+        out.update(verdict="UNDERPOWERED",
+                   why=f"the BASELINE has only {b_n} observations in the "
+                       f"{prior!r} row; {MIN_FORCED_OBSERVATIONS} needed. An "
+                       "attribution claim against a starved baseline is a "
+                       "statement about the instrument.")
+        return out
+
+    lo, hi = _boot_diff(hits, n, b_hits, b_n, seed=seed + 2)
+    beats_base = lo > 0.0
+    out.update(baseline={"hit_rate": b_hits / b_n, "n": b_n},
+               delta_ci=[lo, hi], beats_baseline=beats_base)
+
+    if beats_chance and beats_real and beats_base:
+        out.update(verdict="Q1 CLEAN POSITIVE",
+                   why=f"{prior}→{target} at {hits / n:.3f} beats chance, the "
+                       f"realized marginal, AND the pre-training baseline "
+                       f"({b_hits / b_n:.3f}, Δ 95% CI [{lo:+.3f}, {hi:+.3f}]). "
+                       "Force transmits, unconfounded by collapse, and "
+                       "attributable to the multi-turn training.")
+    elif beats_chance and beats_real and not beats_base:
+        out.update(verdict="⚠️ Q1 PRE-EXISTING",
+                   why=f"{prior}→{target} beats chance and the realized "
+                       f"marginal, but NOT the pre-training baseline "
+                       f"({hits / n:.3f} vs {b_hits / b_n:.3f}, Δ 95% CI "
+                       f"[{lo:+.3f}, {hi:+.3f}] includes 0). The structure is "
+                       "real and was ALREADY THERE — speak-conditioning, not "
+                       "this training. Nothing is attributable to the run.")
+    return out
+
+
+#: ⭐⭐ PRE-DECLARED, LOCKED BEFORE THE RUN. The multi-turn row is nearly the
+#: single-turn speak row, so the 0.5 mix is a much smaller distribution shift
+#: than 0.5 suggests. **render/speak holding near 82 / 97 is EXPECTED and is
+#: NEUTRAL** — it neither confirms nor refutes that force-transmission was
+#: learned. Q1 is the only evidence of learning. Reading "render held" as "the
+#: run worked" would be crediting a number that did not move, which is the dual
+#: of every failure in this arc's ledger.
+RENDER_SPEAK_STABILITY_IS_NEUTRAL = True
