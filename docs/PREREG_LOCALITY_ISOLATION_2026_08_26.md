@@ -128,3 +128,84 @@ a knob that silently no-ops would return "locality works" for the worst reason.
 it, which is precisely why the blindness was available here after being burned on
 RULING 14 — and why it is spent if this file is edited after that framework
 arrives.
+
+---
+
+# ⭐⭐ AMENDMENT 1 — 2026-08-26, AFTER the context framework and the (b) ruling
+
+⛔⛔ **THE BLINDNESS CLAIMED ABOVE IS NOW SPENT, AND THIS FILE SAYS SO RATHER THAN
+QUIETLY ABSORBING THE CHANGE.** The original text closes: *"the design depends on
+no part of it, which is precisely why the blindness was available here after
+being burned on RULING 14 — and why it is spent if this file is edited after that
+framework arrives."* It has been edited. **Everything above the amendment line is
+verbatim as locked; everything below is post-hoc and must be read as such.**
+
+## What changed, and why it is not absorbable
+
+RULING (b) makes the trainer and the arena share ONE prompt
+(`tlon/discourse/provocation.py`). That is not a tweak to the arms — it changes
+what the arms *mean*.
+
+**The old arm C/D question was PROMPT PREFERENCE:** which wording does the model
+respond to better. **That question is RETIRED.** It was never the interesting one
+and it is not what the arms now measure.
+
+**The new arm C/D question is TRAIN/SERVE CONTRACT-MATCHING:** arm C is
+trained-`write`/`read`, served-`CONVERSE` — *the mismatch*. Arm D is trained and
+served on the unified provocation — *the match*. The comparison now asks **"does
+matching the training and serving contract eliminate the depth-1 echo"**, which
+is more fundamental than the question it replaces and bears directly on the
+motivation for the whole corpus.
+
+⛔ **RECORDED SO IT IS NOT MISREAD LATER.** If this amendment were absorbed
+silently, a future reader would score the arm C/D result against the *original*
+prereg's prompt-preference question and reach a wrong conclusion. The arms are
+the same shape; the question underneath them is different.
+
+## ⛔⛔ AMENDMENT 2 — the Q1 baseline was going to conflate THREE things
+
+RULING 4 as first stated was a labelling fix: run 3 is trained-mismatched and
+served-mismatched, so beating it measures training **plus** contract-matching,
+not training alone. **That understated it.** Run 3's adapter was trained before
+the `provoke` direction existed at all, so `run-3-as-published` differs from the
+new model in **three** ways at once:
+
+1. multi-turn training — absent
+2. serve-time contract matching — absent
+3. the `provoke` direction present in training — absent
+
+⇒ A CLEAN POSITIVE against that single baseline is **a three-way confound in the
+headline result**, not a caveat.
+
+**FIX — a FOURTH ARM: run 3 RE-SERVED under the unified provocation.** Same
+published weights, new serving prompt. That arm is *"provoke contract present at
+serve, absent at train, multi-turn absent"*, which isolates serve-time matching
+on its own. The headline then splits into three clean pairwise comparisons:
+
+| comparison | isolates |
+|---|---|
+| new model **vs** run-3-published | the full combined effect (all three) |
+| new model **vs** run-3-**re-served** | multi-turn training + train-time `provoke`, **net of** serve-time matching |
+| run-3-re-served **vs** run-3-published | ⭐ **serve-time contract-matching alone** |
+
+⭐ **The third row is the one that tests the hypothesis this whole corpus rests
+on** — that some of the raw-arena degeneration was train/serve mismatch rather
+than model incapacity. Without this arm that assumption stays untested and the
+degeneration-motivation for the corpus stays partly confounded.
+
+⚠️ **ON RECORD: the "no" was nearly the assumed default and would have been
+wrong.** It costs one extra inference pass on a box that is already up — no
+second rental — and it converts a three-way confound in the headline into three
+clean comparisons, one of which tests a load-bearing premise.
+
+## The box plan, amended
+
+Four arms, one rental: **new model interacting** · **new model vs frozen partner**
+(the yoked control, truncated identically) · **run 3 re-served** under the
+provocation · and **run-3-published**, read from prior results rather than re-run.
+Plus the RULING 15 depth-3 temperature re-derivation on the same box.
+
+`Q1` takes `baseline_counts` from **run-3-re-served**, not run-3-published, so the
+CLEAN POSITIVE branch attributes to *training + train-time contract* and never to
+serve-time matching. Run-3-published stays in the report as the combined-effect
+figure, labelled as such.
