@@ -107,11 +107,22 @@ the dimensions that constitutes the emotion**, not something the emotion is
 independent of. And the discrimination is specific: **fear and hope carry an
 UNCERTAINTY appraisal; anger, disgust and happiness carry a CERTAINTY appraisal.**
 
-⇒ **Affect is not orthogonal to epistemic state.** `frax` (feared) carries its own
-epistemic signature, so it is **not** freely attachable to every contact level —
-`xöl`(seen)→`frax` and `hrin`(doubted)→`frax` are not the same kind of transition,
-and a grouping that treats Affective as uniformly adjacent-to-everything is
-asserting something the emotion literature specifically denies.
+⇒ **Affect is not orthogonal to epistemic state** — which is enough to kill the
+*geometric justification* for Affective-adjacent-to-everything.
+
+⛔⛔ **CORRECTED 2026-08-26 — THIS ENTRY ORIGINALLY OVER-REACHED, ONE SENTENCE
+AFTER NAMING A WORD-TRAP.** It said `frax` "carries its own epistemic signature,
+so it is not freely attachable to every contact level." **That does not follow.**
+S&E's *certainty* is **outcome predictability** (*"understand what is happening
+and can predict what will happen"*) — forward-looking. Tlön's M-class marks
+**source of information** — backward-looking. **Two different objects wearing one
+English word**, which is the identical trap to the "orthogonal" one flagged
+immediately above it. You can be visually certain of what you see and fearful of
+what it portends.
+
+⇒ **The verdict is narrower: Object 3 REMOVES A JUSTIFICATION AND SUPPLIES NO
+REPLACEMENT.** It says nothing about `frax`'s adjacency either way. See
+`GROUPING_MUTATION_TEST_2026_08_26.md`.
 
 ⚠️ **A WORD-TRAP WORTH NAMING.** "Orthogonal" *does* appear in this literature —
 the six appraisal dimensions are orthogonal **to each other** (factor-analytic
