@@ -91,8 +91,29 @@ def _rate(speaker, stimuli, kind: str, histories=None) -> dict:
                     else speaker.render(stim, ()))
         produced.append(proposal)
         if proposal is None:
-            failures.append({"kind": kind, "reason": "no parseable JSON",
-                             "proposal": None, "class_errors": []})
+            # ⛔⛔ THE RAW GENERATION IS RECORDED, NEVER DISCARDED. Run 4 stored
+            # `proposal: null` and nothing else for **60 of 61 speak failures** —
+            # 98 % of a 21-point regression — and the collapse could not be
+            # diagnosed afterwards at any price. Two hypotheses were tested
+            # against other data and refuted; the third was untestable because
+            # the subject of the measurement had been thrown away.
+            #
+            # ⭐ A FAILURE IS THE MOST INFORMATION-DENSE EVENT IN A RUN. This is
+            # the third time this project has destroyed one and had to pay for
+            # it (comprehension answers scored as NO_ANSWER; a greedy probe
+            # reporting n=1 as n=64). Structural now, not remembered.
+            lf = getattr(speaker, "last_failure", None) or {}
+            row = {"kind": kind, "proposal": None, "class_errors": [],
+                   "reason": lf.get("reason") or "no parseable JSON",
+                   "raw": lf.get("raw"),
+                   "raw_len": len(lf["raw"]) if lf.get("raw") else 0}
+            if row["raw"] is None:
+                # ⛔ SAY SO LOUDLY rather than leaving an empty field that reads
+                # like "the model emitted nothing". Those are different facts.
+                row["raw_unavailable"] = (
+                    "the backend did not attach a raw generation — this is an "
+                    "INSTRUMENT gap, not an empty emission")
+            failures.append(row)
             continue
         try:
             PS.validate(proposal)

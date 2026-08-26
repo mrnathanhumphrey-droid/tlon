@@ -32,7 +32,30 @@ NO_ANSWER = -1
 
 
 class BackendError(RuntimeError):
-    pass
+    """⛔⛔ IT CARRIES THE RAW GENERATION, AND THAT IS THE WHOLE POINT.
+
+    Run 4 lost its largest result to this class of defect: **60 of 61 `speak`
+    failures were "no parseable JSON" and the harness stored `proposal: null`
+    with no text**, so the mode responsible for 98 % of a 21-point regression
+    was the one the ledger recorded the least about. Two hypotheses were formed
+    and refuted against other data, and the third could not be tested at all,
+    because the subject of the measurement had been thrown away.
+
+    ⭐ THIS IS THE PROJECT'S OWN FOUNDING RULE AND THE HARNESS WAS BREAKING IT.
+    The same shape has now appeared three times: the comprehension parser scored
+    64 real answers as NO_ANSWER and discarded them; the greedy-decoding probe
+    reported n=1 as n=64; and here. **A failure is the most information-dense
+    event in a run. Never destroy it.**
+
+    `raw` is the FULL decoded generation — never truncated. The cost log keeps a
+    short prefix for accounting; that is not evidence.
+    """
+
+    def __init__(self, message: str, *, raw: str | None = None,
+                 kind: str | None = None):
+        super().__init__(message)
+        self.raw = raw
+        self.kind = kind
 
 
 class Backend(Protocol):
@@ -127,12 +150,33 @@ class LLMSpeaker:
     history_limit: int = 60
     card: bool = True
     _card: str = field(default="", repr=False)
+    #: The most recent backend failure, WITH the raw generation. Read by the
+    #: probe loop and ledgered beside the null proposal.
+    last_failure: dict | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         self._card = (self._card or lexicon_card()) if self.card else ""
 
     def _system(self, preamble: str) -> str:
         return preamble + ("\n\n" + self._card if self.card else "")
+
+    def _record_failure(self, exc: "BackendError", kind: str) -> None:
+        """⛔⛔ THE RAW GENERATION SURVIVES THE EXCEPTION. `None` alone says a
+        turn failed; it cannot say WHY, and run 4's speak collapse was
+        undiagnosable for exactly that reason. The caller reads
+        `speaker.last_failure` and ledgers it beside the null proposal.
+
+        ⭐ Stored, never printed here — a probe loop that prints 60 raw
+        generations buries the run's own log.
+        """
+        self.last_failure = {
+            "kind": kind, "reason": str(exc),
+            # ⛔ FULL text. Truncating here would reproduce the defect one level
+            # down: a raw clipped to 400 chars cannot show a generation that
+            # ran long, which is one of the live hypotheses.
+            "raw": exc.raw,
+            "raw_recorded": exc.raw is not None,
+        }
 
     # -- a turn -------------------------------------------------------
     def speak(self, history: Sequence[str], turn: int) -> dict | None:
@@ -142,7 +186,8 @@ class LLMSpeaker:
             return self.backend.call(system=self._system(CONVERSE),
                                      user=user, schema=SB.scene_schema(),
                                      kind="speak")
-        except BackendError:
+        except BackendError as exc:
+            self._record_failure(exc, "speak")
             return None
 
     # -- production probe --------------------------------------------
@@ -157,7 +202,8 @@ class LLMSpeaker:
             return self.backend.call(system=self._system(RENDER),
                                      user=user, schema=SB.scene_schema(),
                                      kind="render")
-        except BackendError:
+        except BackendError as exc:
+            self._record_failure(exc, "render")
             return None
 
     # -- comprehension probe -----------------------------------------
@@ -170,7 +216,8 @@ class LLMSpeaker:
             out = self.backend.call(system=self._system(CHOOSE),
                                     user=user, schema=CHOICE_SCHEMA,
                                     kind="choose")
-        except BackendError:
+        except BackendError as exc:
+            self._record_failure(exc, "choose")
             return NO_ANSWER
         choice = out.get("choice")
         if not isinstance(choice, int) or not 0 <= choice < len(options):

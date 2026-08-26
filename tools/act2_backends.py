@@ -194,6 +194,8 @@ class LocalBackend:
                 pad_token_id=self.tok.pad_token_id or self.tok.eos_token_id)
         gen = self.tok.decode(out[0][ids["input_ids"].shape[1]:],
                               skip_special_tokens=True)
+        # ⛔ The cost log keeps a short prefix for ACCOUNTING. That is not
+        # evidence, and it must never be the only copy — see below.
         self.calls.append({"kind": kind, "raw": gen[:400],
                            "in_tokens": int(ids["input_ids"].shape[1]),
                            "out_tokens": int(out.shape[1] - ids["input_ids"].shape[1])})
@@ -201,11 +203,19 @@ class LocalBackend:
         if start < 0 or end <= start:
             if kind == "choose":
                 return {"choice": _bare_index(gen, kind)}
-            raise BackendError(f"no JSON object in the generation for {kind}")
+            # ⛔⛔ THE RAW GOES WITH THE EXCEPTION, IN FULL. This raise is where
+            # run 4's speak collapse became undiagnosable: 60 of 61 failures
+            # arrived here, the text was dropped, and `proposal: null` was all
+            # the ledger kept. `raw=gen` is UNTRUNCATED on purpose — a 400-char
+            # clip cannot show a generation that ran long, which is one of the
+            # live hypotheses about why this fires.
+            raise BackendError(f"no JSON object in the generation for {kind}",
+                               raw=gen, kind=kind)
         try:
             return json.loads(gen[start:end + 1])
         except json.JSONDecodeError as exc:
-            raise BackendError(f"malformed JSON for {kind}: {exc}") from exc
+            raise BackendError(f"malformed JSON for {kind}: {exc}",
+                               raw=gen, kind=kind) from exc
 
     def cost_report(self) -> dict:
         return {"calls": len(self.calls), "usd_total": 0.0,

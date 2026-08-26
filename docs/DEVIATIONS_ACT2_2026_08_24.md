@@ -654,3 +654,55 @@ up — a verdict keyed to a metric that cannot resolve the difference it reports
 **~3.05 h × $1.99 = ≈ $6.1**, of which ~45 min was four environment failures
 (Pillow, jinja2, numpy, plus a relaunch). Act 2 total **≈ $29**.
 **The $1,500 contingency is still untouched.** Instance TERMINATED, verified.
+
+---
+
+## D18 — ⛔⛔ STANDING RULE: A FAILURE IS EVIDENCE. NEVER DESTROY IT.
+
+**2026-08-25.** Three rules, promoted from repeated cost to structure.
+
+### RULE 1 — the raw generation is recorded on EVERY parse failure
+
+`BackendError` now carries the **full, untruncated** generation; `LLMSpeaker`
+stashes it on `last_failure`; `act2_flocal._rate` ledgers it beside the null
+proposal. A backend that attaches no raw produces an explicit
+`raw_unavailable` note, because **"the model emitted nothing" and "the
+instrument did not record it" are different facts and must not share a
+representation.**
+
+⭐ **THIRD TIME THIS SHAPE HAS COST SOMETHING:** the comprehension parser scored
+64 real answers as NO_ANSWER and discarded them (reading 0/64, below chance); the
+greedy probe reported n=1 as n=64; and run 4 stored `proposal: null` for **60 of
+61 speak failures** — 98 % of a 21-point regression — leaving it permanently
+undiagnosable. Red-proofed: 11 tests, and the mutation that restores run 4's
+behaviour is **caught** (2 tests fail, file restored byte-identical).
+
+### RULE 2 — ⛔ CHECKPOINTS SURVIVE UNTIL THEIR DIAGNOSTIC'S OUTPUT IS BANKED
+
+**Never terminate an instance while checkpoints are un-analysed or their
+diagnostic output un-banked.** Run 4 ran Diagnostic C — whose entire purpose is
+*find a better checkpoint* — and then deleted the 7.4 GB of checkpoints it
+evaluates to save **$0.25** of meter before terminating. If an earlier checkpoint
+is better, that is now unrecoverable without retraining.
+
+⭐ **$0.25 IS NEVER WORTH AN UNRECOVERABLE SUBJECT.** The asymmetry is total: the
+saving is bounded and trivial, the loss is unbounded and permanent. Running a
+diagnostic and discarding its subject is not a trade-off, it is a mistake.
+
+### RULE 3 — a verdict may not report a move its n cannot resolve
+
+`read_curve`'s `rose`/`fell` compared against a fixed **0.1** while the binomial
+sd at n=12, p≈0.85 is **0.106** — the bar sat **under one standard deviation**,
+so the verdict fired on noise by construction. Run 4's curve
+(**9, 12, 12, 9, 12, 7, 10, 10**; scatter 1.81 vs binomial 1.27) was reported as
+*"OVERTRAINED"*.
+
+Now the bar is `2 × SE(difference of two proportions at this n)`, floored at
+0.15, and **the resolution is printed with the verdict**. A wide but non-monotone
+curve reads **"NOISY — NO RESOLVED TREND … this is a statement about the
+instrument"**.
+
+⛔ **AND THE OPPOSITE ERROR IS GUARDED TOO.** "NEVER ROSE" is a claim about the
+*model*, and run 4's adapter went **0 % → 82 % render** — the 12-sample curve
+simply could not see it. Both misreadings are now pinned by test: 13 tests, with
+real rises, real overtraining and real floors all still firing.

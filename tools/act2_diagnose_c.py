@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import pathlib
 import sys
 
@@ -48,6 +49,13 @@ from tlon.product import schema as PS                          # noqa: E402
 #: 12], and a rigid 0.999 threshold called that "not at ceiling" over a
 #: single-sample dip. A threshold finer than the sampling granularity of the
 #: thing it reads is measuring noise.
+#: ⛔ HOW MANY STANDARD ERRORS A MOVE MUST CLEAR TO BE CALLED A TREND. Fixed
+#: before use, not tuned to make a curve read a particular way.
+NOISE_SD_MULT = 2.0
+#: ⛔ AND A FLOOR UNDER THAT, because at very small n the standard error itself
+#: gets small near p=0 or p=1, and a 1-item move must never become a "trend".
+MIN_REAL_MOVE = 0.15
+
 _PINNED = 0.999
 _CEILING_BAND = 0.90
 
@@ -93,8 +101,29 @@ def read_curve(rows: list[dict]) -> str:
                 if _saturated(dep) else "")
 
     peak = max(range(len(curve)), key=lambda i: curve[i])
-    rose = curve[peak] > curve[0] + 0.1
-    fell = curve[-1] < curve[peak] - 0.1
+
+    # ⛔⛔ THE THRESHOLD WAS BELOW THE NOISE IT WAS MEANT TO CLEAR. `rose`/`fell`
+    # compared against a FIXED 0.1, and at n=12 the binomial standard deviation
+    # near p≈0.85 is **0.106** — so the bar sat UNDER one sd and the verdict
+    # fired on sampling noise by construction.
+    #
+    # Measured on run 4: the curve was 9,12,12,9,12,7,10,10 of 12 — scatter 1.81
+    # items against a binomial sd of 1.27 — i.e. consistent with a FLAT ~84 %,
+    # and non-monotone in both directions. The tool reported
+    # "⛔ OVERTRAINED — rose to 100 % at step 1000, fell to 83 %."
+    #
+    # ⭐ THE FIX IS THE SAME ONE HARDEN 2 APPLIED ONE LEVEL UP: do not report a
+    # movement the instrument cannot resolve. The bar is now the standard error
+    # of the DIFFERENCE of two proportions at this n, times a pre-set multiple.
+    def _se(a: float, b: float) -> float:
+        return math.sqrt(max(a * (1 - a), 1e-9) / n + max(b * (1 - b), 1e-9) / n)
+
+    rise_bar = NOISE_SD_MULT * _se(curve[peak], curve[0])
+    fall_bar = NOISE_SD_MULT * _se(curve[-1], curve[peak])
+    rose = curve[peak] - curve[0] > max(rise_bar, MIN_REAL_MOVE)
+    fell = curve[peak] - curve[-1] > max(fall_bar, MIN_REAL_MOVE)
+    noise_note = (f" · resolution at n={n}: a move must exceed "
+                  f"{max(rise_bar, MIN_REAL_MOVE):.0%} to be called")
 
     if _at_ceiling(curve):
         first = steps[0]
@@ -105,17 +134,44 @@ def read_curve(rows: list[dict]) -> str:
     if rose and fell:
         return (f"⛔ OVERTRAINED — rose to {curve[peak]:.0%} at step "
                 f"{steps[peak]}, fell to {curve[-1]:.0%}. Stop near the "
-                f"peak.{dep_note}")
+                f"peak.{dep_note}{noise_note}")
     if rose:
         return (f"✅ ROSE AND HELD — {curve[0]:.0%} → {curve[-1]:.0%} "
                 f"(peak {curve[peak]:.0%} at step {steps[peak]}). No duration "
-                f"problem to fix.{dep_note}")
+                f"problem to fix.{dep_note}{noise_note}")
     if max(curve) <= 0.1:
         return (f"⛔ NEVER ROSE, AND STAYED ON THE FLOOR ({curve[0]:.0%} → "
                 f"{curve[-1]:.0%}) — the task is not in the training data at "
                 f"all. Not a duration problem.{dep_note}")
+    # ⛔ "NEVER ROSE" AND "COULD NOT TELL" ARE DIFFERENT FACTS. If the curve
+    # moved but not past the resolution bar, say THAT — reporting it as a flat
+    # null is the uninformative-cell error wearing a verdict's clothes.
+    span = max(curve) - min(curve)
+    # ⛔⛔ "NEVER ROSE" IS A CLAIM ABOUT THE MODEL. On run 4 it would have been
+    # FALSE — that adapter went 0 % → 82 % render — and only the 12-sample curve
+    # could not see the shape. A curve that swings WIDELY but resolves no
+    # monotone trend is a statement about the INSTRUMENT, and must be reported
+    # as one.
+    mean = sum(curve) / len(curve)
+    binom_sd = math.sqrt(max(mean * (1 - mean), 1e-9) / n)
+    observed_sd = (math.sqrt(sum((c - mean) ** 2 for c in curve)
+                             / max(1, len(curve) - 1)))
+    if span > max(rise_bar, MIN_REAL_MOVE) and not rose and not fell:
+        return (f"⚠️⚠️ NOISY — NO RESOLVED TREND. The curve swings "
+                f"{min(curve):.0%}..{max(curve):.0%} but is NOT monotone, and "
+                f"neither the rise nor the fall clears "
+                f"{max(rise_bar, MIN_REAL_MOVE):.0%} at n={n} "
+                f"(observed scatter {observed_sd:.3f} vs binomial "
+                f"{binom_sd:.3f}). ⛔ This is NOT 'never rose' — that would be a "
+                f"claim about the model, and this is a statement about the "
+                f"instrument. Raise n per checkpoint to read it.{dep_note}")
+    if span > 0.0 and span <= max(rise_bar, MIN_REAL_MOVE):
+        return (f"⚠️ WITHIN NOISE — the curve moves {min(curve):.0%}..{max(curve):.0%} "
+                f"but n={n} per point cannot resolve a move smaller than "
+                f"{max(rise_bar, MIN_REAL_MOVE):.0%}. This is NOT 'flat' and NOT "
+                f"'overtrained' — it is UNRESOLVED. Raise n to read it.{dep_note}")
     return (f"⛔ NEVER ROSE — {curve[0]:.0%} → {curve[-1]:.0%}, no rise beyond "
-            f"noise. Not a training-duration problem.{dep_note}")
+            f"noise. Not a training-duration problem.{dep_note}{noise_note}")
 
 
 def _valid(proposals) -> int:
