@@ -30,8 +30,8 @@ RUN3=runs/act2/run3_adapter
 
 # ⛔ THE CORPUS IS PINNED. A pipeline that trains on whatever happens to be on
 # disk cannot tell you what it trained on.
-EXPECT_TRAIN=5fea15f19c5622946fadba6b3c09c189d2b5a60301c25d185db7d45d2860b559
-EXPECT_EVAL=394234841b6d0f0e2858822b3d333a665092ca5472993b29a43df0d78277e085
+EXPECT_TRAIN=5e796d5afb98d36778a6d3f80cc9f88c6a4ff82ca2d7d1cb47d9f7738660f45b
+EXPECT_EVAL=c4d3b51709f152f3fb316d54cb0ba2e0bb3fcee3a83d6cf39dd7e10f56827f4f
 
 # ── 0 · PREFLIGHT — exercise every import AND the paths that broke before ──
 step preflight
@@ -80,6 +80,14 @@ print(f"  provocation sha {m['provocation_sha']}  forced {m['forced_cells']}")
 PY
 
 # ── 3 · ⛔⛔ THE TOKEN GATE. TRAINING DOES NOT START UNLESS THIS PASSES ─────
+# ⛔⛔ THE GATE AND THE TRAINER MUST USE THE SAME --seq. The gate counts
+# truncation against its own seq; if they disagree the gate is measuring a run
+# that will not happen. seq 384 chosen from the VRAM measurement: the planner's
+# correction factor is NOT a constant (x0.955 to x1.253 across two measured
+# anchors, sign-flipping), so the WORST factor was applied to a hard wall —
+# batch 8 corrected to 41.7 GiB (over 40, does not fit), batch 4 to 33.3.
+# grad-ckpt does not rescue batch 8 because the LOGITS term dominates at this
+# vocab size and checkpointing only touches activations.
 step token_gate
 python tools/act2_token_budget.py --model $MODEL --corpus $CORPUS \
   --baseline runs/act2/corpus/token_budget.json --tolerance 0.02 \
@@ -89,7 +97,7 @@ echo "  ✅ tokens held against run 3 within 2 %" | tee -a $LOG
 # ── 4 · TRAIN ─────────────────────────────────────────────────────────────
 step train
 python tools/act2_finetune.py --model $MODEL --out runs/act2/adapter_mt \
-  --corpus $CORPUS --seq 256 --batch 8 --accum 2 2>&1 | tee -a $LOG
+  --corpus $CORPUS --seq 384 --batch 4 --accum 4 2>&1 | tee -a $LOG
 
 # ── 5 · F-LOCAL — render/speak/comprehension on the new adapter ────────────
 # ⚠️ PRE-DECLARED NEUTRAL. At 0.5 compute the multi-turn task is a small
