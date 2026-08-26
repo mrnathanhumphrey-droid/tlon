@@ -1,0 +1,70 @@
+{
+  "multiturn_fraction_requested_BY_COMPUTE": 0.5,
+  "multiturn_fraction_by_rows_DERIVED": 0.2601044817156998,
+  "held_variable": "compute (char/token share); rows are the dial",
+  "n_multiturn_rows": 13244,
+  "n_singleturn_rows": 37674,
+  "singleturn_directions": [
+    "read",
+    "write"
+  ],
+  "chains": 1204,
+  "turns": 12,
+  "seed": 20620,
+  "direction": "provoke",
+  "provocation_sha": "47ea5a7fd712be0c",
+  "forced_cells": {
+    "ki": "ka"
+  },
+  "uniform_rows": [
+    "ka",
+    "ko",
+    "ku",
+    "kä"
+  ],
+  "separation": 0.22222222222223173,
+  "design_zeros": [
+    "ki->ki",
+    "ki->ko",
+    "ki->ku",
+    "ki->kä"
+  ],
+  "force_pair_counts": {
+    "ka->ka": 835,
+    "ka->ki": 890,
+    "ka->ko": 824,
+    "ka->ku": 853,
+    "ka->kä": 869,
+    "ki->ka": 2189,
+    "ko->ka": 459,
+    "ko->ki": 398,
+    "ko->ko": 471,
+    "ko->ku": 462,
+    "ko->kä": 443,
+    "ku->ka": 442,
+    "ku->ki": 442,
+    "ku->ko": 435,
+    "ku->ku": 459,
+    "ku->kä": 495,
+    "kä->ka": 455,
+    "kä->ki": 446,
+    "kä->ko": 447,
+    "kä->ku": 482,
+    "kä->kä": 448
+  },
+  "fairness": {
+    "total_transitions": 13244,
+    "worst_cell": [
+      "ko",
+      "ki"
+    ],
+    "worst_ratio": 0.8911777877295118,
+    "floor": 0.01
+  },
+  "NOT_IN_THIS_CORPUS": [
+    "content-adjacency of any kind (C-D2: association is total)",
+    "directional evidential adjacency (empirical, the arena's target)",
+    "non-forced force-map cells (uniform, not guessed)",
+    "the base convention table (§8.1, deferred — base_convention raises)"
+  ]
+}

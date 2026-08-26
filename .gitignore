@@ -23,6 +23,11 @@ scheduler.pt
 # recorded sha256 is a stronger artifact than the file — anyone can rebuild it
 # and check they got the identical bytes.
 runs/act2/corpus/*.jsonl
+# same convention for the multi-turn corpus: the rows are
+# reproducible from act2_build_multiturn.py + the manifest,
+# which IS committed (it carries the provocation sha, the
+# force map, the design zeros, and the held-variable record).
+runs/act2/corpus_mt/*.jsonl
 
 # ── PYTHON ───────────────────────────────────────────────────────────────
 __pycache__/

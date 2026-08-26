@@ -32,6 +32,7 @@ for _s in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
+from act2_finetune import row_to_text                          # noqa: E402
 from tlon.act2 import corpus as C1                             # noqa: E402
 from tlon.act2 import schema_bridge as SB                      # noqa: E402
 from tlon.discourse import force_map as FM                     # noqa: E402
@@ -67,8 +68,9 @@ def main() -> int:
     ap.add_argument("--pool-n", type=int, default=6000,
                     help="single-turn pairs to draw paintings from")
     ap.add_argument("--multiturn-fraction", type=float, required=True,
-                    help="REQUIRED, no default — a mix fraction with a default "
-                         "is a held variable nobody wrote down")
+                    help="multi-turn share BY COMPUTE (not by rows). REQUIRED, no "
+                         "default — a mix fraction with a default is a held "
+                         "variable nobody wrote down. Rows are solved for.")
     ap.add_argument("--seed", type=int, default=20620)
     ap.add_argument("--out", default="runs/act2/corpus_mt")
     ap.add_argument("--eval-frac", type=float, default=0.02)
@@ -94,8 +96,36 @@ def main() -> int:
     mt = rows_from(chains)
     # ⛔ THE MIX IS ON ROWS, AND THE TOKEN CHECK IS WHAT MAKES IT HONEST — a row
     # ratio is not a compute ratio, and only the counter can say which you got.
-    n_single = int(round(len(mt) * (1 - a.multiturn_fraction)
-                         / a.multiturn_fraction))
+    # ⛔⛔ THE FRACTION IS BY COMPUTE, AND ROWS ARE SOLVED FOR. Asking the caller
+    # for a ROW fraction made rows a proxy for compute, and the proxy rotted by
+    # 24 points: 0.50 by rows landed at 0.737 by chars, because the provocation
+    # system prompt is 711 chars and rides on EVERY provoke row while write/read
+    # carry 79/99. Same shape as the `<700` length check — replace the proxy
+    # with the property. Compute is the held variable; rows are the dial.
+    #
+    # ⚠️ CHARS ARE THEMSELVES A PROXY FOR TOKENS — a tighter one (both sides go
+    # through the same fold) but not the thing. `act2_token_budget.py` is the
+    # arbiter and it runs before training.
+    class _NoTok:
+        chat_template = None
+    mt_chars = sum(len(row_to_text(r, _NoTok())) for r in mt)
+    probe = C1.build(200, seed=a.seed + 1)
+    probe_chars = 0
+    for q in probe:
+        base = {"prompt": q.prompt(), "english": q.english, "surface": q.surface,
+                "scene": SB.scene_to_proposal(q.scene),
+                "impression": q.impression, "source": q.source}
+        for d in ("write", "read"):
+            probe_chars += len(row_to_text(dict(base, direction=d), _NoTok()))
+    chars_per_pair = probe_chars / len(probe)
+    target_single_chars = mt_chars * (1 - a.multiturn_fraction) / a.multiturn_fraction
+    n_single = int(round(2 * target_single_chars / chars_per_pair))
+    print()
+    print("  ⭐ HOLDING COMPUTE, SOLVING FOR ROWS")
+    print(f"     multi-turn: {len(mt):,} rows, {mt_chars:,} chars "
+          f"({mt_chars / len(mt):.0f}/row)")
+    print(f"     single-turn needs {target_single_chars:,.0f} chars at "
+          f"{chars_per_pair / 2:.0f}/row → {n_single:,} rows")
     # ⛔⛔ BOTH SINGLE-TURN DIRECTIONS, OR SPEAK CRATERS. `corpus.build` emits
     # `write` ONLY; the read half exists because `act2_build_corpus.py` DUPLICATES
     # each row with `direction="read"`. The first version of this tool did not,
@@ -138,8 +168,9 @@ def main() -> int:
 
     counts = MT.transition_counts(chains)
     manifest = {
-        "multiturn_fraction_requested": a.multiturn_fraction,
-        "multiturn_fraction_by_rows": len(mt) / len(rows),
+        "multiturn_fraction_requested_BY_COMPUTE": a.multiturn_fraction,
+        "multiturn_fraction_by_rows_DERIVED": len(mt) / len(rows),
+        "held_variable": "compute (char/token share); rows are the dial",
         "n_multiturn_rows": len(mt), "n_singleturn_rows": len(single),
         "singleturn_directions": sorted({r["direction"] for r in single}),
         "chains": a.chains, "turns": a.turns, "seed": a.seed,
