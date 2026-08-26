@@ -25,6 +25,15 @@ STAGE="init"
 step() { STAGE="$1"; echo "=== [$1] $(date -u +%H:%M:%S) ===" | tee -a $LOG; }
 
 MODEL=Qwen/Qwen2.5-7B-Instruct
+# ⛔⛔ ONE SEQ, USED BY THE GATE AND THE TRAINER. They were two separate
+# literals and they DISAGREED: the gate ran at 256 and flagged 9,396 truncated
+# rows while the trainer was set to 384. A gate measuring a different seq than
+# the trainer is measuring a run that will not happen. And the assert that was
+# supposed to catch it checked the TRAINER line, so the gate's edit no-opped
+# silently and the assert passed anyway.
+SEQ=384
+BATCH=4
+ACCUM=4
 CORPUS=runs/act2/corpus_mt
 RUN3=runs/act2/run3_adapter
 
@@ -90,6 +99,7 @@ PY
 # vocab size and checkpointing only touches activations.
 step token_gate
 python tools/act2_token_budget.py --model $MODEL --corpus $CORPUS \
+  --seq $SEQ \
   --baseline runs/act2/corpus/token_budget.json --tolerance 0.02 \
   --out $CORPUS/token_budget.json 2>&1 | tee -a $LOG
 echo "  ✅ tokens held against run 3 within 2 %" | tee -a $LOG
@@ -97,7 +107,7 @@ echo "  ✅ tokens held against run 3 within 2 %" | tee -a $LOG
 # ── 4 · TRAIN ─────────────────────────────────────────────────────────────
 step train
 python tools/act2_finetune.py --model $MODEL --out runs/act2/adapter_mt \
-  --corpus $CORPUS --seq 384 --batch 4 --accum 4 2>&1 | tee -a $LOG
+  --corpus $CORPUS --seq $SEQ --batch $BATCH --accum $ACCUM 2>&1 | tee -a $LOG
 
 # ── 5 · F-LOCAL — render/speak/comprehension on the new adapter ────────────
 # ⚠️ PRE-DECLARED NEUTRAL. At 0.5 compute the multi-turn task is a small
