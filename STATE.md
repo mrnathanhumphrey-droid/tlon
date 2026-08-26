@@ -1,5 +1,104 @@
 # Tlön — STATE
 
+**Updated 2026-08-26. 1,061 tests. ⭐ ADAPTER PUBLISHED:
+https://huggingface.co/keyzersoze04/tlon-7b-lora** (public, MIT).
+⛔ HF token lives in `/d/physics_detector/.env` (`HF_TOKEN`, user `keyzersoze04`)
+— there is none in this project's environment.
+
+# ⭐⭐ NEXT: (d) THE MULTI-TURN CORPUS. SPEC INCOMING FROM NATE.
+
+⭐ **THE RECON SETTLED THE BUILD ORDER, AND IT DOES NOT REORDER.** With raws
+captured for the first time, **16 of 16** unparseable `speak` generations were
+**valid, round-tripping Tlön** — `parse(render(s)) == s`, zero malformed, ECHO
+**0/16**. **The model was shown a Tlön history, asked to say the next thing, and
+said it in Tlön.** The harness scored that 0 for lacking the `{force, node}`
+envelope.
+
+⇒ **CONDITIONING IS NOT THE BLOCKER.** The pre-declared conditional was *"if the
+model cannot produce parseable output conditioned on Tlön history, conditioning
+is a lower-level problem than coherence."* It can. **Go straight at coherence**
+(abide / close / break, evidential smoothness). The discourse-layer order stands.
+
+⛔ **HELD-VARIABLE LIST IS THE ASK FOR THE SPEC** — every confound in this arc
+came from a variable nobody wrote down. **Boost-total-as-a-fraction must be named
+in it.**
+
+# THE FIVE RUNS
+
+| | render | speak | comprehension | |
+|---|---|---|---|---|
+| baseline (bf16) | 0.0 % | 0.0 % | 39.1 % | reproduced 3× on 2 boxes |
+| **run 3** | **82.0 %** | **97.3 %** | **71.1 %** | ⭐ **REFERENCE. On HuggingFace.** |
+| run 4 (slot floor 0.30) | 81.6 % | 76.2 % | 60.2 % | errors RELOCATED |
+| run 5 (b) | 48.4 % | **98.0 %** | 62.9 % | ⛔ CONFOUNDED |
+
+⛔ **F-LOCAL HAS NEVER CLEARED.** Render is the gap; run 3's 82.0 % CI
+[76.8, 86.5] is entirely below 0.90.
+
+⛔⛔ **AND NEITHER RUN 4 NOR RUN 5 IS INTERPRETABLE AS A TEST.** Run 4 moved
+errors from the slots it treated into the untreated root slot (`M→R` 7→19, total
+48→50). Run 5 was confounded (below). ⇒ **(d) is reached because render tuning
+produced two uninterpretable runs and the arena blocker is waiting — NOT because
+(b) was cleanly tested and failed.** Do not let (d) be justified by a conclusion
+the data cannot support.
+
+# ⛔⛔ THE LESSON OF THIS ARC — A CONSTANT COUPLED TO THE DATA IS NOT A CONSTANT
+
+Run 5 held tokens (**+0.03 %**), steps (**+3.3 %**), seq, batch, battery,
+decoding and hardware — **every variable that LOOKS like a variable** — and was
+confounded anyway. `focus = {form: 60 × times_confused}` **is a function of the
+corpus**: 4 hand-picked forms → 89 mined confusions moved the total boost
+**240 → 5,340, 22×**, and shattered the invariant the whole corpus design rests
+on (run 3's M class flat at **663–664**; run 5's `nem` at **2,563 = 34.9 %** of
+all evidential exposure).
+
+⭐⭐ **THE HARDEST CONFOUND TO CATCH: not a variable someone forgot to hold, but a
+"constant" secretly coupled to the thing that changed.** It moved because the
+DATA moved, and nothing in the held-variable list named it.
+
+⛔ **AND THE FIRST FIX HAD THE SAME BUG ONE LEVEL DOWN** — an absolute cap of 240
+is a constant coupled to *corpus size*. The test caught it. Now
+`FOCUS_BOOST_FRACTION = 240/41_000`, `n_pairs` **required with no default**, and
+`check_exposure_fairness` **REFUSES** below 0.40 of class mean before a corpus is
+written. 15 tests.
+
+# THREE RULES NOW STRUCTURAL (D18–D21)
+
+- ⛔⛔ **THE RAW GENERATION IS RECORDED ON EVERY PARSE FAILURE.** Run 4 stored
+  `proposal: null` for 60/61 speak failures — 98 % of a 21-point regression —
+  leaving it permanently undiagnosable. Third time this shape cost something.
+  Mutation-proofed.
+- ⛔ **CHECKPOINTS SURVIVE until their diagnostic's output is banked**, and
+  **the instant training hits DONE: pull everything, kill the box, THEN
+  analyse.** Analysis never needs a GPU. Run 4 lost all 11; run 5 saved 7 of 11
+  and idled while I analysed locally.
+- ⛔ **A VERDICT MAY NOT REPORT A MOVE ITS n CANNOT RESOLVE.** Diagnostic C's bar
+  was 0.1 against a binomial sd of 0.106 — under one sd, firing on noise by
+  construction. Now 2×SE floored at 0.15, resolution printed. **Worked on its
+  first live run**: run 5 read *"WITHIN NOISE — UNRESOLVED"* where the old code
+  would have called a trend.
+
+# THE GATE STAYS STRICT — TWO NUMBERS, NEVER MERGED
+
+Crediting bare-but-valid nodes would loosen the gate to match the model's current
+behaviour (the tolerant-parser trap). `_rate` now emits **`valid_surface_rate`
+beside** the gate score. Strict = the gate. Diagnostic = the model knows Tlön
+even when it flubs the envelope.
+
+# ⚠️ KNOWN UNKNOWN — THE SCENE-WRAPPER COLLAPSE
+
+**113 of 132** run-5 render failures emit a **bare node**, `{force, node}`
+wrapper gone; every field legal. **The corpus is not the cause** (0 of 82,614
+rows lack a force). ⭐ **Hypothesis recorded, NOT tested: downstream of the
+focus-boost break.** ⛔ **Do not run forensics on a symptom of a known confound
+before removing the confound** — the next clean run re-measures it for free.
+7 checkpoints saved at `runs/act2/tlon_run5/checkpoints/` if it survives.
+
+**Spend: ≈$16 all-in. $1,500 contingency untouched. No instances running.**
+
+---
+
+
 **Updated:** 2026-08-25. ⭐⭐ **THE RESEARCH IS SEALED. THE LIVE WORK IS THE
 PRODUCT — the open-world chatbot (the freeware door).**
 
