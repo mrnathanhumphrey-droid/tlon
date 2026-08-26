@@ -29,6 +29,53 @@ die()  { echo "⛔ $1" | tee -a $LOG; exit 1; }
 
 MODEL=Qwen/Qwen2.5-7B-Instruct
 
+# ── 0 · ⛔⛔ PREFLIGHT — IMPORT EVERYTHING EVERY STAGE WILL NEED, NOW ──────
+#
+# FOUR environment breaks in this arc, each found by a DIFFERENT stage, each
+# with the meter running:
+#   Pillow 9.0.1   → died importing PEFT
+#   numpy/torch    → ABI breakage
+#   Jinja2 3.0.3   → died at the first real GENERATION (stage 4)
+#   numpy 1.21.5   → died at `DataCollatorForLanguageModeling`'s class body,
+#                    which uses `np.ndarray[...]` — needs numpy ≥ 1.22 (stage 5,
+#                    AFTER the baseline had already passed)
+#
+# ⛔⛔ THE LAST ONE IS THE LESSON AND IT WAS MY OWN NOTE THAT WAS WRONG. I wrote
+# "numpy 1.21.5 … worked" into requirements-lambda.txt because nothing had failed
+# yet. Nothing had failed because NOTHING ON THE PATH RUN SO FAR IMPORTED THE
+# COLLATOR. Absence of a failure on an unexercised path is not evidence the path
+# works — it is the absence of a test.
+#
+# ⭐ SO THE FIX IS STRUCTURAL, NOT ANOTHER PIN: import every symbol every later
+# stage uses, and exercise the two runtime paths that import-time cannot see
+# (chat templating, a CUDA matmul). Costs seconds; each of the four above cost
+# between $0.30 and a 66-minute training run.
+step "0-preflight"
+python - <<'PY' 2>&1 | tee -a $LOG
+import numpy, torch
+assert tuple(int(x) for x in numpy.__version__.split(".")[:2]) >= (1, 22), (
+    f"numpy {numpy.__version__} cannot subscript np.ndarray[...]; "
+    "DataCollatorForLanguageModeling's class body needs >= 1.22")
+assert torch.cuda.is_available(), "no CUDA"
+a = torch.randn(8, 8, device="cuda")
+assert float((a @ a).sum()) == float((a @ a).sum()), "cuda matmul is not finite"
+# every symbol the later stages import
+from transformers import (AutoModelForCausalLM, AutoTokenizer,          # noqa: F401
+                          DataCollatorForLanguageModeling, Trainer,     # noqa: F401
+                          TrainingArguments)                            # noqa: F401
+from peft import LoraConfig, get_peft_model, PeftModel                  # noqa: F401
+from datasets import load_dataset                                       # noqa: F401
+# ⛔ THE PATH IMPORTS CANNOT REACH: templating only fails when something
+# actually prompts the model. This is the jinja2 failure, caught in 2 seconds.
+tok = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-7B-Instruct")
+s = tok.apply_chat_template([{"role": "user", "content": "x"}], tokenize=False,
+                            add_generation_prompt=True)
+assert "<|im_start|>" in s, s[:80]
+print(f"  ✅ preflight: numpy {numpy.__version__} · torch {torch.__version__} · "
+      f"cuda live · trainer imports · chat template renders")
+PY
+[ "${PIPESTATUS[0]}" = "0" ] || die "preflight failed — fix the box before spending GPU time"
+
 # ── 1 · the suite, on the box ─────────────────────────────────────────────
 step "1-suite"
 python -m pytest tests/ -q 2>&1 | tail -3 | tee -a $LOG

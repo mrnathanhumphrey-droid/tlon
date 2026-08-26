@@ -11,7 +11,19 @@
 #                    (raised only when the model is first PROMPTED — so it
 #                     survives install, survives import, and detonates at the
 #                     first real generation)
-#   numpy          → torch/scipy ABI breakage when upgraded carelessly
+#   numpy 1.21.5   → `TypeError: 'type' object is not subscriptable` from
+#                    `DataCollatorForLanguageModeling`'s CLASS BODY, which
+#                    annotates `np.ndarray[...]`. `np.ndarray.__class_getitem__`
+#                    arrived in numpy 1.22.
+#
+# ⛔⛔ AND THE NUMPY ONE IS A CORRECTION TO THIS FILE'S OWN EARLIER TEXT. An
+# earlier revision said numpy 1.21.5 "was left alone … and worked". It did not
+# work. It had never been EXERCISED: the gate path never imports the collator,
+# only the trainer does, so the first thing to touch it was stage 5 — after the
+# baseline had already passed and with the meter running. **Absence of a failure
+# on an unexercised path is not evidence the path works; it is the absence of a
+# test.** The lesson is not "pin numpy too" — it is that a version claim must
+# name what exercised it.
 #
 # ⭐ THE JINJA ONE IS THE INSTRUCTIVE CASE: nothing catches it until something
 # actually calls the chat template. `pip install` succeeds, `import transformers`
@@ -31,9 +43,10 @@
 # ⛔ THAT LAST LINE IS NOT OPTIONAL. It is the smoke test for the failure that
 # import-time checks cannot see. Ask the live path a real question.
 
-# ── the two the base image ships too old ─────────────────────────────────
+# ── the THREE the base image ships too old ───────────────────────────────
 Pillow>=10.0.0
 Jinja2>=3.1.0
+numpy>=1.22,<2.0        # 1.22 for np.ndarray[...]; <2.0 to leave torch alone
 
 # ── the pinned stack the published results were produced with ────────────
 transformers==5.8.1
@@ -53,8 +66,14 @@ pytest>=8.0
 # Measured-good on that box, 2026-08-25 (run 4):
 #   torch 2.7.0 · transformers 5.8.1 · peft 0.19.1 · datasets 4.8.5
 #   accelerate 1.13.0 · Jinja2 3.1.6 · pillow 12.3.0 · tokenizers 0.22.2
-#   huggingface_hub 1.28.0 · safetensors 0.8.0
+#   huggingface_hub 1.28.0 · safetensors 0.8.0 · numpy 1.26.4
 #
-# ⚠️ numpy 1.21.5 and PyYAML 5.4.1 are the IMAGE's versions and were left alone.
-# Both are older than this project's local pins and both worked. Upgrading numpy
-# on a rented box has broken torch before; do not touch it without a reason.
+# ⭐ EXERCISED BY, so the claim names its evidence: `pipeline_run4.sh` stage
+# 0-preflight — a CUDA matmul, every trainer/PEFT/datasets symbol the later
+# stages import, and a real `apply_chat_template` render.
+#
+# ⚠️ PyYAML 5.4.1 is the IMAGE's version, older than this project's local pin,
+# and is exercised by the full test suite in stage 1. numpy was moved to 1.26.4
+# and NOT to 2.x: torch 2.7.0 tolerates 2.x, but 1.26.4 is the smallest step that
+# fixes the collator, and a rented box is the wrong place to test an ABI jump.
+# (scipy warns it wants <1.25 — scipy is not on any path this project uses.)
