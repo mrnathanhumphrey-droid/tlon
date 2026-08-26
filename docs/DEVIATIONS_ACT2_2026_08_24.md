@@ -706,3 +706,76 @@ instrument"**.
 *model*, and run 4's adapter went **0 % → 82 % render** — the 12-sample curve
 simply could not see it. Both misreadings are now pinned by test: 13 tests, with
 real rises, real overtraining and real floors all still firing.
+
+---
+
+## D19 — ⭐⭐ THE SPEAK COLLAPSE WAS A FORMAT FAILURE. THE MODEL ANSWERED IN TLÖN.
+
+**2026-08-26.** The harness fix (D18) was applied and the speak probe re-run on
+the **run-4 adapter** across history depths 1/3/5/8, n=48 each, raws captured.
+
+| shape | count |
+|---|---|
+| **ECHO** — ≥50 % of tokens lifted from the history | **0 / 16** |
+| **MUSH** — "Tlön prose, no JSON at all" | **16 / 16** |
+| EMPTY / truncated | 0 / 16 |
+
+⛔⛔ **AND "MUSH" IS THE WRONG NAME — I CHOSE IT BEFORE THE DATA AND IT
+PREJUDGED.** I defined the category as *"near-Tlön: the shape of an answer,
+structurally broken."* Every one of the 16 is **grammatical Tlön that the parser
+accepts and that round-trips exactly** — `parse(render(s)) == s`, 16/16, zero
+malformed. The detector was right; my label editorialised. Renamed **TLÖN_NOT_JSON**.
+
+```
+  said : kra hlin nol nu plun klon axaxas tos mling hunhunas xar fröm ka
+  means: because of ⟨as ⟨oft, now, inferred, it leaps, unceasingly (×2),
+         strongly⟩, it recalls, beginning (×2), overwhelmingly⟩, it mists.
+```
+
+⭐⭐ **THE MODEL WAS SHOWN A TLÖN HISTORY, ASKED TO SAY THE NEXT THING, AND SAID
+IT IN TLÖN.** The harness scored that **0** because it wanted a JSON Scene.
+
+### What this answers, and what it does NOT
+
+✅ **THE MULTI-TURN BUILD ORDER DOES NOT REORDER.** The pre-declared conditional
+was: *"if the model cannot produce parseable output when conditioned on Tlön
+history, conditioning is a lower-level problem than coherence."* **It can.** It
+conditions well enough to reply *in the language*. Conditioning is not the
+blocker; **coherence is the right level**, and the discourse layer's build order
+stands.
+
+✅ **ECHO / OOD-RETREAT IS REFUTED for this failure mode** — 0/16. Nothing is
+being mirrored back.
+
+⛔ **THE SCORING QUESTION IS NATE'S, NOT MINE.** On this battery:
+
+| | as scored | crediting Tlön surfaces |
+|---|---|---|
+| speak | **73.4 %** (141/192) | **81.8 %** (157/192) |
+
+**I have not re-scored anything.** Changing a scoring rule *after* seeing that it
+favours the model is precisely the shape this project refuses, and it would be
+worse here because the probe prompt explicitly says *"Emit ONLY the JSON
+object"* — so a model ignoring it is failing an instruction, on one reading.
+Both readings are defensible and the choice must be deliberate:
+
+- **FOR crediting:** F-LOCAL's bar is *"first-attempt legal emission, cardless,
+  unconstrained"*. A valid Tlön surface **is** a legal emission. The grammar is
+  exactly invertible, so `parse()` recovers the Scene with **zero ambiguity** —
+  nothing is lost but transport. And **the arena exchanges surfaces, not JSON**,
+  so a model that emits Tlön directly is better suited to it, not worse.
+- **AGAINST crediting:** the prompt asked for JSON; the product gate is the
+  schema; and run 3 / run 4 cannot be re-scored the same way because **their raws
+  were discarded**, so a rule change breaks cross-run comparability.
+
+⭐ **RUN 5's GATE CARRIES THE FIX, so it can be reported BOTH ways** — that is
+the first run where the choice can be made on evidence rather than in the dark.
+
+### The depth reading, under the new noise rule
+
+Valid by depth: **85 % · 77 % · 60 % · 71 %** (n=48, binomial sd ≈ **6.7 pts**).
+Depth 1→5 is a **25-point fall ≈ 3.7 sd — REAL**. Depth 5→8 rising again is
+**within noise and is not a trend**, and is not reported as one.
+
+⚠️ **AND THE 35 `INVALID` ROWS ARE A DIFFERENT FAILURE** — those *were* JSON and
+failed the schema gate. They are not part of this finding.
