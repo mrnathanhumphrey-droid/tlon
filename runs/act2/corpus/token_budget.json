@@ -1,23 +1,23 @@
 {
-  "rows": 63603,
-  "tokens": 9527752,
-  "mean": 149.80035532915113,
-  "max_untruncated": 256,
-  "p99": 229,
+  "rows": 82614,
+  "tokens": 9542574,
+  "mean": 115.50795264725107,
+  "max_untruncated": 219,
+  "p99": 169,
   "truncated": 0,
   "by_direction": {
     "read": {
-      "rows": 31804,
-      "mean": 145.92287133693875
+      "rows": 41307,
+      "mean": 113.33154186941681
     },
     "write": {
-      "rows": 31799,
-      "mean": 153.67844900783044
+      "rows": 41307,
+      "mean": 117.68436342508534
     }
   },
-  "pruned_over_seq": 5,
+  "pruned_over_seq": 0,
   "baseline_tokens": 9539850,
-  "delta_fraction": -0.0012681541114378109,
+  "delta_fraction": 0.00028553908080315726,
   "verdict": "HELD",
   "model": "Qwen/Qwen2.5-7B-Instruct",
   "seq": 256

@@ -83,7 +83,14 @@ def main() -> int:
         focus = None if a.no_focus else STALE_PREFLIGHT_CONFUSED
         print("⚠️ using the STALE pre-flight list (ablation)")
     elif not a.no_focus:
-        mined = corpus.mined_confusions(a.from_ledger)
+        # ⛔ MULTIPLE LEDGERS, COMMA-SEPARATED. (b)'s corpus is run-3-like, so
+        # run 3's error profile is the regime it starts from — but run 4 showed
+        # the M/R boundary is the fragile one under any prior shift, and a
+        # boundary that broke once is worth teaching even when the corpus that
+        # broke it is not being reused. Union, not replacement.
+        mined = []
+        for _lg in [x for x in a.from_ledger.split(",") if x.strip()]:
+            mined.extend(corpus.mined_confusions(_lg.strip()))
         counts = {}
         for e in mined:
             counts[e.form] = counts.get(e.form, 0) + 1

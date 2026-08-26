@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
-# ═══ RUN 4 — §8.2, the corrected corpus. ON-INSTANCE PIPELINE ═══════════════
+# ═══ ACT 2 — THE ON-INSTANCE PIPELINE. Currently: RUN 5, variant (b). ═══════
+#
+# (b) = CONTRASTIVE MINIMAL PAIRS ALONE, NO SLOT FLOOR.
+# Run 4 decomposed the §8.2 fix: the contrastive pairs are pure benefit (they
+# killed their targets — Q→A 5→0, L→M 6→1) while the 0.30 slot floor inflated
+# the modifier prior and RELOCATED errors into the always-on root slot
+# (M→R 7→19, R→M 1→6, total 48→50). Occupancy is a dose, not a switch. This runs
+# the zero-cost half alone.
 #
 # ⛔⛔ IT WRITES `DONE` ONLY ON SUCCESS. The run-2 pipeline wrote DONE
 # unconditionally and reported success while ALL FOUR STAGES HAD FAILED. Every
@@ -86,20 +93,20 @@ python -m pytest tests/ -q 2>&1 | tail -3 | tee -a $LOG
 # specific file. If what landed here is not byte-identical to what was counted,
 # the token match is a statement about a file that is not being trained on.
 step "2-corpus-integrity"
-EXPECT_TRAIN=7ee9c98a6ee9ae205ad8eebaffe27ef32da302764c9c5ee072f72e5485085772
+EXPECT_TRAIN=043c8fd67fc061a9a957f5b4acce1a7f070335439e76e1b73604315997b0797a
 GOT_TRAIN=$(sha256sum runs/act2/corpus/train.jsonl | cut -d' ' -f1)
 echo "  train.jsonl sha256 $GOT_TRAIN" | tee -a $LOG
 [ "$GOT_TRAIN" = "$EXPECT_TRAIN" ] || die "corpus sha MISMATCH — expected $EXPECT_TRAIN"
 python - <<'PY' 2>&1 | tee -a $LOG
 import json
 rows = [json.loads(l) for l in open("runs/act2/corpus/train.jsonl", encoding="utf-8")]
-assert len(rows) == 63603, f"rows {len(rows)}"
+assert len(rows) == 82614, f"rows {len(rows)}"
 src = {}
 for r in rows:
     src[r.get("source", "?")] = src.get(r.get("source", "?"), 0) + 1
 print(f"  rows {len(rows):,} · {src}")
 m = json.load(open("runs/act2/corpus/meta.json", encoding="utf-8"))
-assert m["tokens"] == 9527752, m["tokens"]
+assert m["tokens"] == 9542574, m["tokens"]
 assert m["token_verdict"] == "HELD", m["token_verdict"]
 print(f"  tokens {m['tokens']:,} vs run3 {m['tokens_baseline_run3']:,} "
       f"({m['tokens_delta_fraction']:+.4%}) ⇒ {m['token_verdict']}")
@@ -125,6 +132,15 @@ step "4-baseline"
 python tools/act2_flocal.py --model $MODEL --n 64 --n-comp 64 2>&1 | tee -a $LOG
 [ "${PIPESTATUS[0]}" = "0" ] || die "baseline gate failed"
 
+# ── 4.5 · ⭐⭐ SPEAK-COLLAPSE RECON ON THE RUN-4 ADAPTER ──────────────────
+# ⛔ RUNS BEFORE THE FINE-TUNE, ON PURPOSE. It reads the PREVIOUS adapter, and
+# stage 5 overwrites runs/act2/adapter. Ordering it after would destroy its
+# subject — the same mistake as discarding the checkpoints Diagnostic C had just
+# evaluated.
+step "4.5-speak-recon"
+python tools/act2_speak_recon.py --model $MODEL --adapter runs/act2/run4_adapter   --n 48 --depths 1,3,5,8 2>&1 | tee -a $LOG
+[ "${PIPESTATUS[0]}" = "0" ] || die "speak recon failed"
+
 # ── 5 · the fine-tune ─────────────────────────────────────────────────────
 # ⛔ EVERY VARIABLE HELD TO RUN 3 EXCEPT THE TWO UNDER TEST:
 #   bf16 · lr 1e-4 · rank 32 · 1 epoch · effective batch 16 · A100-40GB
@@ -149,6 +165,15 @@ step "7-diagnosis-c"
 python tools/act2_diagnose_c.py --model $MODEL \
   --adapter-root runs/act2/adapter --n 12 2>&1 | tee -a $LOG
 [ "${PIPESTATUS[0]}" = "0" ] || die "diagnosis C failed"
+
+# ⛔⛔ D18 — CHECKPOINTS SURVIVE UNTIL THEIR DIAGNOSTIC'S OUTPUT IS BANKED.
+# Run 4 deleted 7.4 GB of checkpoints — the subject of the diagnostic that had
+# just run — to save $0.25 before terminating, making an earlier-better
+# checkpoint unrecoverable. The saving is bounded and trivial; the loss is
+# unbounded and permanent.
+step "8-checkpoint-manifest"
+du -sh runs/act2/adapter/checkpoint-* 2>/dev/null | tee -a $LOG
+ls -d runs/act2/adapter/checkpoint-* 2>/dev/null | wc -l |   xargs -I{} echo "  ⛔ {} checkpoints on disk — DO NOT TERMINATE until pulled or Diagnostic C's reading is banked" | tee -a $LOG
 
 step "complete"
 echo "ok" > ~/DONE
