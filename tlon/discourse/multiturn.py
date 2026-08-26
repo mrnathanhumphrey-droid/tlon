@@ -144,3 +144,53 @@ def build(n_chains: int, *, turns: int, pairs, seed: int) -> list[list[Turn]]:
     chains = [chain(pool, turns=turns, rng=rng) for _ in range(n_chains)]
     check_force_pair_fairness(chains)
     return chains
+
+
+#: ⛔⛔ THE DIRECTIONS A MIXED CORPUS MUST CONTAIN. Not a style preference — a
+#: corpus missing `read` measures a writer as a reader (render 81.2 %, speak
+#: 9.4 %, measured), and one missing `provoke` trains under a contract the arena
+#: does not serve.
+EXPECTED_DIRECTIONS: frozenset = frozenset({"write", "read", "provoke"})
+
+#: A direction present but starved is a direction absent with extra steps.
+MIN_DIRECTION_SHARE = 0.05
+
+
+def check_direction_coverage(rows, *, expected=EXPECTED_DIRECTIONS,
+                             minimum: float = MIN_DIRECTION_SHARE) -> dict:
+    """⛔⛔ REFUSE BEFORE WRITING IF A DIRECTION IS MISSING OR STARVED.
+
+    **THE STANDING RULE, MADE MECHANICAL.** Three times this session the same
+    failure: *a builder produces something a downstream tool post-processes, and
+    reimplementing the builder drops the post-processing invisibly.* The read
+    rows exist only because `act2_build_corpus.py` DUPLICATES every row with
+    `direction="read"`; the provoke prompt exists only because trainer and arena
+    import one string; the token count is only honest because the counter imports
+    the trainer's fold. Each time, re-deriving the builder silently dropped the
+    transformation.
+
+    ⭐ AND THE COST IS NOT A CRASH, IT IS A FALSE FINDING THAT LOOKS REAL. A
+    corpus with no `read` rows produces speak ≈ 9 %, which reads as *"multi-turn
+    training destroyed speak"* — plausible, clean, and completely wrong. This
+    catches it at WRITE time instead of at speak-9.4 %.
+    """
+    counts = Counter(r.get("direction") for r in rows)
+    total = sum(counts.values())
+    if not total:
+        raise MultiturnError("no rows to check")
+    missing = sorted(expected - set(counts))
+    if missing:
+        raise MultiturnError(
+            f"DIRECTION MISSING: {missing}. Expected {sorted(expected)}, got "
+            f"{sorted(counts)}. A corpus without `read` measures a writer as a "
+            "reader (render 81.2 %, speak 9.4 % — measured); one without "
+            "`provoke` trains under a contract the arena does not serve.")
+    starved = {d: counts[d] / total for d in expected
+               if counts[d] / total < minimum}
+    if starved:
+        raise MultiturnError(
+            f"DIRECTION STARVED: {starved} below the {minimum:.0%} floor. "
+            "A direction present but starved is a direction absent with extra "
+            "steps.")
+    return {"counts": dict(counts), "total": total,
+            "shares": {d: counts[d] / total for d in sorted(counts)}}

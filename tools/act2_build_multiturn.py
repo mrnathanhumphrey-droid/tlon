@@ -114,6 +114,14 @@ def main() -> int:
         single.append(dict(row, direction="read"))
 
     rows = mt + single
+    # ⛔⛔ REFUSE BEFORE WRITING. The first version of this tool produced a
+    # corpus with ZERO read rows and nothing complained until speak would have
+    # read 9.4 %. This is that catch, moved to write time.
+    dirs = MT.check_direction_coverage(rows)
+    print("  ✅ direction coverage: "
+          + ", ".join(f"{d} {n:,} ({dirs['shares'][d]:.1%})"
+                      for d, n in sorted(dirs["counts"].items())))
+
     rng = random.Random(a.seed)
     rng.shuffle(rows)
     cut = max(1, int(len(rows) * a.eval_frac))

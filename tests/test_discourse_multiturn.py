@@ -465,3 +465,45 @@ def test_the_builder_REFUSES_a_fraction_outside_the_open_unit_interval():
                             "--multiturn-fraction", bad, "--chains", "2"],
                            capture_output=True, text=True)
         assert r.returncode != 0, bad
+
+
+def test_a_corpus_with_NO_READ_ROWS_is_refused_before_writing(pairs):
+    """⛔⛔ THE NEAR-MISS, MADE MECHANICAL. The first corpus writer produced ZERO
+    read rows and nothing complained — the failure would have surfaced as
+    speak 9.4 %, read as "multi-turn training destroyed speak": plausible, clean,
+    and completely wrong. Caught at WRITE time now."""
+    rows = [{"direction": "provoke"}] * 50 + [{"direction": "write"}] * 50
+    with pytest.raises(MT.MultiturnError, match="DIRECTION MISSING"):
+        MT.check_direction_coverage(rows)
+
+
+def test_the_refusal_NAMES_the_missing_direction_and_the_measured_cost(pairs):
+    rows = [{"direction": "provoke"}] * 50 + [{"direction": "write"}] * 50
+    with pytest.raises(MT.MultiturnError) as e:
+        MT.check_direction_coverage(rows)
+    msg = str(e.value)
+    assert "'read'" in msg and "9.4" in msg
+
+
+def test_a_direction_present_but_STARVED_is_also_refused():
+    """A direction present at 1 % is a direction absent with extra steps."""
+    rows = ([{"direction": "provoke"}] * 500 + [{"direction": "write"}] * 480
+            + [{"direction": "read"}] * 5)
+    with pytest.raises(MT.MultiturnError, match="DIRECTION STARVED"):
+        MT.check_direction_coverage(rows)
+
+
+def test_a_healthy_mix_passes_and_reports_its_shares():
+    rows = ([{"direction": "provoke"}] * 400 + [{"direction": "write"}] * 200
+            + [{"direction": "read"}] * 200)
+    rep = MT.check_direction_coverage(rows)
+    assert rep["shares"]["provoke"] == 0.5
+    assert rep["shares"]["read"] == 0.25
+
+
+def test_the_missing_provoke_case_is_caught_too():
+    """A corpus without `provoke` trains under a contract the arena never
+    serves — the train/serve seam, guarded from the corpus side."""
+    rows = [{"direction": "write"}] * 50 + [{"direction": "read"}] * 50
+    with pytest.raises(MT.MultiturnError, match="provoke"):
+        MT.check_direction_coverage(rows)
