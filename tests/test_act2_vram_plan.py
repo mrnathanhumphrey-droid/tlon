@@ -26,11 +26,49 @@ import act2_finetune as FT                                       # noqa: E402
 @pytest.mark.parametrize("params,dtype,seq,batch,vocab,measured,where", FT.MEASURED)
 def test_the_plan_reproduces_every_run_that_actually_happened(
         params, dtype, seq, batch, vocab, measured, where):
-    """⭐⭐ THE ONLY CHECK THAT MATTERS. Two real jobs, their real peaks. A formula
-    that cannot reproduce what already happened cannot predict what has not."""
+    """⭐⭐ THE ONLY CHECK THAT MATTERS. Real jobs, their real peaks. A formula
+    that cannot reproduce what already happened cannot predict what has not.
+
+    ⛔⛔ THE OLD ±30 % BAND WAS TOO WIDE TO SAY ANYTHING. Run 4's anchor missed by
+    **28 %** — 28.3 GiB predicted against 36.1 measured — and passed a test named
+    *"reproduces every run that actually happened"* with 2 points to spare. A
+    tolerance that admits "you have 12 GiB of headroom" for a job that finished
+    with 4 is not a check, it is a rubber stamp.
+
+    ⭐ THE TWO DIRECTIONS ARE NOT SYMMETRIC, SO THEY GET DIFFERENT BARS.
+    Over-prediction is merely annoying: the planner says a job will not fit and
+    someone rents a bigger card. **Under-prediction is what OOMs a paid run at
+    step 3,000.** So the tight bar goes on the over side (the planner is declared
+    a LOWER BOUND and may exceed a measurement only slightly), and the loose bar
+    on the under side — where the honest statement is "at least this much", not
+    "about this much".
+    """
     got = FT.plan(params, dtype, seq, batch, grad_ckpt=True, vocab=vocab)["total_GiB"]
-    assert 0.7 * measured <= got <= 1.3 * measured, (
-        f"{where}: measured {measured} GiB, plan says {got:.1f} GiB")
+    assert got <= 1.05 * measured, (
+        f"{where}: the planner is declared a LOWER BOUND but predicts {got:.1f} "
+        f"GiB against {measured} GiB measured — it is over-predicting, which "
+        "would send someone to rent hardware they do not need.")
+    assert got >= 0.6 * measured, (
+        f"{where}: measured {measured} GiB, plan says only {got:.1f} GiB — a "
+        "lower bound this far below the truth would let a job OOM mid-run.")
+
+
+def test_the_worst_under_prediction_is_PINNED_so_it_cannot_quietly_grow():
+    """⛔ The planner under-predicts, that is now declared, and the SIZE of the
+    worst miss is the thing that must not drift. Run 4: 28.3 vs 36.1 = 0.78.
+    If a future change makes any anchor worse than this, it is a decision, not
+    an accident."""
+    worst = min(
+        FT.plan(p, dt, seq, b, grad_ckpt=True, vocab=v)["total_GiB"] / meas
+        for p, dt, seq, b, v, meas, _ in FT.MEASURED)
+    assert worst >= 0.75, (
+        f"worst anchor ratio is now {worst:.2f}; run 4's 0.78 was the previous "
+        "floor. The planner has got less trustworthy, not more.")
+
+
+def test_the_planner_declares_itself_a_lower_bound():
+    """⚠️ The caveat lives in an identifier, not only in prose."""
+    assert FT.PLANNER_IS_A_LOWER_BOUND is True
 
 
 def test_the_OLD_formula_would_FAIL_this_and_that_is_the_point():

@@ -81,7 +81,29 @@ MEASURED = (
     # (params_b, dtype, seq, batch, vocab, measured_GiB, where)
     (7.62, "4bit", 192, 8, 152064, 15.5, "local RTX Blackwell 16 GiB, 97 % full"),
     (7.62, "bf16", 192, 16, 152064, 31.8, "TLON A100 40 GiB"),
+    # ⛔⛔ THE THIRD ANCHOR DISAGREES, AND THE DOCSTRING SAID TO SAY SO.
+    (7.62, "bf16", 256, 8, 152064, 36.1, "TLON A100 40 GiB, run 4 — PLANNER "
+                                         "UNDER-PREDICTED BY 28 %"),
 )
+
+#: ⛔⛔ `RUNTIME_SLACK` IS NOT A CONSTANT, AND THREE POINTS ARE ENOUGH TO SHOW IT.
+#: Implied slack per anchor: **2.43 · 2.26 · 3.77**. The fitted 2.35 reproduces
+#: the first two within 3 % (ratios 1.03 and 0.98) and under-predicts the third
+#: by **28 %** — 28.3 GiB predicted against **36.1 GiB** measured, which left
+#: ~4 GiB of headroom on a 40 GiB card where ~12 was expected.
+#:
+#: ⚠️ NOT REFITTED TO 3.77. That would over-predict both other anchors; it is a
+#: one-parameter model against three disagreeing points, and forcing it would
+#: trade a visible error for a hidden one. **The planner is therefore a LOWER
+#: BOUND, not an estimate** — treat every figure it prints as "at least this
+#: much", and never quote one as though it were measured.
+#:
+#: ⭐ THE PATTERN WORTH TESTING NEXT: both good anchors are seq 192 and the bad
+#: one is seq 256, so the slack may scale with sequence length rather than being
+#: flat. One more measurement at (bf16, 256, 16) would separate that from a
+#: measurement-timing artefact — the readings are high-water marks and were not
+#: all taken at the same point in training. Recorded as open, not guessed.
+PLANNER_IS_A_LOWER_BOUND = True
 
 #: ⚠️ AN EMPIRICAL FACTOR, NOT PHYSICS, AND IT IS NAMED THAT WAY ON PURPOSE.
 #: The two anchors are **`nvidia-smi` RESERVED** memory, which is what a card must
@@ -114,8 +136,9 @@ def plan(params_b: float, dtype: str, seq: int, batch: int,
     old formula counted. ⛔ A planner blind to vocab will under-size every
     large-vocab model in exactly the same way.
 
-    ⚠️ Calibrated against two points (see `MEASURED`). Treat as ±30 %, and
-    re-anchor it whenever a real run disagrees.
+    ⚠️ Calibrated against two points and CONTRADICTED BY A THIRD (see
+    `MEASURED`). It under-predicted run 4 by 28 %. **Treat the output as a LOWER
+    BOUND**, not an estimate, and never quote it as though it were measured.
     """
     bytes_per = {"bf16": 2, "fp16": 2, "4bit": 0.55}[dtype]
     weights = params_b * bytes_per
@@ -138,6 +161,8 @@ def plan(params_b: float, dtype: str, seq: int, batch: int,
 
 
 def _fmt(p: dict, budget: float) -> str:
+    # ⛔ The margin is against a LOWER BOUND, so "FITS" needs real room. Run 4
+    # was predicted to fit with ~12 GiB spare and fit with ~4.
     fits = p["total_GiB"] <= budget - 1.0
     # ⛔ THE PRINTED EQUATION MUST BALANCE. A first version showed the live terms
     # and the slack-inflated total on one line, so it read "15.2 + 0.4 + 0.1 +
