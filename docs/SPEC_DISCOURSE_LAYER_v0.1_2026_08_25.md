@@ -7,7 +7,207 @@ sentence grammar nor the frozen lexicon `e2b8527010231a81fd31b6eeb9de3d8c`.**
 
 ---
 
-# ⭐⭐ RULINGS — 2026-08-25. THESE SUPERSEDE THE BODY. READ THEM FIRST.
+# ⭐⭐ RULINGS v0.2 — 2026-08-25 (multi-turn corpus verification pass). SUPERSEDES v0.1 RULINGS AND BODY. READ FIRST.
+
+Nate's rulings on Code's multi-turn-corpus verification pass. The v0.1 RULINGS
+block (rulings 1–7) stands; these add rulings 8–15 and two corrections. Where any
+ruling and the body disagree, the ruling governs. The body stays verbatim.
+
+⛔ **STATUS OF RULING 9 (the derived M-adjacency table): MUTATION-TESTED AND NOT
+CLEARED.** 6 of 12 cross-block cells came back PICKED, 16 within-block cells are
+undetermined, and the root cause is upstream of the cells — the Irreal block puts
+un-anchored generation (`xos`) with two affective stances (`mir`, `frax`) and
+half the table is `xos`'s reasoning applied to all three. Full record:
+`docs/MUTATION_TEST_M_ADJACENCY_2026_08_26.md`. **Build order item 1 is NOT
+complete; no adjacency table has been encoded.**
+
+## Carried from v0.1 (unchanged): rulings 1–7.
+Ruling 2 (region gate WITHDRAWN, ρ_wide deleted) and ruling 3 (oracle drops to
+two conditions, BREAK = refusing the flow) are LOAD-BEARING for everything below.
+Ruling 5 (σ_cp absolute floor + near-repetition guard, `falsify.degeneracy_guard`)
+is the guard the new rulings align the oracle *with*.
+
+## ⛔⛔ CORRECTION 2 — the M-adjacency object and §8.1 are TWO objects, not one
+
+v0.1 §8 and the multi-turn spec both said "build §8.1 (the base convention table)
+first." **That was a conflation.** On the machine they are distinct:
+
+- **M-ADJACENCY** — which ordered M→M morphs are *smooth* (ABIDE-legal) vs *shock*
+  (BREAK). This is **the oracle** after ruling 3. §4 gives the turbulent-flow
+  argument and the 4-way grouping but **defines no adjacency relation.**
+  Undefined = the corpus has no oracle.
+- **§8.1 the base convention table** — `base_convention(m) →` the *bias* within a
+  response. This is the **mean of the coupling**, not the legality gate.
+
+⇒ **The M-adjacency relation is the load-bearing derivation. §8.1 is deferred
+(ruling 12).**
+
+## ⛔ CORRECTION 3 — §8.1's codomain was deleted by ruling 2
+
+§8.1's return type was specified in terms of the region ("biases *where in the
+region*", §4). Ruling 2 withdrew the region and deleted ρ_wide. So §8.1 as
+specified is a bias over a **deleted space** — it cannot be built until
+re-specified post-region. `base_convention`'s existing refusal correctly caught
+this (nothing was built against the stale codomain). See ruling 12.
+
+## ⭐ RULING 8 — MORPH MEANS CHANGE. THE DIAGONAL IS EXCLUDED FROM ABIDE.
+
+`m → m` is **not** a smooth morph — it is excluded from ABIDE entirely. Forced,
+not tuned: Borges says the world is *"successive."* A series in which nothing
+changes is **not a succession** — it is one act failing to pass, the negation of
+the independent-acts ontology. A constant-evidential chain is not abiding; it is
+**stalling**, and stalling is what `falsify.degeneracy_guard` (ruling 5) refuses.
+
+⛔⛔ **THIS RESOLVES AN ORACLE-VS-GATE CONTRADICTION THAT WOULD HAVE BEEN THE
+THIRD PASS-MAXED-BY-A-CONSTANT IN THIS PROJECT.** As specified, `m→m` was
+maximally abide-legal, so the oracle could not reject the constant chain — would
+have trained it as a fully-legal exemplar, teaching "abiding = hold still" — and
+then `degeneracy_guard` (`DEGENERACY_TTR_FLOOR=0.50`, `NEAR_REPETITION_SHARE=0.50`)
+would read DEGENERATE on the model that learned it. Oracle and success gate
+pointed **opposite directions**.
+
+⇒ **ABIDE requires `m ≠ m′` AND a smooth (adjacent) morph.** The diagonal is
+neither ABIDE, CLOSE, nor BREAK — it is the degenerate non-move both the oracle
+and the gate reject. No parameter added (the rate-cap and distinctness-term exits
+were rejected precisely because they add a knob where the ontology answers).
+
+## ⭐ RULING 9 — M-ADJACENCY IS DERIVED AT BLOCK LEVEL, DIRECTED. EXCEPTIONS NAMED.
+
+**Block, not pair.** The 4-way grouping (Direct 3 / Mediated 2 / Irreal 3 /
+Withdrawn 2) gives 4×4 = **16 block-transition decisions**; the 100 ordered cells
+follow by construction. A per-pair derivation makes ~84 of 100 cells "taste
+wearing a grouping's clothes" and is unauditable.
+
+**Directed, not symmetric.** A symmetric relation is a *distance* (spatial); an
+asymmetric one is a *flow* (temporal). Ruling 2 deleted the spatial region with
+*"successive, temporal, not spatial"* — so a **symmetric adjacency matrix
+re-imports the deleted region and is a FAILURE, not a result.**
+
+| from ↓ / to → | Direct | Mediated | Withdrawn | Irreal |
+|---|---|---|---|---|
+| **Direct**    | S†     | **S**    | **S**     | ✗      |
+| **Mediated**  | ✗      | S†       | **S**     | ✗      |
+| **Withdrawn** | ✗      | S        | S†        | **S**  |
+| **Irreal**    | **S**  | ✗        | S         | S†     |
+
+(S† = within-block: non-self morphs smooth, self-morphs excluded by ruling 8.)
+
+Forcing reason per block-transition (for the mutation test):
+- **Direct→Mediated (S):** perception becomes memory/inference — the arrow of time.
+- **Direct→Withdrawn (S):** perception softening into doubt — contact loosening.
+- **Direct→Irreal (✗):** direct contact → un-anchored generated = discontinuity.
+- **Mediated→Withdrawn (S):** memory/inference softening into doubt — along arrow.
+- **Mediated→Direct (✗):** memory → fresh perception runs *against* the arrow.
+- **Mediated→Irreal (✗):** contact-derived → un-anchored = shock.
+- **Withdrawn→Irreal (S):** suspended-contact → absent-contact is continuous. ⚠️ HIGHEST-PRIORITY MUTATION TARGET.
+- **Withdrawn→Mediated (S):** doubt resolving toward a reasoned account.
+- **Withdrawn→Direct (✗):** doubt → fresh perception, against the arrow.
+- **Irreal→Direct (S):** the dream yielding to what is actually there — the waking arrow.
+- **Irreal→Withdrawn (S):** the irreal softening into doubt ("was that real?").
+- **Irreal→Mediated (✗):** dream→memory-as-fact skips withdrawal = discontinuity.
+
+**Named exceptions flagged for mutation-test:**
+1. `hrin`→`nem` (hardening) may be smooth while `nem`→`hrin` (softening) is marked — within-block may itself be directed.
+2. Within-Irreal: `frax`→`mir` reverses affective valence, may be a shock even within-block.
+3. `Withdrawn→Irreal` is the load-bearing non-obvious cell — priority mutation target.
+
+⛔ **AUTHORITATIVE M-FORM SPELLINGS** (v0.1 correction 1), keyed on the frozen
+lexicon: Direct = `xöl` (seen), `hrix` (heard), `ten` (felt) · Mediated = `plun`
+(inferred), `mar` (remembered) · Irreal = `xos` (dreamt), `mir` (wished), `frax`
+(feared) · Withdrawn = `nem` (denied), `hrin` (doubted).
+
+⛔ **MUTATION-TEST RESULT: 6 FORCED / 6 PICKED, and the grouping is the root
+cause.** See `docs/MUTATION_TEST_M_ADJACENCY_2026_08_26.md`. This table is NOT an
+oracle and has NOT been encoded.
+
+## ⭐ RULING 10 — MOVES ARE FORCE-CARRIED AND SURFACE-CHECKABLE. "INSISTENCE" IS DELETED.
+
+v0.1 §2 distinguished ABIDE from CLOSE by "`ka` non-insistently vs `ka`
+insistently." **Insistence is not in the surface** — F has exactly five forms
+(`ka` assert · `ki` ask · `ko` wonder · `ku` urge · `kä` deny) and none marks
+insistence. An unmeasurable distinction cannot be a training target OR an arena
+measurement (the tolerant-parser trap, discourse-costumed). ⇒ **force carries the
+move:**
+
+- **ABIDE** = a flow-continuing force (`ka`/`ki`/`ko`) with a smooth (`m≠m′`, adjacent) morph.
+- **CLOSE** = `ku` (urge).
+- **BREAK** = `kä` (deny) **OR** an evidential discontinuity (non-adjacent morph).
+
+**Precedence (resolves the residual discontinuous+`ku` cell): morph is checked
+BEFORE force.** Discontinuous morph → BREAK, *irrespective of force*. Only within
+a smooth morph does force distinguish ABIDE from CLOSE. Reason: the move is
+*about the flow*; once you break the flow you have left the unfolding, and what
+force you use inside the break is **stance, not move.**
+
+## ⭐ RULING 11 — FLOOR THE JOINT (m→m′, move), NOT THE MARGINALS. AS A FRACTION.
+
+Flat marginals hide starved joint cells (per-form exposure was flat to 1.002×
+while slot-occupancy starved; errors tracked the slot). The multi-turn structural
+unit is **(m→m′, move)**. ⇒ **Coverage floors the JOINT, each cell ≥ a floor
+expressed as a FRACTION of corpus** (never an absolute count — the boost bug a
+fourth time). `check_exposure_fairness` refuses any corpus whose least-seen
+**joint cell** drops below its fraction, **before writing.** Transition-level
+contrastive minimal pairs teach the boundaries directly.
+
+⛔ **The live cell count is 204, not ~300** — 57 smooth pairs × 3 moves + 33 shock
+pairs × 1 (BREAK only, by ruling 10's precedence). The floor binds on CLOSE and
+BREAK, which run ~4× thinner than ABIDE under an abide-dominant ratio. See the
+mutation-test doc, finding 5.
+
+## ⭐ RULING 12 — DEFER §8.1 (THE CONVENTION TABLE). THE DEFERRAL IS CORRECT, NOT MERELY FASTER.
+
+§8.1 is deferred. Not built, not guessed. Reason beyond correction 3: **the
+convention is exactly what the arena measures the DRIFT OF.** Building it in
+*assumes the thing σ_cp exists to discover* — you would measure
+drift-from-a-guessed-bias, confounding "a pact formed" with "the pair drifted off
+an imposed baseline." An unbuilt table (`base_convention` raises) is a **known
+unknown**: the models start with mechanical abide-capacity and *no conventional
+pull*, and the arena watches whether convention *emerges*. That is the honest
+null.
+
+## ⭐ RULING 13 — MIX, DON'T REPLACE. `MULTITURN_FRACTION` IS A NAMED HELD VARIABLE.
+
+The multi-turn corpus **mixes with** the single-turn corpus. Replacing loses the
+training that produced render 82.0 / speak 97.3 → a model that sustains an
+exchange in **degraded Tlön** (useless). ⇒ **`MULTITURN_FRACTION` is a held
+variable, expressed as a FRACTION of corpus (never a row count), required
+argument with no default, recorded in the §0 held-variable ledger.**
+
+## ⭐ RULING 14 (verifier discipline) — THE MUTATION PREREG IS WRITTEN BEFORE THE TABLE IS SCORED.
+
+A plausible adjacency table looks exactly like a forced one, so a verifier that
+reads 100 cells finds them plausible — which is not a review. ⇒ **Pre-register the
+mutation test against the EMPTY table:** for each cell, invert it; does the same
+4-way grouping justify the *opposite* reading? If both directions survive, the
+cell is **picked**, not forced, and is re-derived or marked undetermined.
+
+⛔⛔ **THE BLINDNESS WAS NOT ACHIEVED ON THE FIRST PASS** — ruling 9's table and
+ruling 14's assignment arrived in the same message, so the verifier read all
+twelve cells before writing any prereg. Recorded, not papered over: the 2026-08-26
+pass is **not blind** and its FORCED verdicts carry that caveat. The PICKED
+verdicts survive it (a contaminated verifier is biased *against* finding them).
+**The count of pre-declared cells is permanently lost. Any future adjacency
+derivation gets a blind pass or none.**
+
+## ⭐ RULING 15 — ARENA TEMPERATURE FLOOR RE-DERIVED ON RUN 3 DURING THE TRAINING RENTAL.
+
+The temperature floor (ruling 6, `MIN_ARENA_TEMPERATURE=0.7`, unvalidated) blocks
+*reading* the arena result, not *building* the corpus. Re-derive at real
+conversational depth (`MIN_SWEEP_HISTORY_DEPTH ≥ 3`) **on run 3, during the same
+GPU rental as the multi-turn training run** — one box, both jobs.
+
+## Build order after v0.2 (supersedes v0.1 §8):
+
+1. **Derive M-ADJACENCY** (ruling 9) — ⛔ **NOT COMPLETE.** Table derived, mutation-tested, 6/12 PICKED; the 4-way grouping itself needs the red-team. Blocks the oracle.
+2. **Fix F-LOCAL** (render →≥0.90) — carried, ruling 7.
+3. **Multi-turn corpus** via the ruling-8/9/10/11 oracle, MIXED at `MULTITURN_FRACTION` (ruling 13), §8.1 deferred (ruling 12), held-variable ledger enforced.
+4. **Temperature floor** re-derived on run 3 during the training rental (ruling 15).
+5. **Analytic-toy closure** substantially banked (TOY_05 passed, shape locked, location held-not-locked — ruling 4).
+6. **Arena** — σ_cp, IFT guard, frozen-partner control, temperature ≥ the re-derived floor, shape-not-location pre-declared.
+
+---
+
+# ⭐⭐ RULINGS v0.1 — 2026-08-25. THESE SUPERSEDE THE BODY. READ THEM FIRST.
 
 Nate's rulings on the verification pass below. **The spec body stays verbatim;
 these amend it.** Where a ruling and the body disagree, the ruling governs.
