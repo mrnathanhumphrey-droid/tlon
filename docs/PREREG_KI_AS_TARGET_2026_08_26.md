@@ -223,3 +223,39 @@ the arena.
 
 **Locked before any treatment corpus exists.** The hash of this file at commit
 time is the pre-registration; any later edit is an amendment and says so.
+
+---
+
+# ⛔ AMENDMENT 1 — 2026-08-27, AFTER the run, box down
+
+**The blindness above is spent. Everything before this line is verbatim as locked
+and hash-verified on the box (`9b21976c…`); everything below is post-hoc.** This
+was appended only after the instance was terminated — editing it mid-run would
+have broken the chain of custody, since the throughput gate asserts this file's
+sha256 and `N_COMMITTED.json` records it as provenance.
+
+**Two unspecified-case holes, both found by the run:**
+
+1. **"Budget" was a switch, not a cap.** §5 said *">4 h → fall back to 38/arm"*
+   and never said what to do if the fallback *also* exceeds 4 h. On the box
+   PRIMARY projected 13.12 h and FALLBACK 6.64 h, so the gate selected a fallback
+   that violated the condition that triggered it. Faithful to the text, ~$13 more
+   than the word "budget" implied. **Future preregs need three arms:**
+   `≤ limit → primary`, `> limit → fallback`, `fallback > limit → PICK ONE IN
+   ADVANCE` (hard-stop-and-ask, or proceed-with-acknowledgement).
+
+2. **Degeneracy vs the count lock.** §6/§7 never said what happens when a
+   legitimately generated exchange comes back degenerate. `treat_23` did (18/40
+   distinct), the degeneracy gate refused it, the count lock then refused the arm
+   for having 37 against a committed 38. Resolved by making degeneracy a
+   **reported statistic and a sensitivity arm**, never a silent exclusion — the
+   committed N stays primary. On this data the choice was **moot**: the verdict is
+   BELOW MDE all three ways.
+
+**And the design flaw the result exposes:** §5 sized power over *exchanges*, after
+correcting from *transitions*. Both are the wrong unit. Same-map run-to-run
+variance measured **0.1330** against an expected map effect near 0.10 ⇒ **a
+two-adapter contrast is underpowered in principle**. The unit of independence is
+the **training run**, and a future version needs k ≥ 3 seeds per arm.
+
+**Result: `RESULTS_KI_AS_TARGET_2026_08_27.md` — HALTED at the reproduction check.**

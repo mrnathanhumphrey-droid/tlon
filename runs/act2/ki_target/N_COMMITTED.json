@@ -1,0 +1,38 @@
+{
+  "NOTE": "Committed BEFORE any scored arm. Timing exchanges were DISCARDED and carry no commitment sha, so the analyser rejects them by the same mechanism that enforces the order.",
+  "branch": "FALLBACK",
+  "considered": [
+    {
+      "branch": "PRIMARY",
+      "exchanges_per_arm": 82,
+      "mde": 0.04,
+      "partial_resolvable": true,
+      "projected_s": 47245.14870786667,
+      "total_exchanges": 178
+    },
+    {
+      "branch": "FALLBACK",
+      "exchanges_per_arm": 38,
+      "mde": 0.06,
+      "partial_resolvable": false,
+      "projected_s": 23887.996537685394,
+      "total_exchanges": 90
+    }
+  ],
+  "exchanges_per_arm": 38,
+  "mde": 0.06,
+  "mean_s": 261.88077028592426,
+  "partial_resolvable": false,
+  "prereg": "docs/PREREG_KI_AS_TARGET_2026_08_26.md",
+  "prereg_sha256": "9b21976c520f7e2660b95391fefc1a4355398a375399e4fe7175b3c35a37b0be",
+  "projected_s": 23887.996537685394,
+  "projection_budget_s": 14400,
+  "timing_seconds": [
+    265.42218375205994,
+    258.59480118751526,
+    261.62532591819763
+  ],
+  "turns": 40,
+  "variance_arm_exchanges": 14,
+  "worst_s": 265.42218375205994
+}

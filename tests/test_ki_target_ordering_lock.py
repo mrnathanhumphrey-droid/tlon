@@ -120,13 +120,41 @@ def test_arm_count_ABOVE_the_committed_N_is_also_REFUSED(tmp_path, pool):
                  commitment="OK", expect_n=3)
 
 
-def test_degenerate_exchange_is_REFUSED(tmp_path, pool):
+def test_degenerate_exchange_is_FLAGGED_not_refused(tmp_path, pool):
+    """⛔⛔ AMENDED 2026-08-27 AFTER THE RUN. This originally asserted that a
+    degenerate exchange RAISES — and that collided with the count lock: `treat_23`
+    came back 18/40 distinct, refusing it left 37 against a COMMITTED 38, and the
+    lock then refused the entire arm. Two guards, each right alone, with no
+    specified behaviour for their intersection.
+
+    ⭐ The contract is now: degeneracy is a REPORTED STATISTIC, never a silent
+    exclusion. The committed N stays primary, because "it looked degenerate" is
+    not a distinction the lock can verify, and dropping to taste is exactly the
+    optional stopping the lock exists to prevent."""
     p = tmp_path / "treat_1.json"
     p.write_text(json.dumps({"turns": 40, "commitment_sha": "OK",
                              "transcript_interacting": ["x"] * 40,
                              "transcript_control": ["x"] * 40}),
                  encoding="utf-8")
-    with pytest.raises(Refuse, match="DEGENERATE"):
+    e = exchange_rate(p, ROWS)
+    assert e["degenerate"] is True
+    assert e["distinct_ratio"] == pytest.approx(1 / 40)
+
+
+def test_healthy_exchange_is_not_flagged_degenerate(tmp_path, pool):
+    """The flag must be able to come back False, or it carries no information."""
+    write_arm(tmp_path / "treat_2.json", pool, ki_rate=0.1, sha="OK", seed=99)
+    e = exchange_rate(tmp_path / "treat_2.json", ROWS)
+    assert e["degenerate"] is False and e["distinct_ratio"] > 0.5
+
+
+def test_empty_transcript_is_still_REFUSED(tmp_path):
+    """Relaxing degeneracy must not relax emptiness — there is nothing to score."""
+    p = tmp_path / "treat_3.json"
+    p.write_text(json.dumps({"turns": 0, "commitment_sha": "OK",
+                             "transcript_interacting": [],
+                             "transcript_control": []}), encoding="utf-8")
+    with pytest.raises(Refuse, match="empty"):
         exchange_rate(p, ROWS)
 
 

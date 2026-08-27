@@ -28,6 +28,9 @@ runs/act2/corpus/*.jsonl
 # which IS committed (it carries the provocation sha, the
 # force map, the design zeros, and the held-variable record).
 runs/act2/corpus_mt/*.jsonl
+# and the ki-target probe's two corpora — 27 MB each, seed-pinned and
+# sha-pinned in tools/pipeline_ki_target.sh, so they rebuild byte-identical.
+runs/act2/ki_target/corpus_*/*.jsonl
 
 # ── PYTHON ───────────────────────────────────────────────────────────────
 __pycache__/

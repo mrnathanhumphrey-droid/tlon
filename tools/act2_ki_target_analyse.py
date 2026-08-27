@@ -64,8 +64,30 @@ def exchange_rate(path: pathlib.Path, rows) -> dict:
     """`P(ki | prior ∈ rows)` for ONE exchange, plus its per-prior breakdown."""
     d = json.loads(path.read_text(encoding="utf-8"))
     t = d["transcript_interacting"]
-    if not t or len(set(t)) / len(t) < MIN_DISTINCT_RATIO:
-        raise Refuse(f"{path.name}: DEGENERATE ({len(set(t))}/{len(t)} distinct)")
+    if not t:
+        raise Refuse(f"{path.name}: empty transcript")
+    # ⛔⛔ AMENDMENT 2026-08-27, POST-HOC AND LABELLED AS SUCH.
+    #
+    # This line originally RAISED on any exchange below MIN_DISTINCT_RATIO, and
+    # it collided head-on with the count lock: `treat_23` came back at 18/40
+    # distinct, so refusing it left 37 treatment exchanges against a COMMITTED
+    # 38, and the count lock then refused the whole arm. Two guards I wrote,
+    # both correct in isolation, with **no specified behaviour for a
+    # legitimately-generated exchange that degenerates.** Same class as the
+    # budget-vs-cap hole: an unspecified case in a branch clause, filled by
+    # whatever was written literally. Second instance in one run.
+    #
+    # ⭐ THE RESOLUTION HONOURS THE LOCK RATHER THAN OVERRIDING IT. The committed
+    # N is what the PRIMARY analysis reports — dropping exchanges to taste is
+    # exactly the optional stopping the lock exists to prevent, and "it looked
+    # degenerate" is not a distinction the lock can verify. So degeneracy becomes
+    # a REPORTED STATISTIC and a sensitivity arm, never a silent exclusion.
+    #
+    # ⚠️ AND THE THRESHOLD IS KNIFE-EDGE ON THIS DATA: the treatment arm's tail
+    # runs 0.450, 0.450, 0.500, 0.825, 0.850, 0.975 — a hard cut at 0.50 slices a
+    # continuous distribution mid-tail and would decide 36 vs 37 vs 38 by a
+    # rounding. [[threshold_verdicts_need_a_straddles_branch]].
+    degenerate = len(set(t)) / len(t) < MIN_DISTINCT_RATIO
     f = _forces(t)
     tr = list(zip(f, f[1:]))
     sel = [(p, r) for p, r in tr if p in rows]
@@ -76,6 +98,7 @@ def exchange_rate(path: pathlib.Path, rows) -> dict:
             by[p] = {"n": len(sub),
                      "ki_rate": sum(r == TARGET for r in sub) / len(sub)}
     return {"file": path.name, "commitment_sha": d.get("commitment_sha"),
+            "degenerate": degenerate, "distinct_ratio": len(set(t)) / len(t),
             "n": len(sel), "hit": sum(r == TARGET for _, r in sel),
             "rate": (sum(r == TARGET for _, r in sel) / len(sel)) if sel else None,
             "by_prior": by,
@@ -104,12 +127,17 @@ def load_arm(paths, rows, *, label: str, commitment: str | None,
             f"{label}: {len(ex)} usable exchanges but {expect_n} were COMMITTED. "
             "A count that does not match the commitment is a design chosen after "
             "the fact — report the committed N or amend the prereg, not both.")
+    n_deg = sum(e["degenerate"] for e in ex)
+    if n_deg:
+        print(f"  ⚠️ {label}: {n_deg} of {len(ex)} exchanges below the "
+              f"{MIN_DISTINCT_RATIO} distinct-ratio floor — REPORTED, not "
+              f"dropped (the committed N is what the primary analysis reports)")
     rates = [e["rate"] for e in ex]
     hit = sum(e["hit"] for e in ex)
     n = sum(e["n"] for e in ex)
     return {"label": label, "exchanges": ex, "rates": rates,
             "mean": sum(rates) / len(rates), "pooled": hit / n,
-            "hit": hit, "n": n,
+            "hit": hit, "n": n, "n_degenerate": n_deg,
             "sd": (sum((r - sum(rates) / len(rates)) ** 2 for r in rates)
                    / (len(rates) - 1)) ** 0.5 if len(rates) > 1 else 0.0}
 
