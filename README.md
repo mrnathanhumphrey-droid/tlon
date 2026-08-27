@@ -2,6 +2,12 @@
 
 **A working language with no nouns — and a 7B model that learned to speak it.**
 
+**Weights:** [`keyzersoze04/tlon-7b-lora`](https://huggingface.co/keyzersoze04/tlon-7b-lora)
+· LoRA adapter for `Qwen2.5-7B-Instruct`, MIT.
+⛔ That published adapter is **run 3**, which does *not* clear the project's own
+gate — see [the results](#can-a-model-learn-it). A later model does clear it and
+is not published.
+
 > *"There are no nouns in the conjectural Ursprache of Tlön, from which its
 > present-day languages and dialects derive: there are impersonal verbs, modified
 > by monosyllabic suffixes or prefixes which have the force of adverbs."*
@@ -135,7 +141,7 @@ Comprehension is significant by a paired McNemar test, **p = 1.1 × 10⁻⁶** o
 
 ### The gate has since been cleared — by a later model that is not the one published
 
-The table above is **run 3**, the adapter on HuggingFace, measured at n = 64. It
+The table above is **run 3** — the adapter published at [`keyzersoze04/tlon-7b-lora`](https://huggingface.co/keyzersoze04/tlon-7b-lora) — measured at n = 64. It
 does **not** clear the formal gate: reading passes, writing sits 5.6 points short.
 
 A later model, trained on a **multi-turn** corpus, does clear it — measured at
