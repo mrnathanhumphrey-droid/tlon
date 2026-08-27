@@ -1,0 +1,71 @@
+{
+  "target_mde": 0.04,
+  "power": 0.8,
+  "alpha": 0.05,
+  "turns": 40,
+  "common_uniform_rows": [
+    "ka",
+    "ku",
+    "kä"
+  ],
+  "common_uniform_expectation": 0.2,
+  "stipulated_source": "ko",
+  "replication_source_held": "ku",
+  "observed_baseline": {
+    "rate": 0.10049019607843138,
+    "hit": 41,
+    "n": 408,
+    "exchanges": 14,
+    "per_exchange_n": 29.142857142857142
+  },
+  "design_common_share": {
+    "baseline": 0.6666666666666501,
+    "treatment": 0.6249999999999194
+  },
+  "per_exchange_transitions_treatment": 27.321428571425724,
+  "table": [
+    {
+      "delta": 0.1,
+      "n_per_arm_naive": 199,
+      "exchanges_naive": 8,
+      "exchanges_clustered": 15
+    },
+    {
+      "delta": 0.08,
+      "n_per_arm_naive": 292,
+      "exchanges_naive": 11,
+      "exchanges_clustered": 23
+    },
+    {
+      "delta": 0.06,
+      "n_per_arm_naive": 497,
+      "exchanges_naive": 19,
+      "exchanges_clustered": 38
+    },
+    {
+      "delta": 0.04,
+      "n_per_arm_naive": 1024,
+      "exchanges_naive": 38,
+      "exchanges_clustered": 82
+    },
+    {
+      "delta": 0.03,
+      "n_per_arm_naive": 1777,
+      "exchanges_naive": 66,
+      "exchanges_clustered": 143
+    },
+    {
+      "delta": 0.02,
+      "n_per_arm_naive": 3847,
+      "exchanges_naive": 143,
+      "exchanges_clustered": 317
+    }
+  ],
+  "declared": {
+    "delta": 0.04,
+    "n_per_arm_naive": 1024,
+    "exchanges_naive": 38,
+    "exchanges_clustered": 82,
+    "declared_exchanges_per_arm": 82
+  }
+}
