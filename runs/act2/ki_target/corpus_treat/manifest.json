@@ -1,0 +1,88 @@
+{
+  "map_label": "STIPULATED_KI_TARGET_v1",
+  "map_is_STIPULATED": true,
+  "map_stipulated_cells": {
+    "ko": "ki"
+  },
+  "map_forced_cells": {
+    "ki": "ka",
+    "ko": "ki"
+  },
+  "map_stationary": {
+    "ka": 0.37499999999993716,
+    "ki": 0.2500000000000913,
+    "ko": 0.12499999999999109,
+    "ku": 0.12499999999999109,
+    "kä": 0.12499999999999109
+  },
+  "PRIMARY_MEASURE_ROWS_common_uniform": [
+    "ka",
+    "ku",
+    "kä"
+  ],
+  "PRIMARY_MEASURE_EXPECTATION": 0.2,
+  "multiturn_fraction_requested_BY_COMPUTE": 0.5,
+  "multiturn_fraction_by_rows_DERIVED": 0.2601345269463038,
+  "held_variable": "compute (char/token share); rows are the dial",
+  "n_multiturn_rows": 15895,
+  "n_singleturn_rows": 45208,
+  "singleturn_directions": [
+    "read",
+    "write"
+  ],
+  "chains": 1445,
+  "turns": 12,
+  "seed": 20620,
+  "direction": "provoke",
+  "provocation_sha": "47ea5a7fd712be0c",
+  "uniform_rows": [
+    "ka",
+    "ku",
+    "kä"
+  ],
+  "separation": 0.3906250000000477,
+  "design_zeros": [
+    "ki->ki",
+    "ki->ko",
+    "ki->ku",
+    "ki->kä",
+    "ko->ka",
+    "ko->ko",
+    "ko->ku",
+    "ko->kä"
+  ],
+  "force_pair_counts": {
+    "ka->ka": 1211,
+    "ka->ki": 1126,
+    "ka->ko": 1116,
+    "ka->ku": 1126,
+    "ka->kä": 1123,
+    "ki->ka": 3966,
+    "ko->ki": 2053,
+    "ku->ka": 413,
+    "ku->ki": 416,
+    "ku->ko": 412,
+    "ku->ku": 420,
+    "ku->kä": 444,
+    "kä->ka": 374,
+    "kä->ki": 452,
+    "kä->ko": 419,
+    "kä->ku": 438,
+    "kä->kä": 386
+  },
+  "fairness": {
+    "total_transitions": 15895,
+    "worst_cell": [
+      "kä",
+      "ka"
+    ],
+    "worst_ratio": 0.903818269695505,
+    "floor": 0.01
+  },
+  "NOT_IN_THIS_CORPUS": [
+    "content-adjacency of any kind (C-D2: association is total)",
+    "directional evidential adjacency (empirical, the arena's target)",
+    "non-forced force-map cells (uniform, not guessed)",
+    "the base convention table (§8.1, deferred — base_convention raises)"
+  ]
+}

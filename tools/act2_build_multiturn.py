@@ -74,6 +74,14 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=20620)
     ap.add_argument("--out", default="runs/act2/corpus_mt")
     ap.add_argument("--eval-frac", type=float, default=0.02)
+    ap.add_argument("--map", default="derived",
+                    choices=("derived", "stipulated"),
+                    help="derived = DERIVED_v1 (the real map). stipulated = "
+                         "STIPULATED_KI_TARGET_v1, the MECHANISM PROBE ONLY.")
+    ap.add_argument("--allow-stipulated", action="store_true",
+                    help="⛔ REQUIRED to build a stipulated corpus. An explicit "
+                         "second key, so a probe corpus cannot be produced by a "
+                         "typo in --map.")
     a = ap.parse_args()
 
     if not 0.0 < a.multiturn_fraction < 1.0:
@@ -81,14 +89,35 @@ def main() -> int:
                          "1. Mix, don't replace: single-turn is what produced "
                          "render 82.0 / speak 97.3.")
 
+    # ⛔⛔ TWO KEYS TO BUILD A STIPULATED CORPUS. `--map stipulated` alone is one
+    # character away from `derived` on a command line, and the artifact it
+    # produces is a corpus that LOOKS like every other corpus on disk. The
+    # stipulation must be impossible to reach by accident and impossible to
+    # mistake once reached.
+    fmap = FM.DERIVED_v1 if a.map == "derived" else FM.STIPULATED_KI_TARGET_v1
+    if fmap.is_stipulated and not a.allow_stipulated:
+        raise SystemExit(
+            f"⛔⛔ {fmap.label} carries STIPULATED cell(s) "
+            f"{sorted(fmap.stipulated)}. Pass --allow-stipulated to confirm this "
+            "is the mechanism probe. A stipulated cell is NOT derived, NOT a map "
+            "proposal, and is discarded after the probe REGARDLESS OF OUTCOME.")
+    if not fmap.is_stipulated:
+        fmap.assert_derived("a non-probe corpus")
+
     print(f"MULTI-TURN CORPUS · Markov depth-1 · content-free · "
           f"MULTITURN_FRACTION={a.multiturn_fraction}")
-    print(FM.describe())
-    print(f"\n  separation (max reachable fidelity band): {FM.separation():.4f}")
+    print(fmap.describe())
+    print(f"\n  separation (max reachable fidelity band): "
+          f"{fmap.separation():.4f}")
+    if fmap.is_stipulated:
+        print("  ⚠️  PRIMARY MEASURE EXCLUDES THE STIPULATED ROW. "
+              f"common uniform rows = {list(FM.COMMON_UNIFORM_ROWS)}")
 
     pool_pairs = C1.build(a.pool_n, seed=a.seed)
-    chains = MT.build(a.chains, turns=a.turns, pairs=pool_pairs, seed=a.seed)
-    fair = MT.check_force_pair_fairness(chains)      # refuses BEFORE writing
+    chains = MT.build(a.chains, turns=a.turns, pairs=pool_pairs, seed=a.seed,
+                      fmap=fmap)
+    # refuses BEFORE writing
+    fair = MT.check_force_pair_fairness(chains, fmap=fmap)
     print(f"\n  ✅ force-pair fairness: worst live cell {fair['worst_cell']} at "
           f"{fair['worst_ratio']:.3f} of its row share "
           f"(floor {fair['floor']:.4f})")
@@ -168,6 +197,17 @@ def main() -> int:
 
     counts = MT.transition_counts(chains)
     manifest = {
+        # ⛔⛔ THE MAP'S IDENTITY IS THE FIRST FIELD IN THE MANIFEST, AND THE
+        # STIPULATION IS A BOOLEAN NOT A FOOTNOTE. A corpus that cannot say
+        # which map made it is a corpus nobody can attribute a result to.
+        "map_label": fmap.label,
+        "map_is_STIPULATED": fmap.is_stipulated,
+        "map_stipulated_cells": {s: fmap.forced_cells[s]
+                                 for s in sorted(fmap.stipulated)},
+        "map_forced_cells": dict(fmap.forced_cells),
+        "map_stationary": fmap.stationary(),
+        "PRIMARY_MEASURE_ROWS_common_uniform": list(FM.COMMON_UNIFORM_ROWS),
+        "PRIMARY_MEASURE_EXPECTATION": FM.COMMON_UNIFORM_EXPECTATION,
         "multiturn_fraction_requested_BY_COMPUTE": a.multiturn_fraction,
         "multiturn_fraction_by_rows_DERIVED": len(mt) / len(rows),
         "held_variable": "compute (char/token share); rows are the dial",
@@ -177,11 +217,11 @@ def main() -> int:
         "direction": PV.DIRECTION,
         "provocation_sha": __import__("hashlib").sha256(
             PV.PROVOCATION.encode()).hexdigest()[:16],
-        "forced_cells": FM.FORCED_CELLS,
-        "uniform_rows": [f for f in FM.ORDER if FM.verdict(f) == FM.UNIFORM],
-        "separation": FM.separation(),
+        
+        "uniform_rows": list(fmap.uniform_rows()),
+        "separation": fmap.separation(),
         "design_zeros": [f"{p}->{r}" for p in FM.ORDER for r in FM.ORDER
-                         if FM.row(p)[r] == 0.0],
+                         if fmap.row(p)[r] == 0.0],
         "force_pair_counts": {f"{a_}->{b_}": n for (a_, b_), n in
                               sorted(counts.items())},
         "fairness": {k: v for k, v in fair.items() if k != "counts"},

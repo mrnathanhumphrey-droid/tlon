@@ -45,6 +45,16 @@ class Turn:
     prior_force: str | None
 
 
+def _resolve(fmap):
+    """⭐ MAP-PARAMETERISED, DEFAULTING TO THE DERIVED MAP.
+
+    The mechanism probe needs two maps alive at once. Every generator entry point
+    takes `fmap=None` and resolves to `DERIVED_v1`, so every existing caller keeps
+    the derived map and a stipulated map can only be reached by passing it.
+    """
+    return FM.DERIVED_v1 if fmap is None else fmap
+
+
 def _pool_by_force(pairs) -> dict[str, list[str]]:
     """Surfaces indexed by their force. ⭐ Content-free means the painting is
     drawn from the WHOLE compatible space, never from near the prior."""
@@ -70,14 +80,15 @@ def _pool_by_force(pairs) -> dict[str, list[str]]:
 
 
 def chain(pool: dict[str, list[str]], *, turns: int, rng: random.Random,
-          seed_force: str | None = None) -> list[Turn]:
+          seed_force: str | None = None, fmap=None) -> list[Turn]:
     """One Markov depth-1 exchange. ⭐ `prior_force` is the ONLY thing carried."""
+    m = _resolve(fmap)
     if turns < 2:
         raise MultiturnError("a chain shorter than 2 turns has no transition")
     f = seed_force or rng.choice(FM.ORDER)
     out = [Turn(rng.choice(pool[f]), f, None)]
     for _ in range(turns - 1):
-        dist = FM.row(f)
+        dist = m.row(f)
         nxt = rng.choices(FM.ORDER, weights=[dist[x] for x in FM.ORDER])[0]
         out.append(Turn(rng.choice(pool[nxt]), nxt, f))
         f = nxt
@@ -94,7 +105,8 @@ def transition_counts(chains) -> Counter:
 
 
 def check_force_pair_fairness(chains, *,
-                              floor: float = FORCE_PAIR_FLOOR_FRACTION) -> dict:
+                              floor: float = FORCE_PAIR_FLOOR_FRACTION,
+                              fmap=None) -> dict:
     """⛔⛔ REFUSES BEFORE WRITING, AND STRATIFIES BY ROW.
 
     RULING 11's lesson, carried up: **flat marginals hide starved joint cells.**
@@ -107,13 +119,14 @@ def check_force_pair_fairness(chains, *,
     map assigns probability zero are exempt because they are a DESIGN ZERO, not a
     starved cell. ⭐ A legitimate no-op must not be red.
     """
+    m = _resolve(fmap)
     counts = transition_counts(chains)
     total = sum(counts.values())
     if not total:
         raise MultiturnError("no transitions to check")
     worst = (None, 1.0)
     for prior in FM.ORDER:
-        r = FM.row(prior)
+        r = m.row(prior)
         n_prior = sum(counts[(prior, x)] for x in FM.ORDER)
         if not n_prior:
             raise MultiturnError(
@@ -137,12 +150,14 @@ def check_force_pair_fairness(chains, *,
     return report
 
 
-def build(n_chains: int, *, turns: int, pairs, seed: int) -> list[list[Turn]]:
+def build(n_chains: int, *, turns: int, pairs, seed: int,
+          fmap=None) -> list[list[Turn]]:
     """Generate, then REFUSE if the coverage is starved — before anything writes."""
+    m = _resolve(fmap)
     rng = random.Random(seed)
     pool = _pool_by_force(pairs)
-    chains = [chain(pool, turns=turns, rng=rng) for _ in range(n_chains)]
-    check_force_pair_fairness(chains)
+    chains = [chain(pool, turns=turns, rng=rng, fmap=m) for _ in range(n_chains)]
+    check_force_pair_fairness(chains, fmap=m)
     return chains
 
 

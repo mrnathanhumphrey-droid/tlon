@@ -173,6 +173,10 @@ def main() -> int:
     ap.add_argument("--temperature", type=float,
                     default=F.MIN_ARENA_TEMPERATURE)
     ap.add_argument("--out", default="runs/act2/logs/exchange_probe.json")
+    ap.add_argument("--commitment", default=None,
+                    help="sha256 of N_COMMITTED.json, stamped into the output. "
+                         "The ki-target analyser REFUSES arms without it: an arm "
+                         "made before the branch was committed cannot carry it.")
     a = ap.parse_args()
 
     from act2_backends import LocalBackend
@@ -265,6 +269,17 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(
         {"temperature": a.temperature, "turns": a.turns,
+         # ⛔⛔ THE ORDERING LOCK, CRYPTOGRAPHIC RATHER THAN PROMISED. The
+         # throughput fallback CHANGES THE MDE (0.040 → 0.060), which changes
+         # what counts as PARTIAL vs UNDERPOWERED. That reclassification is
+         # legitimate only if it was triggered by throughput and never touched
+         # by the effect — so the branch must be committed BEFORE any relief
+         # datum exists. This field is the proof: `act2_throughput_gate.py`
+         # writes N_COMMITTED.json, and every arm carries its sha256. **An arm
+         # generated before the commitment existed CANNOT carry its hash**, so
+         # "we saw the effect was weak and wanted the softer MDE" is not
+         # reachable — the analyser refuses any arm whose sha does not match.
+         "commitment_sha": a.commitment,
          "criteria": {"last_quarter_validity": LAST_QUARTER_VALIDITY,
                       "ttr_decline": TTR_DECLINE,
                       "cycle_max_period": CYCLE_MAX_PERIOD,
