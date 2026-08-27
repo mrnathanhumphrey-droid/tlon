@@ -1,0 +1,28 @@
+{
+  "rows": 58694,
+  "tokens": 9409796,
+  "mean": 160.31955566156677,
+  "max_untruncated": 316,
+  "p99": 286,
+  "truncated": 0,
+  "by_direction": {
+    "provoke": {
+      "rows": 15581,
+      "mean": 255.30569283101212
+    },
+    "read": {
+      "rows": 21555,
+      "mean": 129.98311296682905
+    },
+    "write": {
+      "rows": 21558,
+      "mean": 122.00074218387606
+    }
+  },
+  "pruned_over_seq": null,
+  "baseline_tokens": 9542574,
+  "delta_fraction": -0.013914275121157038,
+  "verdict": "HELD",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "seq": 384
+}

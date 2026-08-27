@@ -206,6 +206,16 @@ def main() -> int:
     ap.add_argument("--epochs", type=float, default=2.0)
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--rank", type=int, default=32)
+    # ⛔⛔ WAS HARDCODED `seed=20620`. That made "run the recipe again" impossible
+    # to express: the reproducibility probe needs to RE-ROLL what the recipe
+    # re-rolls, and a welded seed silently pins the trainer while the caller
+    # believes they varied it. Discovered when B-fresh and adapter_mt turned out
+    # to share a seed yet differ by 0.133 on ki-emission — the divergence was the
+    # CORPUS DRAW, not the seed, and the seed could not have been varied anyway.
+    ap.add_argument("--seed", type=int, default=20620,
+                    help="drives the trainer (init, shuffle, dropout). Pair it "
+                         "with act2_build_multiturn.py --seed to re-roll the "
+                         "whole recipe.")
     ap.add_argument("--vram", type=float, default=15.9)
     # ⭐ DIAGNOSIS C IS ONLY ANSWERABLE IF THE CURVE EXISTS. Saving per-epoch
     # gives 2 points, which cannot distinguish "rose then fell" (overtrained,
@@ -303,7 +313,7 @@ def main() -> int:
             save_strategy=("steps" if a.save_steps else "epoch"),
             save_steps=(a.save_steps or 500),
             save_total_limit=(None if a.save_steps else 2),
-            report_to=[], seed=20620))
+            report_to=[], seed=a.seed))
     trainer.train()
     trainer.save_model(a.out)
     print(f"\n⭐ adapter → {a.out}")
