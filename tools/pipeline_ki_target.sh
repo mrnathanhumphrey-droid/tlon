@@ -73,6 +73,19 @@ assert (torch.randn(64, 64, device="cuda") @ torch.randn(64, 64, device="cuda"))
 print("  ✅ chat template rendered; CUDA matmul ran")
 PY
 
+# ── 0.5 · ⛔⛔ DOES THE REPO EVEN PARSE UNDER *THIS* PYTHON? ────────────────
+# This cost a live box. tools/act2_ki_attribution.py used a multi-line
+# expression inside an f-string — PEP 701, fine on the 3.12 used for
+# development, a hard SyntaxError on the 3.10 this image ships. Stage 1 died on
+# a file it could not even import, with the meter running.
+# ⚠️ AND THE LOCAL GUARD FOR IT CANNOT BE ast.parse(feature_version=...): that
+# ACCEPTS the construct (measured). The only authority is the real interpreter,
+# and it costs two seconds.
+step syntax_floor
+python --version | tee -a $LOG
+python -m compileall -q tools/ tlon/ tests/ 2>&1 | tee -a $LOG
+echo "  ✅ every module parses under $(python --version 2>&1)" | tee -a $LOG
+
 # ── 1 · THE SUITE ──────────────────────────────────────────────────────────
 step tests
 python -m pytest tests/ -q 2>&1 | tee -a $LOG | tail -3

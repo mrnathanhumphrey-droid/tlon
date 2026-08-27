@@ -316,8 +316,12 @@ def main() -> int:
     print(f"  {agree}/{usable} exchanges show P({TARGET}|ka) > "
           f"P({TARGET}|other)   = {share:.1%}")
     passed = usable and share >= CROSS_EXCHANGE_FLOOR
-    print(f"  ⇒ {'✅ CONSISTENT' if passed else '⛔ NOT CONSISTENT — the pooled '
-                                                'effect is carried by a minority'}")
+    # ⛔ Built as a plain string, NOT a multi-line expression inside an f-string.
+    # That syntax is PEP 701 and needs Python 3.12; the rented box runs 3.10 and
+    # could not even PARSE the file. See tests/test_python_floor.py.
+    _c = ("✅ CONSISTENT" if passed else
+          "⛔ NOT CONSISTENT — the pooled effect is carried by a minority")
+    print(f"  ⇒ {_c}")
     report["tests"]["C_cross_exchange"] = {
         "agree": agree, "usable": usable, "share": share,
         "floor": CROSS_EXCHANGE_FLOOR, "passed": bool(passed)}
