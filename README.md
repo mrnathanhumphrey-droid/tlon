@@ -133,11 +133,42 @@ legality by the sampler:
 Comprehension is significant by a paired McNemar test, **p = 1.1 × 10⁻⁶** over
 256 items.
 
-The formal gate — ≥ 90 % on *both* directions — **has not been cleared**: reading
-passes at 98.4 %, writing sits 5.6 points short. Reported as open, not as
-success.
+### The gate has since been cleared — by a later model that is not the one published
 
-Total cost of the fine-tuning research: **about $15** of rented A100 time.
+The table above is **run 3**, the adapter on HuggingFace, measured at n = 64. It
+does **not** clear the formal gate: reading passes, writing sits 5.6 points short.
+
+A later model, trained on a **multi-turn** corpus, does clear it — measured at
+n = 256, still cardless and unconstrained:
+
+| | run 3 (published) | multi-turn model |
+|---|---|---|
+| **writes** legal Tlön from English | 84.4 % *(n=64)* | **96.1 %** *(n=256)* |
+| **reads** Tlön and replies legally | 98.4 % *(n=64)* | **100.0 %** *(n=256)* |
+| **comprehends** (4-way forced choice) | 68.0 % | 57.0 % |
+
+⚠️ **Comprehension fell as the other two rose.** That is a real trade, not a
+rounding — and it is the direction a human conversation actually needs. Reported
+because it cuts against the headline.
+
+⛔ **The published adapter is still run 3, the one that does not clear.** Nothing
+that clears the gate has been published.
+
+### And a result that cuts against all of the above
+
+Two adapters built by the **same recipe** — same map, same hyperparameters,
+corpora matched to 0.19 % on tokens — disagree by **0.133** on how often the model
+asks questions rather than asserts. A pre-registered probe **halted at its own
+reproduction check** when it found this: the *measurement* reproduces (t +0.62 on
+re-serving the same weights), but the *pipeline's output* does not (t +6.89
+between two builds).
+
+So several numbers on this page describe **one training run**, not the method.
+Whether the recipe determines the model at all is an open question with a
+pre-registered probe running against it. Written down here rather than left for
+someone else to find.
+
+Cost of the fine-tuning research to date: **about $92** of rented A100 time.
 
 ---
 

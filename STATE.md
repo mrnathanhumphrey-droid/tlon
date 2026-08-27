@@ -1,27 +1,102 @@
 # Tlön — STATE
 
-**Updated 2026-08-26. 1,061 tests. ⭐ ADAPTER PUBLISHED:
-https://huggingface.co/keyzersoze04/tlon-7b-lora** (public, MIT).
+**Updated 2026-08-27. 1,208 tests.** Public repo:
+`github.com/mrnathanhumphrey-droid/tlon`. Adapter (run 3, MIT):
+`huggingface.co/keyzersoze04/tlon-7b-lora`.
 ⛔ HF token lives in `/d/physics_detector/.env` (`HF_TOKEN`, user `keyzersoze04`)
 — there is none in this project's environment.
 
-# ⭐⭐ NEXT: (d) THE MULTI-TURN CORPUS. SPEC INCOMING FROM NATE.
+# ⭐⭐ WHERE THINGS ACTUALLY STAND
 
-⭐ **THE RECON SETTLED THE BUILD ORDER, AND IT DOES NOT REORDER.** With raws
-captured for the first time, **16 of 16** unparseable `speak` generations were
-**valid, round-tripping Tlön** — `parse(render(s)) == s`, zero malformed, ECHO
-**0/16**. **The model was shown a Tlön history, asked to say the next thing, and
-said it in Tlön.** The harness scored that 0 for lacking the `{force, node}`
-envelope.
+**F-LOCAL CLEARS.** It had never cleared before 2026-08-26. Multi-turn training
+did it, measured at n=256, cardless and unconstrained:
 
-⇒ **CONDITIONING IS NOT THE BLOCKER.** The pre-declared conditional was *"if the
-model cannot produce parseable output conditioned on Tlön history, conditioning
-is a lower-level problem than coherence."* It can. **Go straight at coherence**
-(abide / close / break, evidential smoothness). The discourse-layer order stands.
+| adapter | render | speak | comprehension |
+|---|---|---|---|
+| run 3 (⭐ the PUBLISHED one) | 82.0 % | 97.3 % | 71.1 % |
+| `adapter_mt` (multi-turn) | **96.1 %** | **100.0 %** | 57.0 % |
+| `adapter_bfresh` (seed 20620) | **97.3 %** | **100.0 %** | 55.9 % |
+| `adapter_treat` (stipulated map) | **97.7 %** | **100.0 %** | 57.8 % |
 
-⛔ **HELD-VARIABLE LIST IS THE ASK FOR THE SPEC** — every confound in this arc
-came from a variable nobody wrote down. **Boost-total-as-a-fraction must be named
-in it.**
+⚠️ **COMPREHENSION FELL** (71.1 → ~56–58) as render/speak rose. Held inside the
+0.35–0.95 band on purpose so drift stays measurable, but it is a real trade and
+it is the direction a human conversation needs — see "can a human talk to it".
+⛔ **The published adapter is still run 3, which does NOT clear.** Nothing that
+clears has been published.
+
+# ⛔⛔ THE OPEN QUESTION THAT BLOCKS EVERYTHING DOWNSTREAM
+
+**Two adapters built by the same recipe disagree by 0.133 on `ki`-emission.**
+
+The `ki`-as-target probe (`docs/RESULTS_KI_AS_TARGET_2026_08_27.md`) **HALTED at
+its own reproduction check**: `adapter_mt` re-served reproduces itself at t +0.62,
+but a freshly trained adapter on the *same map* scored 0.2520 against the stored
+0.1005 — **t +6.89**. The measurement is stable; the pipeline's output is not.
+
+⇒ The 2026-08-26 "the model will not ask" finding
+(`docs/KI_ATTRIBUTION_2026_08_26.md`) was measured **entirely inside one
+adapter**. Its internal results stand *for that adapter*; what is unsupported is
+that they generalise.
+
+**Attribution found at $0:** the trainer seed was **hardcoded** (`seed=20620`), so
+those two adapters shared a seed — the gap was never seed variance. They
+nonetheless trained on corpora whose multi-turn rows overlap by only **3,229 of
+15,895 (~20 %)**, because code changes between 08-26 and 08-27 re-rolled the draw.
+The generator *is* deterministic given fixed code. `--seed` is now wired through
+`act2_finetune.py`.
+
+## ⏳ RUNNING NOW — the recipe-variance probe
+
+`docs/PREREG_RECIPE_VARIANCE_2026_08_27.md` (sha `76de343c…`, locked before any
+new adapter existed). Four draws of the **same** recipe at seeds
+20620/20621/20622/20623, one map, no treatment arm. Pre-declared bands on the
+spread **S**:
+
+- `S < 0.04` → recipe stable; the earlier gap was the code change
+- `0.04 ≤ S < 0.10` → moderate; map experiments need k ≥ 3 adapters per arm
+- `S ≥ 0.10` → ⛔⛔ the recipe does not determine `ki`-emission, and the asymmetry
+  mechanism is **unfalsifiable by this apparatus**
+
+# ⭐ THE RULE THIS ARC KEEPS RE-LEARNING
+
+**Size and test on the unit the experiment actually re-rolls.** It moved twice:
+transitions → exchanges (caught pre-spend, a 2.2× power overstatement) → **training
+runs** (not caught; it halted a $31 run). A same-condition control arm is the
+cheapest arm in any design and the only one that can say *"this comparison was
+never resolvable."*
+
+# CAN A HUMAN TALK TO IT?
+
+Yes in one direction, weakly in the other. `render` hands the model **English
+prose** and asks for Tlön — 97.3 % means English comprehension is intact.
+`choose` is Tlön → English on a 4-way forced choice with **mutation distractors**
+(deliberately near-misses) and sits ~56 %, against 25 % chance. It is a LoRA on
+Qwen2.5-7B, so base English is untouched — detach the adapter and it is all there.
+⏭ **Never directly measured: free Tlön→English translation.** Cheap, no box.
+
+# COSTS TO DATE
+
+≈ **$15** (runs 1–3) + **$16** (multi-turn) + **$31** (ki-as-target) + **~$30**
+(recipe variance, running) ≈ **$92**.
+
+# ⏭ QUEUE
+
+1. **Read the recipe-variance verdict.** Everything below is gated on it.
+2. If the recipe is unstable: fix the variance source before any further map work.
+3. If stable: the asymmetry mechanism question re-opens (`ku→ki` is the pre-named
+   replication and must stay a replication).
+4. Free Tlön→English eval — the human-facing gap, $0.
+5. **Still no drift number. σ_cp has never been measured.**
+6. Deferred: §8.1 base convention (`base_convention` raises); the 32B track;
+   `NEAR_REPETITION_CEILING_SINGLE_TURN_NULL` recalibration; HARDEN 4.
+
+---
+
+# ⏮ HISTORICAL — everything below predates 2026-08-27 and is kept as the record
+
+⚠️ Statements below such as *"F-LOCAL has never cleared"* and *"NEXT: the
+multi-turn corpus"* were true when written and are now superseded by the head of
+this file.
 
 # THE FIVE RUNS
 
