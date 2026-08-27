@@ -1,0 +1,101 @@
+{
+  "rows": [
+    {
+      "temp": 0.0,
+      "distinct": 1,
+      "n": 16,
+      "valid": 7,
+      "valid_rate": 0.4375,
+      "can_vary": false,
+      "legal": false,
+      "reading": "unusable — both"
+    },
+    {
+      "temp": 0.2,
+      "distinct": 1,
+      "n": 16,
+      "valid": 7,
+      "valid_rate": 0.4375,
+      "can_vary": false,
+      "legal": false,
+      "reading": "unusable — both"
+    },
+    {
+      "temp": 0.4,
+      "distinct": 1,
+      "n": 16,
+      "valid": 6,
+      "valid_rate": 0.375,
+      "can_vary": false,
+      "legal": false,
+      "reading": "unusable — both"
+    },
+    {
+      "temp": 0.6,
+      "distinct": 5,
+      "n": 16,
+      "valid": 8,
+      "valid_rate": 0.5,
+      "can_vary": true,
+      "legal": false,
+      "reading": "too hot — illegal emissions"
+    },
+    {
+      "temp": 0.7,
+      "distinct": 5,
+      "n": 16,
+      "valid": 5,
+      "valid_rate": 0.3125,
+      "can_vary": true,
+      "legal": false,
+      "reading": "too hot — illegal emissions"
+    },
+    {
+      "temp": 0.8,
+      "distinct": 6,
+      "n": 16,
+      "valid": 4,
+      "valid_rate": 0.25,
+      "can_vary": true,
+      "legal": false,
+      "reading": "too hot — illegal emissions"
+    },
+    {
+      "temp": 1.0,
+      "distinct": 10,
+      "n": 16,
+      "valid": 8,
+      "valid_rate": 0.5,
+      "can_vary": true,
+      "legal": false,
+      "reading": "too hot — illegal emissions"
+    },
+    {
+      "temp": 1.2,
+      "distinct": 13,
+      "n": 16,
+      "valid": 6,
+      "valid_rate": 0.375,
+      "can_vary": true,
+      "legal": false,
+      "reading": "too hot — illegal emissions"
+    },
+    {
+      "temp": 1.5,
+      "distinct": 13,
+      "n": 16,
+      "valid": 4,
+      "valid_rate": 0.25,
+      "can_vary": true,
+      "legal": false,
+      "reading": "too hot — illegal emissions"
+    }
+  ],
+  "measured_floor": null,
+  "declared_floor": 0.7,
+  "declared_floor_provenance": "PLACEHOLDER — UNVALIDATED. The derivation sweep probed at history-depth 1 (the deterministic-echo regime) and its verdict is an artefact of the probe, not a fact about the model. Re-derive at conversational depth before any σ_cp claim rests on it.",
+  "declared_floor_is_measured": false,
+  "history_depth": 3,
+  "min_sweep_history_depth": 3,
+  "min_validity": 0.9
+}

@@ -1,0 +1,86 @@
+{
+  "target": "ki",
+  "tests": {
+    "A_substrate": {
+      "verdict": "VOID",
+      "why": "⛔ VOID — no source exists. harden/exchange_probe.json is DEGENERATE (7 distinct / 40 turns, all force ki, echoing a ki-final seed); arm3 emitted illegal force 'u' at validity 0.000; temp_floor kept counts not surfaces; flocal/speak_recon fix the force via the English prompt so the model never chose it."
+    },
+    "B_ka_coupling": {
+      "verdict": "GLOBAL-FLAT REFUTED",
+      "post_hoc": true,
+      "permutation_p": 0.009449527523623819,
+      "mde_80": 0.08,
+      "pivot": "ka",
+      "others": [
+        "ko",
+        "ku",
+        "kä"
+      ],
+      "target": "ki",
+      "pivot_hit": 25,
+      "pivot_n": 181,
+      "other_hit": 21,
+      "other_n": 319,
+      "pivot_rate": 0.13812154696132597,
+      "other_rate": 0.06583072100313479
+    },
+    "C_cross_exchange": {
+      "agree": 12,
+      "usable": 14,
+      "share": 0.8571428571428571,
+      "floor": 0.7142857142857143,
+      "passed": true
+    },
+    "D_heldout": {
+      "verdict": "UNDERPOWERED_BY_CONSTRUCTION",
+      "mde_80": 0.48,
+      "pivot": "ka",
+      "others": [
+        "ko",
+        "ku",
+        "kä"
+      ],
+      "target": "ki",
+      "pivot_hit": 2,
+      "pivot_n": 9,
+      "other_hit": 8,
+      "other_n": 16,
+      "pivot_rate": 0.2222222222222222,
+      "other_rate": 0.5
+    },
+    "E_window": {
+      "post_hoc": true,
+      "single_exchange": true,
+      "arm2_mean": 0.0964612037806617,
+      "arm2_sd": 0.07470613041453578,
+      "arm2_range": [
+        0.0,
+        0.25806451612903225
+      ],
+      "arm1_rate": 0.4,
+      "outside_range": true
+    }
+  },
+  "confound_surface_length": {
+    "ka": {
+      "n": 5157,
+      "mean_chars": 28.50533255768858
+    },
+    "ki": {
+      "n": 2542,
+      "mean_chars": 28.980330448465775
+    },
+    "ko": {
+      "n": 2561,
+      "mean_chars": 29.39867239359625
+    },
+    "ku": {
+      "n": 2643,
+      "mean_chars": 28.711691259931897
+    },
+    "kä": {
+      "n": 2670,
+      "mean_chars": 28.467415730337077
+    }
+  }
+}
