@@ -1,3 +1,47 @@
+# 🔴 RUN IN FLIGHT — read this first
+
+**A box is LIVE and unattended.** Do not start new work until it is resolved.
+
+```
+instance  13364f3ed5254efbade3655499803371   name tlon-var-decomp
+ip        129.80.209.3          key ~/.ssh/tlon      user ubuntu
+started   2026-08-28 12:28 UTC  A100-SXM4-40GB
+script    tools/pipeline_variance_decompose.sh   (setsid, survives ssh drop)
+stdout    ~/pipeline_stdout.log        sentinel  ~/DONE  or  ~/FAILED
+prereg    docs/PREREG_VARIANCE_DECOMPOSE_2026_08_28.md  sha 9bd4a629…  (verified on box)
+```
+
+**Progress at last check (16:28 UTC):** corpus pinned BYTE-IDENTICAL to B-fresh's
+(`263fe3c8…` — the gate that makes the decomposition valid), token gate HELD,
+VRAM fits, `t30001` trained (13,050 s, loss 0.2373) and cleared F-LOCAL
+(render 0.953 / speak 1.000), window-1 exchanges running. `t30002` and `t30003`
+still to train. ETA ≈ 05:30 UTC 2026-08-29.
+
+**Expected shape:** 3 adapters × (train ≈3h37m + F-LOCAL + 14 window-1 + 8
+accumulating exchanges), then `tools/act2_variance_decompose.py`.
+
+## ⛔ WHEN IT FINISHES — in this order
+
+1. **PULL `runs/act2/var_decomp/pipeline_variance_decompose.log` FIRST.** Its
+   absence on an earlier run is why throughput had to become a gate; timings die
+   with the box.
+2. Pull `~/pipeline_stdout.log`, `runs/act2/var_decomp/logs/*`,
+   `decompose.json`, `corpus_fixed/token_budget.json`, and the three adapters
+   (`adapter_model.safetensors` + `adapter_config.json`) — **md5-verify the
+   adapters against the box before killing it.**
+3. `curl -s -u "$LAMBDA_API_KEY:" -X POST …/instance-operations/terminate`
+   with that id, then confirm the fleet is empty.
+4. Analyse LOCALLY. ⛔ Zero analysis on a live box.
+
+⚠️ **If `~/FAILED` exists:** read the whole stdout log — **never `tail` it**; a
+truncated traceback cost a session's diagnosis once already.
+
+⚠️ Corpora under `runs/act2/*/corpus_*/*.jsonl` are gitignored (27 MB each,
+seed-deterministic). Cost ledgers are gitignored too — **do not reintroduce spend
+figures into public files.**
+
+---
+
 # Tlön — STATE
 
 **Updated 2026-08-27. 1,208 tests.** Public repo:
