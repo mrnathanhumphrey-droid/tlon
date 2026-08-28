@@ -61,7 +61,7 @@ spread **S**:
 
 **Size and test on the unit the experiment actually re-rolls.** It moved twice:
 transitions → exchanges (caught pre-spend, a 2.2× power overstatement) → **training
-runs** (not caught; it halted a $31 run). A same-condition control arm is the
+runs** (not caught; it halted a full run). A same-condition control arm is the
 cheapest arm in any design and the only one that can say *"this comparison was
 never resolvable."*
 
@@ -73,11 +73,6 @@ prose** and asks for Tlön — 97.3 % means English comprehension is intact.
 (deliberately near-misses) and sits ~56 %, against 25 % chance. It is a LoRA on
 Qwen2.5-7B, so base English is untouched — detach the adapter and it is all there.
 ⏭ **Never directly measured: free Tlön→English translation.** Cheap, no box.
-
-# COSTS TO DATE
-
-≈ **$15** (runs 1–3) + **$16** (multi-turn) + **$31** (ki-as-target) + **~$30**
-(recipe variance, running) ≈ **$92**.
 
 # ⏭ QUEUE
 
@@ -169,7 +164,7 @@ focus-boost break.** ⛔ **Do not run forensics on a symptom of a known confound
 before removing the confound** — the next clean run re-measures it for free.
 7 checkpoints saved at `runs/act2/tlon_run5/checkpoints/` if it survives.
 
-**Spend: ≈$16 all-in. $1,500 contingency untouched. No instances running.**
+**Spend: ledgered privately. Contingency untouched. No instances running.**
 
 ---
 
@@ -178,7 +173,7 @@ before removing the confound** — the next clean run re-measures it for free.
 PRODUCT — the open-world chatbot (the freeware door).**
 
 ✅ **ACT 2 TIER-A DONE. THE 7B READS AND WRITES TLÖN NATIVELY.** Four Lambda
-runs, every instance TERMINATED, ≈ **$23** total. **$1,500 untouched.**
+runs, every instance TERMINATED. **Contingency untouched.**
 ⭐ **PUBLIC: https://github.com/mrnathanhumphrey-droid/tlon** (MIT, all pushed).
 
 | | baseline | run 3 | at n=256 |
@@ -193,7 +188,7 @@ recover pairing you did not record. Per-item outcomes are now ledgered.
 
 ⛔ **THE GATE IS RESOLVED AND RENDER FAILS: 82.0 %, CI ENTIRELY BELOW 0.90.**
 At n=64 it was formally UNDECIDABLE (CI [73.1, 92.2] contained the bar) — the
-extra $2 of measurement was the difference between knowing and guessing.
+extra measurement was the difference between knowing and guessing.
 
 # ⛔⛔ THE ARENA IS NOT READY, AND WE KNOW EXACTLY WHY
 
@@ -321,11 +316,11 @@ none should be invented.
 ~84 %. Same shape HARDEN 2 fixed one level up.
 
 ⛔ **AND I DISCARDED THE CHECKPOINTS.** Diagnostic C exists to find a better
-checkpoint; I dropped its 7.4 GB subject to save $0.25 and terminated. If an
+checkpoint; I dropped its 7.4 GB subject to save a few minutes of meter and terminated. If an
 earlier checkpoint is better, that is **unrecoverable without retraining.**
 
-**Cost ≈ $6.1** (~45 min of it four environment failures). Act 2 ≈ **$29**.
-**$1,500 contingency untouched.** Instance TERMINATED.
+(~45 min of it four environment failures.)
+**Contingency untouched.** Instance TERMINATED.
 
 # ⛔⛔ §8.2 — THE NAMED INSTRUMENT WAS THE WRONG ONE (D16)
 
@@ -563,7 +558,7 @@ a covariate, which made F4 fire on *every* cell including the no-drift one.
 
 ## ⭐⭐ STEP 2 PRE-FLIGHT RAN — `docs/FINDINGS_ACT2_F1_2026_08_24.md`
 
-**Sonnet 5 · 48 calls · $0.1043 of a $1.00 hard ceiling · ledgered.** Act 2's
+**Sonnet 5 · 48 calls · well inside its hard ceiling · ledgered.** Act 2's
 first spend, and it bought a stop.
 
 | | |
@@ -640,7 +635,7 @@ Nate ruled **Tier A · 7–8B QLoRA · bitsandbytes path · "Go — run it when 
 | **corpus** | ✅ 40k train / 1k eval, worst-form exposure **664**, 9/9 classes complete |
 | **`LocalBackend` → F-LOCAL** | ✅ smoked end-to-end on a cached 1.5B — read **0%/0%/0%**, which is the CORRECT answer for an untuned cardless base model and is the baseline the fine-tune must move |
 | **backbone** | ⏳ `Qwen/Qwen2.5-7B-Instruct` (**Apache-2.0** — the installation makes licence a hard constraint), ~8 of ~15 GiB |
-| **spend** | **$0 tonight.** Act 2 total still **$0.1043**, all of it the hosted pre-flight. |
+| **spend** | **No rental tonight.** Act 2 spend so far is all hosted pre-flight. |
 
 ⭐ **TWO MEASUREMENTS IMPROVED THE PLAN.** Real corpus tokens are **110 mean /
 181 max**, not the ~200 assumed — so `seq=192` truncates nothing and batch can
@@ -678,7 +673,7 @@ failures recorded. Widen before building the corpus.
 (7–8B QLoRA) fits with headroom and is **likely $0, overnight, on owned
 hardware** — training seqs are ~200 tok, and **both arena speakers are the same
 weights with different contexts**, so one served instance covers both. **The
-$1,500 Lambda budget looks over-provisioned**; hold it for Tier C.
+the contingency Lambda budget looks over-provisioned**; hold it for Tier C.
 
 ⛔⛔ **TRAP THAT WOULD MAKE THE FALSIFIER VACUOUS:** grammar-constrained decoding
 makes invalid emission *impossible* ⇒ validity 100 % **by construction** and
@@ -709,7 +704,7 @@ remains wanted at all.
 | | |
 |---|---|
 | **Route A** | hosted proposer proposes a Scene; **our parser is the only safety boundary** — class membership, every grammar bound, and `parse(render(s)) == s`. Nothing illegal can reach the screen. One retry carrying the parser's own complaint; a second failure is REFUSED, never repaired. |
-| **cost** | **~$0.025/message** (Sonnet 5). 2,000 messages ≈ $50. **First non-$0.00 spend in the project's history — deliberate, bounded, and it buys Route B's corpus.** |
+| **cost** | per-message hosted rate (Sonnet 5). **First non-zero spend in the project's history — deliberate, bounded, and it buys Route B's corpus.** |
 | **Route B** | not started. Milestone declared in `corpus.py` **before** the corpus existed: **2,000 distinct English AND 100 of 156 roots**, counted on `translate` rows only. `/corpus` reports it. |
 | **coverage edge** | **THE FEATURE.** Object-heavy English has no denotation (only 14/156 roots touch human/social content), so the bot names what it let go: *"Tlön would not hold 'landlord', 'rent' as things."* Revelation, never apology. `refused_objects` + `note` are **REQUIRED IN THE SCHEMA** — they were optional at first launch and came back empty on all three live renders. |
 | **B2 done** | opacity-first · `/reveal` gated by *"are you sure you want to ruin the puzzle?"* · **`/compat` — the compatibility-set reveal** · **HARDENED: both claims red-proofed, input boundary swept** (below) |
@@ -813,7 +808,7 @@ MEANING GOT OPPOSITE VERDICTS.** `orient: [fen, nar]` rendered; `orient: [nar,
 fen]` was **REFUSED** — on list order alone. Same for sibling clauses. The
 grammar itself calls both slots order-insensitive (`canon_node` sorts them,
 `render` emits them sorted, `fiber_size` counts the permutations as ONE scene,
-Q3 = 1). Every occurrence **burned a hosted retry (~$0.025)**, and a model
+Q3 = 1). Every occurrence **burned a hosted retry**, and a model
 unlucky twice showed a visitor *"Tlön could not hold that"* for input Tlön holds
 perfectly well. `_node` now canonicalises both slots.
 ⭐ **THIS IS NOT A REPAIR AND THE DISTINCTION IS ASSERTED, NOT ARGUED**: repair

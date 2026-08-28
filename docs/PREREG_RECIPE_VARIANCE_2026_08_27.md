@@ -135,7 +135,7 @@ first**; pull-and-kill at DONE.
 there is no fallback that preserves the estimate — dropping adapters is the one
 thing that would destroy it. Cost is accepted up front instead of branched on.
 *(Last run's "budget" clause was a switch, not a cap, and the missing third arm
-cost ~$13.)*
+carried a real cost.)*
 
 ## 6 · WHAT THIS DOES NOT DO
 

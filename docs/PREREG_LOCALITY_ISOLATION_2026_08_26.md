@@ -17,8 +17,7 @@ Locality asserts two separable things. **Only the second costs money.**
    scenes does this well.
 
 **This test is claim 1 only, on run 3, untrained.** If claim 1 is false there is
-nothing for the corpus to exploit and the architecture is refuted for ~$1 instead
-of ~$15 plus a week.
+nothing for the corpus to exploit and the architecture is refuted cheaply instead of expensively, plus a week.
 
 ## ⛔⛔ WHAT WE ALREADY MEASURED, WRITTEN DOWN BEFORE THE RUN
 

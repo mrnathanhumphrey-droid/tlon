@@ -640,7 +640,7 @@ up — a verdict keyed to a metric that cannot resolve the difference it reports
 
 - **I did not pull the checkpoints.** Diagnostic C exists to identify a better
   checkpoint; I then discarded the 7.4 GB of checkpoints it evaluates to save
-  ~$0.25 of meter, and terminated. If an earlier checkpoint is better, **that is
+  a few minutes of meter, and terminated. If an earlier checkpoint is better, **that is
   now unrecoverable without retraining.** Running the diagnostic and throwing
   away its subject was a mistake, not a trade-off.
 - **I claimed invented forms were "a new category not in run 3 at all."** Wrong:
@@ -651,9 +651,9 @@ up — a verdict keyed to a metric that cannot resolve the difference it reports
 
 ### COST
 
-**~3.05 h × $1.99 = ≈ $6.1**, of which ~45 min was four environment failures
-(Pillow, jinja2, numpy, plus a relaunch). Act 2 total **≈ $29**.
-**The $1,500 contingency is still untouched.** Instance TERMINATED, verified.
+**~3.05 h of rented time**, of which ~45 min was four environment failures
+(Pillow, jinja2, numpy, plus a relaunch).
+Instance TERMINATED, verified.
 
 ---
 
@@ -682,10 +682,10 @@ behaviour is **caught** (2 tests fail, file restored byte-identical).
 **Never terminate an instance while checkpoints are un-analysed or their
 diagnostic output un-banked.** Run 4 ran Diagnostic C — whose entire purpose is
 *find a better checkpoint* — and then deleted the 7.4 GB of checkpoints it
-evaluates to save **$0.25** of meter before terminating. If an earlier checkpoint
+evaluates to save a few minutes of meter before terminating. If an earlier checkpoint
 is better, that is now unrecoverable without retraining.
 
-⭐ **$0.25 IS NEVER WORTH AN UNRECOVERABLE SUBJECT.** The asymmetry is total: the
+⭐ **A FEW MINUTES OF METER IS NEVER WORTH AN UNRECOVERABLE SUBJECT.** The asymmetry is total: the
 saving is bounded and trivial, the loss is unbounded and permanent. Running a
 diagnostic and discarding its subject is not a trade-off, it is a mistake.
 
@@ -862,7 +862,7 @@ be CLAIMED, not what happens next.
   code would have called it a trend.
 - ✅ **7 of 11 checkpoints saved** (5.6 GB) before terminate, per D18.
 - ⛔ **run 3 remains the best adapter.** It is what should go to HuggingFace.
-- **Cost:** Act 2 total ≈ **$16** across all runs (Nate's figure). Contingency
+- **Cost:** ledgered privately, not in this repo. Contingency
   untouched. Instance TERMINATED, verified.
 - ⛔ **I left the box idle while analysing locally.** Nate caught it. The rule is:
   pull, terminate, THEN analyse — nothing in the analysis needed the machine.

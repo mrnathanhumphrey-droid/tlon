@@ -174,7 +174,7 @@ Whether the recipe determines the model at all is an open question with a
 pre-registered probe running against it. Written down here rather than left for
 someone else to find.
 
-Cost of the fine-tuning research to date: **about $92** of rented A100 time.
+The fine-tuning research runs on rented A100 time; spend is ledgered privately.
 
 ---
 

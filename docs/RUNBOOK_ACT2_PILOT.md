@@ -1,6 +1,6 @@
 # RUNBOOK — Act 2 Tier-A pilot. ✅ **COMPLETE. NO METER RUNNING.**
 
-**Three runs, all instances terminated, ~$14.60 of A100 time.** Kept as the
+**Three runs, all instances terminated.** Kept as the
 operational record of how the results in the README were produced, and as the
 procedure for the next rented run.
 
@@ -19,7 +19,7 @@ tense.** Everything about a running instance applies only while one exists.
 |---|---|
 | **instance** | **TLON** · `<INSTANCE-ID>` · `<INSTANCE-IP>` |
 | **type** | `gpu_1x_a100_sxm4` — 1× A100 40 GB SXM4, us-east-1 |
-| **rate** | **$1.99/hr — ~$48/day if it is left up** |
+| **rate** | **billed hourly — a full day if it is left up** |
 | **key** | `~/.ssh/tlon` (ed25519, generated for this; registered with Lambda as `tlon`) |
 | **login** | `ssh -i ~/.ssh/tlon ubuntu@<INSTANCE-IP>` |
 
@@ -60,7 +60,7 @@ exactly like an auth failure. The key is fine; the client was the problem.
 | **run 1** | ⛔ **UNINFORMATIVE** — corpus was serialized in the canonical HASHING dialect, not the proposal schema (39 of 44 render failures) |
 | **run 2** | render **81.2 %** · speak **9.4 %** — dialect fixed; the corpus trained a WRITER and the gate tested a READER |
 | **run 3** | ⭐ render **84.4 %** · speak **98.4 %** · comprehension **68.0 %** — read direction added |
-| **spend** | hosted **$0.1043** + Lambda **≈ $14.60**. **The $1,500 contingency was never touched.** |
+| **spend** | hosted + Lambda, ledgered privately. **The contingency was never touched.** |
 
 **Pipeline:** `~/pipeline.sh` on the box, `nohup`, logs to
 `~/tlon/runs/act2/logs/`. It writes **`DONE` only on success** and **`FAILED`

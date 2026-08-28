@@ -1,6 +1,6 @@
 # ACT 2 — F1 + §8 pre-flight. PREREG `20620b7c`
 
-**Ran:** 2026-08-24 · `claude-sonnet-5` · 48 calls · **$0.1043 of a $1.00 hard
+**Ran:** 2026-08-24 · `claude-sonnet-5` · 48 calls · **well inside a hard
 ceiling** · battery `d6f1ae1040d6910d` · lexicon `e2b85270…` · ledgered to
 `runs/act2/ledger.jsonl`.
 

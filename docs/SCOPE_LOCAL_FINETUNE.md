@@ -216,7 +216,7 @@ throughput that is **hours per epoch, not days**.
 
 ⛔ **THOSE THROUGHPUT FIGURES ARE ESTIMATES AND ARE NOT LOAD-BEARING.** The
 honest next action is a **$0 measured pilot**: one short QLoRA run on owned
-hardware to record real tokens/sec and real peak VRAM. **The $1,500 Lambda budget
+hardware to record real tokens/sec and real peak VRAM. **The the contingency Lambda budget
 appears over-provisioned for this step** and should be held for Tier C or for
 running axis settings in parallel — not spent because it exists.
 
@@ -325,5 +325,5 @@ between turns without the run becoming a study of training instability.
 1. **Backbone tier** (A: 7–8B, likely $0 on owned hardware · B: 12–14B · C: Lambda).
 2. Whether to run the **$0 measured pilot** — one short QLoRA on the 5070 Ti for
    real tokens/sec and peak VRAM — before ruling on tier.
-3. **Hold the $1,500** unless Tier C is reached. It is not to be spent because it
+3. **Hold the the contingency** unless Tier C is reached. It is not to be spent because it
    exists.

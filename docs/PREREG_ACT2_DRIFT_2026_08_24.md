@@ -35,7 +35,7 @@ phenomenon the brief correctly wants measured first — but it is **not** the sa
 object as post-fine-tune drift, and the two must never be reported under one
 word. ⇒ Caveat in the name, never in prose beside it:
 `D_ctx` (in-context, prompted, cheap) and `D_w` (weight-level, post-fine-tune,
-the $1500 class). Every number, table and filename carries its subscript.
+the the contingency class). Every number, table and filename carries its subscript.
 
 **0.3 — A PROBE ADMINISTERED WITHOUT THE CONVERSATION IN CONTEXT MEASURES THE
 BASE MODEL.** In the prompted pass the model at epoch t and the model at epoch 0
@@ -302,7 +302,7 @@ block, and the retractions.
 | 0 | **this document** | **$0** | — |
 | 1 | harness: probe battery, drift observable, **control first**, axis toggles | $0 (local) | this doc LOCKED |
 | 2 | **inference-only pass** — prompted + validated, `D_ctx` only | cheap, local hardware | harness green, control runs first |
-| 3 | fine-tune for `D_w` | **$1500 class** | ⛔ **ONLY IF step 2 RECOVERS** (§5.4) |
+| 3 | fine-tune for `D_w` | **the contingency class** | ⛔ **ONLY IF step 2 RECOVERS** (§5.4) |
 | 4 | installation | — | rides on **the axis that recovered**, never the one hoped for |
 
 ⛔ **NO FINE-TUNING SPEND UNTIL THE CHEAP PROMPTED PASS SHOWS DRIFT EXCEEDING

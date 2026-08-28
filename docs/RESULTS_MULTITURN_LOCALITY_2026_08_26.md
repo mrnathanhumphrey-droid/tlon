@@ -1,6 +1,6 @@
 # RESULTS — the multi-turn locality run
 
-**Box `6eccef0e` terminated. ≈$16, ~7h15m wall. Corpus sha `5e796d5a`, adapter
+**Box `6eccef0e` terminated. ~7h15m wall. Corpus sha `5e796d5a`, adapter
 `runs/act2/adapter_mt`, artifacts `runs/act2/logs/mt_run/` (31 files).**
 
 ## ⭐⭐ F-LOCAL CLEARS — first time in the project

@@ -2,7 +2,7 @@
 
 Prereg `docs/PREREG_KI_AS_TARGET_2026_08_26.md`, sha256 `9b21976c…`, locked before
 any treatment corpus existed and hash-verified on the box at runtime.
-Commitment `61059a06…`. Box `42269df0…`, **15h31m, ≈$30.90**, terminated.
+Commitment `61059a06…`. Box `42269df0…`, **15h31m**, terminated.
 
 ---
 

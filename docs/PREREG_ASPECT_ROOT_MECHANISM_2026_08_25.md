@@ -95,7 +95,7 @@ happens to walk is a test shaped by its instrument.
 
 A count-based test needs ~4× the errors to halve the relative noise ⇒ **n≈1024**
 rather than 256. On the run-3 gate's measured rate that is roughly **4× the gate
-time (~$1–2 more)**. ⭐ **Not spent now, and named so it is a decision rather
+time (a little more)**. ⭐ **Not spent now, and named so it is a decision rather
 than an omission.**
 
 ## Locked

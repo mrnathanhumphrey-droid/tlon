@@ -50,3 +50,10 @@ venv/
 # !runs/act2/**/logs/          the measured output of every run
 # !runs/act2/**/ledger.jsonl   the spend + result ledger
 # !runs/act2/corpus/meta.json  the exposure report the corpus was built to
+
+# ── COST LEDGERS — NOT PUBLIC ────────────────────────────────────────────
+# Spend accounting is Nate's, not the research record. The ledgers stay on the
+# machine; nothing about a result depends on what it cost.
+**/ledger_tlon.jsonl
+**/ledger_harden.jsonl
+runs/act2/ledger.jsonl

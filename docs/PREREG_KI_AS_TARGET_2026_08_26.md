@@ -239,7 +239,7 @@ sha256 and `N_COMMITTED.json` records it as provenance.
 1. **"Budget" was a switch, not a cap.** §5 said *">4 h → fall back to 38/arm"*
    and never said what to do if the fallback *also* exceeds 4 h. On the box
    PRIMARY projected 13.12 h and FALLBACK 6.64 h, so the gate selected a fallback
-   that violated the condition that triggered it. Faithful to the text, ~$13 more
+   that violated the condition that triggered it. Faithful to the text, and more costly
    than the word "budget" implied. **Future preregs need three arms:**
    `≤ limit → primary`, `> limit → fallback`, `fallback > limit → PICK ONE IN
    ADVANCE` (hard-stop-and-ask, or proceed-with-acknowledgement).
