@@ -45,17 +45,33 @@ nonetheless trained on corpora whose multi-turn rows overlap by only **3,229 of
 The generator *is* deterministic given fixed code. `--seed` is now wired through
 `act2_finetune.py`.
 
-## ⏳ RUNNING NOW — the recipe-variance probe
+## ⛔⛔ ANSWERED 2026-08-28 — THE RECIPE DOES NOT DETERMINE ki-EMISSION
 
-`docs/PREREG_RECIPE_VARIANCE_2026_08_27.md` (sha `76de343c…`, locked before any
-new adapter existed). Four draws of the **same** recipe at seeds
-20620/20621/20622/20623, one map, no treatment arm. Pre-declared bands on the
-spread **S**:
+`docs/RESULTS_RECIPE_VARIANCE_2026_08_28.md` — **S = 0.1549**, against a
+pre-declared unstable band of ≥ 0.10.
 
-- `S < 0.04` → recipe stable; the earlier gap was the code change
-- `0.04 ≤ S < 0.10` → moderate; map experiments need k ≥ 3 adapters per arm
-- `S ≥ 0.10` → ⛔⛔ the recipe does not determine `ki`-emission, and the asymmetry
-  mechanism is **unfalsifiable by this apparatus**
+```
+s20621      0.0971   "suppressed"
+adapter_mt  0.1027   "suppressed"  (historical, different code, not in S)
+s20623      0.2071   at expectation
+s20622      0.2368
+s20620      0.2520
+              0.20 = corpus expectation
+between-adapter sd 0.0700  vs  within-adapter se 0.0189   → ratio 3.7×
+```
+
+⇒ **Suppression is a MINORITY OUTCOME: 2 of 5 builds.** Had the first multi-turn
+adapter drawn a different seed, the whole `ki` investigation would never have
+opened. `KI_ATTRIBUTION_2026_08_26.md` describes **`adapter_mt`**, not Tlön.
+
+⛔ Corpus compute does NOT explain it (the two closest in compute are the two
+furthest apart in `ki`). Loss does not see it (0.2369 / 0.2375 / 0.2369 across
+draws differing by 0.155 in behaviour). F-LOCAL does not see it (render
+0.922–0.973 throughout).
+
+⭐⭐ **PRICE OF ANY FUTURE MAP EXPERIMENT:** at between-adapter sd 0.0700,
+detecting a 0.10 map effect needs **9 adapters per arm = 18 trainings ≈ 65
+GPU-hours**. The ki-as-target probe used **one**.
 
 # ⭐ THE RULE THIS ARC KEEPS RE-LEARNING
 

@@ -31,6 +31,8 @@ runs/act2/corpus_mt/*.jsonl
 # and the ki-target probe's two corpora — 27 MB each, seed-pinned and
 # sha-pinned in tools/pipeline_ki_target.sh, so they rebuild byte-identical.
 runs/act2/ki_target/corpus_*/*.jsonl
+# same for the recipe-variance seeds — sha-pinned in the pipeline
+runs/act2/recipe_var/corpus_*/*.jsonl
 
 # ── PYTHON ───────────────────────────────────────────────────────────────
 __pycache__/
