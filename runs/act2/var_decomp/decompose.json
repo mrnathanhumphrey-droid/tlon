@@ -1,0 +1,148 @@
+{
+  "decomposition": {
+    "S_training": 0.0654992159020727,
+    "S_combined": 0.1549,
+    "R": 0.4228483918791006,
+    "verdict": "BOTH CONTRIBUTE",
+    "why": "R 0.42 sits between the pre-declared bands; report the split, claim neither source.",
+    "means": {
+      "s20620 (B-fresh)": 0.25196995856819115,
+      "t30001": 0.18647074266611846,
+      "t30002": 0.22524548751647488,
+      "t30003": 0.23974751209223258
+    },
+    "degenerate": {
+      "s20620 (B-fresh)": 0,
+      "t30001": 0,
+      "t30002": 0,
+      "t30003": 0
+    }
+  },
+  "screen_a": {
+    "rank": [
+      [
+        "root TTR",
+        0.12537851339939832
+      ],
+      [
+        "force:ka",
+        0.21645344472463154
+      ],
+      [
+        "force:ku",
+        0.21715342081041378
+      ],
+      [
+        "tokens/surface",
+        0.22798609701407851
+      ],
+      [
+        "nodes/scene",
+        0.27533878426719194
+      ],
+      [
+        "force:ki",
+        0.27843111338394044
+      ],
+      [
+        "modifier density",
+        0.32833295552170194
+      ],
+      [
+        "root repertoire",
+        0.3792515671081434
+      ],
+      [
+        "force:kä",
+        0.6738978094491832
+      ],
+      [
+        "force:ko",
+        1.0950829812924658
+      ],
+      [
+        "distinct-surface",
+        Infinity
+      ]
+    ],
+    "top3": [
+      "root TTR",
+      "force:ka",
+      "force:ku"
+    ],
+    "ki_rank": 6,
+    "held": true
+  },
+  "screen_b": {
+    "n_exchanges": 24,
+    "n_degenerate": 0,
+    "couples": [
+      {
+        "observable": "force:ki",
+        "paired_delta": 0.01458333333333333,
+        "t": 0.6625963263574407,
+        "n": 24
+      },
+      {
+        "observable": "force:ka",
+        "paired_delta": -0.0021929824561403347,
+        "t": -0.08074934814474048,
+        "n": 24
+      },
+      {
+        "observable": "force:ko",
+        "paired_delta": 0.01260964912280702,
+        "t": 0.5075853529005931,
+        "n": 24
+      },
+      {
+        "observable": "force:ku",
+        "paired_delta": 0.02083333333333334,
+        "t": 0.9018290388293191,
+        "n": 24
+      },
+      {
+        "observable": "force:kä",
+        "paired_delta": -0.020833333333333325,
+        "t": -1.2655715346009484,
+        "n": 24
+      },
+      {
+        "observable": "root TTR",
+        "paired_delta": 0.008177598627818658,
+        "t": 0.5337675946906061,
+        "n": 24
+      },
+      {
+        "observable": "distinct-surface",
+        "paired_delta": 0.0,
+        "t": 0.0,
+        "n": 24
+      },
+      {
+        "observable": "nodes/scene",
+        "paired_delta": 0.02960526315789484,
+        "t": 1.6436918317469464,
+        "n": 24
+      },
+      {
+        "observable": "modifier density",
+        "paired_delta": 0.0012928532810597452,
+        "t": 0.6872265944915443,
+        "n": 24
+      },
+      {
+        "observable": "tokens/surface",
+        "paired_delta": -0.03245614035087715,
+        "t": -0.4157329042828435,
+        "n": 24
+      },
+      {
+        "observable": "root repertoire",
+        "paired_delta": -0.5,
+        "t": -0.5045914645784857,
+        "n": 24
+      }
+    ]
+  }
+}

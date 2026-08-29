@@ -1,40 +1,38 @@
-# 🔴 RUN IN FLIGHT — read this first
+# ✅ NO RUN IN FLIGHT — fleet empty as of 2026-08-29 05:0x UTC
 
-**A box is LIVE and unattended.** Do not start new work until it is resolved.
+Instance `13364f3e…` (`tlon-var-decomp`) terminated after all stages passed;
+emptiness confirmed by polling to an empty instance list, not by the terminate
+call's return. Artefacts, logs and all three adapters are local and md5-verified.
 
-```
-instance  13364f3ed5254efbade3655499803371   name tlon-var-decomp
-ip        129.80.209.3          key ~/.ssh/tlon      user ubuntu
-started   2026-08-28 12:28 UTC  A100-SXM4-40GB
-script    tools/pipeline_variance_decompose.sh   (setsid, survives ssh drop)
-stdout    ~/pipeline_stdout.log        sentinel  ~/DONE  or  ~/FAILED
-prereg    docs/PREREG_VARIANCE_DECOMPOSE_2026_08_28.md  sha 9bd4a629…  (verified on box)
-```
+# ⛔⛔ READ THIS BEFORE DESIGNING ANY EXCHANGE EXPERIMENT
 
-**Progress at last check (16:28 UTC):** corpus pinned BYTE-IDENTICAL to B-fresh's
-(`263fe3c8…` — the gate that makes the decomposition valid), token gate HELD,
-VRAM fits, `t30001` trained (13,050 s, loss 0.2373) and cleared F-LOCAL
-(render 0.953 / speak 1.000), window-1 exchanges running. `t30002` and `t30003`
-still to train. ETA ≈ 05:30 UTC 2026-08-29.
+Two structural facts were discovered on 2026-08-29 and they invalidate every
+coupling/drift measurement taken so far. Full write-up:
+`docs/RESULTS_VARIANCE_DECOMPOSE_2026_08_29.md` §4.
 
-**Expected shape:** 3 adapters × (train ≈3h37m + F-LOCAL + 14 window-1 + 8
-accumulating exchanges), then `tools/act2_variance_decompose.py`.
+1. **`act2_exchange_probe.py` gives speaker A and speaker B the SAME adapter** —
+   one `LocalBackend`, two labels. Every "interacting" exchange in Act 2 is one
+   impression talking to itself. Identical things cannot converge, so the
+   coupling column was always going to read zero regardless of observable or
+   regime. **`--adapter` must take two adapters before a drift number can exist.**
+2. **Full accumulation retains the partner's past turns = object-persistence,
+   which the ontology forbids** (discourse spec, twice: *"the exact
+   object-persistence the ontology forbids"*; grammar §8: *"There is no
+   persisting moon"*). Window-1 is also wrong — it denies a speaker its own
+   memory. ⇒ **The correct regime is asymmetric — self accumulates, partner
+   present-only — and it has never been run.** `exchange()` cannot express it:
+   `hist` is one shared list with no speaker attribution.
 
-## ⛔ WHEN IT FINISHES — in this order
+⭐ **Individuality is latent at window-1 and expresses only at depth**: between-
+build spread of `ka` is 0.037 at window-1 and 0.687 under accumulation (18×).
+Window-1 cannot see individual differences at all.
 
-1. **PULL `runs/act2/var_decomp/pipeline_variance_decompose.log` FIRST.** Its
-   absence on an earlier run is why throughput had to become a gate; timings die
-   with the box.
-2. Pull `~/pipeline_stdout.log`, `runs/act2/var_decomp/logs/*`,
-   `decompose.json`, `corpus_fixed/token_budget.json`, and the three adapters
-   (`adapter_model.safetensors` + `adapter_config.json`) — **md5-verify the
-   adapters against the box before killing it.**
-3. `curl -s -u "$LAMBDA_API_KEY:" -X POST …/instance-operations/terminate`
-   with that id, then confirm the fleet is empty.
-4. Analyse LOCALLY. ⛔ Zero analysis on a live box.
+## ⭐ THE ASSET
 
-⚠️ **If `~/FAILED` exists:** read the whole stdout log — **never `tail` it**; a
-truncated traceback cost a session's diagnosis once already.
+`runs/act2/var_decomp/adapter_t30001|t30002|t30003` — same corpus (`263fe3c8…`),
+three trainer seeds, three measurably distinct individuals of one language, all
+F-LOCAL-clear. **The asymmetric-history experiment is inference-only on these.**
+Gitignored (323 MB each); they exist only on this machine.
 
 ⚠️ Corpora under `runs/act2/*/corpus_*/*.jsonl` are gitignored (27 MB each,
 seed-deterministic). Cost ledgers are gitignored too — **do not reintroduce spend
