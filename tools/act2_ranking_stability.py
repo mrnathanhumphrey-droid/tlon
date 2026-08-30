@@ -64,13 +64,32 @@ BOOT_SEED = 20260830        # ⭐ fixed and recorded: the analysis is reproducib
 MIN_DISTINCT_BUILDS = 3     # a resample below this cannot estimate a spread
 
 
-def load_builds():
+#: ⭐ THE IN-REGIME SOURCE. Stage 1 ran on window-1 transcripts, which is not the
+#: regime the drift run uses — between-build `ka` spread was 0.037 at window-1
+#: against 0.687 under accumulation. These are the asymmetric solo transcripts
+#: (own chain accumulates, no partner), generated 2026-08-30 under prereg
+#: a7bc2a7f, `--no-injections` so no pooled material can compress the sd that
+#: contamination is computed from.
+ASYM_BUILDS = [(b, "runs/act2/asym_recert/logs", "%s_solo_*.json" % b)
+               for b in ("s20620", "s20621", "s20622", "s20623",
+                         "t30001", "t30002", "t30003")]
+
+
+def _transcript(data):
+    """window-1 files carry `transcript_interacting`; asymmetric solo files
+    carry `conditions.cold_a.surfaces` — already filtered to MEASURABLE turns."""
+    if "transcript_interacting" in data:
+        return data["transcript_interacting"] or []
+    return (data.get("conditions", {}).get("cold_a", {}).get("surfaces")) or []
+
+
+def load_builds(spec=None):
     out = {}
-    for name, d, pat in BUILDS:
+    for name, d, pat in (spec or BUILDS):
         ex = []
         for f in sorted(pathlib.Path(d).glob(pat)):
             data = json.loads(f.read_text(encoding="utf-8"))
-            scs = scenes_of(data.get("transcript_interacting") or [])
+            scs = scenes_of(_transcript(data))
             if len(scs) < 8:
                 continue
             h = len(scs) // 2
@@ -136,11 +155,15 @@ def rank_of(per_build, names):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="runs/act2/ranking_stability.json")
+    ap.add_argument("--source", choices=("window1", "asym"), default="window1",
+                    help="asym = the in-regime solo transcripts (prereg a7bc2a7f)")
     a = ap.parse_args()
 
-    per_build = load_builds()
+    per_build = load_builds(ASYM_BUILDS if a.source == "asym" else BUILDS)
     print("STAGE 1 — IS THE CONTAMINATION RANKING STABLE UNDER RESAMPLING?")
     print("=" * 78)
+    print("  source: %s" % ("ASYMMETRIC SOLO (in-regime)" if a.source == "asym"
+                            else "window-1 (the regime the drift run will NOT use)"))
     for n, ex in per_build.items():
         print("  %-8s %3d exchanges" % (n, len(ex)))
     names = list(per_build)
@@ -250,7 +273,8 @@ def main() -> int:
            "rule": {"max_rank_range": MAX_RANK_RANGE,
                     "max_ci_upper": MAX_CI_UPPER, "n_boot": N_BOOT,
                     "boot_seed": BOOT_SEED, "thin_resamples": thin},
-           "rows": rows, "admitted": admitted, "verdict": verdict}
+           "rows": rows, "admitted": admitted, "verdict": verdict,
+           "source": a.source}
     pathlib.Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     pathlib.Path(a.out).write_text(json.dumps(out, indent=2, ensure_ascii=False),
                                    encoding="utf-8", newline="")

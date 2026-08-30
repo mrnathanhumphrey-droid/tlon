@@ -1,0 +1,1034 @@
+=== [prereg_pin] 13:03:45 ===
+  ✅ prereg pinned a7bc2a7fd30bc310cc53c4b3e24815c268c20d5495b02af7395e332193ece8b8
+=== [syntax_floor] 13:03:45 ===
+Python 3.10.12
+  ✅ parses under Python 3.10.12
+=== [adapter_pin] 13:03:45 ===
+  ✅ 7 adapters md5-pinned and mutually distinct
+=== [preflight] 13:03:48 ===
+  torch 2.7.0+cu126 cuda True
+  ✅ chat template rendered; CUDA matmul ran
+=== [tests] 13:03:54 ===
+........................................................................ [  5%]
+...............s........................................................ [ 11%]
+........................................................................ [ 17%]
+sss..................................................................... [ 22%]
+........................................................................ [ 28%]
+........................................................................ [ 34%]
+........................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 51%]
+........................................................................ [ 57%]
+........................................................................ [ 62%]
+........................................................................ [ 68%]
+........................................................................ [ 74%]
+........................................................................ [ 80%]
+........................................................................ [ 85%]
+........................................................................ [ 91%]
+........................................................................ [ 97%]
+..................................                                       [100%]
+=============================== warnings summary ===============================
+tests/test_residue_loop.py: 3 warnings
+tests/test_selection_log.py: 7 warnings
+  /home/ubuntu/venv/lib/python3.10/site-packages/torch/nn/modules/transformer.py:382: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1254 passed, 4 skipped, 10 warnings in 60.09s (0:01:00)
+  ⏱ setup wall (one-time, NOT divisible into per-build): 70 s
+=== [solo_s20620] 13:04:55 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.27it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.76it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.46it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 166.74it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 165.73it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 180.37it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.29it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.80it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 184.78it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 186.81it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 195.29it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 193.30it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 184.42it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 187.27it/s]Loading weights:  93%|█████████▎| 314/339 [00:01<00:00, 189.21it/s]Loading weights:  99%|█████████▊| 334/339 [00:01<00:00, 190.07it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.68it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_1.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.96it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.02it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 114.37it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 150.39it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 176.78it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 181.55it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 179.60it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 180.98it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 199.11it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.67it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 188.79it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.69it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 190.43it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 197.46it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.94it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 186.31it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 174.21it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_2.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.87it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.61it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.49it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 142.93it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.42it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.99it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.79it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 186.14it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.94it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.99it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 187.54it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.42it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 189.78it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.52it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.31it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 186.07it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.59it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_3.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.83it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 60.57it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:02, 114.24it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 157.01it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 166.72it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.90it/s]Loading weights:  36%|███▋      | 123/339 [00:00<00:01, 176.39it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 195.14it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.31it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.33it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 179.96it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 189.99it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.12it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 193.14it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.13it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.48it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.58it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_4.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:16,  4.44it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.84it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.40it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 146.99it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:01, 171.00it/s]Loading weights:  31%|███▏      | 106/339 [00:00<00:01, 176.46it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 175.10it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 188.39it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 198.20it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.01it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 188.35it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.51it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 190.36it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.71it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.71it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 186.14it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.70it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_5.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.89it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.51it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:02, 113.83it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 156.86it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 169.28it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 168.14it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.95it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.03it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.71it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.50it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.37it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.57it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.54it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 194.14it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 186.06it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 189.54it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.95it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_6.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.94it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.47it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.43it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.83it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.59it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.48it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 182.19it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.36it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.00it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.50it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.41it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.78it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.99it/s]Loading weights:  82%|████████▏ | 277/339 [00:01<00:00, 196.79it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 187.91it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 185.43it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 174.09it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_7.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.89it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.71it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.35it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.27it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.20it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.49it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 182.15it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.47it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 193.28it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 186.04it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 185.99it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 177.04it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 188.96it/s]Loading weights:  82%|████████▏ | 279/339 [00:01<00:00, 196.22it/s]Loading weights:  88%|████████▊ | 299/339 [00:01<00:00, 192.65it/s]Loading weights:  94%|█████████▍| 319/339 [00:01<00:00, 185.37it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.81it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_8.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.85it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.46it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.42it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 143.09it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.25it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.72it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.53it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 183.15it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 197.52it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 197.31it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 187.99it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.87it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 189.99it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 187.62it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 197.38it/s]Loading weights:  96%|█████████▌| 324/339 [00:01<00:00, 194.32it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.49it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_9.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.73it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 63.32it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.26it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.97it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.16it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.10it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 179.83it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 189.13it/s]Loading weights:  49%|████▉     | 167/339 [00:01<00:00, 190.95it/s]Loading weights:  55%|█████▌    | 187/339 [00:01<00:00, 184.55it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 187.45it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 198.83it/s]Loading weights:  75%|███████▍  | 253/339 [00:01<00:00, 198.39it/s]Loading weights:  81%|████████  | 273/339 [00:01<00:00, 187.56it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 178.01it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 191.21it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.02it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_10.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.81it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.47it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.66it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.33it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.44it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.92it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 182.25it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.79it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.62it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.92it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.02it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.47it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.44it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 193.66it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.48it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 180.17it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.80it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_11.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.94it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 61.17it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 122.50it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 152.99it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 166.71it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 166.61it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.78it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 185.43it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 199.11it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.51it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 187.56it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.92it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 188.01it/s]Loading weights:  82%|████████▏ | 279/339 [00:01<00:00, 195.14it/s]Loading weights:  88%|████████▊ | 299/339 [00:01<00:00, 194.53it/s]Loading weights:  94%|█████████▍| 319/339 [00:01<00:00, 185.09it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.93it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_12.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:39,  8.49it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 62.94it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.30it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 152.41it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 160.34it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 168.77it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 184.74it/s]Loading weights:  42%|████▏     | 144/339 [00:00<00:01, 186.87it/s]Loading weights:  48%|████▊     | 164/339 [00:01<00:00, 182.35it/s]Loading weights:  54%|█████▍    | 184/339 [00:01<00:00, 184.02it/s]Loading weights:  61%|██████    | 207/339 [00:01<00:00, 181.84it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 195.10it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 190.91it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 182.52it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 185.90it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 193.43it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 190.96it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 170.66it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_13.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20620
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.88it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.88it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 117.40it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 147.69it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 175.00it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 180.27it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.53it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 179.88it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 188.39it/s]Loading weights:  58%|█████▊    | 196/339 [00:01<00:00, 190.33it/s]Loading weights:  65%|██████▍   | 220/339 [00:01<00:00, 199.11it/s]Loading weights:  71%|███████   | 241/339 [00:01<00:00, 198.72it/s]Loading weights:  77%|███████▋  | 262/339 [00:01<00:00, 189.82it/s]Loading weights:  83%|████████▎ | 282/339 [00:01<00:00, 182.35it/s]Loading weights:  90%|████████▉ | 305/339 [00:01<00:00, 191.37it/s]Loading weights:  96%|█████████▋| 327/339 [00:01<00:00, 186.34it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 174.10it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20620_solo_14.json
+  ⏱ s20620 marginal wall: 2147 s for 14 transcripts
+=== [solo_s20621] 13:40:42 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:16,  4.43it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.80it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.36it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.34it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.99it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.50it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 180.34it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.61it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 195.84it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 187.89it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 175.75it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 178.17it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 189.44it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 195.27it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 191.51it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 184.50it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 171.86it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_1.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:16,  4.45it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.73it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.24it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 151.70it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.79it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.30it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 178.41it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.23it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.81it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 187.20it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 181.03it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.84it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.87it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 193.33it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.97it/s]Loading weights:  93%|█████████▎| 315/339 [00:01<00:00, 183.36it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.35it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_2.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  9.05it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.52it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:02, 114.83it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 148.95it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.62it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:01, 178.99it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 173.89it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 187.71it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 198.22it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.01it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 185.50it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 185.30it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 194.32it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 190.52it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.03it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.61it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.43it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_3.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.92it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.87it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.02it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.72it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.35it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 166.73it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 184.56it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 195.56it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 198.22it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.43it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 182.48it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 191.97it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 198.99it/s]Loading weights:  82%|████████▏ | 277/339 [00:01<00:00, 197.08it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 188.24it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 176.76it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 174.26it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_4.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.96it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.90it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:02, 113.49it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 156.17it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.96it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.55it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.20it/s]Loading weights:  43%|████▎     | 147/339 [00:01<00:01, 174.03it/s]Loading weights:  51%|█████     | 173/339 [00:01<00:00, 196.03it/s]Loading weights:  58%|█████▊    | 195/339 [00:01<00:00, 181.12it/s]Loading weights:  65%|██████▌   | 221/339 [00:01<00:00, 196.65it/s]Loading weights:  72%|███████▏  | 244/339 [00:01<00:00, 202.01it/s]Loading weights:  78%|███████▊  | 265/339 [00:01<00:00, 198.68it/s]Loading weights:  84%|████████▍ | 286/339 [00:01<00:00, 190.96it/s]Loading weights:  90%|█████████ | 306/339 [00:01<00:00, 182.27it/s]Loading weights:  97%|█████████▋| 329/339 [00:01<00:00, 182.83it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.57it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_5.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.73it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.09it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.28it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.08it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 161.53it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 170.11it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 185.18it/s]Loading weights:  42%|████▏     | 144/339 [00:00<00:01, 187.42it/s]Loading weights:  48%|████▊     | 164/339 [00:01<00:00, 182.78it/s]Loading weights:  55%|█████▍    | 185/339 [00:01<00:00, 187.92it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 185.08it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 186.72it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.66it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.85it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.13it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 178.93it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.16it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_6.json
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.86it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.56it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 116.80it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.24it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.48it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 166.45it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.16it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.54it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.62it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 185.35it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 184.98it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 195.17it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 192.93it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 184.25it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 187.73it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 195.43it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 192.39it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.79it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_7.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.81it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 63.94it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 115.90it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.79it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.12it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 162.30it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 180.01it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.01it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 191.94it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 184.56it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 185.75it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 191.71it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 190.14it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 181.75it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 185.25it/s]Loading weights:  93%|█████████▎| 315/339 [00:01<00:00, 189.55it/s]Loading weights:  99%|█████████▉| 335/339 [00:01<00:00, 189.99it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 171.04it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_8.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.89it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.67it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.47it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.29it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.11it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.67it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 170.13it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 189.99it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 199.53it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.90it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 188.83it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.07it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 189.97it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.39it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 192.70it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 184.77it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.84it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_9.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.79it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 63.27it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.91it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.24it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 163.17it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 163.94it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.93it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.43it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.36it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 185.54it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 184.67it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 186.91it/s]Loading weights:  75%|███████▌  | 255/339 [00:01<00:00, 185.49it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 198.68it/s]Loading weights:  89%|████████▉ | 301/339 [00:01<00:00, 197.36it/s]Loading weights:  95%|█████████▍| 321/339 [00:01<00:00, 188.70it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.65it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_10.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.16it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 112.92it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 151.33it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 173.79it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.27it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.36it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.61it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.12it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.97it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 188.42it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.15it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 190.47it/s]Loading weights:  82%|████████▏ | 279/339 [00:01<00:00, 194.37it/s]Loading weights:  88%|████████▊ | 299/339 [00:01<00:00, 193.63it/s]Loading weights:  94%|█████████▍| 319/339 [00:01<00:00, 184.00it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.41it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_11.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.80it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 63.85it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.75it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.07it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.16it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 170.49it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 186.60it/s]Loading weights:  42%|████▏     | 144/339 [00:00<00:01, 188.93it/s]Loading weights:  48%|████▊     | 164/339 [00:01<00:00, 184.24it/s]Loading weights:  55%|█████▍    | 185/339 [00:01<00:00, 188.95it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 196.32it/s]Loading weights:  67%|██████▋   | 228/339 [00:01<00:00, 193.03it/s]Loading weights:  73%|███████▎  | 248/339 [00:01<00:00, 185.34it/s]Loading weights:  79%|███████▉  | 269/339 [00:01<00:00, 186.58it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 194.66it/s]Loading weights:  92%|█████████▏| 312/339 [00:01<00:00, 192.29it/s]Loading weights:  98%|█████████▊| 332/339 [00:01<00:00, 184.88it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.95it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_12.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.15it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.43it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.66it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.38it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 166.50it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.41it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.77it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.85it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.66it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.80it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 189.90it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.38it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.42it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.11it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 186.25it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.38it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_13.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20621
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.87it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.68it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.97it/s]Loading weights:  18%|█▊        | 60/339 [00:00<00:01, 142.53it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 169.10it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 168.61it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 182.39it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 197.63it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 199.07it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 190.62it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 179.75it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.11it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 187.38it/s]Loading weights:  82%|████████▏ | 279/339 [00:01<00:00, 184.73it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 198.35it/s]Loading weights:  96%|█████████▌| 325/339 [00:01<00:00, 197.95it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.62it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20621_solo_14.json
+  ⏱ s20621 marginal wall: 2125 s for 14 transcripts
+=== [solo_s20622] 14:16:07 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.89it/s]Loading weights:   4%|▍         | 15/339 [00:00<00:06, 53.26it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 115.77it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 149.77it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 172.52it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:01, 177.07it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 171.16it/s]Loading weights:  44%|████▍     | 149/339 [00:01<00:01, 184.50it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 195.10it/s]Loading weights:  57%|█████▋    | 192/339 [00:01<00:00, 192.98it/s]Loading weights:  63%|██████▎   | 212/339 [00:01<00:00, 183.36it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 187.06it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 194.71it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 191.75it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 183.83it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.35it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 171.70it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_1.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.80it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.22it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.40it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 151.50it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 169.09it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 168.71it/s]Loading weights:  36%|███▋      | 123/339 [00:00<00:01, 176.75it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 196.64it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 198.96it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.13it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 181.74it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 192.11it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 199.09it/s]Loading weights:  82%|████████▏ | 277/339 [00:01<00:00, 197.38it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 188.32it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.52it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 174.22it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_2.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.79it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.42it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.36it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.62it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 160.96it/s]Loading weights:  29%|██▉       | 100/339 [00:00<00:01, 159.55it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 182.15it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 186.98it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 200.33it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 200.00it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 187.59it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.38it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 190.54it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 188.20it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 197.77it/s]Loading weights:  96%|█████████▌| 324/339 [00:01<00:00, 194.78it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.31it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_3.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:16,  4.43it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.69it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:02, 114.23it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 157.38it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 166.44it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 166.48it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 180.86it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:01, 177.63it/s]Loading weights:  51%|█████     | 173/339 [00:01<00:00, 195.50it/s]Loading weights:  58%|█████▊    | 196/339 [00:01<00:00, 202.04it/s]Loading weights:  64%|██████▍   | 217/339 [00:01<00:00, 199.03it/s]Loading weights:  70%|███████   | 238/339 [00:01<00:00, 191.09it/s]Loading weights:  76%|███████▌  | 258/339 [00:01<00:00, 180.67it/s]Loading weights:  83%|████████▎ | 281/339 [00:01<00:00, 190.78it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 188.01it/s]Loading weights:  96%|█████████▋| 327/339 [00:01<00:00, 195.35it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.69it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_4.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.90it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.68it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.25it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 146.14it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 173.35it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:01, 176.48it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 173.72it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 181.88it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 199.32it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.54it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 189.01it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.36it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 190.17it/s]Loading weights:  82%|████████▏ | 279/339 [00:01<00:00, 184.46it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 197.34it/s]Loading weights:  96%|█████████▌| 324/339 [00:01<00:00, 194.55it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.27it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_5.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.85it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.09it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 112.65it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 151.26it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 173.41it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.33it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.03it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.82it/s]Loading weights:  50%|█████     | 171/339 [00:01<00:00, 193.49it/s]Loading weights:  56%|█████▋    | 191/339 [00:01<00:00, 193.98it/s]Loading weights:  62%|██████▏   | 211/339 [00:01<00:00, 182.63it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 177.81it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 184.22it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 192.25it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 201.23it/s]Loading weights:  96%|█████████▌| 325/339 [00:01<00:00, 199.45it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.08it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_6.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.90it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.79it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.12it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.72it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 161.76it/s]Loading weights:  29%|██▉       | 100/339 [00:00<00:01, 157.92it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.02it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.90it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 195.76it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 187.81it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 179.16it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 180.32it/s]Loading weights:  75%|███████▌  | 255/339 [00:01<00:00, 186.88it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 199.34it/s]Loading weights:  89%|████████▉ | 301/339 [00:01<00:00, 197.85it/s]Loading weights:  95%|█████████▍| 321/339 [00:01<00:00, 188.11it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.36it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_7.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.81it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.27it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 110.06it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 152.07it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.41it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.18it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.73it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.34it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.16it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.45it/s]Loading weights:  63%|██████▎   | 213/339 [00:01<00:00, 185.91it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 186.46it/s]Loading weights:  75%|███████▌  | 255/339 [00:01<00:00, 191.41it/s]Loading weights:  81%|████████  | 275/339 [00:01<00:00, 190.92it/s]Loading weights:  87%|████████▋ | 295/339 [00:01<00:00, 181.81it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 179.99it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.88it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_8.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.91it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.73it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.58it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.00it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.74it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.06it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 169.57it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:00, 190.75it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 199.29it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.86it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 185.76it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.72it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 189.72it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 195.06it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 192.65it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.17it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.03it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_9.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:17,  4.39it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.36it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 117.17it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.24it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.82it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.23it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 180.95it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.81it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.09it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 184.78it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 187.10it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 193.26it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 191.04it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 183.34it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 187.00it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 194.82it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 192.26it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.43it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_10.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.80it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.17it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.84it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 152.74it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 165.83it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 165.12it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 179.10it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 190.97it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 190.88it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 184.24it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 184.07it/s]Loading weights:  68%|██████▊   | 231/339 [00:01<00:00, 183.33it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.67it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.92it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.70it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.01it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 171.84it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_11.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.79it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.03it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 113.06it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 151.35it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.31it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 180.38it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 179.00it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.93it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.89it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 197.25it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 187.69it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.79it/s]Loading weights:  75%|███████▌  | 255/339 [00:01<00:00, 184.90it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 198.03it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 194.71it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.58it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.23it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_12.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.90it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.37it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.11it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.96it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.26it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 166.75it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 178.34it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.57it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.59it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.37it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.45it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.48it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.58it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 193.71it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.52it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.89it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.52it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_13.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20622
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.88it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.90it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.53it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.83it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.95it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.20it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 172.61it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 189.82it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 198.82it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.59it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 188.94it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.70it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 190.91it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.93it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.38it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.96it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.71it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20622_solo_14.json
+  ⏱ s20622 marginal wall: 2134 s for 14 transcripts
+=== [solo_s20623] 14:51:41 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:16,  4.42it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.64it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.24it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 143.75it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:01, 171.71it/s]Loading weights:  31%|███▏      | 106/339 [00:00<00:01, 176.71it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 174.99it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 183.06it/s]Loading weights:  50%|█████     | 170/339 [00:01<00:00, 194.56it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 194.93it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 181.61it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 191.68it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 188.48it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 197.75it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 194.37it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 186.77it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.20it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_1.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.92it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.86it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 113.74it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 152.00it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.61it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.47it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.06it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.08it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 195.67it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 195.12it/s]Loading weights:  63%|██████▎   | 213/339 [00:01<00:00, 184.49it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 185.22it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 193.32it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 190.28it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 183.10it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 177.52it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.60it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_2.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.85it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.01it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 116.44it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.10it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.93it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 171.27it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 186.93it/s]Loading weights:  42%|████▏     | 144/339 [00:00<00:01, 188.53it/s]Loading weights:  48%|████▊     | 164/339 [00:01<00:00, 183.72it/s]Loading weights:  54%|█████▍    | 183/339 [00:01<00:00, 182.83it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 197.57it/s]Loading weights:  67%|██████▋   | 228/339 [00:01<00:00, 193.18it/s]Loading weights:  73%|███████▎  | 248/339 [00:01<00:00, 185.37it/s]Loading weights:  79%|███████▉  | 267/339 [00:01<00:00, 181.50it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 195.86it/s]Loading weights:  92%|█████████▏| 312/339 [00:01<00:00, 192.77it/s]Loading weights:  98%|█████████▊| 332/339 [00:01<00:00, 184.51it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.49it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_3.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.91it/s]Loading weights:   5%|▍         | 16/339 [00:00<00:05, 57.27it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 112.11it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 153.79it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:01, 163.97it/s]Loading weights:  33%|███▎      | 112/339 [00:00<00:01, 186.50it/s]Loading weights:  39%|███▉      | 132/339 [00:00<00:01, 188.10it/s]Loading weights:  45%|████▍     | 152/339 [00:01<00:01, 183.74it/s]Loading weights:  51%|█████     | 173/339 [00:01<00:00, 188.48it/s]Loading weights:  58%|█████▊    | 196/339 [00:01<00:00, 196.62it/s]Loading weights:  64%|██████▎   | 216/339 [00:01<00:00, 192.29it/s]Loading weights:  70%|██████▉   | 236/339 [00:01<00:00, 184.99it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 174.55it/s]Loading weights:  83%|████████▎ | 281/339 [00:01<00:00, 191.01it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 197.31it/s]Loading weights:  96%|█████████▌| 324/339 [00:01<00:00, 193.15it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.67it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_4.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.83it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.44it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.33it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.13it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 163.64it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 161.59it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 182.87it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:01, 175.72it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 182.48it/s]Loading weights:  58%|█████▊    | 197/339 [00:01<00:00, 196.86it/s]Loading weights:  65%|██████▍   | 220/339 [00:01<00:00, 198.96it/s]Loading weights:  71%|███████   | 241/339 [00:01<00:00, 197.97it/s]Loading weights:  77%|███████▋  | 262/339 [00:01<00:00, 188.81it/s]Loading weights:  83%|████████▎ | 282/339 [00:01<00:00, 181.24it/s]Loading weights:  90%|████████▉ | 305/339 [00:01<00:00, 190.40it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 197.23it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.78it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_5.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.87it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.58it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.92it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.98it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.62it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.52it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.14it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 184.75it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 198.50it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.42it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 187.74it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.92it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 180.38it/s]Loading weights:  83%|████████▎ | 281/339 [00:01<00:00, 193.15it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 199.33it/s]Loading weights:  96%|█████████▌| 325/339 [00:01<00:00, 198.41it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.70it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_6.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.81it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.29it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 109.90it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 149.32it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:01, 172.90it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:01, 181.06it/s]Loading weights:  37%|███▋      | 127/339 [00:00<00:01, 177.49it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 181.96it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 189.20it/s]Loading weights:  57%|█████▋    | 194/339 [00:01<00:00, 194.22it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 192.99it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 184.04it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 192.19it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 199.02it/s]Loading weights:  89%|████████▉ | 301/339 [00:01<00:00, 197.56it/s]Loading weights:  95%|█████████▍| 321/339 [00:01<00:00, 188.12it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.27it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_7.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.88it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.65it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 110.33it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 152.57it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.30it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.08it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 177.55it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 184.39it/s]Loading weights:  50%|█████     | 171/339 [00:01<00:00, 192.47it/s]Loading weights:  56%|█████▋    | 191/339 [00:01<00:00, 191.02it/s]Loading weights:  62%|██████▏   | 211/339 [00:01<00:00, 183.16it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 179.85it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 191.89it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 197.78it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 194.41it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 186.60it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.83it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_8.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.41it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.25it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 146.07it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:01, 169.58it/s]Loading weights:  31%|███▏      | 106/339 [00:00<00:01, 175.27it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 173.97it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 187.45it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 197.24it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 197.07it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 186.23it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 178.59it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 187.89it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 188.32it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 197.11it/s]Loading weights:  96%|█████████▌| 324/339 [00:01<00:00, 190.12it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.05it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_9.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.89it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.87it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.42it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.95it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.81it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 166.94it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 184.75it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 196.70it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 199.42it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 191.13it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.31it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.74it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.99it/s]Loading weights:  82%|████████▏ | 277/339 [00:01<00:00, 195.66it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 187.91it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.41it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 174.58it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_10.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.80it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.32it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.55it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.07it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.66it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.21it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 178.11it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.64it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.26it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.40it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.36it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 189.35it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.94it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 193.16it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.35it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 186.35it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.29it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_11.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:39,  8.61it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 63.21it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:02, 112.53it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.76it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.07it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.40it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.31it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.67it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.12it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.36it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 179.29it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 189.48it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.58it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.55it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.80it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.14it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.57it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_12.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.83it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.36it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.52it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 146.68it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 164.83it/s]Loading weights:  33%|███▎      | 112/339 [00:00<00:01, 183.97it/s]Loading weights:  39%|███▉      | 132/339 [00:00<00:01, 186.97it/s]Loading weights:  45%|████▍     | 152/339 [00:01<00:01, 182.94it/s]Loading weights:  51%|█████     | 173/339 [00:01<00:00, 179.60it/s]Loading weights:  58%|█████▊    | 197/339 [00:01<00:00, 192.58it/s]Loading weights:  65%|██████▍   | 219/339 [00:01<00:00, 185.54it/s]Loading weights:  72%|███████▏  | 244/339 [00:01<00:00, 189.68it/s]Loading weights:  79%|███████▉  | 267/339 [00:01<00:00, 186.33it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 199.52it/s]Loading weights:  92%|█████████▏| 313/339 [00:01<00:00, 197.81it/s]Loading weights:  98%|█████████▊| 333/339 [00:01<00:00, 187.38it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.24it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_13.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/s20623
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.87it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.30it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 112.26it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 142.58it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:01, 164.13it/s]Loading weights:  33%|███▎      | 112/339 [00:00<00:01, 186.41it/s]Loading weights:  39%|███▉      | 132/339 [00:00<00:01, 188.28it/s]Loading weights:  45%|████▍     | 152/339 [00:01<00:01, 184.06it/s]Loading weights:  51%|█████     | 173/339 [00:01<00:00, 189.59it/s]Loading weights:  58%|█████▊    | 195/339 [00:01<00:00, 194.86it/s]Loading weights:  63%|██████▎   | 215/339 [00:01<00:00, 192.32it/s]Loading weights:  69%|██████▉   | 235/339 [00:01<00:00, 183.56it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 189.15it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.16it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.02it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 184.82it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.70it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/s20623_solo_14.json
+  ⏱ s20623 marginal wall: 2090 s for 14 transcripts
+=== [solo_t30001] 15:26:31 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.92it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.00it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.48it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.91it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.03it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.60it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.65it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 190.73it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 194.61it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 186.79it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 185.92it/s]Loading weights:  68%|██████▊   | 231/339 [00:01<00:00, 193.69it/s]Loading weights:  74%|███████▍  | 251/339 [00:01<00:00, 194.10it/s]Loading weights:  80%|███████▉  | 271/339 [00:01<00:00, 183.01it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 189.11it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 196.08it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 193.05it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.54it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_1.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.97it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.92it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.96it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.77it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.92it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.38it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 182.16it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 181.42it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 198.73it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 197.89it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 187.23it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 179.12it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 188.37it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 194.53it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 192.68it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.18it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.02it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_2.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.85it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 60.81it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.60it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.80it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.30it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.51it/s]Loading weights:  36%|███▋      | 123/339 [00:00<00:01, 166.84it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:00, 190.60it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 199.55it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.76it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 189.14it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.19it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 190.03it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.55it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 192.62it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 182.74it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.64it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_3.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.89it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 60.94it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.72it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 146.06it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 163.15it/s]Loading weights:  33%|███▎      | 112/339 [00:00<00:01, 182.69it/s]Loading weights:  39%|███▉      | 132/339 [00:00<00:01, 185.67it/s]Loading weights:  45%|████▍     | 152/339 [00:01<00:01, 181.30it/s]Loading weights:  51%|█████     | 173/339 [00:01<00:00, 187.05it/s]Loading weights:  58%|█████▊    | 196/339 [00:01<00:00, 194.32it/s]Loading weights:  64%|██████▎   | 216/339 [00:01<00:00, 190.38it/s]Loading weights:  70%|██████▉   | 236/339 [00:01<00:00, 183.81it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 187.00it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 195.17it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 192.15it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 184.77it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.46it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_4.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.75it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.02it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.74it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 150.55it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.56it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.61it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.97it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.59it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.24it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.34it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 179.87it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 187.32it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 187.84it/s]Loading weights:  82%|████████▏ | 279/339 [00:01<00:00, 195.08it/s]Loading weights:  88%|████████▊ | 299/339 [00:01<00:00, 194.13it/s]Loading weights:  94%|█████████▍| 319/339 [00:01<00:00, 184.60it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.78it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_5.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.23it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 116.51it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 143.56it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.56it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.33it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.55it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.59it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.17it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.62it/s]Loading weights:  63%|██████▎   | 213/339 [00:01<00:00, 186.26it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 186.77it/s]Loading weights:  75%|███████▌  | 255/339 [00:01<00:00, 191.70it/s]Loading weights:  81%|████████  | 275/339 [00:01<00:00, 189.71it/s]Loading weights:  87%|████████▋ | 295/339 [00:01<00:00, 182.03it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 189.21it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.03it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_6.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.83it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.19it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.84it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 145.30it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 172.55it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:01, 176.78it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 171.91it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.54it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.05it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.48it/s]Loading weights:  63%|██████▎   | 213/339 [00:01<00:00, 186.51it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 175.13it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 188.95it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.37it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.23it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.17it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.41it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_7.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.38it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.65it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.52it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 161.65it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.36it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.89it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 180.61it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 197.73it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.97it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 188.39it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.31it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 188.43it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 194.55it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 191.44it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 184.44it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.20it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_8.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.82it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.42it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.21it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.92it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 166.63it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 166.61it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 172.04it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 189.03it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 199.09it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.73it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 189.28it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 181.90it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 189.12it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.41it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.11it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.25it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.20it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_9.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.83it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.02it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.21it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.56it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.35it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.84it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 182.48it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.00it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.84it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.89it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.65it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.72it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.56it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.91it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.00it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 185.32it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.20it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_10.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 60.48it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.98it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.85it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.20it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 163.36it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 179.61it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.13it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.81it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 185.13it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 177.92it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 191.40it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.72it/s]Loading weights:  82%|████████▏ | 277/339 [00:01<00:00, 196.08it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 187.09it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.76it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.48it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_11.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.80it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.03it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 116.11it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 151.26it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.58it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.42it/s]Loading weights:  36%|███▋      | 123/339 [00:00<00:01, 175.28it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.89it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.18it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.16it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.73it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.64it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 187.77it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 197.38it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.85it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 184.80it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.75it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_12.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:17,  4.36it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.13it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 117.39it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 156.07it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.54it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 166.15it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.69it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 195.07it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.79it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.26it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 182.14it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.63it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.84it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 193.21it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.91it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 186.70it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.59it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_13.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30001
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.81it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.24it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.94it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.10it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.03it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 166.41it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 180.52it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 189.38it/s]Loading weights:  49%|████▉     | 167/339 [00:01<00:00, 191.87it/s]Loading weights:  55%|█████▌    | 187/339 [00:01<00:00, 183.69it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 188.73it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 196.06it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 193.71it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 185.00it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 187.76it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 194.92it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 192.40it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.78it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30001_solo_14.json
+  ⏱ t30001 marginal wall: 2186 s for 14 transcripts
+=== [solo_t30002] 16:02:57 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.76it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 63.90it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 109.38it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 149.91it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 170.09it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:01, 175.12it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 170.95it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:01, 182.29it/s]Loading weights:  50%|█████     | 170/339 [00:01<00:00, 191.32it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 192.26it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 181.63it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.99it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.81it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.67it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.78it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 184.08it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 171.10it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_1.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.80it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.59it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 117.01it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 156.08it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.63it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.49it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 180.09it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 195.73it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.80it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 190.01it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 181.39it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 191.17it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.37it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 193.91it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.93it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 186.51it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.68it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_2.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.87it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.42it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 119.92it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 153.95it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.25it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 163.61it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.01it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 180.16it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 179.52it/s]Loading weights:  58%|█████▊    | 197/339 [00:01<00:00, 194.34it/s]Loading weights:  65%|██████▍   | 220/339 [00:01<00:00, 198.20it/s]Loading weights:  71%|███████   | 241/339 [00:01<00:00, 197.71it/s]Loading weights:  77%|███████▋  | 261/339 [00:01<00:00, 187.53it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 184.61it/s]Loading weights:  89%|████████▉ | 303/339 [00:01<00:00, 183.61it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 197.37it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.55it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_3.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:14,  4.55it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 66.58it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 122.16it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.95it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.18it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.52it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.28it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.90it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.25it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.54it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.51it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.46it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.32it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.24it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.74it/s]Loading weights:  93%|█████████▎| 315/339 [00:01<00:00, 182.94it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.78it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_4.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.86it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.29it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.13it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.06it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 166.74it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 166.17it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 177.51it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.29it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 193.51it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 185.73it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 185.04it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 196.36it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 192.52it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 183.53it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 187.07it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 194.66it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 192.65it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.72it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_5.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.77it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 60.62it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.26it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 146.81it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 173.35it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 179.34it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 177.40it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 182.19it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.31it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.72it/s]Loading weights:  63%|██████▎   | 213/339 [00:01<00:00, 186.24it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 183.92it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 186.13it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.01it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 192.86it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.15it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.79it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_6.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.83it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.36it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 116.55it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 146.56it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 173.52it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:01, 177.93it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 173.22it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 187.44it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 198.04it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 198.33it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 188.86it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.96it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 189.85it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.98it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 193.62it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 186.28it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.56it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_7.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:16,  4.41it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.34it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 113.42it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 148.10it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 165.75it/s]Loading weights:  33%|███▎      | 112/339 [00:00<00:01, 184.59it/s]Loading weights:  39%|███▉      | 132/339 [00:00<00:01, 187.33it/s]Loading weights:  45%|████▍     | 152/339 [00:01<00:01, 182.83it/s]Loading weights:  51%|█████     | 173/339 [00:01<00:00, 188.36it/s]Loading weights:  58%|█████▊    | 196/339 [00:01<00:00, 196.14it/s]Loading weights:  64%|██████▎   | 216/339 [00:01<00:00, 191.40it/s]Loading weights:  70%|██████▉   | 236/339 [00:01<00:00, 184.55it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 186.89it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 194.61it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 191.78it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 185.14it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.67it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_8.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.77it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 64.10it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.13it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.20it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.17it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.81it/s]Loading weights:  36%|███▋      | 123/339 [00:00<00:01, 176.56it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 195.87it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.29it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.46it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.36it/s]Loading weights:  68%|██████▊   | 231/339 [00:01<00:00, 184.54it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 198.88it/s]Loading weights:  82%|████████▏ | 277/339 [00:01<00:00, 196.85it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 187.75it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.35it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.79it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_9.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.91it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.88it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.89it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.04it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.71it/s]Loading weights:  29%|██▉       | 100/339 [00:00<00:01, 167.83it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 187.67it/s]Loading weights:  42%|████▏     | 144/339 [00:00<00:01, 189.41it/s]Loading weights:  48%|████▊     | 164/339 [00:01<00:00, 184.41it/s]Loading weights:  54%|█████▍    | 183/339 [00:01<00:00, 183.09it/s]Loading weights:  61%|██████    | 207/339 [00:01<00:00, 184.14it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 197.08it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 194.65it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 185.24it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 188.22it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 195.56it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 192.89it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.96it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_10.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 60.84it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.63it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 144.28it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 174.98it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 180.37it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.69it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.82it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.39it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.62it/s]Loading weights:  63%|██████▎   | 213/339 [00:01<00:00, 186.97it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 184.10it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 195.61it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.16it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.47it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.90it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.40it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_11.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.70it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:05, 63.81it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 118.56it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 143.69it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:01, 163.87it/s]Loading weights:  31%|███       | 105/339 [00:00<00:01, 167.86it/s]Loading weights:  36%|███▋      | 123/339 [00:00<00:01, 170.15it/s]Loading weights:  44%|████▎     | 148/339 [00:01<00:01, 182.62it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 196.77it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.70it/s]Loading weights:  63%|██████▎   | 213/339 [00:01<00:00, 186.46it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 187.15it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 195.43it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 191.58it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 183.30it/s]Loading weights:  93%|█████████▎| 315/339 [00:01<00:00, 181.94it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 171.45it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_12.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.86it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.48it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.52it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.47it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.55it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.07it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.26it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.54it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.10it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 185.07it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 186.96it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 195.03it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 192.58it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 183.65it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 184.22it/s]Loading weights:  93%|█████████▎| 315/339 [00:01<00:00, 191.89it/s]Loading weights:  99%|█████████▉| 335/339 [00:01<00:00, 190.47it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.77it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_13.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30002
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.97it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.19it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 110.85it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 153.38it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 175.67it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 181.45it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 179.59it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 186.31it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 197.05it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 196.88it/s]Loading weights:  63%|██████▎   | 213/339 [00:01<00:00, 185.39it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 185.46it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 193.72it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 190.38it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 183.46it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.67it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.40it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30002_solo_14.json
+  ⏱ t30002 marginal wall: 2168 s for 14 transcripts
+=== [solo_t30003] 16:39:05 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   0%|          | 1/339 [00:00<01:16,  4.40it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 65.01it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.46it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.40it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.54it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 160.00it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 177.68it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 190.46it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 191.26it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 183.85it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 186.09it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 193.87it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 191.32it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 183.06it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 176.33it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 180.44it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 171.29it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_1.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.95it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.76it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.81it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.14it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 164.78it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.10it/s]Loading weights:  36%|███▋      | 123/339 [00:00<00:01, 176.56it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 195.80it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 198.29it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 187.63it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 181.15it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 189.82it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.74it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.69it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.23it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.35it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.26it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_2.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.84it/s]Loading weights:   5%|▍         | 16/339 [00:00<00:05, 56.97it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.05it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.37it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.11it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 165.88it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 179.76it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.32it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.57it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 185.03it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 187.40it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 186.10it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 195.97it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.51it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 183.96it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.73it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.38it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_3.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.90it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:05, 60.84it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 114.85it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:01, 152.71it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 175.45it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:01, 180.16it/s]Loading weights:  38%|███▊      | 128/339 [00:00<00:01, 178.56it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 185.04it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 195.37it/s]Loading weights:  57%|█████▋    | 192/339 [00:01<00:00, 193.15it/s]Loading weights:  63%|██████▎   | 212/339 [00:01<00:00, 184.04it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 178.10it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 190.85it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 196.99it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 194.00it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 186.03it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.18it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_4.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.95it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.90it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 117.53it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 156.14it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 165.34it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.80it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.61it/s]Loading weights:  43%|████▎     | 147/339 [00:00<00:01, 191.74it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 195.26it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 187.25it/s]Loading weights:  61%|██████▏   | 208/339 [00:01<00:00, 186.68it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 195.45it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 193.64it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 184.25it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 187.97it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 195.64it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 192.88it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.42it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_5.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.88it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.75it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.46it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.66it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.66it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.03it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 178.93it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.43it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 196.68it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.96it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 179.39it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 186.48it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.62it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.72it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 184.70it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 187.53it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.60it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_6.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.82it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.22it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.50it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.99it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.00it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 166.89it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 178.97it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 182.31it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 178.29it/s]Loading weights:  58%|█████▊    | 197/339 [00:01<00:00, 194.07it/s]Loading weights:  65%|██████▍   | 220/339 [00:01<00:00, 189.42it/s]Loading weights:  72%|███████▏  | 243/339 [00:01<00:00, 196.62it/s]Loading weights:  78%|███████▊  | 263/339 [00:01<00:00, 193.97it/s]Loading weights:  83%|████████▎ | 283/339 [00:01<00:00, 185.22it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 187.46it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 197.63it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.87it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_7.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.88it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.50it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.79it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.50it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 167.55it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 166.49it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 180.51it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 192.86it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.30it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 184.70it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 187.54it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 193.59it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 190.43it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 181.76it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 185.74it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 184.83it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.42it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_8.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.82it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.28it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 116.94it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.46it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 162.83it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 165.37it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 182.38it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.19it/s]Loading weights:  50%|████▉     | 168/339 [00:01<00:00, 192.53it/s]Loading weights:  55%|█████▌    | 188/339 [00:01<00:00, 185.40it/s]Loading weights:  62%|██████▏   | 209/339 [00:01<00:00, 187.69it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 194.94it/s]Loading weights:  74%|███████▍  | 252/339 [00:01<00:00, 192.73it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 183.84it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 184.05it/s]Loading weights:  93%|█████████▎| 315/339 [00:01<00:00, 192.38it/s]Loading weights:  99%|█████████▉| 335/339 [00:01<00:00, 193.05it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 172.64it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_9.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.85it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.57it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:02, 116.96it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.73it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.26it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.15it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 181.51it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 193.68it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 195.67it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 188.52it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.20it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 187.71it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 198.34it/s]Loading weights:  82%|████████▏ | 277/339 [00:01<00:00, 197.09it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 188.12it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.01it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.54it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_10.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.92it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.97it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 121.20it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 155.47it/s]Loading weights:  25%|██▍       | 84/339 [00:00<00:01, 168.13it/s]Loading weights:  30%|███       | 103/339 [00:00<00:01, 167.36it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:01, 179.04it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.13it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.08it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 189.28it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.41it/s]Loading weights:  68%|██████▊   | 232/339 [00:01<00:00, 186.29it/s]Loading weights:  75%|███████▌  | 255/339 [00:01<00:00, 191.93it/s]Loading weights:  81%|████████  | 275/339 [00:01<00:00, 191.35it/s]Loading weights:  87%|████████▋ | 295/339 [00:01<00:00, 182.36it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.61it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.00it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_11.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.91it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.69it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.62it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.71it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 163.98it/s]Loading weights:  30%|██▉       | 101/339 [00:00<00:01, 161.71it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 183.29it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 194.98it/s]Loading weights:  50%|████▉     | 169/339 [00:01<00:00, 197.55it/s]Loading weights:  56%|█████▌    | 190/339 [00:01<00:00, 190.02it/s]Loading weights:  62%|██████▏   | 210/339 [00:01<00:00, 180.51it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.07it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 197.25it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.84it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.22it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.33it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.43it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_12.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:38,  8.83it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.39it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.22it/s]Loading weights:  19%|█▊        | 63/339 [00:00<00:01, 142.64it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:01, 170.77it/s]Loading weights:  31%|███▏      | 106/339 [00:00<00:01, 176.20it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:01, 174.55it/s]Loading weights:  44%|████▍     | 149/339 [00:00<00:01, 187.86it/s]Loading weights:  50%|█████     | 171/339 [00:01<00:00, 194.82it/s]Loading weights:  56%|█████▋    | 191/339 [00:01<00:00, 194.87it/s]Loading weights:  62%|██████▏   | 211/339 [00:01<00:00, 183.92it/s]Loading weights:  69%|██████▊   | 233/339 [00:01<00:00, 190.74it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 196.75it/s]Loading weights:  81%|████████▏ | 276/339 [00:01<00:00, 192.84it/s]Loading weights:  87%|████████▋ | 296/339 [00:01<00:00, 185.03it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 188.52it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.04it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_13.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TWO-SPEAKER PROBE · 40 turns · temp 0.70
+  A /home/ubuntu/adapters/t30003
+  B (none — COLD/solo arm)
+  injections OFF (re-certification arm)
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:37,  8.89it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:04, 64.67it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:02, 120.69it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 154.40it/s]Loading weights:  24%|██▍       | 83/339 [00:00<00:01, 163.95it/s]Loading weights:  30%|███       | 102/339 [00:00<00:01, 164.77it/s]Loading weights:  37%|███▋      | 125/339 [00:00<00:01, 182.49it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:01, 183.93it/s]Loading weights:  51%|█████     | 172/339 [00:01<00:00, 197.73it/s]Loading weights:  57%|█████▋    | 193/339 [00:01<00:00, 197.65it/s]Loading weights:  63%|██████▎   | 214/339 [00:01<00:00, 188.35it/s]Loading weights:  69%|██████▉   | 234/339 [00:01<00:00, 180.63it/s]Loading weights:  76%|███████▌  | 257/339 [00:01<00:00, 179.57it/s]Loading weights:  83%|████████▎ | 281/339 [00:01<00:00, 191.97it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 198.15it/s]Loading weights:  96%|█████████▌| 325/339 [00:01<00:00, 197.77it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 173.12it/s]
+
+  ── COLD: A alone, own chain only ──
+
+  solo arm only. wrote runs/act2/asym_recert/logs/t30003_solo_14.json
+  ⏱ t30003 marginal wall: 2152 s for 14 transcripts
+=== [done] 17:14:57 ===
+⭐ ALL STAGES PASSED — pull runs/act2/asym_recert/pipeline_asymmetric_recert.log BEFORE killing the box

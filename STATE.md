@@ -1,55 +1,30 @@
-# 🔴 RUN IN FLIGHT — read this first
+# ✅ NO RUN IN FLIGHT — fleet empty 2026-08-30 17:2x UTC
 
-**A box is LIVE and unattended.** Do not start new work until it is resolved.
+`c89e9890…` (`tlon-asym-recert`) terminated after ALL STAGES PASSED; emptiness
+confirmed by polling to an empty list. 98 transcripts + logs pulled and local.
 
-```
-instance  c89e989021024646a89d03206adde73e   name tlon-asym-recert
-ip        150.136.211.194   key ~/.ssh/tlon   user ubuntu   us-east-1
-started   2026-08-30 13:03 UTC   A100-SXM4-40GB  $1.99/h
-script    tools/pipeline_asymmetric_recert.sh (setsid; survived an ssh kill, verified)
-python    ⛔ ~/venv/bin/python — NOT system python3 (numpy 2.2.6 breaks the
-          system scipy/sklearn/pandas ABI one after another)
-adapters  ~/adapters/<build>/ — UPLOADED, md5-pinned, 7 mutually distinct
-stdout    ~/pipeline_stdout.log      sentinel  ~/DONE | ~/FAILED
-prereg    docs/PREREG_ASYMMETRIC_RECERT_2026_08_30.md sha a7bc2a7f… (pinned on box)
-monitor   task bxokmh1hd (persistent)
-```
+# ⭐ THE PANEL IS `tokens/surface` + `nodes/scene` — TWO AXES, NARROW
 
-**Pass:** 7 builds × 14 solo asymmetric transcripts, 40 turns, `--no-injections`.
-ETA ≈ 4.5 h ⇒ ~17:30 UTC 2026-08-30. Gates already passed: prereg sha, 3.10
-`compileall`, adapter md5 + distinctness, CUDA preflight, 1254 tests.
+`docs/RESULTS_ASYMMETRIC_RECERT_2026_08_30.md`. ⛔⛔ **The window-1 panel was 2/3
+wrong.** `root TTR` was rank 1 in all 7 window-1 leave-one-out runs and is NOT
+admissible in-regime (0.13 → 0.32, rank 1–1 → 1–4). `force:ka` crossed exactly as
+pre-declared (0.27 → **1.59**). `tokens/surface` was REJECTED at window-1 and is
+admitted in-regime. **Only `nodes/scene` survives both regimes.**
+⇒ Re-certifying in the regime you will actually measure in is not a formality.
 
-## ⛔ WHEN IT FINISHES — in this order
+⭐ **Attractors reproduce with no partner at all** — between-build sd 0.2454 vs
+within 0.1098 (ratio 2.24), and the t30001/t30003/t30002 ordering is preserved
+from the symmetric regime. ⛔⛔ **Reading is SELF-ACCUMULATION-INTRINSIC, NOT the
+metaphysics** — a control language (same recipe, non-Tlön corpus) is DEFERRED and
+is what would separate Tlön-specific from generic-transformer.
 
-1. **PULL `runs/act2/asym_recert/pipeline_asymmetric_recert.log` FIRST.**
-2. Pull `runs/act2/asym_recert/logs/*` (98 transcripts) and `~/pipeline_stdout.log`.
-   ⭐ Adapters need NO pulling — they were uploaded from here and are already local.
-3. Terminate `c89e989021024646a89d03206adde73e`; confirm the fleet is empty by
-   POLLING TO AN EMPTY LIST, not by the terminate call's return.
-4. Analyse LOCALLY. ⛔ Zero analysis on a live box.
+⭐ `s20621` is conversationally UNSTABLE (sd 0.271 vs ~0.06–0.13 for siblings; its
+mean 0.462 describes no conversation it produced). **Conversational stability is
+itself a per-build property**, and it is a live threat to the 21-pair design.
 
-⚠️ **If `~/FAILED` exists:** read the whole stdout log — **never `tail` it**.
-
-## ⛔⛔ THE THREE PRE-DECLARATIONS (prereg a7bc2a7f…, binding)
-
-1. **COLD-solo reproducing the attractors = "self-accumulation-intrinsic".**
-   It does **NOT** mean the metaphysics predicted it — any autoregressive model
-   self-reinforces under accumulation and that alternative predicts the same
-   observation. Ruling it out needs a **control language** (same recipe,
-   non-Tlön corpus): DEFERRED, not folded into this pass.
-2. **`force:ka` may cross Z_MAX 1.5 in-regime** (1.30 at window-1; depth widened
-   spread 18×). If it does it is EXCLUDED and a **two-axis panel is a VALID
-   OUTCOME, not a failure**.
-3. **Panel certified SOLO, applied LIVE** — a known regime gap. Low risk,
-   recorded in the results doc rather than discovered later.
-
----
-
-# ✅ NO RUN IN FLIGHT — fleet empty as of 2026-08-29 05:0x UTC
-
-Instance `13364f3e…` (`tlon-var-decomp`) terminated after all stages passed;
-emptiness confirmed by polling to an empty instance list, not by the terminate
-call's return. Artefacts, logs and all three adapters are local and md5-verified.
+⏭ **NEXT:** Stage 2 — define the distance on the two admitted axes. Then the
+drift run (COLD → YOKED → LIVE, 21 pairs, clustered on the ADAPTER, not the
+pair). Pool gate re-passed in-regime on the new panel (z 0.90 / 0.22).
 
 # ⛔⛔ READ THIS BEFORE DESIGNING ANY EXCHANGE EXPERIMENT
 

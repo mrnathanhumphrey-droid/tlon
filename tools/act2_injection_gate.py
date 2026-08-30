@@ -61,11 +61,18 @@ for _s in (sys.stdout, sys.stderr):
         pass
 
 from act2_observable_screen import OBSERVABLES, scenes_of                # noqa: E402
-from act2_ranking_stability import BUILDS                                # noqa: E402
+from act2_ranking_stability import (ASYM_BUILDS, BUILDS,  # noqa: E402
+                                    _transcript)
 
 #: ⭐ The Stage-1 admitted panel. Drift is measured on these axes, so these are
 #: the axes on which an injection pool can do damage.
 PANEL = ("root TTR", "force:ka", "nodes/scene")
+
+#: ⭐ Set at runtime from the re-certified panel. The window-1 panel above is
+#: kept only so the original gate run stays reproducible.
+def set_panel(names):
+    global PANEL
+    PANEL = tuple(names)
 
 #: The pool must sit within this many BETWEEN-BUILD sds of the build mean on
 #: every panel axis. Between-build sd is the right yardstick because it is the
@@ -93,14 +100,14 @@ Z_MAX = 1.5
 OUTSIDE_SEGMENT_FRACTION = 0.50
 
 
-def build_values():
+def build_values(spec=None):
     """Per build, the mean of each panel observable over its exchanges."""
     out = {}
-    for name, d, pat in BUILDS:
+    for name, d, pat in (spec or BUILDS):
         scs = []
         for f in sorted(pathlib.Path(d).glob(pat)):
             data = json.loads(f.read_text(encoding="utf-8"))
-            s = scenes_of(data.get("transcript_interacting") or [])
+            s = scenes_of(_transcript(data))
             if len(s) >= 8:
                 scs.append(s)
         if not scs:
@@ -204,10 +211,16 @@ def main() -> int:
     ap.add_argument("--pool", required=True,
                     help="JSON file: a list of Tlön surfaces")
     ap.add_argument("--out", default="runs/act2/injection_gate.json")
+    ap.add_argument("--source", choices=("window1", "asym"), default="window1")
+    ap.add_argument("--panel", default=None,
+                    help="comma-separated re-certified panel; defaults to the "
+                         "window-1 panel")
     a = ap.parse_args()
 
+    if a.panel:
+        set_panel([x.strip() for x in a.panel.split(",")])
     surfaces = json.loads(pathlib.Path(a.pool).read_text(encoding="utf-8"))
-    builds = build_values()
+    builds = build_values(ASYM_BUILDS if a.source == "asym" else BUILDS)
     pool = pool_values(surfaces)
 
     print("INJECTION-POOL GATE — is the pool a third speaker?")
@@ -264,7 +277,7 @@ def main() -> int:
     out = {"panel": list(PANEL), "z_max": Z_MAX, "outside_fraction": OUTSIDE_SEGMENT_FRACTION,
            "pool": pool, "builds": builds, "centrality": cent,
            "asymmetry": asym, "verdict": verdict,
-           "regime": "window-1 (PROVISIONAL — re-run asymmetric)"}
+           "regime": a.source}
     pathlib.Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     pathlib.Path(a.out).write_text(json.dumps(out, indent=2, ensure_ascii=False),
                                    encoding="utf-8", newline="")
