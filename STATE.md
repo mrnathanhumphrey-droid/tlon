@@ -1,30 +1,36 @@
-# ✅ NO RUN IN FLIGHT — fleet empty 2026-08-30 17:2x UTC
+# ✅ NO RUN IN FLIGHT — fleet empty
 
-`c89e9890…` (`tlon-asym-recert`) terminated after ALL STAGES PASSED; emptiness
-confirmed by polling to an empty list. 98 transcripts + logs pulled and local.
+# ⛔⛔ STAGE 2 HALTED: THE COLD TABLE IS **NOT FROZEN**
 
-# ⭐ THE PANEL IS `tokens/surface` + `nodes/scene` — TWO AXES, NARROW
+`docs/RESULTS_STAGE2_DISTANCE_2026_08_30.md`. The distance is defined and
+red-proofed (2-Wasserstein, Gaussian form, on `tokens/surface` + `nodes/scene`,
+with a MANDATORY mean/spread decomposition — a speaker's fuzz cannot move the
+location term). **What failed is the data, not the metric.**
 
-`docs/RESULTS_ASYMMETRIC_RECERT_2026_08_30.md`. ⛔⛔ **The window-1 panel was 2/3
-wrong.** `root TTR` was rank 1 in all 7 window-1 leave-one-out runs and is NOT
-admissible in-regime (0.13 → 0.32, rank 1–1 → 1–4). `force:ka` crossed exactly as
-pre-declared (0.27 → **1.59**). `tokens/surface` was REJECTED at window-1 and is
-admitted in-regime. **Only `nodes/scene` survives both regimes.**
-⇒ Re-certifying in the regime you will actually measure in is not a formality.
+⛔⛔ **All 7 builds fail locatability at 14 conversations each** (centroid se
+0.63–0.71 × between-build sd, against a pre-declared ≤ 0.50). Independently:
+**15 of 21 pairs are separated by < 2σ**; the closest pair is 0.1σ. ⇒ Most
+speakers cannot be told apart at all, so a drift measured against this baseline
+would be measuring centroid estimation error.
 
-⭐ **Attractors reproduce with no partner at all** — between-build sd 0.2454 vs
-within 0.1098 (ratio 2.24), and the t30001/t30003/t30002 ordering is preserved
-from the symmetric regime. ⛔⛔ **Reading is SELF-ACCUMULATION-INTRINSIC, NOT the
-metaphysics** — a control language (same recipe, non-Tlön corpus) is DEFERRED and
-is what would separate Tlön-specific from generic-transformer.
+⭐ **THE FIX IS MORE CONVERSATIONS PER SPEAKER, NOT MORE SPEAKERS** — se falls as
+1/√n. Need **29 per build** (worst case, s20623); have 14. ⇒ **105 more
+transcripts ≈ 4.5 h on an A100**, and the existing 98 all still count.
 
-⭐ `s20621` is conversationally UNSTABLE (sd 0.271 vs ~0.06–0.13 for siblings; its
-mean 0.462 describes no conversation it produced). **Conversational stability is
-itself a per-build property**, and it is a live threat to the 21-pair design.
+⭐ `s20621`'s famous fuzz was on **`force:ka`, an axis the in-regime
+re-certification already excluded**. On the admitted axes it is unremarkable
+(own sd 0.2490 / 0.0746 against a 7-build range of 0.2387–0.2680 / 0.0578–0.0751).
+The exclusion rule was written for a build that did not need excluding; the check
+found a general problem instead.
 
-⏭ **NEXT:** Stage 2 — define the distance on the two admitted axes. Then the
-drift run (COLD → YOKED → LIVE, 21 pairs, clustered on the ADAPTER, not the
-pair). Pool gate re-passed in-regime on the new panel (z 0.90 / 0.22).
+⭐ Cold table recorded provisionally, `frozen: false`, sha `ca1ab5e9…`:
+fixed-corpus pairs mean W2 1.201 vs cross-corpus 2.114, mean term carrying a
+median 95 % of W2². ⚠️ The near/far gradient holds on average but NOT pair by
+pair — the single closest pair is cross-corpus.
+
+⭐ **PRE-DECLARED FOR THE DRIFT RUN:** estimand `W2(LIVE) − W2(YOKED)` paired per
+pair, COLD is the baseline not the null, clustering on the **ADAPTER** (21 pairs
+over 7 adapters are not 21 observations), no injected material, two axes only.
 
 # ⛔⛔ READ THIS BEFORE DESIGNING ANY EXCHANGE EXPERIMENT
 
