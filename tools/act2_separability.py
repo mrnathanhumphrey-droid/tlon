@@ -139,3 +139,44 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+# ═══ THREE-WAY ADMISSION, SEPARABILITY-FIRST ════════════════════════════════
+#
+# ⛔⛔ THE PRIORITY ORDER IS ARGUED, NOT TUNED. Separability is HARD because it is
+# about the measurement EXISTING: below it there is no distance to shrink and
+# nothing to detect. Contamination is SOFT — a noisier signal is still a signal.
+#
+# ⭐ AND RANK-STABILITY IS NOT SOFTENED, IT IS REPLACED. Jackknife RANK range
+# answers "does this axis keep its POSITION when the build set changes" — a
+# question about which axis generalises as best-in-class. A distance axis needs a
+# different property: does it SEPARATE, reliably. The direct test of that is
+# whether the ICC ITSELF survives dropping a build. Substituting the direct
+# measurement for a proxy is not the same move as relaxing a threshold.
+#
+# ⛔ THE CORRUPTION TEST, APPLIED: would this ordering hold if `root TTR` had
+# passed rank-stability and failed separability instead? Yes — separability would
+# still be the hard floor, because a rank-stable axis that cannot tell two
+# speakers apart still yields no measurement. The argument does not reference
+# which observable passes.
+#
+# ⚠️ PROVENANCE, STATED: `MIN_ICC = 0.30` was set AFTER the ICC table was
+# computed. Its justification is that below 0.30 more than 70 % of what a
+# conversation shows is not about which build produced it, so a "distance between
+# speakers" would mostly not be about the speakers. Read the ICC column directly
+# rather than leaning on the threshold.
+
+MIN_JACK_ICC = 0.25         #: separability must survive dropping any one build
+
+
+def jackknife_icc(per_obs):
+    """Leave-one-BUILD-out ICC. The direct analogue of the rank jackknife, on
+    the quantity a distance axis actually needs."""
+    builds = list(per_obs)
+    out = []
+    for drop in builds:
+        sub = {b: v for b, v in per_obs.items() if b != drop}
+        r = icc_of(sub)
+        if r:
+            out.append(r["icc"])
+    return out
