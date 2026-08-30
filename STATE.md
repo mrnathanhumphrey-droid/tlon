@@ -1,36 +1,51 @@
-# ✅ NO RUN IN FLIGHT — fleet empty
+# 🔴 RUN IN FLIGHT — THE DRIFT RUN
 
-# ⛔⛔ STAGE 2 HALTED: THE COLD TABLE IS **NOT FROZEN**
+```
+instance  f84a329a795a4680bf80280fedcb08e4   name tlon-drift
+ip        141.148.9.215   key ~/.ssh/tlon   user ubuntu   us-east-1
+started   2026-08-30 23:46 UTC   A100-SXM4-40GB  $1.99/h   ETA ~16 h
+script    tools/pipeline_drift.sh (setsid)
+python    ⛔ ~/venv/bin/python — NOT system python3 (numpy 2 breaks dist-packages)
+sentinel  ~/DONE | ~/FAILED     stdout ~/pipeline_stdout.log
+monitor   task bu1pad7hw (persistent)
+```
 
-`docs/RESULTS_STAGE2_DISTANCE_2026_08_30.md`. The distance is defined and
-red-proofed (2-Wasserstein, Gaussian form, on `tokens/surface` + `nodes/scene`,
-with a MANDATORY mean/spread decomposition — a speaker's fuzz cannot move the
-location term). **What failed is the data, not the metric.**
+**12 pairs × 7 replicates + 7 self-pair controls × 3, 80 turns, injections OFF.**
+Cold table FROZEN first: `runs/act2/cold_table_ka.json` sha `84c2a1b5…`.
 
-⛔⛔ **All 7 builds fail locatability at 14 conversations each** (centroid se
-0.63–0.71 × between-build sd, against a pre-declared ≤ 0.50). Independently:
-**15 of 21 pairs are separated by < 2σ**; the closest pair is 0.1σ. ⇒ Most
-speakers cannot be told apart at all, so a drift measured against this baseline
-would be measuring centroid estimation error.
+## ⛔ WHEN IT FINISHES
 
-⭐ **THE FIX IS MORE CONVERSATIONS PER SPEAKER, NOT MORE SPEAKERS** — se falls as
-1/√n. Need **29 per build** (worst case, s20623); have 14. ⇒ **105 more
-transcripts ≈ 4.5 h on an A100**, and the existing 98 all still count.
+1. **PULL `runs/act2/drift/pipeline_drift.log` FIRST**, then `logs/*`,
+   `control/*`, `~/pipeline_stdout.log`. Adapters need no pulling (uploaded).
+2. Terminate `f84a329a795a4680bf80280fedcb08e4`; confirm empty by POLLING.
+3. Analyse locally. ⛔ Zero analysis on a live box.
 
-⭐ `s20621`'s famous fuzz was on **`force:ka`, an axis the in-regime
-re-certification already excluded**. On the admitted axes it is unremarkable
-(own sd 0.2490 / 0.0746 against a 7-build range of 0.2387–0.2680 / 0.0578–0.0751).
-The exclusion rule was written for a build that did not need excluding; the check
-found a general problem instead.
+## ⛔⛔ THE READINGS, BINDING
 
-⭐ Cold table recorded provisionally, `frozen: false`, sha `ca1ab5e9…`:
-fixed-corpus pairs mean W2 1.201 vs cross-corpus 2.114, mean term carrying a
-median 95 % of W2². ⚠️ The near/far gradient holds on average but NOT pair by
-pair — the single closest pair is cross-corpus.
+**Estimand: `W2(LIVE) − W2(YOKED)`, paired per pair, clustered on the ADAPTER**
+(12 pairs are not 12 units — 7 adapters are). Axis: **`force:ka` only**.
 
-⭐ **PRE-DECLARED FOR THE DRIFT RUN:** estimand `W2(LIVE) − W2(YOKED)` paired per
-pair, COLD is the baseline not the null, clustering on the **ADAPTER** (21 pairs
-over 7 adapters are not 21 observations), no injected material, two axes only.
+- `LIVE < YOKED` **AND self-pairs ≈ 0** → coupling is real. **BOTH required.**
+- `LIVE ≈ YOKED` → **UNDERPOWERED** unless the CI excludes a meaningful effect.
+  ⛔ Do NOT read a wide-CI null as the Borges anti-inevitability answer.
+- `LIVE > YOKED` → look for a sign error before interpreting.
+- ⛔⛔ **If the self-pair control is NOT ≈ 0, no coupling claim is licensed** —
+  a pipeline that manufactures drift would do so as `LIVE < YOKED`, the exact
+  signature of the wanted result.
+
+**Scope:** tests coupling on `force:ka`, the one axis that both separates
+(jackknife ICC 0.559–0.906) and moves (capacity 1.45 ± 0.10 vs frozen). A null
+is about `force:ka`, not coupling in general. Single axis, no fallback.
+
+## ⭐ THREE BUGS THE SMOKE TESTS CAUGHT (none would have crashed)
+
+1. Alternation guard checked the CUMULATIVE record; only LIVE alternates.
+2. `--skip-cold` silently no-opped on the `cold_a` block.
+3. ⛔⛔ **`Replay` returned a surface, not a proposal** — every yoked partner
+   turn failed validation, never entered `hist`, and the speaker heard the SEED
+   on all 40 turns. YOKED was "talking to a stale seed", so LIVE−YOKED would
+   have measured **partner present vs absent** instead of **responsive vs not**
+   — a large, clean, entirely spurious coupling signal.
 
 # ⛔⛔ READ THIS BEFORE DESIGNING ANY EXCHANGE EXPERIMENT
 
