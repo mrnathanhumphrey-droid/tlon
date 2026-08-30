@@ -220,6 +220,25 @@ class Replay:
         return self._s[i] if i < len(self._s) else None
 
 
+def measurable_turns(log):
+    """⛔⛔ THE PRIMARY DEFENCE AGAINST A BIASED INJECTION POOL: never measure a
+    turn the pool was visible for.
+
+    A pool that pulls both speakers toward itself manufactures apparent
+    convergence. Neutrality checking (`act2_injection_gate.py`) reduces that
+    risk; EXCLUSION removes it from the measured surfaces entirely, and the two
+    are complementary — the gate can only bound a bias it can see on the panel
+    axes, whereas exclusion drops the contaminated turns whatever the bias is.
+
+    ⭐ AND THE INJECTION DOES NOT PERSIST. `visible_history()` appends it to what
+    is SHOWN, never to `hist`, so an injected surface provokes exactly one turn
+    and is then gone — the same provoke-and-release rule the partner's turns
+    obey. That is what makes turn-level exclusion sufficient rather than
+    cosmetic: there is no injected material sitting in anybody's self-chain.
+    """
+    return [e for e in log if e.get("valid") and not e.get("injected")]
+
+
 def injection_neutrality(pool, panel, speaker_scenes):
     """⛔ Is the injection pool a THIRD SPEAKER?
 
