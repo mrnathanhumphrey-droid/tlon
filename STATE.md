@@ -27,12 +27,34 @@ coupling/drift measurement taken so far. Full write-up:
 build spread of `ka` is 0.037 at window-1 and 0.687 under accumulation (18×).
 Window-1 cannot see individual differences at all.
 
-## ⭐ THE ASSET
+## ⭐ THE ARC, HONESTLY
 
-`runs/act2/var_decomp/adapter_t30001|t30002|t30003` — same corpus (`263fe3c8…`),
-three trainer seeds, three measurably distinct individuals of one language, all
-F-LOCAL-clear. **The asymmetric-history experiment is inference-only on these.**
-Gitignored (323 MB each); they exist only on this machine.
+**We spent three sessions measuring one impression talking to itself, discovered
+it, and the discovery is what makes the real experiment possible.** The two
+structural faults above are not an embarrassment — they are the asset. They
+convert *"the drift is unmeasurable"* into *"the drift was never measured,
+because there was one speaker and no memory architecture — and here are seven
+distinct speakers and the spec for a harness that makes them talk correctly."*
+Still no drift number, but the machine that could produce one is now a spec away
+rather than a confound away.
+
+## ⭐ THE ASSET — 7 builds, not 3
+
+Same-code, same-map (derived), weights on disk, all F-LOCAL-clear:
+`ki_target/adapter_bfresh` (s20620) · `recipe_var/adapter_s20621|s20622|s20623` ·
+`var_decomp/adapter_t30001|t30002|t30003`. **21 pairs**, of which 6 are
+fixed-corpus (`263fe3c8…`, trainer seed only) — so "how far apart they start" is
+a built-in contrast, free. Excluded: `adapter_mt` (pre-08-27 code),
+`adapter_treat` (STIPULATED map).
+
+**The next experiment is inference-only on these.** Gitignored (323 MB each);
+they exist only on this machine.
+
+⏭ **NEXT:** `docs/SPEC_TWO_SPEAKER_DRIFT_2026_08_30.md` — stages 1–3 are `$0` and
+need no GPU. ⛔ Stage 1 can halt the arc: the contamination ranking was itself
+unstable at k=4 (force:ki 0.65→0.28, root TTR 0.07→0.13, gap 9.8×→2.2× on adding
+3 builds), so the distance metric may not be built on it until a jackknife and
+bootstrap over builds say it has stopped moving.
 
 ⚠️ Corpora under `runs/act2/*/corpus_*/*.jsonl` are gitignored (27 MB each,
 seed-deterministic). Cost ledgers are gitignored too — **do not reintroduce spend
