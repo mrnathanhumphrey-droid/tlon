@@ -1,3 +1,50 @@
+# 🔴 RUN IN FLIGHT — read this first
+
+**A box is LIVE and unattended.** Do not start new work until it is resolved.
+
+```
+instance  c89e989021024646a89d03206adde73e   name tlon-asym-recert
+ip        150.136.211.194   key ~/.ssh/tlon   user ubuntu   us-east-1
+started   2026-08-30 13:03 UTC   A100-SXM4-40GB  $1.99/h
+script    tools/pipeline_asymmetric_recert.sh (setsid; survived an ssh kill, verified)
+python    ⛔ ~/venv/bin/python — NOT system python3 (numpy 2.2.6 breaks the
+          system scipy/sklearn/pandas ABI one after another)
+adapters  ~/adapters/<build>/ — UPLOADED, md5-pinned, 7 mutually distinct
+stdout    ~/pipeline_stdout.log      sentinel  ~/DONE | ~/FAILED
+prereg    docs/PREREG_ASYMMETRIC_RECERT_2026_08_30.md sha a7bc2a7f… (pinned on box)
+monitor   task bxokmh1hd (persistent)
+```
+
+**Pass:** 7 builds × 14 solo asymmetric transcripts, 40 turns, `--no-injections`.
+ETA ≈ 4.5 h ⇒ ~17:30 UTC 2026-08-30. Gates already passed: prereg sha, 3.10
+`compileall`, adapter md5 + distinctness, CUDA preflight, 1254 tests.
+
+## ⛔ WHEN IT FINISHES — in this order
+
+1. **PULL `runs/act2/asym_recert/pipeline_asymmetric_recert.log` FIRST.**
+2. Pull `runs/act2/asym_recert/logs/*` (98 transcripts) and `~/pipeline_stdout.log`.
+   ⭐ Adapters need NO pulling — they were uploaded from here and are already local.
+3. Terminate `c89e989021024646a89d03206adde73e`; confirm the fleet is empty by
+   POLLING TO AN EMPTY LIST, not by the terminate call's return.
+4. Analyse LOCALLY. ⛔ Zero analysis on a live box.
+
+⚠️ **If `~/FAILED` exists:** read the whole stdout log — **never `tail` it**.
+
+## ⛔⛔ THE THREE PRE-DECLARATIONS (prereg a7bc2a7f…, binding)
+
+1. **COLD-solo reproducing the attractors = "self-accumulation-intrinsic".**
+   It does **NOT** mean the metaphysics predicted it — any autoregressive model
+   self-reinforces under accumulation and that alternative predicts the same
+   observation. Ruling it out needs a **control language** (same recipe,
+   non-Tlön corpus): DEFERRED, not folded into this pass.
+2. **`force:ka` may cross Z_MAX 1.5 in-regime** (1.30 at window-1; depth widened
+   spread 18×). If it does it is EXCLUDED and a **two-axis panel is a VALID
+   OUTCOME, not a failure**.
+3. **Panel certified SOLO, applied LIVE** — a known regime gap. Low risk,
+   recorded in the results doc rather than discovered later.
+
+---
+
 # ✅ NO RUN IN FLIGHT — fleet empty as of 2026-08-29 05:0x UTC
 
 Instance `13364f3e…` (`tlon-var-decomp`) terminated after all stages passed;
