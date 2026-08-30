@@ -228,7 +228,21 @@ class Replay:
 
     def speak(self, history, turn):      # noqa: ARG002 — deliberately deaf
         i = (turn - 1) // 2
-        return self._s[i] if i < len(self._s) else None
+        if i >= len(self._s):
+            return None
+        # ⛔⛔ MUST RETURN A PROPOSAL, NOT A SURFACE. The probe validates every
+        # turn with `PS.validate`, which takes a proposal dict. Returning the
+        # raw surface made EVERY replayed turn invalid, so it never entered
+        # `hist`, so the live speaker fell back to the seed surface and heard
+        # the SAME provocation on every turn. YOKED was silently "A talking to
+        # a stale seed" rather than "A talking to a recording of B" — which
+        # turns LIVE − YOKED into "partner present vs absent" instead of
+        # "partner responsive vs not", the exact confound the yoked null exists
+        # to remove. Caught by a smoke test; it would have produced a large,
+        # clean, entirely spurious coupling signal.
+        from tlon.act2 import schema_bridge as SB
+        from tlon.grammar.parse import parse
+        return SB.scene_to_proposal(parse(self._s[i]))
 
 
 def measurable_turns(log):

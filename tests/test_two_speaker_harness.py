@@ -30,6 +30,21 @@ from act2_two_speaker import (COLD, LIVE, SEED_SPEAKER, InjectionPlan,  # noqa: 
 # ── fixtures ────────────────────────────────────────────────────────────────
 SEED = ("s1", "s2", "s3", "s4", "s5")
 
+#: ⭐ REAL Tlön, because `Replay` now PARSES what it replays — a fake surface
+#: would fail in the fixture rather than in the code under test.
+def _probe_validate(proposal):
+    """⭐ The validator the PROBE uses. Testing with `validate=None` would put
+    proposal dicts in the history and never exercise the path that broke."""
+    from tlon.product import schema as PS
+    _scene, surface, _ = PS.validate(proposal)
+    return surface
+
+
+REAL_SURFACES = ["mix hlin kron sör ku",
+                 "mil pox hlin kläng krun flex ka",
+                 "nem fen tan hlör mil hlang klan prux ki",
+                 "nix hul sil u krel mös pön krax ka"]
+
 
 def hist_of(pairs):
     return list(pairs)
@@ -260,3 +275,46 @@ def test_a_speaker_that_names_itself_NAME_is_attributed_correctly():
     last = a.seen[-1]
     assert sum(s.startswith("beta") for s in last) == 1
     assert sum(s.startswith("alpha") for s in last) >= 2
+
+
+# ── 8 · THE YOKED PARTNER MUST ACTUALLY BE HEARD ────────────────────────────
+def test_the_replayed_partner_turns_REACH_the_live_speaker():
+    """⛔⛔ THE BUG THAT WOULD HAVE FAKED COUPLING. If the Replay's turns fail
+    validation they never enter `hist`, the live speaker falls back to the seed
+    surface every turn, and YOKED becomes 'talking to a stale seed'. LIVE−YOKED
+    would then measure PARTNER PRESENT vs ABSENT instead of PARTNER RESPONSIVE
+    vs NOT — a large, clean, entirely spurious coupling signal."""
+    from act2_two_speaker import Replay
+
+    recorded = REAL_SURFACES
+    a = Spy("A", _emit)
+    a.backend = object()
+    log = exchange_two(a, Replay(recorded, label="B_rec"), turns=8,
+                       seed_history=SEED, validate=_probe_validate)
+
+    replay_turns = [e for e in log if e["speaker"] == "B_rec"]
+    assert replay_turns, "the replay must take turns at all"
+    assert all(e["valid"] for e in replay_turns), (
+        "every replayed turn must validate, or it never enters the history")
+
+    # and the live speaker must actually SEE them
+    last = a.seen[-1]
+    assert any(s in recorded for s in last), (
+        "the live speaker never saw a recorded partner surface — this is COLD "
+        "wearing YOKED's name")
+
+
+def test_a_yoked_speaker_sees_the_partner_MOVING_not_a_frozen_seed():
+    """The symptom that exposed it: n_shown stuck at 1 for the partner slot."""
+    from act2_two_speaker import Replay
+
+    recorded = REAL_SURFACES
+    a = Spy("A", _emit)
+    a.backend = object()
+    exchange_two(a, Replay(recorded, label="B_rec"), turns=8,
+                 seed_history=SEED, validate=_probe_validate)
+    seen_partner = [next((s for s in ctx if s in recorded), None)
+                    for ctx in a.seen]
+    heard = [s for s in seen_partner if s is not None]
+    assert len(set(heard)) > 1, (
+        "the speaker heard the same partner surface every turn: %r" % heard)
