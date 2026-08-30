@@ -73,6 +73,15 @@ def main() -> int:
                     help="⛔ REQUIRED for the panel re-certification arm")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--skip-cold", action="store_true",
+                    help="COLD is already on disk from the recert pass")
+    ap.add_argument("--allow-self-pair", action="store_true",
+                    help="⛔⛔ CONTROL ONLY. Pairs an adapter WITH ITSELF, which "
+                         "is the fault the whole arc corrected. Identical "
+                         "speakers cannot converge, so the run MUST read ~0; "
+                         "anything else means the pipeline manufactures drift. "
+                         "Output is tagged self_pair=true and must never be "
+                         "pooled with real pairs.")
     a = ap.parse_args()
 
     from act2_backends import LocalBackend
@@ -92,10 +101,33 @@ def main() -> int:
     print("  injections %s" % ("OFF (re-certification arm)" if plan is None
                                else "%d at turns %s" % (a.injections, plan.turns)))
 
-    back_a = LocalBackend(a.model, adapter=a.adapter_a, temperature=a.temperature)
-    A = LLMSpeaker("A", back_a, card=False)
+    core = None
+    if a.adapter_b is None:
+        back_a = LocalBackend(a.model, adapter=a.adapter_a,
+                              temperature=a.temperature)
+        A = LLMSpeaker("A", back_a, card=False)
+        B = None
+    else:
+        if a.adapter_a == a.adapter_b and not a.allow_self_pair:
+            raise SystemExit(
+                "⛔⛔ --adapter-a and --adapter-b are the same path. That is one "
+                "impression and a mirror: identical speakers cannot converge. "
+                "Pass --allow-self-pair ONLY for the control arm.")
+        # ⛔⛔ ONE BASE, TWO LoRAs. Two LocalBackends would be two full 7B models
+        # (~26 GB each observed) and will not fit on a 40 GB card. The adapter
+        # switch is READ BACK on every generation — see act2_dual_backend.
+        from act2_dual_backend import dual_views
+        core, back_a, back_b = dual_views(
+            a.model, a.adapter_a, a.adapter_b, temperature=a.temperature)
+        A = LLMSpeaker("A", back_a, card=False)
+        B = LLMSpeaker("B", back_b, card=False)
+        if a.allow_self_pair and a.adapter_a == a.adapter_b:
+            print("  ⛔⛔ SELF-PAIR CONTROL — one adapter as both speakers. "
+                  "Identical speakers cannot converge, so this MUST read ~0. "
+                  "Tagged self_pair=true; never pool with real pairs.")
 
-    out = {"turns": a.turns, "temperature": a.temperature, "seed": a.seed,
+    out = {"self_pair": bool(a.adapter_a == a.adapter_b),
+           "turns": a.turns, "temperature": a.temperature, "seed": a.seed,
            "adapter_a": a.adapter_a, "adapter_b": a.adapter_b,
            "injections": None if plan is None else
            {"turns": list(plan.turns), "n": a.injections, "seed": a.seed},
@@ -115,26 +147,25 @@ def main() -> int:
         print("\n  solo arm only. wrote %s" % a.out)
         return 0
 
-    back_b = LocalBackend(a.model, adapter=a.adapter_b, temperature=a.temperature)
-    B = LLMSpeaker("B", back_b, card=False)
-    # ⛔⛔ THE ASSERTION THAT WAS MISSING FOR MONTHS. Two adapter paths can still
-    # point at one directory; distinct backend OBJECTS are necessary, and the
-    # paths differing is what makes them distinct MODELS.
-    if a.adapter_a == a.adapter_b:
-        raise SystemExit("⛔⛔ --adapter-a and --adapter-b are the same path. "
-                         "That is one impression and a mirror: identical "
-                         "speakers cannot converge.")
-
-    print("  ── COLD: B alone ──")
-    cold_b = solo(B, turns=a.turns, seed_history=seed_history,
-                  injections=plan, validate=_validate)
-    out["conditions"]["cold_b"] = {"log": cold_b, "surfaces": _surfaces(cold_b)}
+    if not a.skip_cold:
+        print("  ── COLD: B alone ──")
+        cold_b = solo(B, turns=a.turns, seed_history=seed_history,
+                      injections=plan, validate=_validate)
+        out["conditions"]["cold_b"] = {"log": cold_b,
+                                       "surfaces": _surfaces(cold_b)}
 
     # ── LIVE — both adapt ───────────────────────────────────────────────────
     print("  ── LIVE: A and B, each provoked by the other's latest ──")
     live = exchange_two(A, B, turns=a.turns, seed_history=seed_history,
                         injections=plan, mode=LIVE, validate=_validate)
     out["conditions"]["live"] = {"log": live, "surfaces": _surfaces(live)}
+    # ⛔⛔ RUN-TIME PROOF THAT TWO SPEAKERS ACTUALLY SPOKE. A transcript where one
+    # adapter never activated, or where one side generated consecutive turns, is
+    # one impression wearing two labels whatever the CLI said.
+    if core is not None:
+        core.assert_two_speakers_spoke()
+        out["adapter_usage_live"] = core.usage()
+        print("    ✅ both adapters generated and alternated: %s" % core.usage())
 
     # ── YOKED — the null ────────────────────────────────────────────────────
     live_a = [e["surface"] for e in live if e["valid"] and e["speaker"] == "A"]
