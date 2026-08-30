@@ -131,3 +131,32 @@ def test_the_guard_can_FAIL_so_it_has_not_merely_been_consulted():
         bad.activate("A")
     with pytest.raises(AdapterSwitchError):
         bad.assert_two_speakers_spoke()
+
+
+# ── the guard must be SCOPED to one arm ─────────────────────────────────────
+def test_the_guard_scoped_to_the_LIVE_arm_ignores_one_sided_arms():
+    """⛔⛔ CAUGHT ON THE FIRST REAL RUN. COLD is one speaker alone and each
+    YOKED arm is one live speaker against a recording, so a cumulative
+    alternation check fails on arms that are CORRECTLY one-sided."""
+    c = DualAdapterCore(FakeModel(), ("A", "B"))
+    for _ in range(8):                      # COLD: A alone — legitimately
+        c.activate("A")
+    mark = c.mark()
+    for i in range(8):                      # LIVE: alternating
+        c.activate("A" if i % 2 == 0 else "B")
+    c.assert_two_speakers_spoke(since=mark)          # passes, scoped
+    with pytest.raises(AdapterSwitchError, match="did not alternate"):
+        c.assert_two_speakers_spoke()                # fails, cumulative
+    assert c.usage_since(mark) == {"A": 4, "B": 4}
+    assert c.usage() == {"A": 12, "B": 4}            # the observed failure
+
+
+def test_a_one_sided_LIVE_arm_still_fails_when_scoped():
+    """Scoping must not become a way of not looking."""
+    c = DualAdapterCore(FakeModel(), ("A", "B"))
+    c.activate("B")
+    mark = c.mark()
+    for _ in range(6):
+        c.activate("A")
+    with pytest.raises(AdapterSwitchError, match="never generated"):
+        c.assert_two_speakers_spoke(since=mark)

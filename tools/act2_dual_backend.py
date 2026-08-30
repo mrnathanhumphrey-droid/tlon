@@ -65,16 +65,34 @@ class DualAdapterCore:
     def usage(self) -> dict:
         return {n: self.switches.count(n) for n in self.names}
 
-    def assert_two_speakers_spoke(self) -> None:
-        """⛔⛔ THE RUN-TIME GUARD. A transcript where one adapter never
-        activated is one impression and a mirror, whatever the CLI said."""
-        u = self.usage()
+    def mark(self) -> int:
+        """Index into `switches` — take one before an arm to scope the guard.
+
+        ⛔⛔ WITHOUT THIS THE GUARD IS WRONG FOR A MULTI-ARM PROBE, and it fired
+        on its first real run because of it. Only the LIVE arm alternates: COLD
+        is one speaker alone, and each YOKED arm is one live speaker against a
+        recording. Asserting alternation over the cumulative record mixes arms
+        that are *supposed* to be one-sided into a check about a single
+        exchange.
+        """
+        return len(self.switches)
+
+    def usage_since(self, since: int = 0) -> dict:
+        seg = self.switches[since:]
+        return {n: seg.count(n) for n in self.names}
+
+    def assert_two_speakers_spoke(self, since: int = 0) -> None:
+        """⛔⛔ THE RUN-TIME GUARD, scoped to ONE arm. A transcript where one
+        adapter never activated is one impression and a mirror, whatever the CLI
+        said."""
+        seg = self.switches[since:]
+        u = self.usage_since(since)
         missing = [n for n, c in u.items() if c == 0]
         if missing:
             raise AdapterSwitchError(
                 "adapter(s) %r never generated a turn — this is one speaker "
                 "wearing two labels (usage %r)" % (missing, u))
-        if not self.alternated():
+        if not all(x != y for x, y in zip(seg, seg[1:])):
             raise AdapterSwitchError(
                 "the adapters did not alternate; one side generated "
                 "consecutive turns (usage %r)" % (u,))

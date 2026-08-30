@@ -134,10 +134,15 @@ def main() -> int:
            "conditions": {}}
 
     # ── COLD — where each speaker starts, alone ─────────────────────────────
-    print("\n  ── COLD: A alone, own chain only ──")
-    cold_a = solo(A, turns=a.turns, seed_history=seed_history,
-                  injections=plan, validate=_validate)
-    out["conditions"]["cold_a"] = {"log": cold_a, "surfaces": _surfaces(cold_a)}
+    if a.skip_cold and a.adapter_b is None:
+        raise SystemExit("⛔ --skip-cold on a solo run leaves nothing to do; "
+                         "the solo arm IS the cold arm.")
+    if not a.skip_cold:
+        print("\n  ── COLD: A alone, own chain only ──")
+        cold_a = solo(A, turns=a.turns, seed_history=seed_history,
+                      injections=plan, validate=_validate)
+        out["conditions"]["cold_a"] = {"log": cold_a,
+                                       "surfaces": _surfaces(cold_a)}
 
     if a.adapter_b is None:
         pathlib.Path(a.out).parent.mkdir(parents=True, exist_ok=True)
@@ -156,6 +161,7 @@ def main() -> int:
 
     # ── LIVE — both adapt ───────────────────────────────────────────────────
     print("  ── LIVE: A and B, each provoked by the other's latest ──")
+    live_mark = core.mark() if core is not None else 0
     live = exchange_two(A, B, turns=a.turns, seed_history=seed_history,
                         injections=plan, mode=LIVE, validate=_validate)
     out["conditions"]["live"] = {"log": live, "surfaces": _surfaces(live)}
@@ -163,9 +169,13 @@ def main() -> int:
     # adapter never activated, or where one side generated consecutive turns, is
     # one impression wearing two labels whatever the CLI said.
     if core is not None:
-        core.assert_two_speakers_spoke()
-        out["adapter_usage_live"] = core.usage()
-        print("    ✅ both adapters generated and alternated: %s" % core.usage())
+        # ⛔ SCOPED TO THE LIVE ARM ONLY. COLD is one speaker alone and each
+        # YOKED arm is one live speaker against a recording, so a cumulative
+        # check would fail on arms that are correctly one-sided.
+        core.assert_two_speakers_spoke(since=live_mark)
+        out["adapter_usage_live"] = core.usage_since(live_mark)
+        print("    ✅ both adapters generated and alternated: %s"
+              % core.usage_since(live_mark))
 
     # ── YOKED — the null ────────────────────────────────────────────────────
     live_a = [e["surface"] for e in live if e["valid"] and e["speaker"] == "A"]
