@@ -135,7 +135,18 @@ def _assert_two(a, b) -> None:
 
 
 def _label(sp, fallback: str) -> str:
-    return getattr(sp, "label", fallback)
+    """⛔ `LLMSpeaker` calls it `name`, not `label`.
+
+    Falling through to the positional fallback would give BOTH speakers the
+    label of whichever seat they sat in, and speaker-attribution is the entire
+    mechanism — a mis-attributed history silently restores the shared-list
+    behaviour this module exists to remove.
+    """
+    for attr in ("label", "name"):
+        v = getattr(sp, attr, None)
+        if v:
+            return str(v)
+    return fallback
 
 
 def exchange_two(a, b, *, turns: int, seed_history, injections=None,

@@ -239,3 +239,24 @@ def test_the_history_REALLY_GROWS_or_every_test_above_is_vacuous():
     a.backend, b.backend = object(), object()
     exchange_two(a, b, turns=20, seed_history=SEED)
     assert len(a.seen[-1]) > len(a.seen[0])
+
+
+# ── 7 · attribution must survive the REAL speaker class's attribute name ────
+def test_a_speaker_that_names_itself_NAME_is_attributed_correctly():
+    """⛔ `LLMSpeaker` has `.name`, not `.label`. Falling through to the
+    positional fallback would label both speakers by their seat, silently
+    restoring the shared-list behaviour."""
+    class Named:
+        def __init__(self, n):
+            self.name, self.backend, self.seen = n, object(), []
+
+        def speak(self, history, turn):
+            self.seen.append(tuple(history))
+            return "%s%d" % (self.name, turn)
+
+    a, b = Named("alpha"), Named("beta")
+    log = exchange_two(a, b, turns=6, seed_history=SEED)
+    assert [e["speaker"] for e in log] == ["alpha", "beta"] * 3
+    last = a.seen[-1]
+    assert sum(s.startswith("beta") for s in last) == 1
+    assert sum(s.startswith("alpha") for s in last) >= 2
