@@ -107,8 +107,11 @@ def w2(a, b, scale):
     A, B = np.asarray(a) / scale, np.asarray(b) / scale
     dmu = A.mean(axis=0) - B.mean(axis=0)
     mean_term = float(dmu @ dmu)
-    S1 = np.cov(A, rowvar=False)
-    S2 = np.cov(B, rowvar=False)
+    # ⛔ np.cov on a single column returns a 0-d scalar, so a 1-axis panel
+    # would crash the matrix square root. atleast_2d keeps the algebra valid at
+    # any panel width.
+    S1 = np.atleast_2d(np.cov(A, rowvar=False))
+    S2 = np.atleast_2d(np.cov(B, rowvar=False))
     r2 = _sqrtm_psd(S2)
     cross = _sqrtm_psd(r2 @ S1 @ r2)
     spread_term = float(np.trace(S1) + np.trace(S2) - 2.0 * np.trace(cross))
@@ -143,13 +146,18 @@ def locatability(cl, scale):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="runs/act2/cold_table.json")
+    ap.add_argument("--panel", default=None,
+                    help="comma-separated axes; overrides the Stage-1 panel")
     a = ap.parse_args()
 
+    if a.panel:
+        global PANEL
+        PANEL = tuple(x.strip() for x in a.panel.split(","))
     cl = clouds()
     scale = axis_scale(cl)
     print("STAGE 2 — DISTANCE, AND THE FROZEN COLD TABLE")
     print("=" * 78)
-    print("  panel %s   (2-D; root TTR and force:ka are OUT)" % (PANEL,))
+    print("  panel %s   (%d-D)" % (PANEL, len(PANEL)))
     print("  builds %d · conversations each %s"
           % (len(cl), sorted({len(c) for c in cl.values()})))
     print("  frozen axis scale (between-build sd): %s"
