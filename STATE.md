@@ -65,6 +65,21 @@ asymmetric-accumulating** (between-build `ka` spread 0.037 → 0.687, 18×). Sta
 2's cold-distance table must be computed **in the drift regime**, and the panel
 re-validated once asymmetric transcripts exist.
 
+✅ **STAGE 3 DONE** — `tools/act2_two_speaker.py`, 22 red-proof tests written
+BEFORE the module (`tests/test_two_speaker_harness.py`). **The harness that has
+never existed:** two speakers refused if they are one object or share a backend;
+speaker-attributed history where **your own chain accumulates and the partner
+provokes-and-is-released**; `Replay` for the YOKED null; seeded `InjectionPlan`
+yoked identically across conditions. ⭐ Guard-on-the-guard proves the spy
+assertion **catches full accumulation** (leaks 20 partner surfaces) **and**
+window-1 (keeps no self-chain) — so it is not decorative.
+
+⏭ **NEXT (needs a box, NOT $0):** generate asymmetric transcripts for all 7
+builds — that single pass serves **both** the Stage-1 re-certification and the
+Stage-2 cold baseline. Do not make two trips.
+⛔ Stage 2 cannot precede it: the distance must be defined in the regime it is
+measured in.
+
 ⛔ Correction 2026-08-30: `RESULTS_VARIANCE_DECOMPOSE…` §2 said Screen A used 7
 builds. It used **4** (B-fresh + t30001–3). Fixed in place.
 
