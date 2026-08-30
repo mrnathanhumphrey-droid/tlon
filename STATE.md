@@ -50,11 +50,23 @@ a built-in contrast, free. Excluded: `adapter_mt` (pre-08-27 code),
 **The next experiment is inference-only on these.** Gitignored (323 MB each);
 they exist only on this machine.
 
-⏭ **NEXT:** `docs/SPEC_TWO_SPEAKER_DRIFT_2026_08_30.md` — stages 1–3 are `$0` and
-need no GPU. ⛔ Stage 1 can halt the arc: the contamination ranking was itself
-unstable at k=4 (force:ki 0.65→0.28, root TTR 0.07→0.13, gap 9.8×→2.2× on adding
-3 builds), so the distance metric may not be built on it until a jackknife and
-bootstrap over builds say it has stopped moving.
+⏭ **NEXT:** `docs/SPEC_TWO_SPEAKER_DRIFT_2026_08_30.md`. Stages 1–3 are `$0`.
+
+✅ **STAGE 1 DONE** (`RESULTS_STAGE1_RANKING_STABILITY_2026_08_30.md`) — the arc
+does **not** halt. **PANEL = `root TTR` · `force:ka` · `nodes/scene`**, the only
+three passing jackknife rank range ≤ 2 AND bootstrap CI upper < 0.50.
+⭐ The gate earned itself: `force:ku`/`root repertoire`/`tokens/surface` all look
+fine on contamination (0.26–0.30) and move 3–4 ranks on one dropped build — a
+top-N rule would have picked two of them. ⛔ `force:ki` is **dead as an axis**
+(jackknife rank **3–9**); it reads 0.65, 0.28 or 0.53 depending on which builds
+you hold.
+⛔⛔ **The panel is certified on WINDOW-1 transcripts and the drift run is
+asymmetric-accumulating** (between-build `ka` spread 0.037 → 0.687, 18×). Stage
+2's cold-distance table must be computed **in the drift regime**, and the panel
+re-validated once asymmetric transcripts exist.
+
+⛔ Correction 2026-08-30: `RESULTS_VARIANCE_DECOMPOSE…` §2 said Screen A used 7
+builds. It used **4** (B-fresh + t30001–3). Fixed in place.
 
 ⚠️ Corpora under `runs/act2/*/corpus_*/*.jsonl` are gitignored (27 MB each,
 seed-deterministic). Cost ledgers are gitignored too — **do not reintroduce spend

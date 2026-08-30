@@ -60,20 +60,28 @@ Pre-declared: *root TTR stays in the top 3 and `force:ki` stays outside it.*
 ⭐ **HELD — observables may now be selected on contamination.** top3 =
 `[root TTR, force:ka, force:ku]`, `force:ki` at rank 6.
 
-⚠️ **And a caveat that must travel with it.** Re-computed over 7 builds instead
-of 4, the values moved substantially:
+⚠️ **And a caveat that must travel with it.** The values moved substantially
+between build sets:
 
-| | k=4 | k=7 |
-|---|---|---|
-| root TTR | 0.07 | 0.13 |
-| force:ki | 0.65 | **0.28** |
-| **gap** | **9.8×** | **2.2×** |
+| build set | n | root TTR | force:ki | gap |
+|---|---|---|---|---|
+| exploratory screen (s20620–23) | 4 | 0.07 | 0.65 | 9.8× |
+| **Screen A, this run** (s20620 + t30001–3) | **4** | 0.13 | **0.28** | 2.2× |
+| all same-code builds | 7 | 0.13 | **0.53** | 4.2× |
 
-The prediction passed by its letter, but the 10× gap that made the original
-screen compelling is a 2.2× gap. **The k=4 contamination estimates were
-themselves unstable** — the same lesson this whole arc keeps teaching, now
-applied to the instrument that was supposed to escape it. Root TTR is still the
-best available choice; it is not the landslide the exploratory screen suggested.
+⛔ **CORRECTION (2026-08-30).** This section originally said Screen A was
+"recomputed over 7 builds instead of 4." It was not. `act2_variance_decompose.py`
+builds `arms` from B-fresh plus the three new adapters — **4 builds, a different
+4** than the exploratory screen used. `s20621/22/23` were never in it. The 0.28
+figure is a 4-build estimate; the true 7-build value is **0.53**. Verified by
+recomputing both sets: the Screen A set reproduces 0.13 / 0.28 / 2.2× exactly.
+
+The prediction passed by its letter, but `force:ki` reads **0.65, 0.28, or 0.53**
+depending on which builds you hold — **the contamination estimates were
+themselves unstable**, which is the same lesson this arc keeps teaching, now
+applied to the instrument that was supposed to escape it. Stage 1
+(`RESULTS_STAGE1_RANKING_STABILITY_2026_08_30.md`) quantifies it: `force:ki`'s
+jackknife rank range is **3–9**.
 
 ## 3 · SCREEN B — UNDERPOWERED, and in a regime that should not have been run
 
