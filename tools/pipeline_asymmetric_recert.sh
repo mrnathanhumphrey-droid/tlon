@@ -21,12 +21,14 @@ ROOT=runs/act2/asym_recert
 mkdir -p $ROOT/logs
 LOG=$ROOT/pipeline_asymmetric_recert.log
 STAGE=init
+T_START=$(date +%s)
 step() { STAGE="$1"; echo "=== [$1] $(date -u +%H:%M:%S) ===" | tee -a $LOG; }
 
 MODEL=Qwen/Qwen2.5-7B-Instruct
 TURNS=40
 N_PER_BUILD=14
 BUILDS="s20620 s20621 s20622 s20623 t30001 t30002 t30003"
+PY=${PY:-$HOME/venv/bin/python}
 PREREG_SHA=a7bc2a7fd30bc310cc53c4b3e24815c268c20d5495b02af7395e332193ece8b8
 
 step prereg_pin
@@ -35,9 +37,9 @@ GOT=$(sha256sum docs/PREREG_ASYMMETRIC_RECERT_2026_08_30.md | cut -d' ' -f1)
 echo "  ✅ prereg pinned $PREREG_SHA" | tee -a $LOG
 
 step syntax_floor
-python3 --version | tee -a $LOG
-python3 -m compileall -q tools/ tlon/ tests/ 2>&1 | tee -a $LOG
-echo "  ✅ parses under $(python3 --version 2>&1)" | tee -a $LOG
+$PY --version | tee -a $LOG
+$PY -m compileall -q tools/ tlon/ tests/ 2>&1 | tee -a $LOG
+echo "  ✅ parses under $($PY --version 2>&1)" | tee -a $LOG
 
 step adapter_pin
 # ⛔⛔ These weights crossed a network. If any byte moved, every number below
@@ -63,7 +65,7 @@ NDIST=$(cut -d' ' -f1 /tmp/expect_md5.txt | sort -u | wc -l)
 echo "  ✅ 7 adapters md5-pinned and mutually distinct" | tee -a $LOG
 
 step preflight
-python3 - <<'PY' 2>&1 | tee -a $LOG
+$PY - <<'PYEOF' 2>&1 | tee -a $LOG
 import torch
 from transformers import AutoTokenizer
 print("  torch", torch.__version__, "cuda", torch.cuda.is_available())
@@ -71,23 +73,23 @@ tok = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-7B-Instruct")
 tok.apply_chat_template([{"role": "user", "content": "x"}], tokenize=False)
 assert (torch.randn(64, 64, device="cuda") @ torch.randn(64, 64, device="cuda")).shape
 print("  ✅ chat template rendered; CUDA matmul ran")
-PY
+PYEOF
 
 step tests
-python3 -m pytest tests/ -q 2>&1 | tee -a $LOG | tail -3
+$PY -m pytest tests/ -q 2>&1 | tee -a $LOG | tail -3
 
 # ── the pass ────────────────────────────────────────────────────────────────
 # ⭐ PER-BUILD WALL TIME IS LOGGED SEPARATELY FROM SETUP. A fixed cost divided
 # by a small n is the constant, not a rate — that error made an earlier forecast
 # 2x optimistic.
 SETUP_END=$(date +%s)
-echo "  setup wall: $((SETUP_END - $(date -u -d "$(head -1 $LOG | sed 's/.*] //;s/ ===//')" +%s 2>/dev/null || echo $SETUP_END))) s" | tee -a $LOG || true
+echo "  ⏱ setup wall (one-time, NOT divisible into per-build): $((SETUP_END-T_START)) s" | tee -a $LOG
 
 for B in $BUILDS; do
   step solo_$B
   T0=$(date +%s)
   for i in $(seq 1 $N_PER_BUILD); do
-    python3 tools/act2_two_speaker_probe.py --model $MODEL \
+    $PY tools/act2_two_speaker_probe.py --model $MODEL \
       --adapter-a ~/adapters/$B --no-injections --turns $TURNS \
       --out $ROOT/logs/${B}_solo_$i.json 2>&1 | tee -a $LOG
   done
