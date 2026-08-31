@@ -71,8 +71,27 @@ FIXED_CORPUS = frozenset({"s20620", "t30001", "t30002", "t30003"})
 MAX_CENTROID_SE_FRACTION = 0.5
 
 
-def clouds(spec=None):
-    """build -> (n_conversations, 2) array of per-conversation panel points."""
+def clouds(spec=None, *, panel=None):
+    """build -> (n_conversations, len(panel)) array of per-conversation points.
+
+    ⛔⛔ `panel` IS REQUIRED, AND THAT IS A BUG FIX, NOT AN API PREFERENCE.
+    It used to fall back to the module-level PANEL, whose default is the
+    2-D Stage-1 panel. But the frozen cold table was built on `force:ka` via a
+    RUNTIME `--panel` override, so any later caller importing this function got
+    `tokens/surface`+`nodes/scene` while believing it had `force:ka` — and the
+    numbers come back plausible, just wrong by a factor of ~20.
+    Caught on 2026-08-31 by a range check: the returned "force:ka" centroids
+    were ~4.86 for a quantity that is a PROPORTION bounded in [0,1]. The
+    difference of a proportion and a token count is a number, and it excluded
+    zero. ⭐ A default that silently produces wrong-but-plausible values is a
+    landmine; make it fail instead.
+    """
+    if panel is None:
+        raise TypeError(
+            "clouds() requires an explicit panel= — the module default is not "
+            "the panel the frozen cold table was built on, and defaulting "
+            "silently returns the wrong observable with plausible values")
+    panel = tuple(panel)
     out = {}
     for name, d, pat in (spec or ASYM_BUILDS):
         pts = []
@@ -81,7 +100,7 @@ def clouds(spec=None):
             sc = scenes_of(_transcript(data))
             if len(sc) < 8:
                 continue
-            v = [OBSERVABLES[o](sc) for o in PANEL]
+            v = [OBSERVABLES[o](sc) for o in panel]
             if all(x is not None for x in v):
                 pts.append(v)
         if len(pts) >= 3:
@@ -153,7 +172,7 @@ def main() -> int:
     if a.panel:
         global PANEL
         PANEL = tuple(x.strip() for x in a.panel.split(","))
-    cl = clouds()
+    cl = clouds(panel=PANEL)
     scale = axis_scale(cl)
     print("STAGE 2 — DISTANCE, AND THE FROZEN COLD TABLE")
     print("=" * 78)

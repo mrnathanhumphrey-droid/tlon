@@ -96,6 +96,41 @@ def pair_delta(live_a, live_b, yok_a, yok_b, scale):
             "delta_spread_term": L["spread_term"] - Y["spread_term"]}
 
 
+def pairing_gain(a, b):
+    """⭐⭐ THE CHANNEL W2 CANNOT SEE: conversation-specific convention.
+
+    `W2(A,B)` compares MARGINAL distributions. Two speakers can agree *within
+    each shared conversation* — each pair of transcripts landing on its own
+    shared value — while neither speaker's marginal moves at all. W2 is blind to
+    that by construction, and it is exactly the channel a self-accumulation
+    architecture makes available: the speakers never hold each other's words, so
+    whatever they share has to be re-established inside each conversation.
+
+    ⛔⛔ AND IT IS WHY THE SELF-PAIR ARM IS A MARGINAL-NOISE FLOOR, NOT A PROOF
+    THAT COUPLING IS IMPOSSIBLE. For identical weights the two marginals coincide
+    by exchangeability, so the self-pair could NEVER have shown coupling under
+    W2 — no matter how strongly the two trajectories actually converged.
+
+        gain = mean_{i≠j} |A_i − B_j|  −  mean_i |A_i − B_i|
+
+    POSITIVE = partners from the SAME conversation are more alike than partners
+    drawn from different ones. A shared per-conversation offset cancels in the
+    within term and survives in the across term, which is what makes it fire.
+
+    ⭐ It is deliberately blind to a COMMON SHIFT (both speakers moving the same
+    way leaves every difference unchanged) — that is a separate channel, and
+    conflating the two is what `test_a_common_shift_does_NOT_fire` pins down.
+    """
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    n = len(a)
+    if n < 3 or len(b) != n:
+        return None
+    within = np.mean(np.abs(a - b))
+    across = np.mean([abs(a[i] - b[j])
+                      for i in range(n) for j in range(n) if i != j])
+    return float(across - within)
+
+
 def cluster_bootstrap(deltas, adapters, *, n_boot=5000, seed=20260831):
     """Resample ADAPTERS, not pairs — the pairs share speakers.
 

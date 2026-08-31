@@ -29,11 +29,46 @@ interval also excludes an effect worth having. It does not:
 So σ_cp remains **unmeasured**. The run did not find "no coupling"; it found
 that this apparatus cannot yet see coupling.
 
-## ⭐⭐ The self-pair control is the finding
+## ⛔⛔ CORRECTION (2026-08-31, after Nate's challenge): "identical cannot converge" is NOT arithmetic
 
-Identical speakers **cannot** converge — that is a fact about the world, not a
-hypothesis. So every non-zero delta in the control arm is manufactured by
-estimation noise, and the control tells us how big that manufacturing gets:
+This document originally said identical speakers cannot converge because it is
+"a fact about the world, not a hypothesis." **That was wrong as stated, and the
+architecture is the reason.** Speakers do not hold each other's words: A's
+context is `own_chain + B's latest`, B's is `own_chain + A's latest`. Those are
+different token streams from turn 1 at temperature 0.70, so two identical
+adapters are **two individuated trajectories**, not one process mirrored. The
+"identical ⇒ zero difference by construction" argument comes from a
+shared-history system; this is a self-accumulation system.
+
+⭐ **THE NULL SURVIVES ON A DIFFERENT ARGUMENT: EXCHANGEABILITY.** Identical
+weights plus symmetric roles give `law(A) = law(B)`, and W2 compares MARGINAL
+distributions. Two samples from the same law have true W2 = 0 **however wildly
+the individual trajectories wander** — trajectory divergence is invisible to a
+statistic that only sees marginals.
+
+⚠️ **And the roles are NOT perfectly symmetric, which the wrong argument hid.**
+In LIVE, A moves first and sees the seed while B responds to A. In YOKED, A and
+B are *both* first-movers in their own arms. So LIVE carries a first-mover
+asymmetry YOKED lacks. ⭐ This does **not** need to be waved through as "small":
+the asymmetry is **COMMON-MODE** — every LIVE arm has it, self-pairs and real
+pairs alike — so it **cancels in the self-vs-real comparison**. The self-pair is
+therefore the correct *matched baseline including the first-mover offset*, not a
+pure zero. Observed self-pair mean **+0.0445**, the sign the asymmetry predicts.
+
+⛔⛔ **AND THE BIGGER CONSEQUENCE: THE SHIPPED ESTIMAND IS MARGINAL-BLIND.**
+Because self-pair marginals coincide by construction, the self-pair arm could
+**never** have shown coupling under W2, however strongly the two trajectories
+actually converged. So the self-pair is a **marginal-distance noise floor**, NOT
+a proof that coupling is impossible. This document originally used it as the
+latter. That is a category error, and it means the headline answers a narrower
+question than claimed: *do the marginal `force:ka` distributions converge* — not
+*do the speakers form a convention*.
+
+## ⭐⭐ The self-pair control is still the finding
+
+Every non-zero delta in the control arm is manufactured by estimation noise
+(true delta = 0 by exchangeability, plus the common-mode first-mover offset),
+and the control tells us how big that manufacturing gets:
 
 | | sd of pair deltas | min | max |
 |---|---|---|---|
@@ -81,6 +116,67 @@ independently-trained speakers first, and more replicates second.
 arc, and it moved for the same reason as always — sizing was done against what
 the run re-rolls (sampling noise) rather than what the estimand generalises over
 (the speakers).
+
+## THE CHANNEL W2 CANNOT SEE — and it is underpowered too
+
+Two speakers can agree *inside each shared conversation* while neither marginal
+moves; W2 is blind to that, and self-accumulation is exactly the architecture
+where it could happen. Statistic (`act2_drift.pairing_gain`):
+
+    gain = mean_{i≠j} |A_i − B_j|  −  mean_i |A_i − B_i|
+
+| | Δ gain (LIVE − YOKED) | 95% CI |
+|---|---|---|
+| self-pairs (n=3) | +0.0167 | [−0.0250, +0.0655] |
+| real pairs (n=7) | +0.0024 | [−0.0075, +0.0130] |
+
+⛔⛔ **DO NOT READ THAT CI AS A BOUND ON THE CONVENTION.** I first reported it as
+"±0.010 in ka units ≈ 4% of a between-build sd." **Retracted — units error.**
+The CI is on the *gain*, and gain is a heavily compressed function of the
+convention producing it: a planted convention of sd 0.10 ka yields a gain of
+only 0.0233. Calibrated at the real design (12 pairs × 7 reps, noise 0.10):
+
+| planted convention (ka sd) | 0.04 | 0.06 | 0.08 | **0.10** |
+|---|---|---|---|---|
+| mean gain | 0.0036 | 0.0075 | 0.0142 | **0.0233** |
+| detected? | no | no | no | **yes** |
+
+⇒ the run could only have caught a conversation-specific convention of
+**sd ≥ ~0.10 ka = 41% of a between-build sd** — *worse* than the shipped
+estimand's 32%. **Both channels are underpowered.** The pairing statistic is
+nonetheless validated, not inert: `tests/test_pairing_statistic.py` proves it
+fires on a planted convention, responds monotonically to its size, and stays
+silent on a common shift and on the speakers' starting gap.
+
+⭐ **Temporal check** (does convergence build, as coupling should?): it does
+not. Self-pair Δgain **+0.0143 → +0.0000** first half to second — it *decays*.
+Real pairs +0.0026 → +0.0077. The "−0.827 is the coupling ceiling, not the
+artifact floor" hypothesis was testable, tested, and is not supported.
+
+## A LEAD, NOT A RESULT: co-movement
+
+Both speakers moving *together* leaves the gap unchanged, so **neither** W2 nor
+pairing gain sees it. Cold cancels in the LIVE−YOKED contrast, so it is clean:
+**−0.0172, CI [−0.0335, +0.0004]**. It grazes zero. ⛔ It was found post-hoc
+among several tests, so re-analysing this data cannot upgrade it — **it needs
+its own pre-registered run.**
+
+## ⛔⛔ STANDING RULE: COMPARE LIVE TO YOKED, NEVER TO COLD
+
+Two false positives were caught mid-analysis, both of which read as findings:
+
+1. **Jensen.** `gap(LIVE) − gap(COLD) = +0.0736`, CI excluding zero — computed
+   as `mean|A−B|` against `|mean A − mean B|`. `E|X| ≥ |EX|` always, and the
+   inflation is worst at small gaps (`s20620|t30001`: cold 0.029 → live 0.157,
+   essentially all bias). Matched estimators drop it to +0.0516, and even that
+   is inflated because live means use n=7 against cold's n=14.
+2. **A module default.** `clouds()` fell back to the 2-D Stage-1 panel while the
+   caller believed it had `force:ka`, returning "proportions" of ~4.86. Now
+   raises without an explicit `panel=`.
+
+⇒ **Only LIVE-vs-YOKED is a valid contrast** — same n, same estimator, same run.
+It reads **+0.0191, CI [−0.0338, +0.0753]**, covering zero, consistent with the
+shipped W2 result. No divergence-from-cold claim is licensed.
 
 ## What is nevertheless established
 

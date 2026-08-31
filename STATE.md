@@ -18,11 +18,62 @@ effect. It does not: **CI half-width 0.375 = 32% of the median cold-table
 speaker separation (1.1878)**. A coupling effect a third the size of the typical
 distance between two Tlön speakers fits inside the interval undetected.
 
-## ⭐⭐ THE SELF-PAIR CONTROL IS THE FINDING
+## ⛔⛔ "IDENTICAL CANNOT CONVERGE" IS NOT ARITHMETIC — Nate broke that axiom
 
-Identical speakers CANNOT converge, so every non-zero control delta is
-manufactured. **`s20621` against itself read −0.827** — a bigger apparent
-convergence than any real pair achieved (best −0.611, `s20620|s20621`).
+Speakers do NOT hold each other's words, so two identical adapters are **two
+individuated trajectories** (different self-chains from turn 1, temp 0.70), not
+one process mirrored. The old argument was imported from a shared-history system.
+⭐ **THE NULL SURVIVES BY EXCHANGEABILITY INSTEAD:** identical weights + symmetric
+roles ⇒ `law(A)=law(B)`, and **W2 compares MARGINALS**, so trajectory divergence
+is invisible to it and true W2 = 0 regardless.
+⚠️ Roles are NOT perfectly symmetric — in LIVE, A moves first; in YOKED both are
+first-movers. That asymmetry is **COMMON-MODE (every LIVE arm has it) so it
+CANCELS in the self-vs-real comparison.** The self-pair is a matched baseline
+*carrying the offset*, not a pure zero. Observed +0.0445 = the predicted sign.
+⛔⛔ **CONSEQUENCE: THE SHIPPED ESTIMAND IS MARGINAL-BLIND.** Self-pair marginals
+coincide by construction ⇒ that arm could NEVER have shown coupling under W2.
+It is a **marginal-distance noise floor, NOT a no-coupling-proof**; I used it as
+the latter. The headline answers "do the MARGINALS converge", not "do they form
+a convention".
+
+## ⭐ THE CONVENTION CHANNEL — ALSO UNDERPOWERED (`pairing_gain`)
+
+`gain = mean_{i≠j}|A_i−B_j| − mean_i|A_i−B_i|`. Real pairs Δgain **+0.0024, CI
+[−0.0075,+0.0130]**. ⛔⛔ **I FIRST CALLED THAT "±4% of a between-build sd".
+RETRACTED — UNITS ERROR:** the CI is on the GAIN, and gain compresses the effect
+(a convention of sd 0.10 ka gives gain 0.0233). Calibrated: the run could only
+catch a convention of **sd ≥ ~0.10 ka = 41% of a between-build sd**, WORSE than
+the shipped estimand's 32%. ⭐ Statistic is validated not inert —
+`tests/test_pairing_statistic.py` fires on a planted convention, is graded, and
+ignores a common shift + the starting gap.
+⭐ Temporal check: convergence does NOT build — self-pair Δgain **+0.0143 →
++0.0000** across halves (it decays). The "−0.827 = coupling ceiling" inversion
+was tested and is not supported.
+
+## ⛔⛔ STANDING RULE: LIVE-vs-YOKED ONLY, NEVER LIVE-vs-COLD
+
+Two would-be headline false positives, caught mid-analysis:
+**(1) Jensen** — `gap(LIVE)−gap(COLD)=+0.0736` "excluded zero" but compared
+`mean|A−B|` to `|mean A−mean B|`; `E|X|≥|EX|`, worst at small gaps
+(`s20620|t30001` cold 0.029→live 0.157 = pure bias). Still inflated after
+matching, because live n=7 vs cold n=14.
+**(2) A module default** — `clouds()` silently used the 2-D Stage-1 panel while
+the caller believed `force:ka`, returning "proportions" of ~4.86. Now RAISES
+without an explicit `panel=`; regenerating still reproduces sha `84c2a1b5…`.
+⇒ only LIVE-vs-YOKED shares n, estimator and run: **+0.0191, CI [−0.0338,
++0.0753]**, covers zero.
+
+## ⏳ LEAD, NOT A RESULT — co-movement
+Both speakers moving together leaves the gap unchanged, so W2 AND pairing gain
+are both blind. Cold cancels in LIVE−YOKED: **−0.0172, CI [−0.0335, +0.0004]** —
+grazes zero. ⛔ Found post-hoc among several tests ⇒ **needs its own
+pre-registered run; re-analysing this data cannot upgrade it.**
+
+## ⭐⭐ THE SELF-PAIR CONTROL IS STILL THE FINDING
+
+Every non-zero control delta is manufactured (true delta 0 by exchangeability,
+plus the common-mode offset). **`s20621` against itself read −0.827** — a bigger
+apparent convergence than any real pair achieved (best −0.611, `s20620|s20621`).
 
 ⭐ Without the control arm, six converging pairs led by −0.611 would have looked
 like a coupling result. **The control is the only reason no claim was made.**
