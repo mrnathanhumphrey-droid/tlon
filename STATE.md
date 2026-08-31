@@ -7,7 +7,7 @@ started   2026-08-30 23:46 UTC   A100-SXM4-40GB  $1.99/h   ETA ~16 h
 script    tools/pipeline_drift.sh (setsid)
 python    ⛔ ~/venv/bin/python — NOT system python3 (numpy 2 breaks dist-packages)
 sentinel  ~/DONE | ~/FAILED     stdout ~/pipeline_stdout.log
-monitor   task bu1pad7hw (persistent)
+monitor   task byyaxuswj (persistent)
 ```
 
 **12 pairs × 7 replicates + 7 self-pair controls × 3, 80 turns, injections OFF.**
