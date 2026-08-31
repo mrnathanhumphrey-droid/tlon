@@ -18,6 +18,35 @@ effect. It does not: **CI half-width 0.375 = 32% of the median cold-table
 speaker separation (1.1878)**. A coupling effect a third the size of the typical
 distance between two Tlön speakers fits inside the interval undetected.
 
+## ⛔⛔ PRICING ($0, 2026-08-31): "ADAPTER-LIMITED" IS **NOT ESTABLISHED**
+
+Full: `docs/PRICING_ADAPTER_COUNT_2026_08_31.md`.
+**`h = 0.2519, 95% CI [0.0000, 0.4033]` — THE LOWER BOUND IS ZERO.** h is the
+irreducible speaker floor in `sd(n)²=h²+k²/n`; if h=0 the design is
+**REPLICATE-limited** and no new adapters are needed. ⛔ The claim
+"adapter-limited, not replicate-limited" (in RESULTS + STATE + through review) is
+**a point estimate reported without its interval.**
+⭐⭐ **CHEAPEST NEXT MOVE IS NOT MORE ADAPTERS:** extend the EXISTING 12 pairs to
+n≈28 (~36 GPU-h) — h is identified by the CURVATURE of sd(n), and the current fit
+spans only n=3–7. That decides whether the adapter programme is needed at all.
+⛔ **DO NOT TRAIN ADAPTERS BEFORE THAT.**
+
+⭐ Pre-declared threshold **Δ\* = 0.5939** (half the median separation 1.1878),
+fixed before any curve. At Δ\* the completed run is **nominally powered** —
+observed se 0.1915 ⇒ MDE 0.5365 < Δ\*. ⛔ But leave-one-adapter-out MDE ranges
+**0.472–0.725, straddling Δ\***, and the mean swings −0.006→+0.191 ⇒ **the binding
+constraint is INFERENCE STABILITY, not point power.** LOO se swing ≈1.65/N ⇒
+N=17 for ±10%, N=33 for ±5% ⇒ **N ≈ 15–25**.
+⚠️ σ_a² was **not identifiable** (method-of-moments went NEGATIVE, −0.0268; a
+fitted-component model undershot the observed se by 44%) ⇒ N is BRACKETED between
+two bounding laws anchored on the observed se, not extrapolated from components.
+⭐ Cost, both measured: train **1.24 GPU-h/adapter** (4,477 s — ⚠️ only datapoint
+on disk, NOT verified to be these adapters' recipe), infer **615 s/replicate**.
+N=20 with ~60 pairs ≈ **98 GPU-h**.
+⛔ The brief called `0.2397` "h²"; it is **h** (h²=0.0575) — a factor of 4 in
+variance. And between-build sd `0.2454` ≈ h `0.2519` are DIFFERENT QUANTITIES in
+different units that happen to collide numerically.
+
 ## ⛔⛔ "IDENTICAL CANNOT CONVERGE" IS NOT ARITHMETIC — Nate broke that axiom
 
 Speakers do NOT hold each other's words, so two identical adapters are **two
