@@ -3,6 +3,16 @@
 ```
 instance  f84a329a795a4680bf80280fedcb08e4   name tlon-drift
 ip        141.148.9.215   key ~/.ssh/tlon   user ubuntu   us-east-1
+repo      ~/tlon  (LOWERCASE — `~/Tlon` silently reads as an empty dir)
+pid       4815    (`bash tools/pipeline_drift.sh`)
+watchdog  monitor bdrxd0ra9 — POLLS every 5 min, does not tail.
+          ⛔⛔ THE PREVIOUS WATCHDOG COULD NOT DETECT THE THING IT EXISTED FOR.
+          It was `tail -F` over ssh (a dropped connection = permanent silence =
+          looks exactly like a healthy quiet run), and its liveness probe was
+          `pgrep -f pipeline_drift.sh`, which MATCHES THE SSH SHELL'S OWN
+          COMMAND LINE — the process-died branch was unreachable. Liveness is
+          now PID 4815 + `/proc/<pid>/cmdline` identity, red-proofed against a
+          dead pid, an absent pid, and a LIVE pid that is not the run.
 started   2026-08-30 23:46 UTC   A100-SXM4-40GB  $1.99/h   ETA ~16 h
 script    tools/pipeline_drift.sh (setsid)
 python    ⛔ ~/venv/bin/python — NOT system python3 (numpy 2 breaks dist-packages)
