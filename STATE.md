@@ -5,6 +5,13 @@ instance  f84a329a795a4680bf80280fedcb08e4   name tlon-drift
 ip        141.148.9.215   key ~/.ssh/tlon   user ubuntu   us-east-1
 repo      ~/tlon  (LOWERCASE — `~/Tlon` silently reads as an empty dir)
 pid       4815    (`bash tools/pipeline_drift.sh`)
+eta       MEASURED, not estimated: pair 1 marginal wall 4340 s / 7 replicates
+          = 620 s per replicate. 105 replicates (84 real + 21 self-pair) is
+          65,100 s ≈ 18.1 h from the 23:47:14 pair-phase start ⇒ ~17:50 UTC
+          31 Aug. That is ~2 h past the pre-run ~16 h guess. ⭐ The 70 s setup
+          is logged SEPARATELY and is NOT divisible per pair — do not fold it
+          in. Assumes pairs 2-12 match pair 1; the next marginal-wall line
+          tests that assumption rather than confirming it.
 watchdog  monitor bdrxd0ra9 — POLLS every 5 min, does not tail.
           ⛔⛔ THE PREVIOUS WATCHDOG COULD NOT DETECT THE THING IT EXISTED FOR.
           It was `tail -F` over ssh (a dropped connection = permanent silence =
