@@ -1,0 +1,7966 @@
+{
+ "self_pair": false,
+ "turns": 80,
+ "temperature": 0.7,
+ "seed": 7,
+ "adapter_a": "/home/ubuntu/adapters/s20621",
+ "adapter_b": "/home/ubuntu/adapters/s20622",
+ "injections": null,
+ "conditions": {
+  "live": {
+   "log": [
+    {
+     "turn": 0,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "plin"
+            },
+            "relator": "u"
+           }
+          ],
+          "orient": [
+           "hlan"
+          ],
+          "root": "hrir"
+         },
+         "relator": "tan"
+        }
+       ],
+       "root": "mlong"
+      }
+     },
+     "valid": true,
+     "surface": "tan hlan u plin hrir mlong ka",
+     "injected": false,
+     "n_shown": 1
+    },
+    {
+     "turn": 1,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "plung"
+            },
+            "relator": "u"
+           }
+          ],
+          "root": "främ"
+         },
+         "relator": "xom"
+        }
+       ],
+       "orient": [
+        "hren"
+       ],
+       "root": "klen"
+      }
+     },
+     "valid": true,
+     "surface": "hren xom u plung främ klen ko",
+     "injected": false,
+     "n_shown": 1
+    },
+    {
+     "turn": 2,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "krun"
+            },
+            "relator": "u"
+           }
+          ],
+          "orient": [
+           "plas"
+          ],
+          "root": "mlong"
+         },
+         "relator": "fro"
+        }
+       ],
+       "orient": [
+        "fen",
+        "sil"
+       ],
+       "quant": "pän",
+       "root": "mär"
+      }
+     },
+     "valid": true,
+     "surface": "pän fen sil fro plas u krun mlong mär ko",
+     "injected": false,
+     "n_shown": 2
+    },
+    {
+     "turn": 3,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "har"
+             ],
+             "root": "kläng"
+            },
+            "relator": "fro"
+           }
+          ],
+          "root": "hros"
+         },
+         "relator": "kra"
+        }
+       ],
+       "modal": "plun",
+       "root": "plon"
+      }
+     },
+     "valid": true,
+     "surface": "plun kra fro har kläng hros plon ki",
+     "injected": false,
+     "n_shown": 2
+    },
+    {
+     "turn": 4,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "sung"
+             ],
+             "root": "tang"
+            },
+            "relator": "kra"
+           }
+          ],
+          "root": "kras"
+         },
+         "relator": "mil"
+        }
+       ],
+       "root": "frim"
+      }
+     },
+     "valid": true,
+     "surface": "mil kra sung tang kras frim ka",
+     "injected": false,
+     "n_shown": 3
+    },
+    {
+     "turn": 5,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hlan"
+             ],
+             "root": "kem"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "pox"
+          ],
+          "root": "fang"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "nar"
+       ],
+       "root": "tlax"
+      }
+     },
+     "valid": true,
+     "surface": "nar u pox tan hlan kem fang tlax ka",
+     "injected": false,
+     "n_shown": 3
+    },
+    {
+     "turn": 6,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "orient": [
+           "har"
+          ],
+          "root": "klan"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "plas"
+       ],
+       "root": "frem"
+      }
+     },
+     "valid": true,
+     "surface": "plas nix har klan frem ka",
+     "injected": false,
+     "n_shown": 4
+    },
+    {
+     "turn": 7,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "frem"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "root": "plam"
+         },
+         "relator": "sul"
+        }
+       ],
+       "orient": [
+        "pox"
+       ],
+       "root": "kän"
+      }
+     },
+     "valid": true,
+     "surface": "pox sul hlin frem plam kän ka",
+     "injected": false,
+     "n_shown": 4
+    },
+    {
+     "turn": 8,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "näx"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "kril"
+      }
+     },
+     "valid": true,
+     "surface": "u näx kril ko",
+     "injected": false,
+     "n_shown": 5
+    },
+    {
+     "turn": 9,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "mös"
+         },
+         "relator": "sul"
+        }
+       ],
+       "orient": [
+        "lang"
+       ],
+       "root": "tlux"
+      }
+     },
+     "valid": true,
+     "surface": "lang sul mös tlux ki",
+     "injected": false,
+     "n_shown": 5
+    },
+    {
+     "turn": 10,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "klin"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "orient": [
+        "mix"
+       ],
+       "root": "mlung"
+      }
+     },
+     "valid": true,
+     "surface": "mix hlin klin mlung ka",
+     "injected": false,
+     "n_shown": 6
+    },
+    {
+     "turn": 11,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "fes"
+            },
+            "relator": "pos"
+           }
+          ],
+          "orient": [
+           "lang"
+          ],
+          "root": "klin"
+         },
+         "relator": "mil"
+        }
+       ],
+       "root": "mlö"
+      }
+     },
+     "valid": true,
+     "surface": "mil lang pos fes klin mlö ko",
+     "injected": false,
+     "n_shown": 6
+    },
+    {
+     "turn": 12,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hräx"
+            },
+            "relator": "pos"
+           }
+          ],
+          "orient": [
+           "hlan",
+           "sir"
+          ],
+          "root": "mrang"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "fen",
+        "tro"
+       ],
+       "quant": "pän",
+       "root": "prax"
+      }
+     },
+     "valid": true,
+     "surface": "pän fen tro u hlan sir pos hräx mrang prax ko",
+     "injected": false,
+     "n_shown": 7
+    },
+    {
+     "turn": 13,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "flar"
+             ],
+             "root": "kem"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "root": "mär"
+         },
+         "relator": "tan"
+        }
+       ],
+       "modal": "nem",
+       "root": "pöl"
+      }
+     },
+     "valid": true,
+     "surface": "nem tan hlim flar kem mär pöl ki",
+     "injected": false,
+     "n_shown": 7
+    },
+    {
+     "turn": 14,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hröx"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "pox"
+          ],
+          "root": "klen"
+         },
+         "relator": "sen"
+        }
+       ],
+       "orient": [
+        "fen",
+        "tex"
+       ],
+       "root": "mling"
+      }
+     },
+     "valid": true,
+     "surface": "fen tex sen pox hlim hröx klen mling ka",
+     "injected": false,
+     "n_shown": 8
+    },
+    {
+     "turn": 15,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "plon"
+            },
+            "relator": "pos"
+           }
+          ],
+          "orient": [
+           "tro"
+          ],
+          "root": "mring"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "root": "prux"
+      }
+     },
+     "valid": true,
+     "surface": "hlin tro pos plon mring prux ki",
+     "injected": false,
+     "n_shown": 8
+    },
+    {
+     "turn": 16,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kril"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "orient": [
+           "sir"
+          ],
+          "root": "kun"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "mläng"
+      }
+     },
+     "valid": true,
+     "surface": "fro sir hlin kril kun mläng ka",
+     "injected": false,
+     "n_shown": 9
+    },
+    {
+     "turn": 17,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "mös"
+            },
+            "relator": "tan"
+           }
+          ],
+          "root": "mling"
+         },
+         "relator": "pos"
+        }
+       ],
+       "orient": [
+        "hul"
+       ],
+       "root": "krun"
+      }
+     },
+     "valid": true,
+     "surface": "hul pos tan mös mling krun ko",
+     "injected": false,
+     "n_shown": 9
+    },
+    {
+     "turn": 18,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hren"
+             ],
+             "root": "mring"
+            },
+            "relator": "pos"
+           }
+          ],
+          "modal": "nem",
+          "orient": [
+           "har",
+           "tim"
+          ],
+          "root": "krön"
+         },
+         "relator": "tan"
+        }
+       ],
+       "root": "mlung"
+      }
+     },
+     "valid": true,
+     "surface": "tan nem har tim pos hren mring krön mlung ku",
+     "injected": false,
+     "n_shown": 10
+    },
+    {
+     "turn": 19,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "kon"
+             ],
+             "root": "plon"
+            },
+            "relator": "pos"
+           }
+          ],
+          "modal": "hrix",
+          "orient": [
+           "har",
+           "sil"
+          ],
+          "root": "kön"
+         },
+         "relator": "mil"
+        }
+       ],
+       "orient": [
+        "flar",
+        "hlör"
+       ],
+       "root": "mreng"
+      }
+     },
+     "valid": true,
+     "surface": "flar hlör mil hrix har sil pos kon plon kön mreng ko",
+     "injected": false,
+     "n_shown": 10
+    },
+    {
+     "turn": 20,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "mrong"
+            },
+            "relator": "kra"
+           }
+          ],
+          "orient": [
+           "fen"
+          ],
+          "root": "hrun"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "root": "mräng"
+      }
+     },
+     "valid": true,
+     "surface": "hlin fen kra mrong hrun mräng ko",
+     "injected": false,
+     "n_shown": 11
+    },
+    {
+     "turn": 21,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "pim"
+         },
+         "relator": "tan"
+        }
+       ],
+       "root": "plung"
+      }
+     },
+     "valid": true,
+     "surface": "tan pim plung ko",
+     "injected": false,
+     "n_shown": 11
+    },
+    {
+     "turn": 22,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hlör"
+             ],
+             "root": "mlö"
+            },
+            "relator": "kra"
+           }
+          ],
+          "root": "tlax"
+         },
+         "relator": "nix"
+        }
+       ],
+       "root": "fum"
+      }
+     },
+     "valid": true,
+     "surface": "nix kra hlör mlö tlax fum ku",
+     "injected": false,
+     "n_shown": 12
+    },
+    {
+     "turn": 23,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kron"
+            },
+            "relator": "pos"
+           }
+          ],
+          "orient": [
+           "hlör"
+          ],
+          "root": "kun"
+         },
+         "relator": "mil"
+        }
+       ],
+       "root": "mring"
+      }
+     },
+     "valid": true,
+     "surface": "mil hlör pos kron kun mring ka",
+     "injected": false,
+     "n_shown": 12
+    },
+    {
+     "turn": 24,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "pux"
+            },
+            "relator": "kra"
+           }
+          ],
+          "orient": [
+           "hlör"
+          ],
+          "root": "präx"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "orient": [
+        "fen",
+        "plas"
+       ],
+       "root": "pel"
+      }
+     },
+     "valid": true,
+     "surface": "fen plas hlim hlör kra pux präx pel ka",
+     "injected": false,
+     "n_shown": 13
+    },
+    {
+     "turn": 25,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "hlang"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "flar"
+       ],
+       "root": "tlex"
+      }
+     },
+     "valid": true,
+     "surface": "flar tan hlang tlex ko",
+     "injected": false,
+     "n_shown": 13
+    },
+    {
+     "turn": 26,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "sung"
+             ],
+             "root": "krän"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "hlör"
+          ],
+          "root": "föm"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "främ"
+      }
+     },
+     "valid": true,
+     "surface": "sen hlör nix sung krän föm främ kä",
+     "injected": false,
+     "n_shown": 14
+    },
+    {
+     "turn": 27,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "klen"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "flar"
+       ],
+       "root": "hlix"
+      }
+     },
+     "valid": true,
+     "surface": "flar tan klen hlix ki",
+     "injected": false,
+     "n_shown": 14
+    },
+    {
+     "turn": 28,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "pöl"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "root": "föm"
+         },
+         "relator": "pos"
+        }
+       ],
+       "root": "plon"
+      }
+     },
+     "valid": true,
+     "surface": "pos hlin pöl föm plon ka",
+     "injected": false,
+     "n_shown": 15
+    },
+    {
+     "turn": 29,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "tlox"
+            },
+            "relator": "fro"
+           }
+          ],
+          "orient": [
+           "hul"
+          ],
+          "root": "mör"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "nar"
+       ],
+       "root": "pröx"
+      }
+     },
+     "valid": true,
+     "surface": "nar nix hul fro tlox mör pröx ka",
+     "injected": false,
+     "n_shown": 15
+    },
+    {
+     "turn": 30,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hrem"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "fen"
+          ],
+          "root": "föm"
+         },
+         "relator": "tan"
+        }
+       ],
+       "root": "mling"
+      }
+     },
+     "valid": true,
+     "surface": "tan fen nix hrem föm mling kä",
+     "injected": false,
+     "n_shown": 16
+    },
+    {
+     "turn": 31,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "klen"
+         },
+         "relator": "mil"
+        }
+       ],
+       "orient": [
+        "hul"
+       ],
+       "root": "frum"
+      }
+     },
+     "valid": true,
+     "surface": "hul mil klen frum ka",
+     "injected": false,
+     "n_shown": 16
+    },
+    {
+     "turn": 32,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "höm"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "kon"
+       ],
+       "root": "pöl"
+      }
+     },
+     "valid": true,
+     "surface": "kon u höm pöl ka",
+     "injected": false,
+     "n_shown": 17
+    },
+    {
+     "turn": 33,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "klen"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "fem"
+      }
+     },
+     "valid": true,
+     "surface": "u klen fem ka",
+     "injected": false,
+     "n_shown": 17
+    },
+    {
+     "turn": 34,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "mlö"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "sung"
+          ],
+          "root": "hrun"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "tlix"
+      }
+     },
+     "valid": true,
+     "surface": "sen sung tan mlö hrun tlix ku",
+     "injected": false,
+     "n_shown": 18
+    },
+    {
+     "turn": 35,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "har"
+             ],
+             "root": "rän"
+            },
+            "relator": "mil"
+           }
+          ],
+          "root": "tir"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "orient": [
+        "kon",
+        "nong"
+       ],
+       "root": "prax"
+      }
+     },
+     "valid": true,
+     "surface": "kon nong hlim mil har rän tir prax ki",
+     "injected": false,
+     "n_shown": 18
+    },
+    {
+     "turn": 36,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hlox"
+            },
+            "relator": "sul"
+           }
+          ],
+          "orient": [
+           "nong"
+          ],
+          "root": "mlöng"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "pong"
+      }
+     },
+     "valid": true,
+     "surface": "fro nong sul hlox mlöng pong ka",
+     "injected": false,
+     "n_shown": 19
+    },
+    {
+     "turn": 37,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hlan"
+             ],
+             "root": "nöl"
+            },
+            "relator": "sen"
+           }
+          ],
+          "root": "hläx"
+         },
+         "relator": "kra"
+        }
+       ],
+       "root": "plin"
+      }
+     },
+     "valid": true,
+     "surface": "kra sen hlan nöl hläx plin ka",
+     "injected": false,
+     "n_shown": 19
+    },
+    {
+     "turn": 38,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "höm"
+            },
+            "relator": "nix"
+           }
+          ],
+          "root": "kön"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "flar",
+        "tlas"
+       ],
+       "root": "föm"
+      }
+     },
+     "valid": true,
+     "surface": "flar tlas tan nix höm kön föm ka",
+     "injected": false,
+     "n_shown": 20
+    },
+    {
+     "turn": 39,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "klung"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "tex"
+       ],
+       "root": "kron"
+      }
+     },
+     "valid": true,
+     "surface": "tex u klung kron ka",
+     "injected": false,
+     "n_shown": 20
+    },
+    {
+     "turn": 40,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kän"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "sung"
+          ],
+          "root": "prux"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "mong"
+      }
+     },
+     "valid": true,
+     "surface": "fro sung nix kän prux mong ka",
+     "injected": false,
+     "n_shown": 21
+    },
+    {
+     "turn": 41,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hlang"
+            },
+            "relator": "mil"
+           }
+          ],
+          "orient": [
+           "tim"
+          ],
+          "root": "rim"
+         },
+         "relator": "tan"
+        }
+       ],
+       "root": "plon"
+      }
+     },
+     "valid": true,
+     "surface": "tan tim mil hlang rim plon ko",
+     "injected": false,
+     "n_shown": 21
+    },
+    {
+     "turn": 42,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "mräng"
+            },
+            "relator": "sul"
+           }
+          ],
+          "orient": [
+           "fen"
+          ],
+          "root": "föm"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "root": "prax"
+      }
+     },
+     "valid": true,
+     "surface": "hlin fen sul mräng föm prax kä",
+     "injected": false,
+     "n_shown": 22
+    },
+    {
+     "turn": 43,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kän"
+            },
+            "relator": "mil"
+           }
+          ],
+          "orient": [
+           "hren"
+          ],
+          "root": "pön"
+         },
+         "relator": "pos"
+        }
+       ],
+       "orient": [
+        "nong"
+       ],
+       "root": "flöx"
+      }
+     },
+     "valid": true,
+     "surface": "nong pos hren mil kän pön flöx ko",
+     "injected": false,
+     "n_shown": 22
+    },
+    {
+     "turn": 44,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "höm"
+            },
+            "relator": "kra"
+           }
+          ],
+          "root": "pem"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "plas"
+       ],
+       "root": "mlö"
+      }
+     },
+     "valid": true,
+     "surface": "plas nix kra höm pem mlö ko",
+     "injected": false,
+     "n_shown": 23
+    },
+    {
+     "turn": 45,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "mix"
+             ],
+             "root": "plung"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "modal": "ten",
+          "root": "tläx"
+         },
+         "relator": "pos"
+        }
+       ],
+       "root": "flox"
+      }
+     },
+     "valid": true,
+     "surface": "pos ten hlim mix plung tläx flox ki",
+     "injected": false,
+     "n_shown": 23
+    },
+    {
+     "turn": 46,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "hram"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "flar"
+       ],
+       "root": "plen"
+      }
+     },
+     "valid": true,
+     "surface": "flar u hram plen ka",
+     "injected": false,
+     "n_shown": 24
+    },
+    {
+     "turn": 47,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hul",
+              "nong"
+             ],
+             "root": "tir"
+            },
+            "relator": "mil"
+           }
+          ],
+          "root": "fum"
+         },
+         "relator": "kra"
+        }
+       ],
+       "modal": "plun",
+       "root": "klöng"
+      }
+     },
+     "valid": true,
+     "surface": "plun kra mil hul nong tir fum klöng ko",
+     "injected": false,
+     "n_shown": 24
+    },
+    {
+     "turn": 48,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "klan"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "hlan"
+          ],
+          "root": "präx"
+         },
+         "relator": "kra"
+        }
+       ],
+       "root": "mlö"
+      }
+     },
+     "valid": true,
+     "surface": "kra hlan nix klan präx mlö ku",
+     "injected": false,
+     "n_shown": 25
+    },
+    {
+     "turn": 49,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "pem"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "hren"
+       ],
+       "root": "hröx"
+      }
+     },
+     "valid": true,
+     "surface": "hren u pem hröx ka",
+     "injected": false,
+     "n_shown": 25
+    },
+    {
+     "turn": 50,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "krel"
+             ],
+             "root": "krän"
+            },
+            "relator": "u"
+           }
+          ],
+          "modal": "hrix",
+          "root": "kris"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "tir"
+      }
+     },
+     "valid": true,
+     "surface": "sen hrix u krel krän kris tir ko",
+     "injected": false,
+     "n_shown": 26
+    },
+    {
+     "turn": 51,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "mrong"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "hren"
+          ],
+          "root": "kön"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "root": "fröm"
+      }
+     },
+     "valid": true,
+     "surface": "hlin hren tan mrong kön fröm ka",
+     "injected": false,
+     "n_shown": 26
+    },
+    {
+     "turn": 52,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kron"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "orient": [
+           "pox"
+          ],
+          "root": "tlex"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "sir",
+        "tex"
+       ],
+       "root": "mlöng"
+      }
+     },
+     "valid": true,
+     "surface": "sir tex nix pox hlin kron tlex mlöng ko",
+     "injected": false,
+     "n_shown": 27
+    },
+    {
+     "turn": 53,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "klen"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "orient": [
+        "har"
+       ],
+       "root": "nux"
+      }
+     },
+     "valid": true,
+     "surface": "har hlim klen nux ka",
+     "injected": false,
+     "n_shown": 27
+    },
+    {
+     "turn": 54,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "kän"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "sung"
+       ],
+       "quant": "nol",
+       "root": "tlix"
+      }
+     },
+     "valid": true,
+     "surface": "nol sung tan kän tlix ko",
+     "injected": false,
+     "n_shown": 28
+    },
+    {
+     "turn": 55,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "fem"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "nong"
+          ],
+          "root": "klöng"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "kon",
+        "plas"
+       ],
+       "root": "kris"
+      }
+     },
+     "valid": true,
+     "surface": "kon plas tan nong hlim fem klöng kris ka",
+     "injected": false,
+     "n_shown": 28
+    },
+    {
+     "turn": 56,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "orient": [
+           "hul"
+          ],
+          "root": "frim"
+         },
+         "relator": "pos"
+        }
+       ],
+       "root": "klan"
+      }
+     },
+     "valid": true,
+     "surface": "pos hul frim klan ku",
+     "injected": false,
+     "n_shown": 29
+    },
+    {
+     "turn": 57,
+     "speaker": "B",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "plam"
+            },
+            "relator": "kra"
+           }
+          ],
+          "orient": [
+           "kon"
+          ],
+          "root": "lus"
+         },
+         "relator": "pos"
+        }
+       ],
+       "root": "mong"
+      }
+     },
+     "valid": true,
+     "surface": "pos kon kra plam lus mong ku",
+     "injected": false,
+     "n_shown": 29
+    },
+    {
+     "turn": 58,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "präx"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "fen"
+          ],
+          "root": "fis"
+         },
+         "relator": "pos"
+        }
+       ],
+       "orient": [
+        "hlör"
+       ],
+       "root": "plung"
+      }
+     },
+     "valid": true,
+     "surface": "hlör pos fen hlim präx fis plung ku",
+     "injected": false,
+     "n_shown": 30
+    },
+    {
+     "turn": 59,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hrem"
+            },
+            "relator": "fro"
+           }
+          ],
+          "root": "fral"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "hlang"
+      }
+     },
+     "valid": true,
+     "surface": "sen fro hrem fral hlang ko",
+     "injected": false,
+     "n_shown": 30
+    },
+    {
+     "turn": 60,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kem"
+            },
+            "relator": "sul"
+           }
+          ],
+          "orient": [
+           "hlan"
+          ],
+          "root": "hler"
+         },
+         "relator": "mil"
+        }
+       ],
+       "root": "näx"
+      }
+     },
+     "valid": true,
+     "surface": "mil hlan sul kem hler näx ka",
+     "injected": false,
+     "n_shown": 31
+    },
+    {
+     "turn": 61,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "mling"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "root": "klen"
+      }
+     },
+     "valid": true,
+     "surface": "hlim mling klen ko",
+     "injected": false,
+     "n_shown": 31
+    },
+    {
+     "turn": 62,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "nar"
+             ],
+             "root": "nax"
+            },
+            "relator": "tan"
+           }
+          ],
+          "modal": "mar",
+          "root": "präx"
+         },
+         "relator": "sen"
+        }
+       ],
+       "orient": [
+        "pox"
+       ],
+       "root": "fis"
+      }
+     },
+     "valid": true,
+     "surface": "pox sen mar tan nar nax präx fis ku",
+     "injected": false,
+     "n_shown": 32
+    },
+    {
+     "turn": 63,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "tlix"
+            },
+            "relator": "pos"
+           }
+          ],
+          "orient": [
+           "kon"
+          ],
+          "root": "fis"
+         },
+         "relator": "nix"
+        }
+       ],
+       "root": "hlox"
+      }
+     },
+     "valid": true,
+     "surface": "nix kon pos tlix fis hlox ko",
+     "injected": false,
+     "n_shown": 32
+    },
+    {
+     "turn": 64,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hul"
+             ],
+             "root": "kun"
+            },
+            "relator": "pos"
+           }
+          ],
+          "root": "hlax"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "sung"
+       ],
+       "root": "pöl"
+      }
+     },
+     "valid": true,
+     "surface": "sung nix pos hul kun hlax pöl ku",
+     "injected": false,
+     "n_shown": 33
+    },
+    {
+     "turn": 65,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "hrux"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "orient": [
+        "kon"
+       ],
+       "root": "fäm"
+      }
+     },
+     "valid": true,
+     "surface": "kon hlim hrux fäm ko",
+     "injected": false,
+     "n_shown": 33
+    },
+    {
+     "turn": 66,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hlan"
+             ],
+             "root": "hrun"
+            },
+            "relator": "nix"
+           }
+          ],
+          "root": "krax"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "root": "mling"
+      }
+     },
+     "valid": true,
+     "surface": "hlin nix hlan hrun krax mling kä",
+     "injected": false,
+     "n_shown": 34
+    },
+    {
+     "turn": 67,
+     "speaker": "B",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "klin"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "flar"
+          ],
+          "root": "näx"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "mring"
+      }
+     },
+     "valid": true,
+     "surface": "fro flar tan klin näx mring ku",
+     "injected": false,
+     "n_shown": 34
+    },
+    {
+     "turn": 68,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "mläng"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "fen"
+       ],
+       "root": "prax"
+      }
+     },
+     "valid": true,
+     "surface": "fen u mläng prax ku",
+     "injected": false,
+     "n_shown": 35
+    },
+    {
+     "turn": 69,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hren"
+             ],
+             "root": "mling"
+            },
+            "relator": "kra"
+           }
+          ],
+          "root": "fis"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "prux"
+      }
+     },
+     "valid": true,
+     "surface": "sen kra hren mling fis prux ko",
+     "injected": false,
+     "n_shown": 35
+    },
+    {
+     "turn": 70,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "krun"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "plas"
+          ],
+          "root": "hlox"
+         },
+         "relator": "tan"
+        }
+       ],
+       "root": "kläng"
+      }
+     },
+     "valid": true,
+     "surface": "tan plas hlim krun hlox kläng ku",
+     "injected": false,
+     "n_shown": 36
+    },
+    {
+     "turn": 71,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "pem"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "flar"
+          ],
+          "root": "fäm"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "tlas"
+       ],
+       "root": "mös"
+      }
+     },
+     "valid": true,
+     "surface": "tlas nix flar hlim pem fäm mös ko",
+     "injected": false,
+     "n_shown": 36
+    },
+    {
+     "turn": 72,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "nur"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "mling"
+      }
+     },
+     "valid": true,
+     "surface": "u nur mling ku",
+     "injected": false,
+     "n_shown": 37
+    },
+    {
+     "turn": 73,
+     "speaker": "B",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "har"
+             ],
+             "root": "klon"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "hlör",
+           "tlas"
+          ],
+          "root": "nur"
+         },
+         "relator": "pos"
+        }
+       ],
+       "root": "fis"
+      }
+     },
+     "valid": true,
+     "surface": "pos hlör tlas hlim har klon nur fis ku",
+     "injected": false,
+     "n_shown": 37
+    },
+    {
+     "turn": 74,
+     "speaker": "A",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "kem"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "hlang"
+      }
+     },
+     "valid": true,
+     "surface": "u kem hlang ki",
+     "injected": false,
+     "n_shown": 38
+    },
+    {
+     "turn": 75,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "nong"
+             ],
+             "root": "kön"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "root": "krön"
+         },
+         "relator": "pos"
+        }
+       ],
+       "orient": [
+        "nar"
+       ],
+       "root": "fröm"
+      }
+     },
+     "valid": true,
+     "surface": "nar pos hlim nong kön krön fröm ki",
+     "injected": false,
+     "n_shown": 38
+    },
+    {
+     "turn": 76,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "nong"
+             ],
+             "root": "hrun"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "root": "tlex"
+         },
+         "relator": "sul"
+        }
+       ],
+       "root": "klan"
+      }
+     },
+     "valid": true,
+     "surface": "sul hlin nong hrun tlex klan ka",
+     "injected": false,
+     "n_shown": 39
+    },
+    {
+     "turn": 77,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "mös"
+            },
+            "relator": "kra"
+           }
+          ],
+          "orient": [
+           "plas"
+          ],
+          "root": "mröng"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "root": "fem"
+      }
+     },
+     "valid": true,
+     "surface": "hlin plas kra mös mröng fem ko",
+     "injected": false,
+     "n_shown": 39
+    },
+    {
+     "turn": 78,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "nar"
+             ],
+             "root": "kun"
+            },
+            "relator": "pos"
+           }
+          ],
+          "root": "hrem"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "fröm"
+      }
+     },
+     "valid": true,
+     "surface": "u pos nar kun hrem fröm ka",
+     "injected": false,
+     "n_shown": 40
+    },
+    {
+     "turn": 79,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "fis"
+            },
+            "relator": "nix"
+           }
+          ],
+          "root": "kron"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "orient": [
+        "kon"
+       ],
+       "root": "prax"
+      }
+     },
+     "valid": true,
+     "surface": "kon hlim nix fis kron prax ko",
+     "injected": false,
+     "n_shown": 40
+    }
+   ],
+   "surfaces": [
+    "tan hlan u plin hrir mlong ka",
+    "hren xom u plung främ klen ko",
+    "pän fen sil fro plas u krun mlong mär ko",
+    "plun kra fro har kläng hros plon ki",
+    "mil kra sung tang kras frim ka",
+    "nar u pox tan hlan kem fang tlax ka",
+    "plas nix har klan frem ka",
+    "pox sul hlin frem plam kän ka",
+    "u näx kril ko",
+    "lang sul mös tlux ki",
+    "mix hlin klin mlung ka",
+    "mil lang pos fes klin mlö ko",
+    "pän fen tro u hlan sir pos hräx mrang prax ko",
+    "nem tan hlim flar kem mär pöl ki",
+    "fen tex sen pox hlim hröx klen mling ka",
+    "hlin tro pos plon mring prux ki",
+    "fro sir hlin kril kun mläng ka",
+    "hul pos tan mös mling krun ko",
+    "tan nem har tim pos hren mring krön mlung ku",
+    "flar hlör mil hrix har sil pos kon plon kön mreng ko",
+    "hlin fen kra mrong hrun mräng ko",
+    "tan pim plung ko",
+    "nix kra hlör mlö tlax fum ku",
+    "mil hlör pos kron kun mring ka",
+    "fen plas hlim hlör kra pux präx pel ka",
+    "flar tan hlang tlex ko",
+    "sen hlör nix sung krän föm främ kä",
+    "flar tan klen hlix ki",
+    "pos hlin pöl föm plon ka",
+    "nar nix hul fro tlox mör pröx ka",
+    "tan fen nix hrem föm mling kä",
+    "hul mil klen frum ka",
+    "kon u höm pöl ka",
+    "u klen fem ka",
+    "sen sung tan mlö hrun tlix ku",
+    "kon nong hlim mil har rän tir prax ki",
+    "fro nong sul hlox mlöng pong ka",
+    "kra sen hlan nöl hläx plin ka",
+    "flar tlas tan nix höm kön föm ka",
+    "tex u klung kron ka",
+    "fro sung nix kän prux mong ka",
+    "tan tim mil hlang rim plon ko",
+    "hlin fen sul mräng föm prax kä",
+    "nong pos hren mil kän pön flöx ko",
+    "plas nix kra höm pem mlö ko",
+    "pos ten hlim mix plung tläx flox ki",
+    "flar u hram plen ka",
+    "plun kra mil hul nong tir fum klöng ko",
+    "kra hlan nix klan präx mlö ku",
+    "hren u pem hröx ka",
+    "sen hrix u krel krän kris tir ko",
+    "hlin hren tan mrong kön fröm ka",
+    "sir tex nix pox hlin kron tlex mlöng ko",
+    "har hlim klen nux ka",
+    "nol sung tan kän tlix ko",
+    "kon plas tan nong hlim fem klöng kris ka",
+    "pos hul frim klan ku",
+    "pos kon kra plam lus mong ku",
+    "hlör pos fen hlim präx fis plung ku",
+    "sen fro hrem fral hlang ko",
+    "mil hlan sul kem hler näx ka",
+    "hlim mling klen ko",
+    "pox sen mar tan nar nax präx fis ku",
+    "nix kon pos tlix fis hlox ko",
+    "sung nix pos hul kun hlax pöl ku",
+    "kon hlim hrux fäm ko",
+    "hlin nix hlan hrun krax mling kä",
+    "fro flar tan klin näx mring ku",
+    "fen u mläng prax ku",
+    "sen kra hren mling fis prux ko",
+    "tan plas hlim krun hlox kläng ku",
+    "tlas nix flar hlim pem fäm mös ko",
+    "u nur mling ku",
+    "pos hlör tlas hlim har klon nur fis ku",
+    "u kem hlang ki",
+    "nar pos hlim nong kön krön fröm ki",
+    "sul hlin nong hrun tlex klan ka",
+    "hlin plas kra mös mröng fem ko",
+    "u pos nar kun hrem fröm ka",
+    "kon hlim nix fis kron prax ko"
+   ]
+  },
+  "yoked_a": {
+   "log": [
+    {
+     "turn": 0,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kläng"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "orient": [
+           "flar"
+          ],
+          "root": "mlöng"
+         },
+         "relator": "sen"
+        }
+       ],
+       "orient": [
+        "hlör",
+        "tro"
+       ],
+       "root": "pem"
+      }
+     },
+     "valid": true,
+     "surface": "hlör tro sen flar hlin kläng mlöng pem ka",
+     "injected": false,
+     "n_shown": 1
+    },
+    {
+     "turn": 1,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "klen",
+       "orient": [
+        "hren"
+       ],
+       "edges": [
+        {
+         "relator": "xom",
+         "node": {
+          "root": "främ",
+          "edges": [
+           {
+            "relator": "u",
+            "node": {
+             "root": "plung"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hren xom u plung främ klen ko",
+     "injected": false,
+     "n_shown": 1
+    },
+    {
+     "turn": 2,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "plas"
+             ],
+             "root": "nur"
+            },
+            "relator": "sul"
+           }
+          ],
+          "modal": "mar",
+          "orient": [
+           "hlan",
+           "nar"
+          ],
+          "root": "prix"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "kor"
+      }
+     },
+     "valid": true,
+     "surface": "u mar hlan nar sul plas nur prix kor kä",
+     "injected": false,
+     "n_shown": 2
+    },
+    {
+     "turn": 3,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "plon",
+       "modal": "plun",
+       "edges": [
+        {
+         "relator": "kra",
+         "node": {
+          "root": "hros",
+          "edges": [
+           {
+            "relator": "fro",
+            "node": {
+             "root": "kläng",
+             "orient": [
+              "har"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "plun kra fro har kläng hros plon ki",
+     "injected": false,
+     "n_shown": 2
+    },
+    {
+     "turn": 4,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hren"
+             ],
+             "root": "pim"
+            },
+            "relator": "fro"
+           }
+          ],
+          "root": "kron"
+         },
+         "relator": "xom"
+        }
+       ],
+       "root": "mlung"
+      }
+     },
+     "valid": true,
+     "surface": "xom fro hren pim kron mlung ka",
+     "injected": false,
+     "n_shown": 3
+    },
+    {
+     "turn": 5,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "tlax",
+       "orient": [
+        "nar"
+       ],
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "fang",
+          "orient": [
+           "pox"
+          ],
+          "edges": [
+           {
+            "relator": "tan",
+            "node": {
+             "root": "kem",
+             "orient": [
+              "hlan"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "nar u pox tan hlan kem fang tlax ka",
+     "injected": false,
+     "n_shown": 3
+    },
+    {
+     "turn": 6,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "mreng"
+            },
+            "relator": "pos"
+           }
+          ],
+          "root": "frum"
+         },
+         "relator": "mil"
+        }
+       ],
+       "root": "fis"
+      }
+     },
+     "valid": true,
+     "surface": "mil pos mreng frum fis ku",
+     "injected": false,
+     "n_shown": 4
+    },
+    {
+     "turn": 7,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "kän",
+       "orient": [
+        "pox"
+       ],
+       "edges": [
+        {
+         "relator": "sul",
+         "node": {
+          "root": "plam",
+          "edges": [
+           {
+            "relator": "hlin",
+            "node": {
+             "root": "frem"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pox sul hlin frem plam kän ka",
+     "injected": false,
+     "n_shown": 4
+    },
+    {
+     "turn": 8,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hul"
+             ],
+             "root": "mrang"
+            },
+            "relator": "mil"
+           }
+          ],
+          "root": "flox"
+         },
+         "relator": "kra"
+        }
+       ],
+       "root": "klon"
+      }
+     },
+     "valid": true,
+     "surface": "kra mil hul mrang flox klon ka",
+     "injected": false,
+     "n_shown": 5
+    },
+    {
+     "turn": 9,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "tlux",
+       "orient": [
+        "lang"
+       ],
+       "edges": [
+        {
+         "relator": "sul",
+         "node": {
+          "root": "mös"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "lang sul mös tlux ki",
+     "injected": false,
+     "n_shown": 5
+    },
+    {
+     "turn": 10,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kron"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "lang"
+          ],
+          "root": "mrong"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "root": "främ"
+      }
+     },
+     "valid": true,
+     "surface": "hlim lang tan kron mrong främ ka",
+     "injected": false,
+     "n_shown": 6
+    },
+    {
+     "turn": 11,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "mlö",
+       "edges": [
+        {
+         "relator": "mil",
+         "node": {
+          "root": "klin",
+          "orient": [
+           "lang"
+          ],
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "fes"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "mil lang pos fes klin mlö ko",
+     "injected": false,
+     "n_shown": 6
+    },
+    {
+     "turn": 12,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "klan"
+            },
+            "relator": "fro"
+           }
+          ],
+          "orient": [
+           "har",
+           "hul"
+          ],
+          "root": "fis"
+         },
+         "relator": "kra"
+        }
+       ],
+       "modal": "xos",
+       "root": "hrux"
+      }
+     },
+     "valid": true,
+     "surface": "xos kra har hul fro klan fis hrux ku",
+     "injected": false,
+     "n_shown": 7
+    },
+    {
+     "turn": 13,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "pöl",
+       "modal": "nem",
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "mär",
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "kem",
+             "orient": [
+              "flar"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "nem tan hlim flar kem mär pöl ki",
+     "injected": false,
+     "n_shown": 7
+    },
+    {
+     "turn": 14,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "kon"
+             ],
+             "root": "klen"
+            },
+            "relator": "sul"
+           }
+          ],
+          "root": "krän"
+         },
+         "relator": "nix"
+        }
+       ],
+       "root": "hram"
+      }
+     },
+     "valid": true,
+     "surface": "nix sul kon klen krän hram ka",
+     "injected": false,
+     "n_shown": 8
+    },
+    {
+     "turn": 15,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "prux",
+       "edges": [
+        {
+         "relator": "hlin",
+         "node": {
+          "root": "mring",
+          "orient": [
+           "tro"
+          ],
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "plon"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hlin tro pos plon mring prux ki",
+     "injected": false,
+     "n_shown": 8
+    },
+    {
+     "turn": 16,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kron"
+            },
+            "relator": "sen"
+           }
+          ],
+          "root": "fum"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "plas"
+       ],
+       "root": "präx"
+      }
+     },
+     "valid": true,
+     "surface": "plas u sen kron fum präx ka",
+     "injected": false,
+     "n_shown": 9
+    },
+    {
+     "turn": 17,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "krun",
+       "orient": [
+        "hul"
+       ],
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "mling",
+          "edges": [
+           {
+            "relator": "tan",
+            "node": {
+             "root": "mös"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hul pos tan mös mling krun ko",
+     "injected": false,
+     "n_shown": 9
+    },
+    {
+     "turn": 18,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hul"
+             ],
+             "root": "frem"
+            },
+            "relator": "pos"
+           }
+          ],
+          "root": "hlax"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "root": "pem"
+      }
+     },
+     "valid": true,
+     "surface": "hlim pos hul frem hlax pem kä",
+     "injected": false,
+     "n_shown": 10
+    },
+    {
+     "turn": 19,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "mreng",
+       "orient": [
+        "flar",
+        "hlör"
+       ],
+       "edges": [
+        {
+         "relator": "mil",
+         "node": {
+          "root": "kön",
+          "modal": "hrix",
+          "orient": [
+           "har",
+           "sil"
+          ],
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "plon",
+             "orient": [
+              "kon"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "flar hlör mil hrix har sil pos kon plon kön mreng ko",
+     "injected": false,
+     "n_shown": 10
+    },
+    {
+     "turn": 20,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hröx"
+            },
+            "relator": "fro"
+           }
+          ],
+          "orient": [
+           "sir"
+          ],
+          "root": "pim"
+         },
+         "relator": "sen"
+        }
+       ],
+       "orient": [
+        "fen",
+        "mix"
+       ],
+       "root": "prax"
+      }
+     },
+     "valid": true,
+     "surface": "fen mix sen sir fro hröx pim prax ko",
+     "injected": false,
+     "n_shown": 11
+    },
+    {
+     "turn": 21,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "plung",
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "pim"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "tan pim plung ko",
+     "injected": false,
+     "n_shown": 11
+    },
+    {
+     "turn": 22,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "fes"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "flar"
+       ],
+       "root": "kron"
+      }
+     },
+     "valid": true,
+     "surface": "flar u fes kron kä",
+     "injected": false,
+     "n_shown": 12
+    },
+    {
+     "turn": 23,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "mring",
+       "edges": [
+        {
+         "relator": "mil",
+         "node": {
+          "root": "kun",
+          "orient": [
+           "hlör"
+          ],
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "kron"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "mil hlör pos kron kun mring ka",
+     "injected": false,
+     "n_shown": 12
+    },
+    {
+     "turn": 24,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kron"
+            },
+            "relator": "sen"
+           }
+          ],
+          "orient": [
+           "flar"
+          ],
+          "root": "kras"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "orient": [
+        "sir"
+       ],
+       "root": "pem"
+      }
+     },
+     "valid": true,
+     "surface": "sir hlim flar sen kron kras pem ku",
+     "injected": false,
+     "n_shown": 13
+    },
+    {
+     "turn": 25,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "tlex",
+       "orient": [
+        "flar"
+       ],
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "hlang"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "flar tan hlang tlex ko",
+     "injected": false,
+     "n_shown": 13
+    },
+    {
+     "turn": 26,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "hler"
+         },
+         "relator": "pos"
+        }
+       ],
+       "orient": [
+        "mix"
+       ],
+       "root": "läs"
+      }
+     },
+     "valid": true,
+     "surface": "mix pos hler läs kä",
+     "injected": false,
+     "n_shown": 14
+    },
+    {
+     "turn": 27,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "hlix",
+       "orient": [
+        "flar"
+       ],
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "klen"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "flar tan klen hlix ki",
+     "injected": false,
+     "n_shown": 14
+    },
+    {
+     "turn": 28,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "mlö"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "orient": [
+           "hlör",
+           "krel"
+          ],
+          "root": "plin"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "hrun"
+      }
+     },
+     "valid": true,
+     "surface": "u hlör krel hlin mlö plin hrun ka",
+     "injected": false,
+     "n_shown": 15
+    },
+    {
+     "turn": 29,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "pröx",
+       "orient": [
+        "nar"
+       ],
+       "edges": [
+        {
+         "relator": "nix",
+         "node": {
+          "root": "mör",
+          "orient": [
+           "hul"
+          ],
+          "edges": [
+           {
+            "relator": "fro",
+            "node": {
+             "root": "tlox"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "nar nix hul fro tlox mör pröx ka",
+     "injected": false,
+     "n_shown": 15
+    },
+    {
+     "turn": 30,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kris"
+            },
+            "relator": "u"
+           }
+          ],
+          "orient": [
+           "hren"
+          ],
+          "root": "fis"
+         },
+         "relator": "tan"
+        }
+       ],
+       "modal": "xöl",
+       "root": "tir"
+      }
+     },
+     "valid": true,
+     "surface": "xöl tan hren u kris fis tir ka",
+     "injected": false,
+     "n_shown": 16
+    },
+    {
+     "turn": 31,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "frum",
+       "orient": [
+        "hul"
+       ],
+       "edges": [
+        {
+         "relator": "mil",
+         "node": {
+          "root": "klen"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hul mil klen frum ka",
+     "injected": false,
+     "n_shown": 16
+    },
+    {
+     "turn": 32,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kril"
+            },
+            "relator": "fro"
+           }
+          ],
+          "orient": [
+           "fen",
+           "plas"
+          ],
+          "root": "häm"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "mräng"
+      }
+     },
+     "valid": true,
+     "surface": "u fen plas fro kril häm mräng kä",
+     "injected": false,
+     "n_shown": 17
+    },
+    {
+     "turn": 33,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "fem",
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "klen"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "u klen fem ka",
+     "injected": false,
+     "n_shown": 17
+    },
+    {
+     "turn": 34,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kron"
+            },
+            "relator": "pos"
+           }
+          ],
+          "orient": [
+           "har",
+           "plas"
+          ],
+          "root": "hrun"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "mix",
+        "tlas"
+       ],
+       "root": "föm"
+      }
+     },
+     "valid": true,
+     "surface": "mix tlas nix har plas pos kron hrun föm ko",
+     "injected": false,
+     "n_shown": 18
+    },
+    {
+     "turn": 35,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "prax",
+       "orient": [
+        "kon",
+        "nong"
+       ],
+       "edges": [
+        {
+         "relator": "hlim",
+         "node": {
+          "root": "tir",
+          "edges": [
+           {
+            "relator": "mil",
+            "node": {
+             "root": "rän",
+             "orient": [
+              "har"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "kon nong hlim mil har rän tir prax ki",
+     "injected": false,
+     "n_shown": 18
+    },
+    {
+     "turn": 36,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hlan"
+             ],
+             "root": "hrir"
+            },
+            "relator": "sen"
+           }
+          ],
+          "modal": "plun",
+          "root": "nel"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "fem"
+      }
+     },
+     "valid": true,
+     "surface": "u plun sen hlan hrir nel fem ka",
+     "injected": false,
+     "n_shown": 19
+    },
+    {
+     "turn": 37,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "plin",
+       "edges": [
+        {
+         "relator": "kra",
+         "node": {
+          "root": "hläx",
+          "edges": [
+           {
+            "relator": "sen",
+            "node": {
+             "root": "nöl",
+             "orient": [
+              "hlan"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "kra sen hlan nöl hläx plin ka",
+     "injected": false,
+     "n_shown": 19
+    },
+    {
+     "turn": 38,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kem"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "hlör"
+          ],
+          "root": "mlö"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "flar",
+        "sir"
+       ],
+       "root": "mläng"
+      }
+     },
+     "valid": true,
+     "surface": "flar sir nix hlör hlim kem mlö mläng ko",
+     "injected": false,
+     "n_shown": 20
+    },
+    {
+     "turn": 39,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "kron",
+       "orient": [
+        "tex"
+       ],
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "klung"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "tex u klung kron ka",
+     "injected": false,
+     "n_shown": 20
+    },
+    {
+     "turn": 40,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hräx"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "har"
+          ],
+          "root": "präx"
+         },
+         "relator": "pos"
+        }
+       ],
+       "root": "näx"
+      }
+     },
+     "valid": true,
+     "surface": "pos har hlim hräx präx näx ku",
+     "injected": false,
+     "n_shown": 21
+    },
+    {
+     "turn": 41,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "plon",
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "rim",
+          "orient": [
+           "tim"
+          ],
+          "edges": [
+           {
+            "relator": "mil",
+            "node": {
+             "root": "hlang"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "tan tim mil hlang rim plon ko",
+     "injected": false,
+     "n_shown": 21
+    },
+    {
+     "turn": 42,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "fröm"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "har"
+          ],
+          "root": "plam"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "klan"
+      }
+     },
+     "valid": true,
+     "surface": "fro har tan fröm plam klan kä",
+     "injected": false,
+     "n_shown": 22
+    },
+    {
+     "turn": 43,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "flöx",
+       "orient": [
+        "nong"
+       ],
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "pön",
+          "orient": [
+           "hren"
+          ],
+          "edges": [
+           {
+            "relator": "mil",
+            "node": {
+             "root": "kän"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "nong pos hren mil kän pön flöx ko",
+     "injected": false,
+     "n_shown": 22
+    },
+    {
+     "turn": 44,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "präx"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "hlan"
+          ],
+          "root": "frem"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "sung"
+       ],
+       "root": "pem"
+      }
+     },
+     "valid": true,
+     "surface": "sung tan hlan nix präx frem pem ku",
+     "injected": false,
+     "n_shown": 23
+    },
+    {
+     "turn": 45,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "flox",
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "tläx",
+          "modal": "ten",
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "plung",
+             "orient": [
+              "mix"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pos ten hlim mix plung tläx flox ki",
+     "injected": false,
+     "n_shown": 23
+    },
+    {
+     "turn": 46,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kron"
+            },
+            "relator": "fro"
+           }
+          ],
+          "orient": [
+           "lang"
+          ],
+          "root": "mrang"
+         },
+         "relator": "nix"
+        }
+       ],
+       "modal": "frax",
+       "root": "prix"
+      }
+     },
+     "valid": true,
+     "surface": "frax nix lang fro kron mrang prix ka",
+     "injected": false,
+     "n_shown": 24
+    },
+    {
+     "turn": 47,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "klöng",
+       "modal": "plun",
+       "edges": [
+        {
+         "relator": "kra",
+         "node": {
+          "root": "fum",
+          "edges": [
+           {
+            "relator": "mil",
+            "node": {
+             "root": "tir",
+             "orient": [
+              "hul",
+              "nong"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "plun kra mil hul nong tir fum klöng ko",
+     "injected": false,
+     "n_shown": 24
+    },
+    {
+     "turn": 48,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "nong"
+             ],
+             "root": "mrang"
+            },
+            "relator": "u"
+           }
+          ],
+          "root": "hlox"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "lang"
+       ],
+       "root": "kron"
+      }
+     },
+     "valid": true,
+     "surface": "lang tan u nong mrang hlox kron ka",
+     "injected": false,
+     "n_shown": 25
+    },
+    {
+     "turn": 49,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "hröx",
+       "orient": [
+        "hren"
+       ],
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "pem"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hren u pem hröx ka",
+     "injected": false,
+     "n_shown": 25
+    },
+    {
+     "turn": 50,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "lang"
+             ],
+             "root": "frem"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "root": "hröx"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "nar"
+       ],
+       "root": "mling"
+      }
+     },
+     "valid": true,
+     "surface": "nar nix hlin lang frem hröx mling ku",
+     "injected": false,
+     "n_shown": 26
+    },
+    {
+     "turn": 51,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "fröm",
+       "edges": [
+        {
+         "relator": "hlin",
+         "node": {
+          "root": "kön",
+          "orient": [
+           "hren"
+          ],
+          "edges": [
+           {
+            "relator": "tan",
+            "node": {
+             "root": "mrong"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hlin hren tan mrong kön fröm ka",
+     "injected": false,
+     "n_shown": 26
+    },
+    {
+     "turn": 52,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "frem"
+            },
+            "relator": "pos"
+           }
+          ],
+          "root": "präx"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "plas"
+       ],
+       "root": "klun"
+      }
+     },
+     "valid": true,
+     "surface": "plas u pos frem präx klun ku",
+     "injected": false,
+     "n_shown": 27
+    },
+    {
+     "turn": 53,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "nux",
+       "orient": [
+        "har"
+       ],
+       "edges": [
+        {
+         "relator": "hlim",
+         "node": {
+          "root": "klen"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "har hlim klen nux ka",
+     "injected": false,
+     "n_shown": 27
+    },
+    {
+     "turn": 54,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "präx"
+            },
+            "relator": "fro"
+           }
+          ],
+          "orient": [
+           "plas"
+          ],
+          "root": "krän"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "flar",
+        "hlan"
+       ],
+       "root": "kron"
+      }
+     },
+     "valid": true,
+     "surface": "flar hlan u plas fro präx krän kron ko",
+     "injected": false,
+     "n_shown": 28
+    },
+    {
+     "turn": 55,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "kris",
+       "orient": [
+        "kon",
+        "plas"
+       ],
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "klöng",
+          "orient": [
+           "nong"
+          ],
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "fem"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "kon plas tan nong hlim fem klöng kris ka",
+     "injected": false,
+     "n_shown": 28
+    },
+    {
+     "turn": 56,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hlix"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "hlan"
+          ],
+          "root": "klin"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "tlan"
+      }
+     },
+     "valid": true,
+     "surface": "fro hlan nix hlix klin tlan ko",
+     "injected": false,
+     "n_shown": 29
+    },
+    {
+     "turn": 57,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "mong",
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "lus",
+          "orient": [
+           "kon"
+          ],
+          "edges": [
+           {
+            "relator": "kra",
+            "node": {
+             "root": "plam"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pos kon kra plam lus mong ku",
+     "injected": false,
+     "n_shown": 29
+    },
+    {
+     "turn": 58,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "orient": [
+           "hlör"
+          ],
+          "root": "kron"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "mling"
+      }
+     },
+     "valid": true,
+     "surface": "u hlör kron mling ku",
+     "injected": false,
+     "n_shown": 30
+    },
+    {
+     "turn": 59,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "hlang",
+       "edges": [
+        {
+         "relator": "sen",
+         "node": {
+          "root": "fral",
+          "edges": [
+           {
+            "relator": "fro",
+            "node": {
+             "root": "hrem"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "sen fro hrem fral hlang ko",
+     "injected": false,
+     "n_shown": 30
+    },
+    {
+     "turn": 60,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kläng"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "hlan"
+          ],
+          "root": "tlex"
+         },
+         "relator": "fro"
+        }
+       ],
+       "orient": [
+        "flar",
+        "krel"
+       ],
+       "root": "mläng"
+      }
+     },
+     "valid": true,
+     "surface": "flar krel fro hlan tan kläng tlex mläng ka",
+     "injected": false,
+     "n_shown": 31
+    },
+    {
+     "turn": 61,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "klen",
+       "edges": [
+        {
+         "relator": "hlim",
+         "node": {
+          "root": "mling"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hlim mling klen ko",
+     "injected": false,
+     "n_shown": 31
+    },
+    {
+     "turn": 62,
+     "speaker": "A",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "prax"
+            },
+            "relator": "pos"
+           }
+          ],
+          "root": "tlex"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "root": "pön"
+      }
+     },
+     "valid": true,
+     "surface": "hlim pos prax tlex pön kä",
+     "injected": false,
+     "n_shown": 32
+    },
+    {
+     "turn": 63,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "hlox",
+       "edges": [
+        {
+         "relator": "nix",
+         "node": {
+          "root": "fis",
+          "orient": [
+           "kon"
+          ],
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "tlix"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "nix kon pos tlix fis hlox ko",
+     "injected": false,
+     "n_shown": 32
+    },
+    {
+     "turn": 64,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "mleng"
+         },
+         "relator": "fro"
+        }
+       ],
+       "orient": [
+        "nong"
+       ],
+       "root": "mröng"
+      }
+     },
+     "valid": true,
+     "surface": "nong fro mleng mröng ka",
+     "injected": false,
+     "n_shown": 33
+    },
+    {
+     "turn": 65,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "fäm",
+       "orient": [
+        "kon"
+       ],
+       "edges": [
+        {
+         "relator": "hlim",
+         "node": {
+          "root": "hrux"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "kon hlim hrux fäm ko",
+     "injected": false,
+     "n_shown": 33
+    },
+    {
+     "turn": 66,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "tlix"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "orient": [
+        "hlan"
+       ],
+       "root": "pel"
+      }
+     },
+     "valid": true,
+     "surface": "hlan hlin tlix pel ku",
+     "injected": false,
+     "n_shown": 34
+    },
+    {
+     "turn": 67,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "mring",
+       "edges": [
+        {
+         "relator": "fro",
+         "node": {
+          "root": "näx",
+          "orient": [
+           "flar"
+          ],
+          "edges": [
+           {
+            "relator": "tan",
+            "node": {
+             "root": "klin"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "fro flar tan klin näx mring ku",
+     "injected": false,
+     "n_shown": 34
+    },
+    {
+     "turn": 68,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "krel"
+             ],
+             "root": "nur"
+            },
+            "relator": "tan"
+           }
+          ],
+          "modal": "plun",
+          "root": "hlax"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "lös"
+      }
+     },
+     "valid": true,
+     "surface": "u plun tan krel nur hlax lös ku",
+     "injected": false,
+     "n_shown": 35
+    },
+    {
+     "turn": 69,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "prux",
+       "edges": [
+        {
+         "relator": "sen",
+         "node": {
+          "root": "fis",
+          "edges": [
+           {
+            "relator": "kra",
+            "node": {
+             "root": "mling",
+             "orient": [
+              "hren"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "sen kra hren mling fis prux ko",
+     "injected": false,
+     "n_shown": 35
+    },
+    {
+     "turn": 70,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "nux"
+            },
+            "relator": "tan"
+           }
+          ],
+          "root": "mlö"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "kun"
+      }
+     },
+     "valid": true,
+     "surface": "sen tan nux mlö kun ka",
+     "injected": false,
+     "n_shown": 36
+    },
+    {
+     "turn": 71,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "mös",
+       "orient": [
+        "tlas"
+       ],
+       "edges": [
+        {
+         "relator": "nix",
+         "node": {
+          "root": "fäm",
+          "orient": [
+           "flar"
+          ],
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "pem"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "tlas nix flar hlim pem fäm mös ko",
+     "injected": false,
+     "n_shown": 36
+    },
+    {
+     "turn": 72,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "pöl"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "root": "krax"
+         },
+         "relator": "fro"
+        }
+       ],
+       "orient": [
+        "kon"
+       ],
+       "root": "tlan"
+      }
+     },
+     "valid": true,
+     "surface": "kon fro hlim pöl krax tlan ka",
+     "injected": false,
+     "n_shown": 37
+    },
+    {
+     "turn": 73,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "fis",
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "nur",
+          "orient": [
+           "hlör",
+           "tlas"
+          ],
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "klon",
+             "orient": [
+              "har"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pos hlör tlas hlim har klon nur fis ku",
+     "injected": false,
+     "n_shown": 37
+    },
+    {
+     "turn": 74,
+     "speaker": "A",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hren"
+             ],
+             "root": "hröx"
+            },
+            "relator": "mil"
+           }
+          ],
+          "orient": [
+           "hlör"
+          ],
+          "root": "kem"
+         },
+         "relator": "fro"
+        }
+       ],
+       "orient": [
+        "plas"
+       ],
+       "root": "mrang"
+      }
+     },
+     "valid": true,
+     "surface": "plas fro hlör mil hren hröx kem mrang ku",
+     "injected": false,
+     "n_shown": 38
+    },
+    {
+     "turn": 75,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "fröm",
+       "orient": [
+        "nar"
+       ],
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "krön",
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "kön",
+             "orient": [
+              "nong"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "nar pos hlim nong kön krön fröm ki",
+     "injected": false,
+     "n_shown": 38
+    },
+    {
+     "turn": 76,
+     "speaker": "A",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "orient": [
+           "hlan"
+          ],
+          "root": "klan"
+         },
+         "relator": "nix"
+        }
+       ],
+       "root": "tir"
+      }
+     },
+     "valid": true,
+     "surface": "nix hlan klan tir ka",
+     "injected": false,
+     "n_shown": 39
+    },
+    {
+     "turn": 77,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "fem",
+       "edges": [
+        {
+         "relator": "hlin",
+         "node": {
+          "root": "mröng",
+          "orient": [
+           "plas"
+          ],
+          "edges": [
+           {
+            "relator": "kra",
+            "node": {
+             "root": "mös"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hlin plas kra mös mröng fem ko",
+     "injected": false,
+     "n_shown": 39
+    },
+    {
+     "turn": 78,
+     "speaker": "A",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "orient": [
+           "hlör"
+          ],
+          "root": "kem"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "hräx"
+      }
+     },
+     "valid": true,
+     "surface": "u hlör kem hräx ko",
+     "injected": false,
+     "n_shown": 40
+    },
+    {
+     "turn": 79,
+     "speaker": "B_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "prax",
+       "orient": [
+        "kon"
+       ],
+       "edges": [
+        {
+         "relator": "hlim",
+         "node": {
+          "root": "kron",
+          "edges": [
+           {
+            "relator": "nix",
+            "node": {
+             "root": "fis"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "kon hlim nix fis kron prax ko",
+     "injected": false,
+     "n_shown": 40
+    }
+   ],
+   "surfaces": [
+    "hlör tro sen flar hlin kläng mlöng pem ka",
+    "hren xom u plung främ klen ko",
+    "u mar hlan nar sul plas nur prix kor kä",
+    "plun kra fro har kläng hros plon ki",
+    "xom fro hren pim kron mlung ka",
+    "nar u pox tan hlan kem fang tlax ka",
+    "mil pos mreng frum fis ku",
+    "pox sul hlin frem plam kän ka",
+    "kra mil hul mrang flox klon ka",
+    "lang sul mös tlux ki",
+    "hlim lang tan kron mrong främ ka",
+    "mil lang pos fes klin mlö ko",
+    "xos kra har hul fro klan fis hrux ku",
+    "nem tan hlim flar kem mär pöl ki",
+    "nix sul kon klen krän hram ka",
+    "hlin tro pos plon mring prux ki",
+    "plas u sen kron fum präx ka",
+    "hul pos tan mös mling krun ko",
+    "hlim pos hul frem hlax pem kä",
+    "flar hlör mil hrix har sil pos kon plon kön mreng ko",
+    "fen mix sen sir fro hröx pim prax ko",
+    "tan pim plung ko",
+    "flar u fes kron kä",
+    "mil hlör pos kron kun mring ka",
+    "sir hlim flar sen kron kras pem ku",
+    "flar tan hlang tlex ko",
+    "mix pos hler läs kä",
+    "flar tan klen hlix ki",
+    "u hlör krel hlin mlö plin hrun ka",
+    "nar nix hul fro tlox mör pröx ka",
+    "xöl tan hren u kris fis tir ka",
+    "hul mil klen frum ka",
+    "u fen plas fro kril häm mräng kä",
+    "u klen fem ka",
+    "mix tlas nix har plas pos kron hrun föm ko",
+    "kon nong hlim mil har rän tir prax ki",
+    "u plun sen hlan hrir nel fem ka",
+    "kra sen hlan nöl hläx plin ka",
+    "flar sir nix hlör hlim kem mlö mläng ko",
+    "tex u klung kron ka",
+    "pos har hlim hräx präx näx ku",
+    "tan tim mil hlang rim plon ko",
+    "fro har tan fröm plam klan kä",
+    "nong pos hren mil kän pön flöx ko",
+    "sung tan hlan nix präx frem pem ku",
+    "pos ten hlim mix plung tläx flox ki",
+    "frax nix lang fro kron mrang prix ka",
+    "plun kra mil hul nong tir fum klöng ko",
+    "lang tan u nong mrang hlox kron ka",
+    "hren u pem hröx ka",
+    "nar nix hlin lang frem hröx mling ku",
+    "hlin hren tan mrong kön fröm ka",
+    "plas u pos frem präx klun ku",
+    "har hlim klen nux ka",
+    "flar hlan u plas fro präx krän kron ko",
+    "kon plas tan nong hlim fem klöng kris ka",
+    "fro hlan nix hlix klin tlan ko",
+    "pos kon kra plam lus mong ku",
+    "u hlör kron mling ku",
+    "sen fro hrem fral hlang ko",
+    "flar krel fro hlan tan kläng tlex mläng ka",
+    "hlim mling klen ko",
+    "hlim pos prax tlex pön kä",
+    "nix kon pos tlix fis hlox ko",
+    "nong fro mleng mröng ka",
+    "kon hlim hrux fäm ko",
+    "hlan hlin tlix pel ku",
+    "fro flar tan klin näx mring ku",
+    "u plun tan krel nur hlax lös ku",
+    "sen kra hren mling fis prux ko",
+    "sen tan nux mlö kun ka",
+    "tlas nix flar hlim pem fäm mös ko",
+    "kon fro hlim pöl krax tlan ka",
+    "pos hlör tlas hlim har klon nur fis ku",
+    "plas fro hlör mil hren hröx kem mrang ku",
+    "nar pos hlim nong kön krön fröm ki",
+    "nix hlan klan tir ka",
+    "hlin plas kra mös mröng fem ko",
+    "u hlör kem hräx ko",
+    "kon hlim nix fis kron prax ko"
+   ]
+  },
+  "yoked_b": {
+   "log": [
+    {
+     "turn": 0,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hräx"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "orient": [
+           "kon"
+          ],
+          "root": "kän"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "mlöng"
+      }
+     },
+     "valid": true,
+     "surface": "u kon hlin hräx kän mlöng ka",
+     "injected": false,
+     "n_shown": 1
+    },
+    {
+     "turn": 1,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "mlong",
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "hrir",
+          "orient": [
+           "hlan"
+          ],
+          "edges": [
+           {
+            "relator": "u",
+            "node": {
+             "root": "plin"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "tan hlan u plin hrir mlong ka",
+     "injected": false,
+     "n_shown": 1
+    },
+    {
+     "turn": 2,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hul"
+             ],
+             "root": "mös"
+            },
+            "relator": "sul"
+           }
+          ],
+          "orient": [
+           "pox"
+          ],
+          "root": "krän"
+         },
+         "relator": "kra"
+        }
+       ],
+       "root": "fum"
+      }
+     },
+     "valid": true,
+     "surface": "kra pox sul hul mös krän fum ka",
+     "injected": false,
+     "n_shown": 2
+    },
+    {
+     "turn": 3,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "mär",
+       "quant": "pän",
+       "orient": [
+        "fen",
+        "sil"
+       ],
+       "edges": [
+        {
+         "relator": "fro",
+         "node": {
+          "root": "mlong",
+          "orient": [
+           "plas"
+          ],
+          "edges": [
+           {
+            "relator": "u",
+            "node": {
+             "root": "krun"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pän fen sil fro plas u krun mlong mär ko",
+     "injected": false,
+     "n_shown": 2
+    },
+    {
+     "turn": 4,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hlan"
+             ],
+             "root": "klen"
+            },
+            "relator": "mil"
+           }
+          ],
+          "root": "hrun"
+         },
+         "relator": "pos"
+        }
+       ],
+       "orient": [
+        "ung"
+       ],
+       "root": "nux"
+      }
+     },
+     "valid": true,
+     "surface": "ung pos mil hlan klen hrun nux ka",
+     "injected": false,
+     "n_shown": 3
+    },
+    {
+     "turn": 5,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "frim",
+       "edges": [
+        {
+         "relator": "mil",
+         "node": {
+          "root": "kras",
+          "edges": [
+           {
+            "relator": "kra",
+            "node": {
+             "root": "tang",
+             "orient": [
+              "sung"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "mil kra sung tang kras frim ka",
+     "injected": false,
+     "n_shown": 3
+    },
+    {
+     "turn": 6,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "flox"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "nong"
+          ],
+          "root": "fröm"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "tro",
+        "ung"
+       ],
+       "root": "prax"
+      }
+     },
+     "valid": true,
+     "surface": "tro ung tan nong hlim flox fröm prax ki",
+     "injected": false,
+     "n_shown": 4
+    },
+    {
+     "turn": 7,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "frem",
+       "orient": [
+        "plas"
+       ],
+       "edges": [
+        {
+         "relator": "nix",
+         "node": {
+          "root": "klan",
+          "orient": [
+           "har"
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "plas nix har klan frem ka",
+     "injected": false,
+     "n_shown": 4
+    },
+    {
+     "turn": 8,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "pöl"
+         },
+         "relator": "kra"
+        }
+       ],
+       "root": "fes"
+      }
+     },
+     "valid": true,
+     "surface": "kra pöl fes ka",
+     "injected": false,
+     "n_shown": 5
+    },
+    {
+     "turn": 9,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "kril",
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "näx"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "u näx kril ko",
+     "injected": false,
+     "n_shown": 5
+    },
+    {
+     "turn": 10,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "plam"
+            },
+            "relator": "mil"
+           }
+          ],
+          "orient": [
+           "lang"
+          ],
+          "root": "klun"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "root": "föm"
+      }
+     },
+     "valid": true,
+     "surface": "hlin lang mil plam klun föm ka",
+     "injected": false,
+     "n_shown": 6
+    },
+    {
+     "turn": 11,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "mlung",
+       "orient": [
+        "mix"
+       ],
+       "edges": [
+        {
+         "relator": "hlin",
+         "node": {
+          "root": "klin"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "mix hlin klin mlung ka",
+     "injected": false,
+     "n_shown": 6
+    },
+    {
+     "turn": 12,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "hlang"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "tex"
+       ],
+       "root": "plon"
+      }
+     },
+     "valid": true,
+     "surface": "tex u hlang plon ka",
+     "injected": false,
+     "n_shown": 7
+    },
+    {
+     "turn": 13,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "prax",
+       "quant": "pän",
+       "orient": [
+        "fen",
+        "tro"
+       ],
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "mrang",
+          "orient": [
+           "hlan",
+           "sir"
+          ],
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "hräx"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pän fen tro u hlan sir pos hräx mrang prax ko",
+     "injected": false,
+     "n_shown": 7
+    },
+    {
+     "turn": 14,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "tlix"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "hren"
+          ],
+          "root": "läs"
+         },
+         "relator": "pos"
+        }
+       ],
+       "root": "hlox"
+      }
+     },
+     "valid": true,
+     "surface": "pos hren tan tlix läs hlox ka",
+     "injected": false,
+     "n_shown": 8
+    },
+    {
+     "turn": 15,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "mling",
+       "orient": [
+        "fen",
+        "tex"
+       ],
+       "edges": [
+        {
+         "relator": "sen",
+         "node": {
+          "root": "klen",
+          "orient": [
+           "pox"
+          ],
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "hröx"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "fen tex sen pox hlim hröx klen mling ka",
+     "injected": false,
+     "n_shown": 8
+    },
+    {
+     "turn": 16,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hlör",
+              "kon"
+             ],
+             "root": "plung"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "orient": [
+           "nar"
+          ],
+          "root": "kön"
+         },
+         "relator": "fro"
+        }
+       ],
+       "orient": [
+        "tlas"
+       ],
+       "root": "prex"
+      }
+     },
+     "valid": true,
+     "surface": "tlas fro nar hlin hlör kon plung kön prex ka",
+     "injected": false,
+     "n_shown": 9
+    },
+    {
+     "turn": 17,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "mläng",
+       "edges": [
+        {
+         "relator": "fro",
+         "node": {
+          "root": "kun",
+          "orient": [
+           "sir"
+          ],
+          "edges": [
+           {
+            "relator": "hlin",
+            "node": {
+             "root": "kril"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "fro sir hlin kril kun mläng ka",
+     "injected": false,
+     "n_shown": 9
+    },
+    {
+     "turn": 18,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "degree": "fim",
+          "root": "mling"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "orient": [
+        "krel"
+       ],
+       "root": "hläx"
+      }
+     },
+     "valid": true,
+     "surface": "krel hlin mling fim hläx ko",
+     "injected": false,
+     "n_shown": 10
+    },
+    {
+     "turn": 19,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "mlung",
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "krön",
+          "modal": "nem",
+          "orient": [
+           "har",
+           "tim"
+          ],
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "mring",
+             "orient": [
+              "hren"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "tan nem har tim pos hren mring krön mlung ku",
+     "injected": false,
+     "n_shown": 10
+    },
+    {
+     "turn": 20,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kron"
+            },
+            "relator": "pos"
+           }
+          ],
+          "orient": [
+           "hul"
+          ],
+          "root": "kras"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "sung"
+       ],
+       "root": "fem"
+      }
+     },
+     "valid": true,
+     "surface": "sung u hul pos kron kras fem ka",
+     "injected": false,
+     "n_shown": 11
+    },
+    {
+     "turn": 21,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "mräng",
+       "edges": [
+        {
+         "relator": "hlin",
+         "node": {
+          "root": "hrun",
+          "orient": [
+           "fen"
+          ],
+          "edges": [
+           {
+            "relator": "kra",
+            "node": {
+             "root": "mrong"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hlin fen kra mrong hrun mräng ko",
+     "injected": false,
+     "n_shown": 11
+    },
+    {
+     "turn": 22,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "degree": "les",
+          "edges": [
+           {
+            "node": {
+             "root": "häm"
+            },
+            "relator": "pos"
+           }
+          ],
+          "root": "hrux"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "kon"
+       ],
+       "root": "pön"
+      }
+     },
+     "valid": true,
+     "surface": "kon tan pos häm hrux les pön ko",
+     "injected": false,
+     "n_shown": 12
+    },
+    {
+     "turn": 23,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "fum",
+       "edges": [
+        {
+         "relator": "nix",
+         "node": {
+          "root": "tlax",
+          "edges": [
+           {
+            "relator": "kra",
+            "node": {
+             "root": "mlö",
+             "orient": [
+              "hlör"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "nix kra hlör mlö tlax fum ku",
+     "injected": false,
+     "n_shown": 12
+    },
+    {
+     "turn": 24,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "nur"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "flar"
+          ],
+          "root": "hlux"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "ung"
+       ],
+       "root": "plöng"
+      }
+     },
+     "valid": true,
+     "surface": "ung u flar hlim nur hlux plöng ki",
+     "injected": false,
+     "n_shown": 13
+    },
+    {
+     "turn": 25,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "pel",
+       "orient": [
+        "fen",
+        "plas"
+       ],
+       "edges": [
+        {
+         "relator": "hlim",
+         "node": {
+          "root": "präx",
+          "orient": [
+           "hlör"
+          ],
+          "edges": [
+           {
+            "relator": "kra",
+            "node": {
+             "root": "pux"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "fen plas hlim hlör kra pux präx pel ka",
+     "injected": false,
+     "n_shown": 13
+    },
+    {
+     "turn": 26,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "tir"
+            },
+            "relator": "pos"
+           }
+          ],
+          "orient": [
+           "hul"
+          ],
+          "root": "klon"
+         },
+         "relator": "mil"
+        }
+       ],
+       "root": "fral"
+      }
+     },
+     "valid": true,
+     "surface": "mil hul pos tir klon fral ka",
+     "injected": false,
+     "n_shown": 14
+    },
+    {
+     "turn": 27,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "root": "främ",
+       "edges": [
+        {
+         "relator": "sen",
+         "node": {
+          "root": "föm",
+          "orient": [
+           "hlör"
+          ],
+          "edges": [
+           {
+            "relator": "nix",
+            "node": {
+             "root": "krän",
+             "orient": [
+              "sung"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "sen hlör nix sung krän föm främ kä",
+     "injected": false,
+     "n_shown": 14
+    },
+    {
+     "turn": 28,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kläng"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "root": "nux"
+         },
+         "relator": "sen"
+        }
+       ],
+       "orient": [
+        "kon"
+       ],
+       "root": "plin"
+      }
+     },
+     "valid": true,
+     "surface": "kon sen hlin kläng nux plin ka",
+     "injected": false,
+     "n_shown": 15
+    },
+    {
+     "turn": 29,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "plon",
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "föm",
+          "edges": [
+           {
+            "relator": "hlin",
+            "node": {
+             "root": "pöl"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pos hlin pöl föm plon ka",
+     "injected": false,
+     "n_shown": 15
+    },
+    {
+     "turn": 30,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hlan"
+             ],
+             "root": "hläx"
+            },
+            "relator": "mil"
+           }
+          ],
+          "root": "krän"
+         },
+         "relator": "nix"
+        }
+       ],
+       "orient": [
+        "kon"
+       ],
+       "root": "mlang"
+      }
+     },
+     "valid": true,
+     "surface": "kon nix mil hlan hläx krän mlang ka",
+     "injected": false,
+     "n_shown": 16
+    },
+    {
+     "turn": 31,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "root": "mling",
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "föm",
+          "orient": [
+           "fen"
+          ],
+          "edges": [
+           {
+            "relator": "nix",
+            "node": {
+             "root": "hrem"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "tan fen nix hrem föm mling kä",
+     "injected": false,
+     "n_shown": 16
+    },
+    {
+     "turn": 32,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "hräx"
+         },
+         "relator": "hlim"
+        }
+       ],
+       "orient": [
+        "flar"
+       ],
+       "root": "fem"
+      }
+     },
+     "valid": true,
+     "surface": "flar hlim hräx fem ka",
+     "injected": false,
+     "n_shown": 17
+    },
+    {
+     "turn": 33,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "pöl",
+       "orient": [
+        "kon"
+       ],
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "höm"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "kon u höm pöl ka",
+     "injected": false,
+     "n_shown": 17
+    },
+    {
+     "turn": 34,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hul"
+             ],
+             "root": "mlö"
+            },
+            "relator": "nix"
+           }
+          ],
+          "root": "hlux"
+         },
+         "relator": "u"
+        }
+       ],
+       "modal": "mir",
+       "root": "pläng"
+      }
+     },
+     "valid": true,
+     "surface": "mir u nix hul mlö hlux pläng ko",
+     "injected": false,
+     "n_shown": 18
+    },
+    {
+     "turn": 35,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "tlix",
+       "edges": [
+        {
+         "relator": "sen",
+         "node": {
+          "root": "hrun",
+          "orient": [
+           "sung"
+          ],
+          "edges": [
+           {
+            "relator": "tan",
+            "node": {
+             "root": "mlö"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "sen sung tan mlö hrun tlix ku",
+     "injected": false,
+     "n_shown": 18
+    },
+    {
+     "turn": 36,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "främ"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "hren"
+          ],
+          "root": "kun"
+         },
+         "relator": "tan"
+        }
+       ],
+       "root": "prix"
+      }
+     },
+     "valid": true,
+     "surface": "tan hren nix främ kun prix ka",
+     "injected": false,
+     "n_shown": 19
+    },
+    {
+     "turn": 37,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "pong",
+       "edges": [
+        {
+         "relator": "fro",
+         "node": {
+          "root": "mlöng",
+          "orient": [
+           "nong"
+          ],
+          "edges": [
+           {
+            "relator": "sul",
+            "node": {
+             "root": "hlox"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "fro nong sul hlox mlöng pong ka",
+     "injected": false,
+     "n_shown": 19
+    },
+    {
+     "turn": 38,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "tlex"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "flar"
+          ],
+          "root": "prax"
+         },
+         "relator": "pos"
+        }
+       ],
+       "root": "fis"
+      }
+     },
+     "valid": true,
+     "surface": "pos flar tan tlex prax fis ka",
+     "injected": false,
+     "n_shown": 20
+    },
+    {
+     "turn": 39,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "föm",
+       "orient": [
+        "flar",
+        "tlas"
+       ],
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "kön",
+          "edges": [
+           {
+            "relator": "nix",
+            "node": {
+             "root": "höm"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "flar tlas tan nix höm kön föm ka",
+     "injected": false,
+     "n_shown": 20
+    },
+    {
+     "turn": 40,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "degree": "kral",
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hul"
+             ],
+             "root": "hräx"
+            },
+            "relator": "nix"
+           }
+          ],
+          "modal": "mar",
+          "root": "pux"
+         },
+         "relator": "fro"
+        }
+       ],
+       "orient": [
+        "plas"
+       ],
+       "root": "mlung"
+      }
+     },
+     "valid": true,
+     "surface": "plas fro mar nix hul hräx pux kral mlung ki",
+     "injected": false,
+     "n_shown": 21
+    },
+    {
+     "turn": 41,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "mong",
+       "edges": [
+        {
+         "relator": "fro",
+         "node": {
+          "root": "prux",
+          "orient": [
+           "sung"
+          ],
+          "edges": [
+           {
+            "relator": "nix",
+            "node": {
+             "root": "kän"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "fro sung nix kän prux mong ka",
+     "injected": false,
+     "n_shown": 21
+    },
+    {
+     "turn": 42,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "plung"
+            },
+            "relator": "hlim"
+           }
+          ],
+          "orient": [
+           "krel"
+          ],
+          "root": "tläx"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "hrun"
+      }
+     },
+     "valid": true,
+     "surface": "fro krel hlim plung tläx hrun ki",
+     "injected": false,
+     "n_shown": 22
+    },
+    {
+     "turn": 43,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "root": "prax",
+       "edges": [
+        {
+         "relator": "hlin",
+         "node": {
+          "root": "föm",
+          "orient": [
+           "fen"
+          ],
+          "edges": [
+           {
+            "relator": "sul",
+            "node": {
+             "root": "mräng"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hlin fen sul mräng föm prax kä",
+     "injected": false,
+     "n_shown": 22
+    },
+    {
+     "turn": 44,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "flar"
+             ],
+             "root": "fröm"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "root": "fis"
+         },
+         "relator": "mil"
+        }
+       ],
+       "modal": "nem",
+       "root": "pröx"
+      }
+     },
+     "valid": true,
+     "surface": "nem mil hlin flar fröm fis pröx ka",
+     "injected": false,
+     "n_shown": 23
+    },
+    {
+     "turn": 45,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "mlö",
+       "orient": [
+        "plas"
+       ],
+       "edges": [
+        {
+         "relator": "nix",
+         "node": {
+          "root": "pem",
+          "edges": [
+           {
+            "relator": "kra",
+            "node": {
+             "root": "höm"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "plas nix kra höm pem mlö ko",
+     "injected": false,
+     "n_shown": 23
+    },
+    {
+     "turn": 46,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "tir"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "orient": [
+           "kon"
+          ],
+          "root": "kön"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "hros"
+      }
+     },
+     "valid": true,
+     "surface": "u kon hlin tir kön hros ka",
+     "injected": false,
+     "n_shown": 24
+    },
+    {
+     "turn": 47,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "plen",
+       "orient": [
+        "flar"
+       ],
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "hram"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "flar u hram plen ka",
+     "injected": false,
+     "n_shown": 24
+    },
+    {
+     "turn": 48,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "hrem"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "fröm"
+      }
+     },
+     "valid": true,
+     "surface": "sen hrem fröm ki",
+     "injected": false,
+     "n_shown": 25
+    },
+    {
+     "turn": 49,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "mlö",
+       "edges": [
+        {
+         "relator": "kra",
+         "node": {
+          "root": "präx",
+          "orient": [
+           "hlan"
+          ],
+          "edges": [
+           {
+            "relator": "nix",
+            "node": {
+             "root": "klan"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "kra hlan nix klan präx mlö ku",
+     "injected": false,
+     "n_shown": 25
+    },
+    {
+     "turn": 50,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "hlang"
+         },
+         "relator": "mil"
+        }
+       ],
+       "orient": [
+        "hlör"
+       ],
+       "root": "nax"
+      }
+     },
+     "valid": true,
+     "surface": "hlör mil hlang nax ka",
+     "injected": false,
+     "n_shown": 26
+    },
+    {
+     "turn": 51,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "tir",
+       "edges": [
+        {
+         "relator": "sen",
+         "node": {
+          "root": "kris",
+          "modal": "hrix",
+          "edges": [
+           {
+            "relator": "u",
+            "node": {
+             "root": "krän",
+             "orient": [
+              "krel"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "sen hrix u krel krän kris tir ko",
+     "injected": false,
+     "n_shown": 26
+    },
+    {
+     "turn": 52,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "tlex"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "hlan"
+          ],
+          "root": "kril"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "kron"
+      }
+     },
+     "valid": true,
+     "surface": "fro hlan nix tlex kril kron ka",
+     "injected": false,
+     "n_shown": 27
+    },
+    {
+     "turn": 53,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "mlöng",
+       "orient": [
+        "sir",
+        "tex"
+       ],
+       "edges": [
+        {
+         "relator": "nix",
+         "node": {
+          "root": "tlex",
+          "orient": [
+           "pox"
+          ],
+          "edges": [
+           {
+            "relator": "hlin",
+            "node": {
+             "root": "kron"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "sir tex nix pox hlin kron tlex mlöng ko",
+     "injected": false,
+     "n_shown": 27
+    },
+    {
+     "turn": 54,
+     "speaker": "B",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "klon"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "fen"
+          ],
+          "root": "klung"
+         },
+         "relator": "hlin"
+        }
+       ],
+       "root": "flox"
+      }
+     },
+     "valid": true,
+     "surface": "hlin fen nix klon klung flox ku",
+     "injected": false,
+     "n_shown": 28
+    },
+    {
+     "turn": 55,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "root": "tlix",
+       "quant": "nol",
+       "orient": [
+        "sung"
+       ],
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "kän"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "nol sung tan kän tlix ko",
+     "injected": false,
+     "n_shown": 28
+    },
+    {
+     "turn": 56,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hul"
+             ],
+             "root": "tang"
+            },
+            "relator": "sen"
+           }
+          ],
+          "root": "hröx"
+         },
+         "relator": "fro"
+        }
+       ],
+       "root": "fum"
+      }
+     },
+     "valid": true,
+     "surface": "fro sen hul tang hröx fum ki",
+     "injected": false,
+     "n_shown": 29
+    },
+    {
+     "turn": 57,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "klan",
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "frim",
+          "orient": [
+           "hul"
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pos hul frim klan ku",
+     "injected": false,
+     "n_shown": 29
+    },
+    {
+     "turn": 58,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hrux"
+            },
+            "relator": "mil"
+           }
+          ],
+          "orient": [
+           "hren"
+          ],
+          "root": "plin"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "fäm"
+      }
+     },
+     "valid": true,
+     "surface": "sen hren mil hrux plin fäm ki",
+     "injected": false,
+     "n_shown": 30
+    },
+    {
+     "turn": 59,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "plung",
+       "orient": [
+        "hlör"
+       ],
+       "edges": [
+        {
+         "relator": "pos",
+         "node": {
+          "root": "fis",
+          "orient": [
+           "fen"
+          ],
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "präx"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hlör pos fen hlim präx fis plung ku",
+     "injected": false,
+     "n_shown": 30
+    },
+    {
+     "turn": 60,
+     "speaker": "B",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "root": "häm"
+         },
+         "relator": "pos"
+        }
+       ],
+       "orient": [
+        "sil"
+       ],
+       "root": "klan"
+      }
+     },
+     "valid": true,
+     "surface": "sil pos häm klan ku",
+     "injected": false,
+     "n_shown": 31
+    },
+    {
+     "turn": 61,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "näx",
+       "edges": [
+        {
+         "relator": "mil",
+         "node": {
+          "root": "hler",
+          "orient": [
+           "hlan"
+          ],
+          "edges": [
+           {
+            "relator": "sul",
+            "node": {
+             "root": "kem"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "mil hlan sul kem hler näx ka",
+     "injected": false,
+     "n_shown": 31
+    },
+    {
+     "turn": 62,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "kän"
+            },
+            "relator": "mil"
+           }
+          ],
+          "orient": [
+           "hul"
+          ],
+          "root": "näx"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "flox"
+      }
+     },
+     "valid": true,
+     "surface": "u hul mil kän näx flox ki",
+     "injected": false,
+     "n_shown": 32
+    },
+    {
+     "turn": 63,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "fis",
+       "orient": [
+        "pox"
+       ],
+       "edges": [
+        {
+         "relator": "sen",
+         "node": {
+          "root": "präx",
+          "modal": "mar",
+          "edges": [
+           {
+            "relator": "tan",
+            "node": {
+             "root": "nax",
+             "orient": [
+              "nar"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "pox sen mar tan nar nax präx fis ku",
+     "injected": false,
+     "n_shown": 32
+    },
+    {
+     "turn": 64,
+     "speaker": "B",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hren"
+             ],
+             "root": "krön"
+            },
+            "relator": "mil"
+           }
+          ],
+          "root": "frem"
+         },
+         "relator": "u"
+        }
+       ],
+       "modal": "mar",
+       "root": "tang"
+      }
+     },
+     "valid": true,
+     "surface": "mar u mil hren krön frem tang ku",
+     "injected": false,
+     "n_shown": 33
+    },
+    {
+     "turn": 65,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "pöl",
+       "orient": [
+        "sung"
+       ],
+       "edges": [
+        {
+         "relator": "nix",
+         "node": {
+          "root": "hlax",
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "kun",
+             "orient": [
+              "hul"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "sung nix pos hul kun hlax pöl ku",
+     "injected": false,
+     "n_shown": 33
+    },
+    {
+     "turn": 66,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "hren"
+             ],
+             "root": "tlix"
+            },
+            "relator": "tan"
+           }
+          ],
+          "orient": [
+           "nar",
+           "plas"
+          ],
+          "root": "krön"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "pön"
+      }
+     },
+     "valid": true,
+     "surface": "u nar plas tan hren tlix krön pön ko",
+     "injected": false,
+     "n_shown": 34
+    },
+    {
+     "turn": 67,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "kä",
+      "node": {
+       "root": "mling",
+       "edges": [
+        {
+         "relator": "hlin",
+         "node": {
+          "root": "krax",
+          "edges": [
+           {
+            "relator": "nix",
+            "node": {
+             "root": "hrun",
+             "orient": [
+              "hlan"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "hlin nix hlan hrun krax mling kä",
+     "injected": false,
+     "n_shown": 34
+    },
+    {
+     "turn": 68,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "pem"
+            },
+            "relator": "mil"
+           }
+          ],
+          "orient": [
+           "fen"
+          ],
+          "root": "lös"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "hul",
+        "nar"
+       ],
+       "root": "mlang"
+      }
+     },
+     "valid": true,
+     "surface": "hul nar tan fen mil pem lös mlang ko",
+     "injected": false,
+     "n_shown": 35
+    },
+    {
+     "turn": 69,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "prax",
+       "orient": [
+        "fen"
+       ],
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "mläng"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "fen u mläng prax ku",
+     "injected": false,
+     "n_shown": 35
+    },
+    {
+     "turn": 70,
+     "speaker": "B",
+     "proposal": {
+      "force": "ko",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "plon"
+            },
+            "relator": "tan"
+           }
+          ],
+          "root": "näx"
+         },
+         "relator": "u"
+        }
+       ],
+       "orient": [
+        "fen"
+       ],
+       "root": "hlix"
+      }
+     },
+     "valid": true,
+     "surface": "fen u tan plon näx hlix ko",
+     "injected": false,
+     "n_shown": 36
+    },
+    {
+     "turn": 71,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "kläng",
+       "edges": [
+        {
+         "relator": "tan",
+         "node": {
+          "root": "hlox",
+          "orient": [
+           "plas"
+          ],
+          "edges": [
+           {
+            "relator": "hlim",
+            "node": {
+             "root": "krun"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "tan plas hlim krun hlox kläng ku",
+     "injected": false,
+     "n_shown": 36
+    },
+    {
+     "turn": 72,
+     "speaker": "B",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "orient": [
+              "nar"
+             ],
+             "root": "klen"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "root": "pöl"
+         },
+         "relator": "pos"
+        }
+       ],
+       "modal": "mar",
+       "root": "fem"
+      }
+     },
+     "valid": true,
+     "surface": "mar pos hlin nar klen pöl fem ku",
+     "injected": false,
+     "n_shown": 37
+    },
+    {
+     "turn": 73,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "root": "mling",
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "nur"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "u nur mling ku",
+     "injected": false,
+     "n_shown": 37
+    },
+    {
+     "turn": 74,
+     "speaker": "B",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "klan"
+            },
+            "relator": "nix"
+           }
+          ],
+          "orient": [
+           "hlan"
+          ],
+          "root": "kön"
+         },
+         "relator": "tan"
+        }
+       ],
+       "orient": [
+        "fen",
+        "kon"
+       ],
+       "root": "pläng"
+      }
+     },
+     "valid": true,
+     "surface": "fen kon tan hlan nix klan kön pläng ki",
+     "injected": false,
+     "n_shown": 38
+    },
+    {
+     "turn": 75,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ki",
+      "node": {
+       "root": "hlang",
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "kem"
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "u kem hlang ki",
+     "injected": false,
+     "n_shown": 38
+    },
+    {
+     "turn": 76,
+     "speaker": "B",
+     "proposal": {
+      "force": "ku",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "tir"
+            },
+            "relator": "hlin"
+           }
+          ],
+          "orient": [
+           "mix"
+          ],
+          "root": "mleng"
+         },
+         "relator": "u"
+        }
+       ],
+       "root": "fem"
+      }
+     },
+     "valid": true,
+     "surface": "u mix hlin tir mleng fem ku",
+     "injected": false,
+     "n_shown": 39
+    },
+    {
+     "turn": 77,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "klan",
+       "edges": [
+        {
+         "relator": "sul",
+         "node": {
+          "root": "tlex",
+          "edges": [
+           {
+            "relator": "hlin",
+            "node": {
+             "root": "hrun",
+             "orient": [
+              "nong"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "sul hlin nong hrun tlex klan ka",
+     "injected": false,
+     "n_shown": 39
+    },
+    {
+     "turn": 78,
+     "speaker": "B",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "edges": [
+        {
+         "node": {
+          "edges": [
+           {
+            "node": {
+             "root": "hrem"
+            },
+            "relator": "kra"
+           }
+          ],
+          "root": "tir"
+         },
+         "relator": "sen"
+        }
+       ],
+       "root": "krön"
+      }
+     },
+     "valid": true,
+     "surface": "sen kra hrem tir krön ka",
+     "injected": false,
+     "n_shown": 40
+    },
+    {
+     "turn": 79,
+     "speaker": "A_rec",
+     "proposal": {
+      "force": "ka",
+      "node": {
+       "root": "fröm",
+       "edges": [
+        {
+         "relator": "u",
+         "node": {
+          "root": "hrem",
+          "edges": [
+           {
+            "relator": "pos",
+            "node": {
+             "root": "kun",
+             "orient": [
+              "nar"
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "valid": true,
+     "surface": "u pos nar kun hrem fröm ka",
+     "injected": false,
+     "n_shown": 40
+    }
+   ],
+   "surfaces": [
+    "u kon hlin hräx kän mlöng ka",
+    "tan hlan u plin hrir mlong ka",
+    "kra pox sul hul mös krän fum ka",
+    "pän fen sil fro plas u krun mlong mär ko",
+    "ung pos mil hlan klen hrun nux ka",
+    "mil kra sung tang kras frim ka",
+    "tro ung tan nong hlim flox fröm prax ki",
+    "plas nix har klan frem ka",
+    "kra pöl fes ka",
+    "u näx kril ko",
+    "hlin lang mil plam klun föm ka",
+    "mix hlin klin mlung ka",
+    "tex u hlang plon ka",
+    "pän fen tro u hlan sir pos hräx mrang prax ko",
+    "pos hren tan tlix läs hlox ka",
+    "fen tex sen pox hlim hröx klen mling ka",
+    "tlas fro nar hlin hlör kon plung kön prex ka",
+    "fro sir hlin kril kun mläng ka",
+    "krel hlin mling fim hläx ko",
+    "tan nem har tim pos hren mring krön mlung ku",
+    "sung u hul pos kron kras fem ka",
+    "hlin fen kra mrong hrun mräng ko",
+    "kon tan pos häm hrux les pön ko",
+    "nix kra hlör mlö tlax fum ku",
+    "ung u flar hlim nur hlux plöng ki",
+    "fen plas hlim hlör kra pux präx pel ka",
+    "mil hul pos tir klon fral ka",
+    "sen hlör nix sung krän föm främ kä",
+    "kon sen hlin kläng nux plin ka",
+    "pos hlin pöl föm plon ka",
+    "kon nix mil hlan hläx krän mlang ka",
+    "tan fen nix hrem föm mling kä",
+    "flar hlim hräx fem ka",
+    "kon u höm pöl ka",
+    "mir u nix hul mlö hlux pläng ko",
+    "sen sung tan mlö hrun tlix ku",
+    "tan hren nix främ kun prix ka",
+    "fro nong sul hlox mlöng pong ka",
+    "pos flar tan tlex prax fis ka",
+    "flar tlas tan nix höm kön föm ka",
+    "plas fro mar nix hul hräx pux kral mlung ki",
+    "fro sung nix kän prux mong ka",
+    "fro krel hlim plung tläx hrun ki",
+    "hlin fen sul mräng föm prax kä",
+    "nem mil hlin flar fröm fis pröx ka",
+    "plas nix kra höm pem mlö ko",
+    "u kon hlin tir kön hros ka",
+    "flar u hram plen ka",
+    "sen hrem fröm ki",
+    "kra hlan nix klan präx mlö ku",
+    "hlör mil hlang nax ka",
+    "sen hrix u krel krän kris tir ko",
+    "fro hlan nix tlex kril kron ka",
+    "sir tex nix pox hlin kron tlex mlöng ko",
+    "hlin fen nix klon klung flox ku",
+    "nol sung tan kän tlix ko",
+    "fro sen hul tang hröx fum ki",
+    "pos hul frim klan ku",
+    "sen hren mil hrux plin fäm ki",
+    "hlör pos fen hlim präx fis plung ku",
+    "sil pos häm klan ku",
+    "mil hlan sul kem hler näx ka",
+    "u hul mil kän näx flox ki",
+    "pox sen mar tan nar nax präx fis ku",
+    "mar u mil hren krön frem tang ku",
+    "sung nix pos hul kun hlax pöl ku",
+    "u nar plas tan hren tlix krön pön ko",
+    "hlin nix hlan hrun krax mling kä",
+    "hul nar tan fen mil pem lös mlang ko",
+    "fen u mläng prax ku",
+    "fen u tan plon näx hlix ko",
+    "tan plas hlim krun hlox kläng ku",
+    "mar pos hlin nar klen pöl fem ku",
+    "u nur mling ku",
+    "fen kon tan hlan nix klan kön pläng ki",
+    "u kem hlang ki",
+    "u mix hlin tir mleng fem ku",
+    "sul hlin nong hrun tlex klan ka",
+    "sen kra hrem tir krön ka",
+    "u pos nar kun hrem fröm ka"
+   ]
+  }
+ },
+ "adapter_usage_live": {
+  "A": 40,
+  "B": 40
+ }
+}

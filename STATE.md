@@ -1,58 +1,74 @@
-# 🔴 RUN IN FLIGHT — THE DRIFT RUN
+# ✅ THE DRIFT RUN LANDED — verdict UNDERPOWERED. σ_cp STILL UNMEASURED.
+
+Full write-up: `docs/RESULTS_DRIFT_2026_08_31.md` · raw
+`runs/act2/drift/drift_results.json` · analysis `tools/act2_drift.py`
+Box `f84a329a…` TERMINATED; fleet confirmed empty **by polling** (the terminate
+call returned `terminating`, not `terminated` — 3 more polls before it went).
 
 ```
-instance  f84a329a795a4680bf80280fedcb08e4   name tlon-drift
-ip        141.148.9.215   key ~/.ssh/tlon   user ubuntu   us-east-1
-repo      ~/tlon  (LOWERCASE — `~/Tlon` silently reads as an empty dir)
-pid       4815    (`bash tools/pipeline_drift.sh`)
-eta       MEASURED, not estimated: pair 1 marginal wall 4340 s / 7 replicates
-          = 620 s per replicate. 105 replicates (84 real + 21 self-pair) is
-          65,100 s ≈ 18.1 h from the 23:47:14 pair-phase start ⇒ ~17:50 UTC
-          31 Aug. That is ~2 h past the pre-run ~16 h guess. ⭐ The 70 s setup
-          is logged SEPARATELY and is NOT divisible per pair — do not fold it
-          in. Assumes pairs 2-12 match pair 1; the next marginal-wall line
-          tests that assumption rather than confirming it.
-watchdog  monitor bdrxd0ra9 — POLLS every 5 min, does not tail.
-          ⛔⛔ THE PREVIOUS WATCHDOG COULD NOT DETECT THE THING IT EXISTED FOR.
-          It was `tail -F` over ssh (a dropped connection = permanent silence =
-          looks exactly like a healthy quiet run), and its liveness probe was
-          `pgrep -f pipeline_drift.sh`, which MATCHES THE SSH SHELL'S OWN
-          COMMAND LINE — the process-died branch was unreachable. Liveness is
-          now PID 4815 + `/proc/<pid>/cmdline` identity, red-proofed against a
-          dead pid, an absent pid, and a LIVE pid that is not the run.
-started   2026-08-30 23:46 UTC   A100-SXM4-40GB  $1.99/h   ETA ~16 h
-script    tools/pipeline_drift.sh (setsid)
-python    ⛔ ~/venv/bin/python — NOT system python3 (numpy 2 breaks dist-packages)
-sentinel  ~/DONE | ~/FAILED     stdout ~/pipeline_stdout.log
-monitor   task byyaxuswj (persistent)
+mean delta = W2(LIVE) − W2(YOKED) = +0.0803
+95% CI clustered on ADAPTER (7 adapters, 12 pairs) = [−0.2856, +0.4637]
+6 of 12 pairs converge — a coin flip. 105/105 transcripts, ALL STAGES PASSED.
 ```
 
-**12 pairs × 7 replicates + 7 self-pair controls × 3, 80 turns, injections OFF.**
-Cold table FROZEN first: `runs/act2/cold_table_ka.json` sha `84c2a1b5…`.
+## ⛔⛔ THIS IS NOT THE BORGES ANTI-INEVITABILITY ANSWER
 
-## ⛔ WHEN IT FINISHES
+The pre-registration allowed a null ONLY if the CI also excluded a meaningful
+effect. It does not: **CI half-width 0.375 = 32% of the median cold-table
+speaker separation (1.1878)**. A coupling effect a third the size of the typical
+distance between two Tlön speakers fits inside the interval undetected.
 
-1. **PULL `runs/act2/drift/pipeline_drift.log` FIRST**, then `logs/*`,
-   `control/*`, `~/pipeline_stdout.log`. Adapters need no pulling (uploaded).
-2. Terminate `f84a329a795a4680bf80280fedcb08e4`; confirm empty by POLLING.
-3. Analyse locally. ⛔ Zero analysis on a live box.
+## ⭐⭐ THE SELF-PAIR CONTROL IS THE FINDING
 
-## ⛔⛔ THE READINGS, BINDING
+Identical speakers CANNOT converge, so every non-zero control delta is
+manufactured. **`s20621` against itself read −0.827** — a bigger apparent
+convergence than any real pair achieved (best −0.611, `s20620|s20621`).
 
-**Estimand: `W2(LIVE) − W2(YOKED)`, paired per pair, clustered on the ADAPTER**
-(12 pairs are not 12 units — 7 adapters are). Axis: **`force:ka` only**.
+⭐ Without the control arm, six converging pairs led by −0.611 would have looked
+like a coupling result. **The control is the only reason no claim was made.**
+⚠️ Control ran 3 reps vs the real pairs' 7; matched at n=3 by subsampling, real
+sd 0.5389 vs control 0.4412 (real larger in 82% of subsamples) — that is
+pair heterogeneity the cold table already knew about, not coupling.
 
-- `LIVE < YOKED` **AND self-pairs ≈ 0** → coupling is real. **BOTH required.**
-- `LIVE ≈ YOKED` → **UNDERPOWERED** unless the CI excludes a meaningful effect.
-  ⛔ Do NOT read a wide-CI null as the Borges anti-inevitability answer.
-- `LIVE > YOKED` → look for a sign error before interpreting.
-- ⛔⛔ **If the self-pair control is NOT ≈ 0, no coupling claim is licensed** —
-  a pipeline that manufactures drift would do so as `LIVE < YOKED`, the exact
-  signature of the wanted result.
+## ⛔ ADAPTER-LIMITED, NOT REPLICATE-LIMITED
 
-**Scope:** tests coupling on `force:ka`, the one axis that both separates
-(jackknife ICC 0.559–0.906) and moves (capacity 1.45 ± 0.10 vs frozen). A null
-is about `force:ka`, not coupling in general. Single axis, no fallback.
+`sd(n)² = h² + k²/n` on n=3/5/7 (0.5426 / 0.4480 / 0.3988):
+**heterogeneity h = 0.2397 · estimation noise at n=7 = 0.3187 — noise WINS.**
+More reps help (n=28 → 0.2878) but the unit of independence is the ADAPTER and
+there are only 7, capping the design at 21 pairs. Quadrupling reps still leaves
+the CI half-width ~0.27 ≈ 23% of median separation.
+⇒ **A serious next attempt needs MORE INDEPENDENTLY-TRAINED SPEAKERS FIRST.**
+(Sixth move of the unit in this arc — see [unit_of_independence].)
+
+## ⛔ A GUARD THAT WAS NOT A GUARD (now fixed)
+
+`cold_pin` printed the FILE sha beside the frozen CONTENT sha and compared
+nothing — two different quantities by construction, so it printed an apparent
+mismatch and continued. Reported by me as "gate passed"; it was not a gate.
+Now compares the content sha and exits 1; red-proofed against a moved ruler.
+
+## ⭐ WHAT IS ESTABLISHED
+
+1. **0 of 105** transcripts failed the both-adapters-spoke-and-alternated guard;
+   arms balanced to within 1 turn of 8400.
+2. Estimand red-proofed: sign asserted both directions, mutation-tested
+   (flipping the subtraction fails 2 tests). `tests/test_drift_estimand.py`.
+3. Frozen ruler held — content sha recomputes to `84c2a1b5…`.
+4. Mean shift decomposes: location **+0.3957**, spread **−0.0600**.
+
+**Scope:** `force:ka` only, the one axis that both separates (jackknife ICC
+0.559–0.906) and moves (capacity 1.45 ± 0.10). This is about `force:ka`, not
+coupling in general.
+
+## ⭐ THREE BUGS THE SMOKE TESTS CAUGHT (none would have crashed)
+
+1. Alternation guard checked the CUMULATIVE record; only LIVE alternates.
+2. `--skip-cold` silently no-opped on the `cold_a` block.
+3. ⛔⛔ **`Replay` returned a surface, not a proposal** — every yoked partner
+   turn failed validation, never entered `hist`, and the speaker heard the SEED
+   on all 40 turns. YOKED was "talking to a stale seed", so LIVE−YOKED would
+   have measured **partner present vs absent** instead of **responsive vs not**
+   — a large, clean, entirely spurious coupling signal.
 
 ## ⭐ THREE BUGS THE SMOKE TESTS CAUGHT (none would have crashed)
 

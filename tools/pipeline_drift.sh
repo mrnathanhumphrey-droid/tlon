@@ -42,9 +42,20 @@ s20621:s20622 s20621:s20623 s20622:s20623 s20620:s20621 s20622:t30001 s20623:t30
 SELF="s20620 s20621 s20622 s20623 t30001 t30002 t30003"
 
 step cold_pin
-GOT=$(sha256sum runs/act2/cold_table_ka.json | cut -d' ' -f1 || true)
-echo "  cold table on disk: $GOT" | tee -a $LOG
-echo "  frozen reference:   $COLD_SHA" | tee -a $LOG
+# ⛔⛔ THIS WAS NOT A GUARD. It ran `sha256sum` on the FILE and printed it beside
+# $COLD_SHA, which is the sha of the table's CONTENT computed before the sha
+# field was embedded in it. Two different quantities by construction — so it
+# printed an apparent mismatch, compared nothing, and continued. A check that
+# cannot fail has been consulted, not passed.
+GOT=$($PY -c "
+import hashlib,json,pathlib
+d=json.loads(pathlib.Path('runs/act2/cold_table_ka.json').read_text(encoding='utf-8'))
+d.pop('sha256',None)
+print(hashlib.sha256(json.dumps(d,indent=1,ensure_ascii=False,sort_keys=True).encode()).hexdigest())")
+echo "  cold table content sha: $GOT" | tee -a $LOG
+echo "  frozen reference:       $COLD_SHA" | tee -a $LOG
+[ "$GOT" = "$COLD_SHA" ] || { echo "⛔⛔ COLD TABLE HAS MOVED — the baseline is not the frozen one" | tee -a $LOG; exit 1; }
+echo "  ✅ cold table pinned" | tee -a $LOG
 
 step syntax_floor
 $PY --version | tee -a $LOG
