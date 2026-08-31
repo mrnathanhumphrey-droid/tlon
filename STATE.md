@@ -18,6 +18,32 @@ effect. It does not: **CI half-width 0.375 = 32% of the median cold-table
 speaker separation (1.1878)**. A coupling effect a third the size of the typical
 distance between two Tlön speakers fits inside the interval undetected.
 
+## ⛔⛔ PRE-FLIGHT ($0): **DO NOT RUN THE h-DIAGNOSTIC** — `docs/PREFLIGHT_H_DIAGNOSTIC_2026_08_31.md`
+
+No box started. Four checks killed it:
+1. ⛔⛔ **The proposed run targets the WRONG `n`.** The `n` in `sd(n)²=h²+k²/n` is
+   **replicates per PAIR** (7, drift run), not **solo conversations per BUILD**
+   (14, cold arm). `pair_delta()` needs live_a/live_b/yoked_a/yoked_b — a SOLO
+   transcript has none ⇒ 98 new solo transcripts add **ZERO points to the curve**.
+   Correct run = 252 two-speaker probes = **43 GPU-h**, not 36.
+2. ⭐ **A $0 estimator already exists** — split each pair's 7 reps into disjoint
+   halves, covary the half-deltas across pairs (noise cancels): **h²=+0.0358
+   (h=0.189), CI [−0.0624, +0.1398], 24% of draws ≤0.** Agrees with the curve fit
+   (h=0.2519): probably positive, **not established**.
+3. ⛔⛔ **n=28 gives only ~34% power** to establish h>0 if h=0.19 ⇒ 2 of 3 runs
+   return "undetermined". ~80% power needs n≈100 ⇒ **200+ GPU-h — the diagnostic
+   costs MORE than the ~98 GPU-h decision it gates.**
+4. ⭐⭐ **n AND N ARE LEVERS ON DIFFERENT PROBLEMS.** Replicates pin h but do NOT
+   buy stability (LOO swing **65% → still 65% at n=28**); adapters buy stability
+   but do NOT pin h (power 11% at 20 ad/60 pairs/n=7 vs 10% now — h
+   is NOISE-limited on the same estimate whose CI is [−0.0624, +0.1398]). ⇒ **THE ADAPTER DECISION NEVER RESTED ON h** — it rests on the
+   DIRECTLY OBSERVED LOO instability (MDE 0.472→0.725, mean −0.006→+0.191), which
+   is an observation, not a parameter whose CI contains zero.
+⛔ **PRICING §7 "replicates first, adapters only if h survives" is RETRACTED** — I
+let one parameter stand in for two separate questions.
+⏭ Either **stop** (drift result stands, honestly characterised) or go to **~15–20
+adapters on STABILITY grounds** (~54–72 h infer + 10–16 h train, halves the swing).
+
 ## ⛔⛔ PRICING ($0, 2026-08-31): "ADAPTER-LIMITED" IS **NOT ESTABLISHED**
 
 Full: `docs/PRICING_ADAPTER_COUNT_2026_08_31.md`.

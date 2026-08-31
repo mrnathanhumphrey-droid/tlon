@@ -136,7 +136,16 @@ buys little for a great deal:
 Single A100-40GB; divide wall-clock by boxes run in parallel. Rates are in the
 gitignored ledger, deliberately not here.
 
-## §7 RECOMMENDED ORDER
+## §7 RECOMMENDED ORDER — ⛔⛔ RETRACTED 2026-08-31, see PREFLIGHT_H_DIAGNOSTIC
+
+**The sequencing below is wrong.** Pre-flight simulation shows n and N are levers
+on *different* problems: replicates pin h but leave the leave-one-out swing at
+65%; adapters halve the swing but give ~11% power on h. **The adapter decision
+never rested on h** — it rests on the directly observed LOO instability. And the
+h-diagnostic itself has ~34% power at n=28 and would need 200+ GPU-h for 80%,
+more than the design it gates. Kept below as the retracted record.
+
+### (retracted)
 
 1. **Extend replicates on the existing 7 adapters to n≈28** (~36 GPU-h). Pins h
    away from zero or collapses it. **This decides whether §4 is needed at all.**
