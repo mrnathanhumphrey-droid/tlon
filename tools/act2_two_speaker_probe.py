@@ -78,7 +78,7 @@ def main() -> int:
     ap.add_argument("--allow-self-pair", action="store_true",
                     help="⛔⛔ CONTROL ONLY. Pairs an adapter WITH ITSELF, which "
                          "is the fault the whole arc corrected. Identical "
-                         "speakers cannot converge, so the run MUST read ~0; "
+                         "weights ⇒ coinciding marginals, so W2 MUST read ~0; "
                          "anything else means the pipeline manufactures drift. "
                          "Output is tagged self_pair=true and must never be "
                          "pooled with real pairs.")
@@ -111,7 +111,7 @@ def main() -> int:
         if a.adapter_a == a.adapter_b and not a.allow_self_pair:
             raise SystemExit(
                 "⛔⛔ --adapter-a and --adapter-b are the same path. That is one "
-                "impression and a mirror: identical speakers cannot converge. "
+                "impression and a mirror: their marginals coincide. "
                 "Pass --allow-self-pair ONLY for the control arm.")
         # ⛔⛔ ONE BASE, TWO LoRAs. Two LocalBackends would be two full 7B models
         # (~26 GB each observed) and will not fit on a 40 GB card. The adapter
@@ -123,7 +123,7 @@ def main() -> int:
         B = LLMSpeaker("B", back_b, card=False)
         if a.allow_self_pair and a.adapter_a == a.adapter_b:
             print("  ⛔⛔ SELF-PAIR CONTROL — one adapter as both speakers. "
-                  "Identical speakers cannot converge, so this MUST read ~0. "
+                  "Identical weights ⇒ marginals coincide, so W2 MUST read ~0. "
                   "Tagged self_pair=true; never pool with real pairs.")
 
     out = {"self_pair": bool(a.adapter_a == a.adapter_b),

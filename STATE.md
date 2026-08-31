@@ -139,8 +139,9 @@ coupling/drift measurement taken so far. Full write-up:
 
 1. **`act2_exchange_probe.py` gives speaker A and speaker B the SAME adapter** —
    one `LocalBackend`, two labels. Every "interacting" exchange in Act 2 is one
-   impression talking to itself. Identical things cannot converge, so the
-   coupling column was always going to read zero regardless of observable or
+   impression talking to itself. Identical weights make the two MARGINAL
+   distributions coincide, and the coupling column measures a distance between
+   marginals, so it was always going to read zero regardless of observable or
    regime. **`--adapter` must take two adapters before a drift number can exist.**
 2. **Full accumulation retains the partner's past turns = object-persistence,
    which the ontology forbids** (discourse spec, twice: *"the exact

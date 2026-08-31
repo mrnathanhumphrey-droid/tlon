@@ -225,7 +225,12 @@ def main() -> int:
 
     # ── ⛔⛔ THE CONTROL IS READ FIRST. It is a precondition, not a footnote. ──
     ctrl, ctrl_skip = analyse(a.control, panel, scale, self_pair=True)
-    print("\n── SELF-PAIR CONTROL · identical speakers CANNOT converge ──")
+    # ⛔ CORRECTED 2026-08-31: an earlier version of this label claimed identical
+    # speakers are incapable of converging. They are not — they never hold each
+    # other's words, so they are two individuated trajectories. The null holds
+    # because identical weights make the two MARGINALS coincide, and W2 reads
+    # marginals; trajectory divergence is invisible to it.
+    print("\n── SELF-PAIR CONTROL · identical weights ⇒ marginals coincide ──")
     print("  %-18s %5s %8s %9s %9s" % ("pair", "reps", "W2 live", "W2 yoked",
                                        "delta"))
     for r in ctrl:

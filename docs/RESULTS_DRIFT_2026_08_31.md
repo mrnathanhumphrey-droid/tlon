@@ -72,7 +72,7 @@ and the control tells us how big that manufacturing gets:
 
 | | sd of pair deltas | min | max |
 |---|---|---|---|
-| **self-pair control** (cannot converge) | 0.4412 | **−0.8266** | +0.5364 |
+| **self-pair control** (marginals coincide) | 0.4412 | **−0.8266** | +0.5364 |
 | real pairs | 0.3988 | −0.6114 | +0.7999 |
 
 **`s20621` talking to itself produced delta = −0.827** — a larger apparent
@@ -80,15 +80,15 @@ convergence than any real pair achieved (best: `s20620|s20621` at −0.611).
 
 ⭐ Had this run shipped without the control arm, `s20620|s20621` at −0.611 with
 five other converging pairs would have looked like a coupling finding. The
-control proves that magnitude is reachable by pure noise from a source where
-convergence is impossible. **The control is the reason no claim is being made,
+control proves that magnitude is reachable by pure noise from a source whose
+true W2 is zero. **The control is the reason no claim is being made,
 and it cost 21 of the 105 transcripts.**
 
 ⚠️ CAVEAT, stated because it cuts against the comparison above: the control ran
 at **3** replicates and the real pairs at **7**, so the two sds are not
 like-for-like. Matched at n=3 by subsampling the real pairs 200 times, real sd
 is **0.5389** against the control's 0.4412, exceeding it in 82% of subsamples.
-Real pairs are genuinely somewhat more variable than the impossible-convergence
+Real pairs are genuinely somewhat more variable than the zero-true-distance
 control — but that is pair-to-pair *heterogeneity*, which the cold table already
 established, not evidence of coupling.
 

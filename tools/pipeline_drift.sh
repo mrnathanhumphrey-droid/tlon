@@ -100,7 +100,7 @@ for P in $PAIRS; do
 done
 
 # ── ⛔⛔ SELF-PAIR CONTROL — a PRECONDITION for any coupling claim ───────────
-# Identical speakers cannot converge, so LIVE−YOKED MUST read ~0 here. If it
+# Identical weights make the marginals coincide, so LIVE−YOKED MUST read ~0. If it
 # does not, the pipeline manufactures drift and the real-pair result is
 # confounded — and a manufactured drift would appear as W2(LIVE) < W2(YOKED),
 # the exact signature of the wanted result.

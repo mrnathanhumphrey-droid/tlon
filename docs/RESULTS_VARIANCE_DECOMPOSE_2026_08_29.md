@@ -114,7 +114,7 @@ including all 24 here — is **one impression talking to itself.** The code comm
 reads *"A and B, each adapting to the other."* There is no other.
 
 ⇒ Convergence between two speakers is **unmeasurable by construction** in this
-harness: identical things cannot converge, they are already one point. The
+harness: identical weights make the two MARGINAL distributions coincide, and the distance is computed between marginals (⛔ CORRECTED 2026-08-31: they are NOT "already one point" — they are two individuated trajectories, because neither holds the other's words; the statistic simply cannot see that). The
 coupling column was always going to read zero, whatever the observable and
 whatever the regime. `--adapter` must become two adapters before any drift number
 can exist.

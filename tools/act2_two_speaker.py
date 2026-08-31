@@ -7,9 +7,12 @@ Red-proof: tests/test_two_speaker_harness.py (written BEFORE this module)
 
 1. `act2_exchange_probe.exchange()` was given ONE `LocalBackend` and two labels,
    so speaker A and speaker B were the SAME ADAPTER. Every "interacting"
-   exchange in Act 2 was one impression talking to itself, and identical things
-   cannot converge — the coupling column was mechanically zero, whatever the
-   observable or the regime. ⇒ `_assert_two()` below REFUSES that arrangement
+   exchange in Act 2 was one impression talking to itself, and identical weights
+   make the two MARGINAL distributions coincide — so a distance between marginals
+   was mechanically zero, whatever the observable or the regime.
+   ⛔ CORRECTED 2026-08-31: the reason is NOT that identical things cannot
+   converge. They never hold each other's words, so they are two individuated
+   trajectories that could in principle converge; the statistic is blind to it. ⇒ `_assert_two()` below REFUSES that arrangement
    instead of trusting it.
 
 2. Its `hist` was ONE SHARED LIST with no speaker attribution, so the only two
@@ -125,7 +128,8 @@ def _assert_two(a, b) -> None:
     if a is b:
         raise ValueError(
             "speaker A and speaker B are the same object — that is one speaker "
-            "and a mirror, and identical things cannot converge")
+            "and a mirror: their marginals coincide, so any distance between "
+            "marginals is mechanically zero")
     ba, bb = getattr(a, "backend", None), getattr(b, "backend", None)
     if ba is not None and ba is bb:
         raise ValueError(
