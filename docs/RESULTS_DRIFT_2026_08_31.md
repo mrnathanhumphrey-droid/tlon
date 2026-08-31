@@ -108,9 +108,16 @@ Projected sd: n=14 → 0.3290, n=28 → 0.2878, n=56 → 0.2648, asymptote 0.239
 ⛔ But replicates alone will not rescue it. The unit of independence is the
 **adapter**, and there are only 7, capping the design at 21 distinct pairs.
 Quadrupling replicates to 28 shrinks the CI half-width only to roughly 0.27 —
-still ~23% of the median speaker separation. **The experiment is
-adapter-limited, not replicate-limited.** Any serious next attempt needs more
-independently-trained speakers first, and more replicates second.
+still ~23% of the median speaker separation.
+
+⛔⛔ **RETRACTED 2026-08-31 — this paragraph originally concluded "the
+experiment is adapter-limited, not replicate-limited." That is a POINT ESTIMATE
+REPORTED WITHOUT ITS INTERVAL.** Refitting `h` inside an adapter-level bootstrap
+gives **h = 0.2519, 95% CI [0.0000, 0.4033]** — the lower bound is zero, so the
+data cannot rule out h = 0, under which the design is replicate-limited and NO
+new adapters are needed. See `docs/PRICING_ADAPTER_COUNT_2026_08_31.md`.
+⭐ The discriminating next step is more replicates on the EXISTING 7 adapters
+(n≈28, ~36 GPU-h), which tightens h's interval. Do not train adapters first.
 
 ⭐ Per [unit_of_independence]: this is the sixth time the unit has moved in this
 arc, and it moved for the same reason as always — sizing was done against what

@@ -23,7 +23,7 @@ distance between two Tlön speakers fits inside the interval undetected.
 Full: `docs/PRICING_ADAPTER_COUNT_2026_08_31.md`.
 **`h = 0.2519, 95% CI [0.0000, 0.4033]` — THE LOWER BOUND IS ZERO.** h is the
 irreducible speaker floor in `sd(n)²=h²+k²/n`; if h=0 the design is
-**REPLICATE-limited** and no new adapters are needed. ⛔ The claim
+**REPLICATE-limited** (h CI [0.0000, 0.4033]) and no new adapters are needed. ⛔ The claim
 "adapter-limited, not replicate-limited" (in RESULTS + STATE + through review) is
 **a point estimate reported without its interval.**
 ⭐⭐ **CHEAPEST NEXT MOVE IS NOT MORE ADAPTERS:** extend the EXISTING 12 pairs to
@@ -110,7 +110,7 @@ like a coupling result. **The control is the only reason no claim was made.**
 sd 0.5389 vs control 0.4412 (real larger in 82% of subsamples) — that is
 pair heterogeneity the cold table already knew about, not coupling.
 
-## ⛔ ADAPTER-LIMITED, NOT REPLICATE-LIMITED
+## ⛔⛔ "ADAPTER-LIMITED" — RETRACTED, h's CI CONTAINS ZERO (see pricing block above)
 
 `sd(n)² = h² + k²/n` on n=3/5/7 (0.5426 / 0.4480 / 0.3988):
 **heterogeneity h = 0.2397 · estimation noise at n=7 = 0.3187 — noise WINS.**
@@ -2173,7 +2173,7 @@ prove use, or a null would mean "nothing to detect", not "probe blind".
 ⛔⛔ **D1 — "89.3 % CEILING" WAS A FLOOR, NOT A CEILING.** It is
 `E[1/|consistent set|]` — uniform picking inside the consistency set. A Bayes
 listener uses the likelihood and does better. **The no-code arm hit 92.1 %,
-above the "ceiling"** (and arithmetic agrees: ≈85.4 % uniform for that mix).
+above the "ceiling"** (and arithmetic agrees: ≈85.4 % uniform for that mix — settled-claim-ok: a closed-form mixture calculation, no estimate involved).
 Renamed everywhere: **`m_uniform_floor`=0.893, `m_honest_observed`=0.921.**
 Headline unaffected — M is no longer pinned at ~100 %, which is all phase 4
 needed. KILL D stays 70 %.

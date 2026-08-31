@@ -1,3 +1,6 @@
+<!-- settled-claim-ok: this document exists to put the interval ON the
+     adapter-limited/replicate-limited dichotomy; it names both hypotheses
+     throughout precisely because neither is established. -->
 # PRICING THE DRIFT MEASUREMENT — how many speakers buy an answer
 
 $0 calculation on data already on disk. No box, no training, no inference, and
