@@ -18,6 +18,25 @@ effect. It does not: **CI half-width 0.375 = 32% of the median cold-table
 speaker separation (1.1878)**. A coupling effect a third the size of the typical
 distance between two Tlön speakers fits inside the interval undetected.
 
+## ⛔⛔ PRE-FLIGHT ($0, 2026-09-01): **DO NOT SPEND** — `docs/PREFLIGHT_STABILITY_AND_REPLICATION_2026_09_01.md`
+
+1. ⛔⛔ **THE `1.65/N` LOO LAW IS FALSE** (simulated: swing plateaus **~41%** at
+   N≥20, never ±10%) — and BOTH the law and its refutation were MY METRIC: a
+   ratio whose denominator is the near-zero drift mean (+0.0803).
+2. ⭐⭐ **MEASURED PROPERLY THE VERDICT IS ALREADY STABLE.** Absolute LOO sd of
+   the estimate = **0.0666** (range 0.1965) against **Δ\*=0.5939** — 11.2% of the
+   threshold. The estimate never approaches Δ\*, so the verdict does not flip;
+   only the quoted MDE does. ⇒ **NO ESTABLISHED NEED FOR MORE ADAPTERS.** Buying
+   them buys sensitivity BELOW Δ\*, and lowering Δ\* after a null is retrofitting.
+3. ⛔⛔ **ROUGE IS SATURATED, NOT SUPPRESSED.** Partners 0.6610 vs **UNRELATED
+   speakers 0.6669** (244 distinct tokens total) ⇒ a lexical-overlap metric
+   cannot show convergence OR its absence here. A "faithful replication on their
+   metrics" would run a dead instrument. (LIVE−YOKED −0.0044, CI [−0.0147,+0.0057].)
+4. ⛔⛔ **BLOCKED — I CANNOT VERIFY THE PARFENOVA PAPER.** Not in the repo; I will
+   NOT reconstruct another group's Algorithm 1 / Table 4 from recall and call it
+   faithful. ⇒ **PUT THE PDF IN THE REPO** before the shared-memory arm exists.
+⭐ Group sizes 2/3/5 need ≥5 adapters and **we have 7 — no purchase needed.**
+
 ## ⛔⛔ PRE-FLIGHT ($0): **DO NOT RUN THE h-DIAGNOSTIC** — `docs/PREFLIGHT_H_DIAGNOSTIC_2026_08_31.md`
 
 No box started. Four checks killed it:
