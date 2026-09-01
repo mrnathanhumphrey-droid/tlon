@@ -18,6 +18,33 @@ effect. It does not: **CI half-width 0.375 = 32% of the median cold-table
 speaker separation (1.1878)**. A coupling effect a third the size of the typical
 distance between two Tlön speakers fits inside the interval undetected.
 
+## ⭐ PARFENOVA PAPER READ FROM SOURCE — `docs/PARFENOVA_READ_2026_09_01.md`
+
+arXiv **2512.00047v1**, "Emergent Convergence in Multi-Agent LLM Annotation"
+(Parfenova, Denzler, Pfeffer). ⛔ PDF NOT committed (third-party copyright).
+⭐ **The brief's recollection of Table 4 CHECKS OUT against source:** 2-Model
+ΔId **−0.44** (13.55→13.11) · 3-Model **−7.30** (7.94→0.64) · 5-Model **−7.24**
+(7.66→0.42). ⚠️ Table 4 is **intrinsic dimensionality (TwoNN on 384-d MiniLM)**,
+NOT ROUGE — ROUGE evidence is Table 2, per-prompt.
+⭐ **Algorithm 1 extracted in full:** 3 phases, memory = **one-sentence summaries,
+shared append-only, every agent reads everything.** Exactly the opposite of our
+self-accumulation rule ⇒ the contrast is well-defined.
+⭐⭐ **THEIR AGENTS ARE 5 DIFFERENT MODEL FAMILIES** (Llama4 Maverick, Llama3.3
+70B, Deepseek-R1 70B, Gemma, Mistral) ⇒ **group size is CONFOUNDED WITH MODEL
+COMPOSITION**. Our 7 same-recipe seed-varied adapters remove exactly that — the
+contribution, to their open question, not a criticism.
+⚠️ Their R0 baselines are NOT level: 2-Model starts Id **13.55** vs **7.94/7.66**,
+a ~1.7× gap BEFORE any interaction. Unexplained in the paper.
+⛔ **A confound I tested and REJECTED:** TwoNN sample-size bias is ~2% and runs
+the WRONG WAY (larger n → higher Id; their larger groups show lower). Do not raise it.
+⛔⛔ **THEIR METRICS MOSTLY DO NOT TRANSFER:** ROUGE **DEAD/saturated** (unrelated
+Tlön speakers 0.667, partners 0.661, 244-token vocabulary) · certainty/hedging
+lexicons + sentiment **inapplicable** (65 ENGLISH expressions) · MiniLM-on-Tlön
+**validity unestablished**. ⛔ And Algorithm 1 needs a **summarise()** operator
+Tlön has no known equivalent of — substituting the surface is a DEVIATION, declare it.
+⏭ **NEXT ($0, no box): which convergence metric is VALID on Tlön?** Any candidate
+must pass the unrelated-pair test before use. ROUGE fails it today.
+
 ## ⛔⛔ PRE-FLIGHT ($0, 2026-09-01): **DO NOT SPEND** — `docs/PREFLIGHT_STABILITY_AND_REPLICATION_2026_09_01.md`
 
 1. ⛔⛔ **THE `1.65/N` LOO LAW IS FALSE** (simulated: swing plateaus **~41%** at
