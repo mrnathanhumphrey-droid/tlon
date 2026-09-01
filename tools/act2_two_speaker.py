@@ -50,6 +50,49 @@ LIVE = "live"       #: own chain + the partner's single most recent turn
 COLD = "cold"       #: own chain only — no interlocutor at all (the baseline)
 YOKED = "yoked"     #: same visibility as LIVE; the partner is a recording
 
+#: ⛔⛔ SHARED DELIBERATELY VIOLATES THE ASYMMETRIC RULE ABOVE, AND THAT IS ITS
+#: ENTIRE PURPOSE. One append-only store; **both speakers read all of it**, in
+#: the order it happened. This is Parfenova Algorithm 1's `C`, imported wholesale
+#: — the memory model that produces strong convergence in natural language.
+#:
+#: ⚠️ It is ontologically wrong for Tlön, on this module's own argument: a
+#: retained past utterance is a thing that endures unperceived and can be pointed
+#: at again, which is a noun, in a nounless language. That is not an oversight
+#: being tolerated. `PREREG_POSITIVE_CONTROL_KA` `c0de41c7` asks whether the A1
+#: instrument can detect convergence **at all** on real data, and answering it
+#: requires a memory model already known to produce convergence. **SHARED is the
+#: positive control's arm and belongs to no other run** — it is not a candidate
+#: for how Tlön speakers should converse, and a result from it says nothing about
+#: the asymmetric regime.
+#:
+#: ⛔ Red-proof: `tests/test_shared_memory_arm.py`, written BEFORE this and
+#: demonstrated to FAIL (10 of 15) against `SHARED = LIVE`, the silent fallback.
+SHARED = "shared"
+
+#: ⛔⛔ EVERY VALID MODE, ENUMERATED — so an unrecognised one RAISES instead of
+#: taking an `else` branch. The old code routed anything-not-COLD to the
+#: asymmetric rule, which meant a typo'd `"shraed"` would have run
+#: self-accumulation, produced a null, and been reported as *"Tlön does not
+#: converge even under shared memory."* A mechanism that did nothing and a
+#: mechanism that ran and found nothing leave the same trace.
+MODES = (LIVE, COLD, YOKED, SHARED)
+
+if len(set(MODES)) != len(MODES):
+    # ⛔⛔ TWO MODE NAMES SHARING ONE VALUE, REFUSED AT IMPORT. Found by a
+    # mutation experiment that set `SHARED = LIVE` to fake the fallback bug: it
+    # did the OPPOSITE of what was intended. `visible_history` tests
+    # `mode == SHARED` first, so aliasing the constants routed *LIVE* into the
+    # shared branch — the asymmetric arm would have silently run shared memory,
+    # and the run's own null control would have been the treatment.
+    # ⭐ Same shape as `_assert_two`: one thing wearing two labels. Refused, not
+    # warned. A raise at import cannot be skipped by a code path that is not
+    # exercised.
+    raise RuntimeError(
+        "two exchange modes share one value: %s. The mode constants are "
+        "compared by equality, so an alias silently routes one arm into "
+        "another's branch — and each arm would then be measuring the other."
+        % (MODES,))
+
 
 @dataclass(frozen=True)
 class InjectionPlan:
@@ -109,13 +152,27 @@ def visible_history(hist, me: str, *, mode: str = LIVE,
     turns full context, and the run would be uninterpretable in exactly the
     direction that flatters the hypothesis. (Carried from the window-1 guard.)
     """
-    own = tuple(s for speaker, s in hist if speaker == me)
-    if mode == COLD:
-        # No interlocutor. The seed provokes the first turn only — a speaker
-        # provoked by nothing is not a self-accumulator, it is a cold start.
-        shown = own if own else _last_other(hist, me)
+    if mode not in MODES:
+        # ⛔⛔ RAISE, NEVER DEFAULT. See MODES: an unrecognised mode silently
+        # taking the asymmetric branch is how a shared-memory arm becomes a
+        # self-accumulation arm that reports a null.
+        raise ValueError("unknown mode %r; valid modes are %s"
+                         % (mode, ", ".join(MODES)))
+    if mode == SHARED:
+        # ⛔ Everything, in the order it happened, identically for both speakers
+        # — `me` is deliberately unused. Not `own + others`: that would reorder
+        # the store into own-then-partner and stop being Algorithm 1's `C`.
+        # No de-duplication: the observable is a RATE over scenes, so collapsing
+        # a repeated surface would move `force:ka` itself.
+        shown = tuple(s for _speaker, s in hist)
     else:
-        shown = own + _last_other(hist, me)
+        own = tuple(s for speaker, s in hist if speaker == me)
+        if mode == COLD:
+            # No interlocutor. The seed provokes the first turn only — a speaker
+            # provoked by nothing is not a self-accumulator, it is a cold start.
+            shown = own if own else _last_other(hist, me)
+        else:
+            shown = own + _last_other(hist, me)
     return shown + (injected,) if injected is not None else shown
 
 

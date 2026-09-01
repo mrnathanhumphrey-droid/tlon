@@ -1,0 +1,293 @@
+"""⛔⛔ THE RED-PROOF FOR THE SHARED-MEMORY ARM — WRITTEN BEFORE THE MODE.
+
+`PREREG_POSITIVE_CONTROL_KA` `c0de41c7` §4, arm 1: Parfenova Algorithm 1 —
+a shared, append-only store that **both speakers read in full**.
+
+⛔⛔ THE FAILURE THIS FILE EXISTS TO MAKE IMPOSSIBLE. The rest of this harness
+implements the ASYMMETRIC rule (your own chain accumulates; the partner provokes
+and is released). Shared memory is its opposite. If the shared arm silently falls
+back to the asymmetric path — a mode string that does not match, a default that
+routes to `LIVE`, a copy-paste that keeps `own + _last_other` — then:
+
+    the arm runs self-accumulation, `force:ka` does not move, the run reads as a
+    STOP, and the recorded conclusion is **"Tlön shows no convergence even under
+    shared memory"** — which is FALSE, and false in the one direction that closes
+    the whole line of inquiry.
+
+That is the vacuous-guard shape this project has hit repeatedly: a mechanism that
+did nothing and a mechanism that ran and found nothing leave the SAME trace. So
+these tests do not check that shared mode "works". They check that shared mode is
+**distinguishable from the fallback**, positively, on every axis that separates
+them — and `test_the_red_proof_BITES_against_the_self_accumulation_path` asserts
+that these very checks FAIL on `LIVE`. A check that passes on both arms is
+decoration.
+
+⭐ Note the inversion. `test_two_speaker_harness.py` proves a speaker does NOT
+hold the partner's past turns. This file proves it DOES. Same discipline, opposite
+target, and both are load-bearing — for different arms of different runs.
+
+⚠️ Shared memory knowingly violates the Tlön ontology (a retained past utterance
+is a thing that endures unperceived — a noun, in a nounless language). That is
+deliberate and it is the point: the positive control imports the memory model
+known to produce convergence in natural language, to ask whether THIS INSTRUMENT
+can see convergence at all. It is not a claim about how Tlön speakers should
+converse.
+"""
+from __future__ import annotations
+
+import pathlib
+import sys
+
+import pytest
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
+
+from act2_two_speaker import (COLD, LIVE, SEED_SPEAKER, SHARED,  # noqa: E402
+                              visible_history)
+
+#: A history where B has spoken MORE THAN ONCE. That is the whole discriminator:
+#: the asymmetric rule shows exactly one of the partner's turns, so any history
+#: in which the partner spoke once cannot tell the two modes apart.
+HIST = [(SEED_SPEAKER, "s0"),
+        ("A", "a1"), ("B", "b1"),
+        ("A", "a2"), ("B", "b2"),
+        ("A", "a3"), ("B", "b3")]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1 · what SHARED must be
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_shared_shows_every_turn_by_both_speakers_and_the_seed():
+    """Append-only, everyone reads everything. Nothing is dropped."""
+    shown = visible_history(HIST, "A", mode=SHARED)
+    assert list(shown) == ["s0", "a1", "b1", "a2", "b2", "a3", "b3"]
+
+
+def test_shared_is_CHRONOLOGICAL_not_own_then_partner():
+    """⛔ Order is part of the memory model, not cosmetic.
+
+    The asymmetric rule emits `own + last_other`, which is NOT the order the
+    turns happened in. A shared store that reordered into own-then-partner would
+    be feeding a different object than Algorithm 1's `C`, while passing any test
+    that only checked membership.
+    """
+    shown = list(visible_history(HIST, "A", mode=SHARED))
+    assert shown == [s for _speaker, s in HIST]
+    # and the interleave is genuinely alternating, not blocked by speaker
+    assert shown.index("b1") < shown.index("a2") < shown.index("b2")
+
+
+def test_both_speakers_are_handed_the_SAME_store():
+    """⭐ THE CLEANEST DISCRIMINATOR. "Both read everything" means A's view and
+    B's view are identical objects. Under any per-speaker rule they differ."""
+    assert (visible_history(HIST, "A", mode=SHARED)
+            == visible_history(HIST, "B", mode=SHARED))
+
+
+def test_A_can_see_MULTIPLE_of_Bs_turns():
+    """The asymmetric rule releases all but the partner's last turn. This is the
+    positive assertion that the release is NOT happening."""
+    shown = visible_history(HIST, "A", mode=SHARED)
+    assert sum(s in shown for s in ("b1", "b2", "b3")) == 3
+
+
+def test_B_can_see_MULTIPLE_of_As_turns():
+    """Stated separately, because a bug that fixed one seat only would pass the
+    test above. The arm is symmetric or it is not the arm."""
+    shown = visible_history(HIST, "B", mode=SHARED)
+    assert sum(s in shown for s in ("a1", "a2", "a3")) == 3
+
+
+def test_the_seed_is_in_the_store_for_both():
+    """Algorithm 1 initialises `C` before round 1; the seed is shared material,
+    not partner material to be released."""
+    for me in ("A", "B"):
+        assert "s0" in visible_history(HIST, me, mode=SHARED)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2 · ⛔⛔ THE BITE — these same checks must FAIL on the fallback path
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_the_red_proof_BITES_against_the_self_accumulation_path():
+    """⛔⛔ IF THIS TEST EVER PASSES TRIVIALLY, THE FILE ABOVE IS DECORATION.
+
+    Runs the discriminating assertions against `LIVE` — the exact path a silent
+    fallback would take — and requires every one of them to FAIL. This is what
+    makes the suite able to catch `mode="shared"` quietly routing to the
+    asymmetric rule.
+    """
+    live_a = visible_history(HIST, "A", mode=LIVE)
+    live_b = visible_history(HIST, "B", mode=LIVE)
+
+    # (a) LIVE is NOT the full chronological store
+    assert list(live_a) != [s for _sp, s in HIST]
+
+    # (b) LIVE hands the two speakers DIFFERENT views
+    assert live_a != live_b
+
+    # (c) LIVE shows exactly ONE of the partner's turns, not three
+    assert sum(s in live_a for s in ("b1", "b2", "b3")) == 1
+    assert sum(s in live_b for s in ("a1", "a2", "a3")) == 1
+
+    # (d) and the one it shows is the most recent
+    assert "b3" in live_a and "b1" not in live_a
+
+
+def test_shared_and_live_disagree_on_this_history():
+    """The blunt instrument: same history, same speaker, different modes MUST
+    produce different context. A mode that is not distinguishable from LIVE is
+    not a second arm."""
+    assert (visible_history(HIST, "A", mode=SHARED)
+            != visible_history(HIST, "A", mode=LIVE))
+
+
+def test_shared_and_cold_disagree_on_this_history():
+    """COLD is own-chain-only. Shared is everything. If a wiring error routed
+    shared to the baseline the run would compare a thing to itself."""
+    assert (visible_history(HIST, "A", mode=SHARED)
+            != visible_history(HIST, "A", mode=COLD))
+
+
+def test_shared_shows_STRICTLY_MORE_than_live():
+    """Direction matters. A shared store that showed *less* would be a truncation
+    wearing the wrong name."""
+    shared = visible_history(HIST, "A", mode=SHARED)
+    live = visible_history(HIST, "A", mode=LIVE)
+    assert len(shared) > len(live)
+    assert set(live) <= set(shared)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3 · edges that would otherwise fail silently
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_an_unknown_mode_RAISES_rather_than_defaulting():
+    """⛔⛔ THE SILENT-FALLBACK BUG ITSELF, MADE IMPOSSIBLE.
+
+    A typo'd mode string must not quietly take the `else` branch and run the
+    asymmetric rule. This is the single assertion that would have caught the
+    whole failure class at its source.
+    """
+    with pytest.raises(ValueError, match="mode"):
+        visible_history(HIST, "A", mode="shraed")
+
+
+def test_injection_still_lands_last_under_shared():
+    """Injections are yoked identically into every condition; under shared they
+    append to the store like any other turn."""
+    shown = visible_history(HIST, "A", mode=SHARED, injected="x9")
+    assert shown[-1] == "x9"
+    assert list(shown[:-1]) == [s for _sp, s in HIST]
+
+
+def test_empty_history_is_empty_under_shared_not_a_crash():
+    assert visible_history([], "A", mode=SHARED) == ()
+
+
+def test_shared_at_turn_zero_shows_only_the_seed():
+    """⛔ The rule applies FROM TURN 0. Algorithm 1's `C⁽⁰⁾` is the seed and
+    nothing else — an arm that showed more at turn 0 has invented history."""
+    assert visible_history([(SEED_SPEAKER, "s0")], "A", mode=SHARED) == ("s0",)
+
+
+def test_shared_keeps_duplicate_surfaces_rather_than_collapsing_them():
+    """⛔ Append-only means append-only. De-duplicating would quietly change the
+    force distribution the arm is measured on — the observable is a RATE over
+    scenes, so dropping a repeat moves `force:ka` itself."""
+    hist = [("A", "same"), ("B", "same"), ("A", "same")]
+    assert list(visible_history(hist, "A", mode=SHARED)) == ["same"] * 3
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4 · ⛔⛔ END-TO-END THROUGH `exchange_two` — the WIRING, not the function
+# ─────────────────────────────────────────────────────────────────────────────
+# A correct `visible_history` proves nothing if the harness never routes the arm
+# through it with the right mode. These run the real `exchange_two` and read what
+# the speakers were ACTUALLY HANDED, rather than trusting the call site.
+
+class Spy:
+    """⭐ RECORDS WHAT IT ACTUALLY RECEIVED. A knob that silently no-ops returns
+    'the mechanism holds' for the worst possible reason."""
+
+    def __init__(self, label):
+        self.label, self.seen = label, []
+
+    def speak(self, history, turn):
+        self.seen.append(tuple(history))
+        return "%s%d" % (self.label, turn)
+
+
+def _run(mode, turns=8):
+    from act2_two_speaker import exchange_two
+    a, b = Spy("A"), Spy("B")
+    exchange_two(a, b, turns=turns, seed_history=["s0"], mode=mode)
+    return a, b
+
+
+def test_end_to_end_both_speakers_are_handed_the_partners_EARLIER_turns():
+    """⛔⛔ THE ONE THAT MATTERS. If this passes while the arm is secretly
+    self-accumulating, nothing else in this file protects the run."""
+    a, b = _run(SHARED)
+    assert sum(s.startswith("B") for s in a.seen[-1]) >= 2, (
+        "speaker A never received more than one of B's turns — that is the "
+        "asymmetric rule, not shared memory")
+    assert sum(s.startswith("A") for s in b.seen[-1]) >= 2, (
+        "speaker B never received more than one of A's turns")
+
+
+def test_end_to_end_the_store_is_APPEND_ONLY():
+    """Each successive view extends the previous one. ⛔ This is the property the
+    asymmetric rule CANNOT satisfy — `own + last_other` reorders as it grows, so
+    an earlier view is not a prefix of a later one."""
+    a, _b = _run(SHARED)
+    for earlier, later in zip(a.seen, a.seen[1:]):
+        assert later[:len(earlier)] == earlier, \
+            "the store was reordered or truncated between turns"
+
+
+def test_end_to_end_append_only_FAILS_under_the_asymmetric_rule():
+    """⛔ The bite, at the wiring level: the prefix property must NOT hold for
+    LIVE. If it did, the test above would pass on a silent fallback."""
+    a, _b = _run(LIVE)
+    assert any(later[:len(earlier)] != earlier
+               for earlier, later in zip(a.seen, a.seen[1:])), \
+        "LIVE looked append-only — the discriminator above is decoration"
+
+
+def test_end_to_end_shared_grows_by_exactly_one_turn_at_a_time():
+    """No turn is dropped and none is duplicated into the store."""
+    a, b = _run(SHARED)
+    lengths = sorted(len(v) for v in a.seen + b.seen)
+    assert lengths == list(range(1, len(lengths) + 1))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5 · the aliasing trap, found by a mutation experiment that misfired
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_every_mode_constant_has_a_DISTINCT_value():
+    """⛔⛔ FOUND THE HARD WAY. An attempt to fake the fallback bug by setting
+    `SHARED = LIVE` did the OPPOSITE of what was intended: `visible_history`
+    compares `mode == SHARED` first, so the alias routed **LIVE** into the shared
+    branch. The asymmetric arm would have run shared memory while reporting
+    itself as the control — the null and the treatment swapped, invisibly.
+
+    ⭐ The module refuses this at import; this test asserts the refusal exists,
+    because a guard nothing exercises is a guard nobody notices removing.
+    """
+    from act2_two_speaker import MODES
+    assert len(set(MODES)) == len(MODES), (
+        "two exchange modes share a value: %s" % (MODES,))
+    assert SHARED not in (LIVE, COLD), "SHARED must not alias another arm"
+
+
+def test_each_mode_produces_a_DISTINCT_view_on_the_same_history():
+    """The stronger form: distinct *values* are necessary but not sufficient —
+    two modes could still compute the same thing. On a history where they must
+    differ, all three views are pairwise different."""
+    views = {m: visible_history(HIST, "A", mode=m)
+             for m in (LIVE, COLD, SHARED)}
+    assert len(set(views.values())) == 3, (
+        "two modes computed the same view: %r" % (views,))
