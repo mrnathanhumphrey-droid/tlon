@@ -1,0 +1,30 @@
+  ⚠ replicates overridden: measured 7 -> design 28
+A1 DETECTION FLOOR -- planted convergence, real estimator
+  measured off the real run (12 pairs):
+    within-speaker replicate sd : 0.1056 ka
+    grand mean force:ka         : 0.4641
+    replicates per cloud        : 28
+  frozen ruler (cold table):
+    between-build sd            : 0.2454 ka
+  design: 7 pairs / 7 adapters, balanced ring, families alternating
+    s20620|t30001 t30001|s20621 s20621|t30002 t30002|s20622 s20622|t30003 t30003|s20623 s20623|s20620
+  400 sims x 1000 bootstrap per delta
+
+  delta ka   in sd units       power wrong-side
+  0.000      0.000             0.018      0.018
+  0.013      0.051             0.062      0.003
+  0.025      0.102             0.180      0.000
+  0.037      0.153             0.333      0.000
+  0.050      0.204             0.502      0.000
+  0.075      0.306             0.728      0.000
+  0.100      0.408             0.848      0.000
+  0.150      0.611             0.892      0.000
+  0.200      0.815             0.902      0.000
+  0.300      1.223             0.902      0.000
+  0.400      1.630             0.902      0.000
+  COMPLETE   (gap -> 0)        0.902      0.000
+
+  FLOOR_ka = 0.100 ka  (= 0.41 between-build sd), ceiling 0.902
+  false-positive rate at delta=0: 0.018 (nominal 0.025 one-sided)
+
+  wrote runs\act2\a1_floor_7x28.json

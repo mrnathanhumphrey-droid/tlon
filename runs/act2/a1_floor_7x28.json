@@ -1,0 +1,126 @@
+{
+  "structure": {
+    "sd_within": 0.10563767833849373,
+    "mu0": 0.4640663156288156,
+    "n_reps": 28,
+    "sd_between": 0.24538407500544512,
+    "scale": [
+      0.24538407500544512
+    ],
+    "cold_sha": "84c2a1b5",
+    "n_pairs_real": 12
+  },
+  "design": [
+    [
+      "s20620",
+      "t30001"
+    ],
+    [
+      "t30001",
+      "s20621"
+    ],
+    [
+      "s20621",
+      "t30002"
+    ],
+    [
+      "t30002",
+      "s20622"
+    ],
+    [
+      "s20622",
+      "t30003"
+    ],
+    [
+      "t30003",
+      "s20623"
+    ],
+    [
+      "s20623",
+      "s20620"
+    ]
+  ],
+  "n_reps_design": 28,
+  "sims": 400,
+  "n_boot": 1000,
+  "seed": 20260901,
+  "target_power": 0.8,
+  "curve": [
+    {
+      "delta_ka": 0.0,
+      "delta_sd": 0.0,
+      "power": 0.0175,
+      "wrong_side": 0.0175
+    },
+    {
+      "delta_ka": 0.0125,
+      "delta_sd": 0.05094055105133707,
+      "power": 0.0625,
+      "wrong_side": 0.0025
+    },
+    {
+      "delta_ka": 0.025,
+      "delta_sd": 0.10188110210267413,
+      "power": 0.18,
+      "wrong_side": 0.0
+    },
+    {
+      "delta_ka": 0.0375,
+      "delta_sd": 0.15282165315401117,
+      "power": 0.3325,
+      "wrong_side": 0.0
+    },
+    {
+      "delta_ka": 0.05,
+      "delta_sd": 0.20376220420534827,
+      "power": 0.5025,
+      "wrong_side": 0.0
+    },
+    {
+      "delta_ka": 0.075,
+      "delta_sd": 0.30564330630802233,
+      "power": 0.7275,
+      "wrong_side": 0.0
+    },
+    {
+      "delta_ka": 0.1,
+      "delta_sd": 0.40752440841069654,
+      "power": 0.8475,
+      "wrong_side": 0.0
+    },
+    {
+      "delta_ka": 0.15,
+      "delta_sd": 0.6112866126160447,
+      "power": 0.8925,
+      "wrong_side": 0.0
+    },
+    {
+      "delta_ka": 0.2,
+      "delta_sd": 0.8150488168213931,
+      "power": 0.9025,
+      "wrong_side": 0.0
+    },
+    {
+      "delta_ka": 0.3,
+      "delta_sd": 1.2225732252320893,
+      "power": 0.9025,
+      "wrong_side": 0.0
+    },
+    {
+      "delta_ka": 0.4,
+      "delta_sd": 1.6300976336427861,
+      "power": 0.9025,
+      "wrong_side": 0.0
+    }
+  ],
+  "power_ceiling_complete_convergence": 0.9025,
+  "adapter_sweep_at_complete_convergence": [],
+  "replicate_sweep_at_complete_convergence": [],
+  "monte_carlo_se_note": "power se = sqrt(p(1-p)/sims); ~0.02 at p=0.8, sims=400",
+  "adapters_on_disk": 7,
+  "adapters_needed_for_target": null,
+  "floor_ka": 0.1,
+  "floor_sd": 0.40752440841069654,
+  "estimand": "delta = W2(LIVE) - W2(YOKED); negative = coupling",
+  "note": "centroid drawn once per ADAPTER; detection requires ci_upper<0"
+}
