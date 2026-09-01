@@ -21,6 +21,15 @@
 > IFT); the naive form is RETRACTED (sign-indefinite 5000/5000). Sentences below
 > reading *"σ_cp remains unmeasured"* are true but describe a **different
 > estimand** than the one the drift run used. See dictionary A6.
+>
+> ⚠️ **THE ACT-2 PREREG WAS RELOCKED 2026-09-01.** Private research costs were
+> removed from the public repository (`7420a11`, 2026-08-28, §0.2 and §7), then
+> the document was relocked. No hypothesis, estimator, threshold or falsifier
+> changed. Sentences below citing *"prereg `20620b7c` VERIFIED unchanged"* —
+> including :967 — refer to the **pre-redaction** lock and were true when
+> written. Record: [`RETIRED.md`](RETIRED.md) R3.
+> ⛔⛔ **NEVER PUT A SPEND NUMBER IN COMMITTED PROSE.** The ledgers are
+> gitignored; a dollar figure typed into a sentence walks straight past that.
 
 # ✅ WHERE THINGS ACTUALLY STAND — 2026-09-01
 

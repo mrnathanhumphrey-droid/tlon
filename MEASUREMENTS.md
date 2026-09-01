@@ -23,6 +23,7 @@ Removals: [`RETIRED.md`](RETIRED.md).
 **E · Controls & nulls** — [E1 YOKED](#e1) · [E2 COLD](#e2) · [E3 self-pair](#e3) · [E4 unrelated-pair](#e4)
 **F · Foreign metrics** — [F1 ROUGE](#f1) · [F2 TwoNN Id](#f2)
 **G · The measured axis** — [G1 force:ka](#g1) · [G2 the force simplex](#g2)
+**H · The F1–F5 falsifier scheme** — [remapped to its current estimators](#h), not retired
 
 ⛔ **Three words that mean several things. Always disambiguate:**
 | word | see |
@@ -156,10 +157,21 @@ branched context that is then discarded):
 - `D(M,t)` — fraction of probes where M's mapping at epoch t differs from **its own** at epoch 0
 - `C(t)` — fraction of probes where A and B agree **with each other** at epoch t
 
-**Status: `PARKED`.** The apparatus exists (`probes.build`) but the entire
-`force:ka` line measures free-running transcripts with no battery. **The two
-approaches have never been reconciled** (collision C11). Parked, not superseded —
-nothing has replaced what it does.
+**Status: `PARKED` — and parked as the UPGRADE PATH, decided 2026-09-01.** The
+apparatus exists (`probes.build`) but the entire `force:ka` line measures
+free-running transcripts with no battery. **The two approaches have never been
+reconciled** (collision C11). Parked, not superseded — nothing has replaced what
+it does.
+
+⭐ **WHY IT IS HELD RATHER THAN RETIRED.** It measures the **meaning↔form
+mapping** in impression space, which is a strictly stronger convergence claim
+than a free-transcript `force:ka` rate: a shared force rate is two speakers
+*sounding* alike, a shared mapping is two speakers *meaning* alike. It is also
+the only instrument in the project that has ever fired on a constructed pact
+(`ΔD` −5.08, `ΔC` +85.94, p=0.0078, n=8 seed-paired — synthetic).
+⇒ Held pending the positive control ([E4](#e4) must pass first). **If `force:ka`
+moves, this is the apparatus that upgrades "the force rate converged" to "the
+mapping converged."** Flagged item `RETIRED.md` A4.
 
 **Validation on record:** synthetic speakers with drift known by construction,
 n=8 seed-paired, MDE by exact sign-flip permutation — a pact-by-construction gave
@@ -171,10 +183,37 @@ positive on real adapters.**
 name WANDERING, NOT CONVENTION**, and a pair that provably built a shared codebook
 showed `ΔD ≈ 0`. **Drift alone is not a pact.**
 
-⛔ The `D_ctx` / `D_w` subscript discipline mandated by the prereg (in-context vs
-weight-level) has been **abandoned in practice** since 2026-08-24 (collision C8).
+**Authoritative:** `docs/PREREG_ACT2_DRIFT_2026_08_24.md` (relocked 2026-09-01
+after a cost redaction; prior lock `20620b7c` — see C8 below).
 
-**Authoritative:** `docs/PREREG_ACT2_DRIFT_2026_08_24.md` (LOCK `20620b7c`).
+### C8 · the `D_ctx` / `D_w` subscript discipline — `RETIRED` 2026-09-01
+
+The prereg §0.2 mandates *"Every number, table and filename carries its
+subscript"*, separating `D_ctx` (in-context, prompted) from `D_w` (weight-level,
+post-fine-tune). No document since 2026-08-24 uses either subscript (collision
+C8).
+
+**Retired as TRIVIALLY SATISFIED — not abandoned, and not out of compliance.**
+Every Act-2 measurement to date is **inference-only**: no weights change in any
+arm of any run, so **every number in the arc is `_ctx` by construction** and the
+subscript partitions nothing. A marker that takes the same value on every row is
+not a caveat, and carrying it teaches readers to skip a marker that is meant to
+be load-bearing.
+
+⛔ **THE DISTINCTION §0.2 DRAWS IS NOT RETIRED — only the notation is.** The
+moment a fine-tune enters an Act-2 measurement, `D_w` becomes a live category,
+§0.2 is back in force unamended, and the subscripts return. §0.2's actual
+prohibition — *the two must never be reported under one word* — stands
+unconditionally.
+
+Logged with reasoning: [`RETIRED.md`](RETIRED.md) R2. A note is appended to the
+prereg and **this retirement did not edit the body.**
+
+⚠️ **The prereg's lock changed on 2026-09-01.** Private research costs were
+removed from the public repository (`7420a11`, 2026-08-28, §0.2 and §7) and the
+document was then relocked; no hypothesis, estimator, threshold or falsifier
+changed. Older text citing `20620b7c` refers to the pre-redaction lock.
+Record: [`RETIRED.md`](RETIRED.md) **R3**.
 
 <a name="a6"></a>
 ## A6 · σ_cp — coupling power
@@ -274,6 +313,21 @@ population: `centroid se ≤ 0.5 × between-build sd` on every axis. Equivalentl
 ⭐ Both are correct for their own panel. **Locatability is a property of the
 AXIS, not of the sample size** — an earlier "all builds fail, the fix is more n"
 reading was corrected on exactly this point.
+
+**`runs/act2/cold_table.json` (the 2-axis table, sha `ca1ab5e9…`): `SUPERSEDED`,
+and KEPT ON PURPOSE.** Superseded by `runs/act2/cold_table_ka.json` (sha
+`84c2a1b5…`, [C1](#c1)) — ⛔ **never use it as a current baseline.** It is
+retained for two reasons, either of which alone would be sufficient:
+
+1. It is the baseline `docs/RESULTS_STAGE2_DISTANCE_2026_08_30.md` was written
+   against. Deleting it orphans that document's numbers.
+2. Its HALT **is the evidence for the panel switch.** All 7 builds unlocatable at
+   n=14 (needing 23–29) on the 2-axis panel, while all 7 are locatable at the
+   same n=14 on `force:ka`, is what showed locatability tracks the axis rather
+   than the sample size — the finding that re-admitted `force:ka` ([G1](#g1))
+   after contamination had excluded it ([B1](#b1)).
+
+Flagged item `RETIRED.md` A5, decided 2026-09-01: keep, mark, forward-point.
 
 ---
 
@@ -499,3 +553,54 @@ rest".
 4.4%** (0.9716 vs 1.0162, self-standardised). ⭐ **There is no second native axis
 to add.** `force:ka` is sufficient because the substrate has ≈ one structured
 dimension and `force:ka` is approximately it.
+
+---
+
+<a name="h"></a>
+# H · THE F1–F5 FALSIFIER SCHEME — REMAPPED, NOT RETIRED
+
+**Decided 2026-09-01.** The prereg's five falsifiers (`PREREG_ACT2_DRIFT` §2) are
+**live**. What changed is not the scheme but the *estimator* each falsifier is
+computed from: the arc moved off the held-out probe battery ([A5](#a5)) and onto
+free-running transcripts on `force:ka` ([G1](#g1)), and no document connected the
+two — which is collision C10, and why the scheme read as abandoned.
+
+⛔⛔ **THIS TABLE RE-POINTS EACH FALSIFIER AT ITS CURRENT ESTIMATOR AND CHANGES
+NO FALSIFIER'S MEANING.** The firing condition column is the prereg's, unaltered.
+Where nothing currently estimates a falsifier, that is stated — **not** filled in
+with the nearest available number.
+
+| | fires if (prereg §2, unchanged) | current estimator | status |
+|---|---|---|---|
+| **F1** internalizability | native valid-emission rate **< 0.90** on held-out prompts | **F-LOCAL** — `falsify.f_local`, measured cardless and **unconstrained** (constrained decoding makes validity 100% and the falsifier unable to fire) | ⭐ **CLEARED** 2026-08-26. All 7 adapters on disk are recorded F-LOCAL-clear (`STATE.md` :299, :363). Standing gate for any new adapter. |
+| **F2** drift-is-noise ⛔ *the load-bearing brick* | `ΔD = D(interacting) − D(control) ≤ MDE`, seed-paired | the LIVE−YOKED contrast ([E1](#e1)), read against the [E3](#e3) self-pair floor and [A5](#a5)'s synthetic-validation floor | ⚠️ **NOT ADJUDICATED.** [A1](#a1) reads `+0.0803`, CI **[−0.2856, +0.4637]**, which covers zero — but prereg §5.2 binds: an underpowered cell is **UNINFORMATIVE, NOT A FIRING.** F2 is neither cleared nor fired. |
+| **F3** pact | `ΔC = C(interacting) − C(control) ≤ MDE`, seed-paired | [A1](#a1) for the shared-marginal reading; [A2](#a2) for conversation-specific convention | ⚠️ **NOT ADJUDICATED**, same headroom reason. [A2](#a2) Δgain `+0.0024`, CI **[−0.0075, +0.0130]**. ⛔ **The estimator changed OBJECT:** `C` is probe *agreement*, [A1](#a1) is marginal *distance* and is marginal-blind. Reconnected **by intent, not by identity** — see the caveat below. |
+| **F4** degeneration | drift explained by degradation rather than convention: root-diversity decline **> 25 %** in the interacting arm while the control's holds, **or** `ΔD` losing significance under a pre-committed covariate | `falsify.f4_degeneration` — the two relative branches plus the absolute third, `degeneracy_guard` (root-TTR floor **0.50**, near-repetition ceiling **0.75**) | ⭐ **ACTIVE and PASSING.** Fired and was fixed (**D15**, `STATE.md` :599): both relative branches read **+0.0 %** on a real collapse because both arms sat on the floor, which under a yoked design is the *likely* case. Current regime: **0 of 98** in-regime solo transcripts degenerated (`tools/pipeline_drift.sh` :14). |
+| **F5** leakage | a probe's impression appears in the conversation **before** that probe is administered | ⛔ **none — there is no current estimator** | ⏸ **PARKED with [A5](#a5).** F5 is defined over a probe battery; the free-transcript line administers no probes, so there is nothing that can leak into anything. It returns to force **with the battery**, and not before. |
+
+⚠️ **F4's absolute branch is a tripwire, not a discriminator — do not read a
+PASS as evidence for the claim.** A depth-1 Markov painter that ignores the prior
+turn entirely scores **0/200 guard-fires** at depths 8/20/40 (mean root-TTR
+**0.937 / 0.856 / 0.738** against the 0.50 floor —
+`tlon/discourse/multiturn.py`). It separates *degenerate* from *healthy* and has
+**no power** to separate *noise* from *convention*. The gate a random painter
+fails is force-fidelity (`tools/act2_force_fidelity.py`).
+
+⚠️ **F3's remap is the one place a reader could be misled, so it is stated
+twice.** `C` asks whether A and B give the **same answer to the same probe**;
+[A1](#a1) asks whether their **`force:ka` marginals are close**. Two speakers can
+match on the second while disagreeing on every probe. The F3 row records what
+currently stands in for the falsifier — it does **not** claim the two quantities
+are the same, and a future `C` measurement supersedes the substitution rather
+than agreeing with it. [A5](#a5) is the apparatus that would restore the original
+estimator.
+
+⭐ **WHAT THE REMAP EXPOSES.** F1 and F4 — the two falsifiers asking whether the
+speakers are *fit to be measured* — are cleared and passing. F2 and F3 — the two
+that carry the actual scientific claim — are **undetermined for want of power**,
+not answered. That is the same verdict [A1](#a1) and [A2](#a2) already report,
+reached independently through the prereg's own vocabulary. **Nothing in the F
+scheme has been retired, and nothing in it has been cleared that the dictionary
+does not also clear.**
+
+Flagged item `RETIRED.md` A3, decided 2026-09-01: **remap, do not retire.**

@@ -1,15 +1,35 @@
-<!-- LOCKED PREREG - body never edited. See ../MEASUREMENTS.md A5, D2, C8, C10. -->
+<!-- LOCKED PREREG - body never edited.
+     See ../MEASUREMENTS.md A5 (apparatus + the C8 subscripts), D2 (MDE), §H (F1-F5). -->
 # PREREG ACT 2 — does constrained LLM-to-LLM communication drift, and is the drift a pact?
 
-> ⛔ **NOTE ADDED 2026-09-01 (body unchanged, lock `20620b7c` intact).** Its `D`
+> **ADDENDUM 2026-09-01 — private research costs removed from public repository,
+> then relocked.** The redaction touched §0.2 and §7 only. No hypothesis,
+> estimator, threshold or falsifier changed. Prior lock `20620b7c`.
+>
+> ⛔ **NOTE ADDED 2026-09-01.** Its `D`
 > is *within*-speaker departure — **not** the `D(A,B)` between-speaker distance of
 > `SPEC_TWO_SPEAKER` §3 (collision C1). Its `MDE` is a permutation quantity, not
 > the 2.802×se used since (C9). Its apparatus (`D`/`C` on a held-out probe
-> battery) is `PARKED`, and the `D_ctx`/`D_w` subscript discipline it mandates has
-> been abandoned in practice — flagged for review, `RETIRED.md` A2.
+> battery) is `PARKED` — see `../MEASUREMENTS.md` A5 for the upgrade path it is
+> held for.
+>
+> ⛔ **AMENDMENT NOTE — §0.2, the `D_ctx` / `D_w` subscript discipline: RETIRED
+> 2026-09-01, as TRIVIALLY SATISFIED rather than abandoned.** (Landed as a note;
+> **the body was not edited by this retirement.**) Every Act-2
+> measurement is inference-only, so every number in the arc is `_ctx` by
+> construction and the subscript partitions nothing. ⛔ **The DISTINCTION §0.2
+> draws is NOT retired — only the notation is.** If a fine-tune ever enters an
+> Act-2 measurement, `D_w` becomes a live category and §0.2 is back in force
+> unamended; its prohibition — *the two must never be reported under one word* —
+> stands unconditionally. Reasoning logged in `../RETIRED.md` R2.
+>
+> ⭐ **§2's falsifiers F1–F5 are LIVE and were NOT retired.** They are re-pointed
+> at their current estimators in `../MEASUREMENTS.md` §H: F1 CLEARED, F4 ACTIVE
+> and PASSING, F2 and F3 **not adjudicated** (underpowered, and §5.2 binds — an
+> underpowered cell is uninformative, not a firing), F5 PARKED with the battery.
 
 - **Status:** LOCKED — pre-registered. Not fired.
-- **LOCK:** `20620b7c` (sha256[:8] of draft body at lock, 2026-08-24T22:30Z)
+- **LOCK:** `b96902b3` (sha256[:8] of draft body at lock, 2026-09-01T20:16Z)
 - **Date:** 2026-08-24
 - **Deliverable:** Act 2, **Deliverable 0**. Framework only. **$0.** No harness
   line exists yet and none may be written until this is LOCKED.
