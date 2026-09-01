@@ -1,4 +1,11 @@
+<!-- STALE PANEL. See ../MEASUREMENTS.md B1 + G1. -->
 # RESULTS — asymmetric solo pass: the panel re-certified in-regime
+
+> ⛔ **PARTLY SUPERSEDED (2026-09-01).** This doc excludes `force:ka`
+> (contamination 1.59, *"the single worst-behaved force"*). **`force:ka` was
+> later re-admitted** because contamination selects *against* separability
+> (`MEASUREMENTS.md` B1, collision C4). The §3 attractor table and the
+> self-accumulation-intrinsic caveat are **unaffected and still LIVE.**
 
 **Prereg:** `PREREG_ASYMMETRIC_RECERT_2026_08_30.md`, sha `a7bc2a7f…`, pinned on
 the box before generation. **Run:** A100-SXM4-40GB, 2026-08-30 13:03 → 17:15 UTC,

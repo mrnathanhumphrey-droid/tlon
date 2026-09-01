@@ -1,4 +1,12 @@
+<!-- LOCKED PREREG - body never edited. See ../MEASUREMENTS.md A5, D2, C8, C10. -->
 # PREREG ACT 2 — does constrained LLM-to-LLM communication drift, and is the drift a pact?
+
+> ⛔ **NOTE ADDED 2026-09-01 (body unchanged, lock `20620b7c` intact).** Its `D`
+> is *within*-speaker departure — **not** the `D(A,B)` between-speaker distance of
+> `SPEC_TWO_SPEAKER` §3 (collision C1). Its `MDE` is a permutation quantity, not
+> the 2.802×se used since (C9). Its apparatus (`D`/`C` on a held-out probe
+> battery) is `PARKED`, and the `D_ctx`/`D_w` subscript discipline it mandates has
+> been abandoned in practice — flagged for review, `RETIRED.md` A2.
 
 - **Status:** LOCKED — pre-registered. Not fired.
 - **LOCK:** `20620b7c` (sha256[:8] of draft body at lock, 2026-08-24T22:30Z)

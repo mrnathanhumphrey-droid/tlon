@@ -36,8 +36,12 @@ import sys
 
 #: Live decision documents. Historical run-logs are exempt: the rule is about
 #: claims still steering choices, not about rewriting the record.
-LIVE_GLOBS = ("STATE.md", "docs/RESULTS_*.md", "docs/PRICING_*.md",
-              "docs/SPEC_*.md", "docs/PREREG_*.md")
+#: ⛔ `MEASUREMENTS.md` was outside this list when it was written, so the single
+#: most important decision document in the repo — the one that exists to attach an
+#: interval to every claim — was itself unlinted. Added 2026-09-01.
+LIVE_GLOBS = ("STATE.md", "MEASUREMENTS.md", "RETIRED.md",
+              "docs/RESULTS_*.md", "docs/PRICING_*.md", "docs/PREFLIGHT_*.md",
+              "docs/AUDIT_*.md", "docs/SPEC_*.md", "docs/PREREG_*.md")
 
 #: Settled-property phrasing — grammatical forms that close inquiry.
 #:

@@ -1,4 +1,41 @@
-# ✅ THE DRIFT RUN LANDED — verdict UNDERPOWERED. σ_cp STILL UNMEASURED.
+> ## ⭐⭐ START HERE — [`MEASUREMENTS.md`](MEASUREMENTS.md) IS THE SINGLE SOURCE OF TRUTH
+>
+> One authoritative definition per measurement: what it measures, what it does
+> **not**, how it is computed, its unit of independence, its status
+> (LIVE / SUPERSEDED / RETRACTED / PARKED), and its current value **with its
+> interval**. **Where any document below disagrees with it, the dictionary
+> governs.**
+>
+> Audit + the 14 collisions it resolves:
+> [`docs/AUDIT_INVENTORY_2026_09_01.md`](docs/AUDIT_INVENTORY_2026_09_01.md) ·
+> removals: [`RETIRED.md`](RETIRED.md).
+>
+> ⛔ **Three words in this file mean several things.** `drift` = the W2 estimand
+> (A1) **or** probe-battery departure (A5) **or** capacity (B3). `D` = departure
+> (within-speaker) **or** `D(A,B)` distance (between-speaker). `MDE` = two
+> incompatible estimators. Disambiguate against the dictionary before using any
+> of them.
+>
+> ⛔⛔ **`σ_cp` IS NOT WHAT THE DRIFT RUN MEASURED.** It is a
+> stochastic-thermodynamics coupling power (`σ_cp ∝ dᵀKd`, diffusion matrix,
+> IFT); the naive form is RETRACTED (sign-indefinite 5000/5000). Sentences below
+> reading *"σ_cp remains unmeasured"* are true but describe a **different
+> estimand** than the one the drift run used. See dictionary A6.
+
+# ✅ WHERE THINGS ACTUALLY STAND — 2026-09-01
+
+| | status |
+|---|---|
+| **coupling on `force:ka` (A1)** | **UNDERPOWERED**, not a null. `+0.0803`, CI **[−0.2856, +0.4637]**. Detection floor ≈32% of median speaker separation; Δ\* = 0.5939. |
+| **convention channel (A2)** | **UNDERPOWERED.** Δgain `+0.0024`, CI [−0.0075, +0.0130]; true floor ≈41% of a between-build sd. |
+| **σ_cp (A6)** | **never measured on any real system**, and not by this arc. |
+| **single-speaker attractor** | reproduces without a partner; ⛔ **self-accumulation-intrinsic, NOT Tlön-specific** — separating that needs a control language, **DEFERRED**. |
+| **the live axis** | `force:ka` alone, and G2 shows there is **no second native axis** (force rates sum to 1; PC1 76%; CLR 4-vector buys 4.4%). |
+| **adapters** | 7 on disk. ⛔ **No established need for more** — the LOO verdict is stable in absolute units (sd 0.0666 vs Δ\* 0.5939). |
+| **next run** | **none priced.** Three consecutive pre-flights ($0) recommended *not* spending; the open question is which convergence metric is valid on Tlön (E4 gate). |
+| **Parfenova replication** | their metrics mostly do not transfer (F1 dead, F2 unvalidated); the contribution is the **same-recipe substrate removing their composition confound**. |
+
+# ⏮ THE DRIFT RUN LANDED — verdict UNDERPOWERED (see dictionary A1)
 
 Full write-up: `docs/RESULTS_DRIFT_2026_08_31.md` · raw
 `runs/act2/drift/drift_results.json` · analysis `tools/act2_drift.py`
@@ -222,16 +259,6 @@ coupling in general.
    have measured **partner present vs absent** instead of **responsive vs not**
    — a large, clean, entirely spurious coupling signal.
 
-## ⭐ THREE BUGS THE SMOKE TESTS CAUGHT (none would have crashed)
-
-1. Alternation guard checked the CUMULATIVE record; only LIVE alternates.
-2. `--skip-cold` silently no-opped on the `cold_a` block.
-3. ⛔⛔ **`Replay` returned a surface, not a proposal** — every yoked partner
-   turn failed validation, never entered `hist`, and the speaker heard the SEED
-   on all 40 turns. YOKED was "talking to a stale seed", so LIVE−YOKED would
-   have measured **partner present vs absent** instead of **responsive vs not**
-   — a large, clean, entirely spurious coupling signal.
-
 # ⛔⛔ READ THIS BEFORE DESIGNING ANY EXCHANGE EXPERIMENT
 
 Two structural facts were discovered on 2026-08-29 and they invalidate every
@@ -318,7 +345,12 @@ figures into public files.**
 
 ---
 
-# Tlön — STATE
+# ⏮ Tlön — STATE (SNAPSHOT OF 2026-08-27, superseded)
+
+> ⛔ **THIS IS NOT THE CURRENT STATE.** It reads as the document's title block and
+> is not — the current position is at the top of this file and in
+> [`MEASUREMENTS.md`](MEASUREMENTS.md). Kept in place because it is the record of
+> what was true on 2026-08-27; **flagged, not moved** (`RETIRED.md` A1).
 
 **Updated 2026-08-27. 1,208 tests.** Public repo:
 `github.com/mrnathanhumphrey-droid/tlon`. Adapter (run 3, MIT):

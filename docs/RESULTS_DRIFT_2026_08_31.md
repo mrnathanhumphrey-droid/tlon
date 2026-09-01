@@ -1,3 +1,6 @@
+<!-- Canonical definitions: ../MEASUREMENTS.md (A1 estimand, A2 convention
+     channel, E3 self-pair, D1 threshold). Where this doc and the dictionary
+     disagree, the DICTIONARY GOVERNS. -->
 # THE DRIFT RUN — verdict: UNDERPOWERED, and the control is what proves it
 
 Run: 105 transcripts (12 pairs × 7 replicates + 7 self-pairs × 3), 80 turns,

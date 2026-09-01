@@ -1,4 +1,9 @@
+<!-- STALE PANEL. See ../MEASUREMENTS.md B1. -->
 # RESULTS — Stage 1: is the contamination ranking stable?
+
+> ⛔ **SUPERSEDED (2026-09-01).** Certified on **window-1** transcripts; the doc
+> flags this itself in §"THE LIMIT THAT MUST TRAVEL". Contamination is now
+> `SUPERSEDED` as an admission rule (`MEASUREMENTS.md` B1).
 
 **Spec:** `SPEC_TWO_SPEAKER_DRIFT_2026_08_30.md` §2, admission rule fixed before
 this ran. `$0`, no box, re-analysis of 122 window-1 exchanges across 7 same-code

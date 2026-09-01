@@ -1,4 +1,14 @@
+<!-- STALE PANEL. See ../MEASUREMENTS.md B4 + G1. -->
 # RESULTS — Stage 2: the distance is defined; the cold table is NOT frozen
+
+> ⛔⛔ **SUPERSEDED IN PART (2026-09-01).** This doc's panel is `tokens/surface` +
+> `nodes/scene` and its cold table is `frozen: false` (sha `ca1ab5e9…`). **The
+> shipped baseline is `force:ka` alone, frozen, sha `84c2a1b5…`.** The
+> re-admission of `force:ka` — on separability + capacity + locatability, after
+> contamination was found to select backwards — **has no RESULTS doc**; it is
+> recorded in `MEASUREMENTS.md` G1 and collision C3. Its §2 locatability HALT and
+> its §5 *"more conversations, not more speakers"* are **true for the 2-axis
+> panel only.**
 
 `$0`, on the 98 in-regime transcripts. Tool `tools/act2_distance.py`, red-proof
 `tests/test_distance_metric.py` (14 tests). Suite 1272.
