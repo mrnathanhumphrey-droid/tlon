@@ -306,6 +306,32 @@ class Replay:
         return SB.scene_to_proposal(parse(self._s[i]))
 
 
+def store_was_shared(log, *, turns=None, threshold=0.75) -> bool:
+    """⛔⛔ DID THE ARM ACTUALLY RUN SHARED? ASKED OF THE TRANSCRIPT, NOT THE
+    CALL SITE.
+
+    `exchange_two` records `n_shown` per turn — how much context that turn was
+    handed. Under SHARED it is the whole store (seed + every valid turn so far);
+    under the asymmetric rule it is roughly the speaker's own half plus one. So
+    the transcript itself states which memory model produced it, and no one has
+    to trust the flag that was passed.
+
+    ⭐ This is the guard the drift run did not have, in the form it needed: the
+    arm that silently self-accumulates and the arm that ran and found nothing
+    leave the same *result*, but they do not leave the same `n_shown`.
+
+    `turns` is accepted for call-site readability and deliberately unused — the
+    denominator comes from the VALID turns actually in the log, because invalid
+    turns never enter the store and would otherwise make a healthy shared arm
+    look short.
+    """
+    shown = [e.get("n_shown", 0) for e in log]
+    if not shown:
+        return False
+    n_valid = sum(1 for e in log if e.get("valid"))
+    return max(shown) >= threshold * (n_valid + 1)
+
+
 def measurable_turns(log):
     """⛔⛔ THE PRIMARY DEFENCE AGAINST A BIASED INJECTION POOL: never measure a
     turn the pool was visible for.

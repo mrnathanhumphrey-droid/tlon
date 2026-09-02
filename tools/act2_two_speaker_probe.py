@@ -38,7 +38,8 @@ for _s in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
-from act2_two_speaker import (COLD, LIVE, SHARED, YOKED, Replay, exchange_two,   # noqa: E402
+from act2_two_speaker import (COLD, LIVE, SHARED, YOKED, Replay, exchange_two,
+                              store_was_shared,   # noqa: E402
                               measurable_turns, plan_injections, solo)
 from tlon.act2 import falsify as F                                       # noqa: E402
 from tlon.act2 import probes                                             # noqa: E402
@@ -136,7 +137,14 @@ def main() -> int:
     # `act2_drift.assert_arm` refuses the mismatch on the way back in.
     arm = SHARED if a.shared else LIVE
     arm_key = "shared" if a.shared else "live"
-    out = {"arm_mode": arm_key,
+    # ⛔⛔ THE NULL RUNS THE TREATMENT'S MEMORY MODEL. AMENDMENT A to PREREG
+    # c0de41c7. Registered arm 2 was the asymmetric YOKED against a SHARED
+    # treatment, which varies TWO things — partner-adaptivity AND memory model
+    # — so a negative delta could be entirely "long context changes the force
+    # rate". PREREG_ACT2_DRIFT §4 rejects a solo control in exactly those words.
+    # Only adaptivity may differ between the arms.
+    null_mode = SHARED if a.shared else YOKED
+    out = {"arm_mode": arm_key, "null_mode": arm_key,
            "self_pair": bool(a.adapter_a == a.adapter_b),
            "turns": a.turns, "temperature": a.temperature, "seed": a.seed,
            "adapter_a": a.adapter_a, "adapter_b": a.adapter_b,
@@ -196,10 +204,24 @@ def main() -> int:
     print("  ── YOKED: each against a recording of the other's LIVE turns ──")
     yoked_a = exchange_two(A, Replay(live_b, label="B_rec"), turns=a.turns,
                            seed_history=seed_history, injections=plan,
-                           mode=YOKED, validate=_validate)
+                           mode=null_mode, validate=_validate)
     yoked_b = exchange_two(B, Replay(live_a, label="A_rec"), turns=a.turns,
                            seed_history=seed_history, injections=plan,
-                           mode=YOKED, validate=_validate)
+                           mode=null_mode, validate=_validate)
+    if a.shared:
+        # ⛔⛔ ASSERT THE MATCHED NULL ACTUALLY RAN SHARED, FROM THE TRANSCRIPT.
+        # `n_shown` says how much context each turn received, so this cannot be
+        # satisfied by a flag that was passed and ignored. A null that quietly
+        # ran the asymmetric rule would make the contrast measure context length
+        # instead of coupling — and would look like an ordinary result.
+        for nm, lg in (("live/shared", live), ("yoked_a", yoked_a),
+                       ("yoked_b", yoked_b)):
+            if not store_was_shared(lg, turns=a.turns):
+                raise SystemExit(
+                    "⛔⛔ %s did not run the shared store (n_shown never reached "
+                    "the full history). The arms are not matched and the "
+                    "contrast would measure context length, not coupling." % nm)
+        print("    ✅ all three arms verified SHARED from their own n_shown")
     out["conditions"]["yoked_a"] = {"log": yoked_a, "surfaces": _surfaces(yoked_a)}
     out["conditions"]["yoked_b"] = {"log": yoked_b, "surfaces": _surfaces(yoked_b)}
 

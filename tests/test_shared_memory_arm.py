@@ -332,3 +332,85 @@ def test_an_unknown_arm_RAISES_rather_than_defaulting():
     from act2_drift import assert_arm
     with pytest.raises(ValueError, match="unknown arm"):
         assert_arm({"arm_mode": "live"}, "shraed")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7 · ⛔⛔ THE MATCHED NULL — AMENDMENT A to PREREG c0de41c7
+# ─────────────────────────────────────────────────────────────────────────────
+# The registered arm 2 ran `mode=YOKED` (own chain + the partner's single most
+# recent turn) against a treatment arm running SHARED (the full store). That
+# contrast varies TWO things — partner-adaptivity AND memory model — so a
+# negative delta could be entirely "long context changes the force rate".
+# PREREG_ACT2_DRIFT §4 rejects a solo control in exactly those words. The null
+# must run the SAME memory model as the treatment; only adaptivity may differ.
+
+class Recording:
+    """A deaf partner that emits from a fixed list — the shape `Replay` has.
+
+    ⛔ NOT `Replay` itself: that one parses each surface through the real
+    grammar, so it needs valid Tlön. What is under test here is `exchange_two`'s
+    STORE behaviour, which is a property of the harness and not of the partner —
+    and `Replay` is deliberately deaf to `history`, so it behaves identically
+    under any mode by construction.
+    """
+
+    def __init__(self, surfaces, label="B_rec"):
+        self._s, self.label = list(surfaces), label
+        self.backend = object()
+
+    def speak(self, history, turn):      # noqa: ARG002 — deliberately deaf
+        i = (turn - 1) // 2
+        return self._s[i] if i < len(self._s) else None
+
+
+def test_a_replayed_partner_under_SHARED_fills_the_store():
+    """The matched null: the recording still ENTERS the store, so the live
+    speaker reads the same shape of context it reads in the treatment arm."""
+    from act2_two_speaker import exchange_two
+    a = Spy("A")
+    exchange_two(a, Recording(["r1", "r2", "r3", "r4"]),
+                 turns=8, seed_history=["s0"], mode=SHARED)
+    assert sum(s.startswith("r") for s in a.seen[-1]) >= 2, (
+        "the yoked speaker saw at most one recorded turn — that is the "
+        "ASYMMETRIC null, not a null matched to a shared-memory treatment")
+
+
+def test_the_matched_null_DIFFERS_from_the_asymmetric_null():
+    """⛔ The bite. Same recording, same speaker: the two nulls must not be the
+    same object, or the amendment changed nothing."""
+    from act2_two_speaker import exchange_two
+    seen = {}
+    for mode in (SHARED, LIVE):
+        sp = Spy("A")
+        exchange_two(sp, Recording(["r1", "r2", "r3", "r4"]),
+                     turns=8, seed_history=["s0"], mode=mode)
+        seen[mode] = sp.seen[-1]
+    assert seen[SHARED] != seen[LIVE]
+    assert len(seen[SHARED]) > len(seen[LIVE])
+
+
+def test_the_asymmetric_null_shows_exactly_one_recorded_turn():
+    """States the defect positively, so the amendment's reason stays legible."""
+    from act2_two_speaker import exchange_two
+    a = Spy("A")
+    exchange_two(a, Recording(["r1", "r2", "r3", "r4"]),
+                 turns=8, seed_history=["s0"], mode=LIVE)
+    assert sum(s.startswith("r") for s in a.seen[-1]) == 1
+
+
+def test_store_share_check_PASSES_on_a_shared_transcript():
+    """⛔⛔ ASSERT THE ARM RAN, FROM ITS OWN DATA. `n_shown` is recorded per
+    turn, so the transcript itself says how much context each turn received —
+    no need to trust the call site."""
+    from act2_two_speaker import exchange_two, store_was_shared
+    log = exchange_two(Spy("A"), Recording(["r%d" % i for i in range(6)]),
+                       turns=10, seed_history=["s0"], mode=SHARED)
+    assert store_was_shared(log, turns=10) is True
+
+
+def test_store_share_check_FAILS_on_an_asymmetric_transcript():
+    """The same check on the old null must return False, or it is decoration."""
+    from act2_two_speaker import exchange_two, store_was_shared
+    log = exchange_two(Spy("A"), Recording(["r%d" % i for i in range(6)]),
+                       turns=10, seed_history=["s0"], mode=LIVE)
+    assert store_was_shared(log, turns=10) is False
