@@ -38,7 +38,7 @@ for _s in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
-from act2_two_speaker import (COLD, LIVE, YOKED, Replay, exchange_two,   # noqa: E402
+from act2_two_speaker import (COLD, LIVE, SHARED, YOKED, Replay, exchange_two,   # noqa: E402
                               measurable_turns, plan_injections, solo)
 from tlon.act2 import falsify as F                                       # noqa: E402
 from tlon.act2 import probes                                             # noqa: E402
@@ -75,6 +75,9 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--skip-cold", action="store_true",
                     help="COLD is already on disk from the recert pass")
+    ap.add_argument("--shared", action="store_true",
+                    help="run the SHARED-memory arm (Parfenova Algorithm 1) "
+                         "instead of LIVE. PREREG_POSITIVE_CONTROL_KA c0de41c7")
     ap.add_argument("--allow-self-pair", action="store_true",
                     help="⛔⛔ CONTROL ONLY. Pairs an adapter WITH ITSELF, which "
                          "is the fault the whole arc corrected. Identical "
@@ -126,7 +129,15 @@ def main() -> int:
                   "Identical weights ⇒ marginals coincide, so W2 MUST read ~0. "
                   "Tagged self_pair=true; never pool with real pairs.")
 
-    out = {"self_pair": bool(a.adapter_a == a.adapter_b),
+    # ⛔⛔ THE ARM IS NAMED IN THE DATA AND IN THE CONDITION KEY. Writing a
+    # shared-memory transcript under the key `live` — with a note saying so —
+    # is the caveat-in-prose failure: the note separates from the number and a
+    # later reader pools two different memory models under one estimand.
+    # `act2_drift.assert_arm` refuses the mismatch on the way back in.
+    arm = SHARED if a.shared else LIVE
+    arm_key = "shared" if a.shared else "live"
+    out = {"arm_mode": arm_key,
+           "self_pair": bool(a.adapter_a == a.adapter_b),
            "turns": a.turns, "temperature": a.temperature, "seed": a.seed,
            "adapter_a": a.adapter_a, "adapter_b": a.adapter_b,
            "injections": None if plan is None else
@@ -160,11 +171,13 @@ def main() -> int:
                                        "surfaces": _surfaces(cold_b)}
 
     # ── LIVE — both adapt ───────────────────────────────────────────────────
-    print("  ── LIVE: A and B, each provoked by the other's latest ──")
+    print("  ── %s ──" % ("SHARED: one append-only store, both read all of it"
+                          if a.shared else
+                          "LIVE: A and B, each provoked by the other's latest"))
     live_mark = core.mark() if core is not None else 0
     live = exchange_two(A, B, turns=a.turns, seed_history=seed_history,
-                        injections=plan, mode=LIVE, validate=_validate)
-    out["conditions"]["live"] = {"log": live, "surfaces": _surfaces(live)}
+                        injections=plan, mode=arm, validate=_validate)
+    out["conditions"][arm_key] = {"log": live, "surfaces": _surfaces(live)}
     # ⛔⛔ RUN-TIME PROOF THAT TWO SPEAKERS ACTUALLY SPOKE. A transcript where one
     # adapter never activated, or where one side generated consecutive turns, is
     # one impression wearing two labels whatever the CLI said.

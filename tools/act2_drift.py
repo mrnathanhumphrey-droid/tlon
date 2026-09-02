@@ -157,11 +157,45 @@ def cluster_bootstrap(deltas, adapters, *, n_boot=5000, seed=20260831):
             "n_adapters": len(names)}
 
 
+#: ⛔⛔ THE ARM MUST BE NAMED IN THE DATA, NOT IN A NOTE BESIDE IT.
+#: The positive control writes a SHARED-memory arm. Storing it under the key
+#: `live` — with a comment saying "this run's live arm is actually shared" —
+#: is the caveat-in-prose failure that this project keeps paying for: the note
+#: gets separated from the number and a later reader pools two different
+#: experiments. The arm is a KEY, and the file states which arm it holds.
+ARM_LIVE = "live"
+ARM_SHARED = "shared"
+ARMS = (ARM_LIVE, ARM_SHARED)
+
+
+def assert_arm(doc: dict, arm: str) -> None:
+    """⛔⛔ REFUSE TO READ ONE ARM AS ANOTHER.
+
+    A transcript records `arm_mode`. Loading a shared-memory transcript as
+    `live` would silently pool the positive control with the drift run — two
+    different memory models under one estimand — and the resulting number would
+    look exactly like a normal result.
+
+    ⛔ Files written before `arm_mode` existed carry no key; they are LIVE by
+    construction (SHARED did not exist when they were made), so the default is
+    explicit rather than permissive.
+    """
+    if arm not in ARMS:
+        raise ValueError("unknown arm %r; valid arms are %s"
+                         % (arm, ", ".join(ARMS)))
+    got = doc.get("arm_mode", ARM_LIVE)
+    if got != arm:
+        raise ValueError(
+            "this transcript is the %r arm and was asked for as %r — these are "
+            "different memory models and must never be pooled under one "
+            "estimand" % (got, arm))
+
+
 def _adapter(path):
     return re.sub(r".*[/\\]", "", str(path).rstrip("/\\"))
 
 
-def load_pairs(directory, panel, *, self_pair):
+def load_pairs(directory, panel, *, self_pair, arm=ARM_LIVE):
     """-> {(a, b): {'live_a': arr, 'live_b': arr, 'yoked_a': arr, 'yoked_b': arr}}
 
     Each replicate contributes ONE point per speaker per arm, so a pair's cloud
@@ -172,10 +206,11 @@ def load_pairs(directory, panel, *, self_pair):
         d = json.loads(f.read_text(encoding="utf-8"))
         if bool(d.get("self_pair")) != self_pair:
             continue
+        assert_arm(d, arm)
         key = (_adapter(d["adapter_a"]), _adapter(d["adapter_b"]))
         c = d["conditions"]
-        pts = {"live_a": point(own_surfaces(c["live"]["log"], "A"), panel),
-               "live_b": point(own_surfaces(c["live"]["log"], "B"), panel),
+        pts = {"live_a": point(own_surfaces(c[arm]["log"], "A"), panel),
+               "live_b": point(own_surfaces(c[arm]["log"], "B"), panel),
                "yoked_a": point(own_surfaces(c["yoked_a"]["log"], "A"), panel),
                "yoked_b": point(own_surfaces(c["yoked_b"]["log"], "B"), panel)}
         if any(v is None for v in pts.values()):

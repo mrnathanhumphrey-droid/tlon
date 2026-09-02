@@ -291,3 +291,44 @@ def test_each_mode_produces_a_DISTINCT_view_on_the_same_history():
              for m in (LIVE, COLD, SHARED)}
     assert len(set(views.values())) == 3, (
         "two modes computed the same view: %r" % (views,))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6 · ⛔⛔ THE ARM IS NAMED IN THE DATA — the two runs must not pool
+# ─────────────────────────────────────────────────────────────────────────────
+# The positive control and the drift run use DIFFERENT MEMORY MODELS under the
+# same estimand. If a shared-memory transcript can be read as `live`, the two
+# pool silently and the pooled number looks like an ordinary result. The caveat
+# goes in the KEY, never in a note beside it.
+
+def test_reading_a_shared_transcript_as_live_RAISES():
+    from act2_drift import ARM_LIVE, assert_arm
+    with pytest.raises(ValueError, match="different memory models"):
+        assert_arm({"arm_mode": "shared"}, ARM_LIVE)
+
+
+def test_reading_a_live_transcript_as_shared_RAISES():
+    from act2_drift import ARM_SHARED, assert_arm
+    with pytest.raises(ValueError, match="different memory models"):
+        assert_arm({"arm_mode": "live"}, ARM_SHARED)
+
+
+def test_a_legacy_transcript_without_arm_mode_is_LIVE_by_construction():
+    """⛔ Not permissive — explicit. Files predating this key were written when
+    SHARED did not exist, so `live` is the only thing they can be."""
+    from act2_drift import ARM_LIVE, ARM_SHARED, assert_arm
+    assert_arm({}, ARM_LIVE)                      # fine
+    with pytest.raises(ValueError):
+        assert_arm({}, ARM_SHARED)                # never silently upgraded
+
+
+def test_each_arm_reads_its_own_transcript():
+    from act2_drift import ARM_LIVE, ARM_SHARED, assert_arm
+    assert_arm({"arm_mode": "shared"}, ARM_SHARED)
+    assert_arm({"arm_mode": "live"}, ARM_LIVE)
+
+
+def test_an_unknown_arm_RAISES_rather_than_defaulting():
+    from act2_drift import assert_arm
+    with pytest.raises(ValueError, match="unknown arm"):
+        assert_arm({"arm_mode": "live"}, "shraed")
