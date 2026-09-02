@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # ═══ THE POSITIVE CONTROL — SHARED MEMORY vs YOKED on force:ka ══════════════
 #
-# PREREG_POSITIVE_CONTROL_KA `c0de41c7`.  FLOOR_ka = 0.100 ka = -0.311 W2 units.
-# Design: 7 pairs / 7 adapters / 28 replicates / 2 arms.  Power 0.848 at the
+# PREREG_POSITIVE_CONTROL_KA `c0de41c7` + AMENDMENT A `8f3024fb` (matched null)
+# + AMENDMENT B (self-pair lockstep floor).  FLOOR_ka = 0.100 ka = -0.311 W2.
+# Design: 7 real pairs + 7 SELF-pairs / 7 adapters / 28 reps / 2 arms. Power 0.848 at the
 # floor, 0.902 at complete convergence, ~0.90 at Delta* = 0.5939.
 #
 # ⛔ THE QUESTION IS NOT "did force:ka move". It is "did it move by more than the
@@ -21,7 +22,7 @@ trap 'rc=$?; if [ $rc -ne 0 ]; then
 set -e
 
 ROOT=runs/act2/poscontrol
-mkdir -p $ROOT/logs
+mkdir -p $ROOT/logs $ROOT/control
 LOG=$ROOT/pipeline_positive_control.log
 STAGE=init
 T_START=$(date +%s)
@@ -45,6 +46,18 @@ s20622:t30003 t30003:s20623 s20623:s20620"
 # (36 h end). If pair 1 lands beyond the expensive end, the estimate was wrong
 # and the remaining six are NOT bought on an assumption.
 PAIR1_MAX_S=18514
+
+# ⛔⛔ AMENDMENT B — THE SELF-PAIR LOCKSTEP FLOOR. One adapter as BOTH speakers,
+# same two arms, same 28 replicates. SHARED-YOKED removes responsiveness
+# entirely, not identical-responsiveness specifically, so two copies of one
+# adapter can fall into step in LIVE-not-YOKED and arrive wearing the signature
+# of coupling. In the drift run s20621 against ITSELF read -0.827, a LARGER
+# apparent convergence than any real pair (best -0.611): that arm did not
+# confirm the result, it INVERTED it.
+# ⛔ CONTROL, NEVER DATA. Written with self_pair=true, and load_pairs partitions
+# on that field, so these transcripts are structurally unable to enter the
+# real-pair analysis.
+SELF="s20620 s20621 s20622 s20623 t30001 t30002 t30003"
 
 # ── 1 · THE RULER, AND THIS TIME IT IS A GATE ───────────────────────────────
 step cold_pin
@@ -157,8 +170,23 @@ for P in $PAIRS; do
   fi
 done
 
+# ── 6 · THE SELF-PAIR FLOOR — AMENDMENT B ───────────────────────────────────
+for S in $SELF; do
+  N=$((N+1))
+  step selfpair_${S}
+  echo "  ⛔⛔ _assert_two BYPASSED for this arm via --allow-self-pair (off by" | tee -a $LOG
+  echo "     default; the probe SystemExits without it). One adapter as BOTH" | tee -a $LOG
+  echo "     speakers. Tagged self_pair=true; CONTROL, NEVER DATA." | tee -a $LOG
+  T0=$(date +%s)
+  for i in $(seq 1 $REPS); do
+    $PY tools/act2_two_speaker_probe.py --model $MODEL       --adapter-a ~/adapters/$S --adapter-b ~/adapters/$S --allow-self-pair       --shared --skip-cold --no-injections --turns $TURNS       --out $ROOT/control/${S}__self_$i.json 2>&1 | tee -a $LOG
+  done
+  T1=$(date +%s)
+  echo "  ⏱ ${S}|self marginal wall: $((T1-T0)) s for $REPS replicates" | tee -a $LOG
+done
+
 step done
-echo "⭐ ALL STAGES PASSED — 7 pairs x $REPS replicates, SHARED vs YOKED" | tee -a $LOG
+echo "⭐ ALL STAGES PASSED — 7 real + 7 self pairs x $REPS reps, SHARED vs YOKED" | tee -a $LOG
 echo "⛔ PULL $LOG AND $ROOT/ BEFORE KILLING THE BOX — the throughput log has" | tee -a $LOG
 echo "   been lost to a kill once already." | tee -a $LOG
 echo "  total wall: $(( $(date +%s) - T_START )) s" | tee -a $LOG
