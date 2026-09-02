@@ -125,6 +125,11 @@ def main() -> int:
             a.model, a.adapter_a, a.adapter_b, temperature=a.temperature)
         A = LLMSpeaker("A", back_a, card=False)
         B = LLMSpeaker("B", back_b, card=False)
+        if history_limit is not None:
+            A.history_limit = B.history_limit = history_limit
+            print("  history window raised to %d for the shared arm "
+                  "(store holds %d at %d turns)"
+                  % (history_limit, a.turns + len(seed_history), a.turns))
         if a.allow_self_pair and a.adapter_a == a.adapter_b:
             print("  ⛔⛔ SELF-PAIR CONTROL — one adapter as both speakers. "
                   "Identical weights ⇒ marginals coincide, so W2 MUST read ~0. "
@@ -144,6 +149,16 @@ def main() -> int:
     # rate". PREREG_ACT2_DRIFT §4 rejects a solo control in exactly those words.
     # Only adaptivity may differ between the arms.
     null_mode = SHARED if a.shared else YOKED
+
+    # ⛔⛔ THE WINDOW IS PART OF THE MEMORY MODEL, NOT A TUNING KNOB.
+    # `LLMSpeaker.history_limit` defaults to 60 and `transcript_block` drops the
+    # OLDEST turns beyond it. At TURNS=80 the shared store holds 81 entries, so
+    # the default would hand 81 and let the model read 60 — 26% of the store
+    # dropped, and the arm would be "shared store, last 60" rather than
+    # Algorithm 1's C. The asymmetric rule hands only ~41 at 80 turns, so this
+    # limit has NEVER BOUND in any prior run and no earlier result changes.
+    # ⭐ Raised only for the shared arm, to exactly what the store needs.
+    history_limit = (a.turns + len(seed_history) + 8) if a.shared else None
     out = {"arm_mode": arm_key, "null_mode": arm_key,
            "self_pair": bool(a.adapter_a == a.adapter_b),
            "turns": a.turns, "temperature": a.temperature, "seed": a.seed,
@@ -216,12 +231,15 @@ def main() -> int:
         # instead of coupling — and would look like an ordinary result.
         for nm, lg in (("live/shared", live), ("yoked_a", yoked_a),
                        ("yoked_b", yoked_b)):
-            if not store_was_shared(lg, turns=a.turns):
+            if not store_was_shared(lg, turns=a.turns,
+                                    attended_limit=history_limit):
                 raise SystemExit(
                     "⛔⛔ %s did not run the shared store (n_shown never reached "
                     "the full history). The arms are not matched and the "
                     "contrast would measure context length, not coupling." % nm)
-        print("    ✅ all three arms verified SHARED from their own n_shown")
+        out["history_limit"] = history_limit
+        print("    ✅ all three arms verified SHARED and ATTENDABLE "
+              "(store <= window %d) from their own n_shown" % history_limit)
     out["conditions"]["yoked_a"] = {"log": yoked_a, "surfaces": _surfaces(yoked_a)}
     out["conditions"]["yoked_b"] = {"log": yoked_b, "surfaces": _surfaces(yoked_b)}
 

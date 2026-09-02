@@ -306,7 +306,8 @@ class Replay:
         return SB.scene_to_proposal(parse(self._s[i]))
 
 
-def store_was_shared(log, *, turns=None, threshold=0.75) -> bool:
+def store_was_shared(log, *, turns=None, threshold=0.75,
+                     attended_limit=None) -> bool:
     """⛔⛔ DID THE ARM ACTUALLY RUN SHARED? ASKED OF THE TRANSCRIPT, NOT THE
     CALL SITE.
 
@@ -329,6 +330,15 @@ def store_was_shared(log, *, turns=None, threshold=0.75) -> bool:
     if not shown:
         return False
     n_valid = sum(1 for e in log if e.get("valid"))
+    if attended_limit is not None and max(shown) > attended_limit:
+        # ⛔⛔ HANDED IS NOT ATTENDED. `LLMSpeaker.history_limit` drops the
+        # OLDEST turns beyond the window, so a store larger than the window
+        # reaches the model with its head missing. `n_shown` records what the
+        # harness handed over; this is the only place that asks whether the
+        # model could actually read it. Without it the check passes on an arm
+        # running "shared store, last N" — a different memory model wearing the
+        # right name.
+        return False
     return max(shown) >= threshold * (n_valid + 1)
 
 

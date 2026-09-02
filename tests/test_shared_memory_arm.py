@@ -414,3 +414,115 @@ def test_store_share_check_FAILS_on_an_asymmetric_transcript():
     log = exchange_two(Spy("A"), Recording(["r%d" % i for i in range(6)]),
                        turns=10, seed_history=["s0"], mode=LIVE)
     assert store_was_shared(log, turns=10) is False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8 · ⛔⛔ THE MATCHED NULL RESTS ON `Replay` BEING MODE-AGNOSTIC — MEASURE IT
+# ─────────────────────────────────────────────────────────────────────────────
+# AMENDMENT A §5 recorded this as an ARGUMENT: "Replay ignores `history`, so it
+# emits identically under SHARED and asymmetric." That was reasoned from reading
+# the code. The entire validity of the matched null rests on it, so it is not
+# allowed to stay an argument.
+#
+# ⛔ If Replay's emissions differed by mode, the two arms would no longer be
+# yoked on what the partner says, and SHARED-LIVE minus SHARED-YOKED would stop
+# subtracting the store-regression — the one thing the amendment exists to do.
+
+def _real_surfaces(n=6):
+    """⭐ REAL surfaces from a committed drift transcript, not synthesised ones.
+    `Replay` parses every surface through the actual grammar, so a placeholder
+    would test a parse failure rather than the replay mechanism."""
+    import glob
+    import json
+    for f in sorted(glob.glob("runs/act2/drift/logs/*.json")):
+        d = json.loads(pathlib.Path(f).read_text(encoding="utf-8"))
+        got = [e["surface"] for e in d["conditions"]["live"]["log"]
+               if e.get("valid") and e.get("surface")]
+        if len(got) >= n:
+            return got[:n]
+    pytest.skip("no committed drift transcript with enough valid surfaces")
+
+
+def _replay_emissions(mode, surfaces):
+    from act2_two_speaker import Replay, exchange_two
+    log = exchange_two(Spy("A"), Replay(surfaces, label="B_rec"),
+                       turns=2 * len(surfaces), seed_history=["seed"],
+                       mode=mode)
+    return [e["proposal"] for e in log if e["speaker"] == "B_rec"]
+
+
+def test_MEASURED_replay_emits_identically_under_shared_and_asymmetric():
+    """⛔⛔ THE ARGUMENT, TURNED INTO A MEASUREMENT. Same recording, same turns,
+    two memory models — the replayed partner must produce the same thing."""
+    surfaces = _real_surfaces()
+    shared = _replay_emissions(SHARED, surfaces)
+    asym = _replay_emissions(LIVE, surfaces)
+    assert shared, "Replay emitted nothing — this test would pass vacuously"
+    assert len(shared) == len(asym) == len(surfaces)
+    assert shared == asym, (
+        "Replay's emissions depend on the memory model. The matched null is "
+        "broken: the two arms are no longer yoked on what the partner says.")
+
+
+def test_MEASURED_replay_emissions_match_the_recording_it_was_given():
+    """⛔ Non-vacuity, stated separately: identical-but-empty, or
+    identical-but-wrong, would satisfy the test above. This pins the content to
+    the recording rather than merely to itself."""
+    from tlon.act2 import schema_bridge as SB
+    from tlon.grammar.parse import parse
+    surfaces = _real_surfaces()
+    expected = [SB.scene_to_proposal(parse(s)) for s in surfaces]
+    assert _replay_emissions(SHARED, surfaces) == expected
+
+
+def test_MEASURED_replay_is_deaf_to_the_history_it_is_handed():
+    """The mechanism behind the mode-agnosticism, measured directly: hand the
+    same Replay wildly different histories and it must not care."""
+    from act2_two_speaker import Replay
+    surfaces = _real_surfaces(3)
+    a, b = Replay(surfaces), Replay(surfaces)
+    assert a.speak((), 1) == b.speak(("x",) * 50, 1)
+    assert a.speak(("one",), 3) == b.speak(tuple("abcdefghij"), 3)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9 · ⛔⛔ HANDED IS NOT ATTENDED — the history window silently truncates
+# ─────────────────────────────────────────────────────────────────────────────
+# `LLMSpeaker.history_limit` defaults to 60 and `transcript_block` drops the
+# OLDEST turns beyond it. At the registered TURNS=80 the shared store holds 81
+# entries, so 26% of it never reaches the model: the arm would implement
+# "shared store, last 60" rather than Algorithm 1's C.
+#
+# ⛔ The limit has never bound before — the asymmetric rule hands only ~41 at 80
+# turns — so this is the first arm where it bites, and no prior result changes.
+# `llm.py` says it plainly: changing the window "CHANGES WHAT D_ctx CAN SEE, so
+# it is a pre-registration-adjacent decision, not a tuning knob." Which is why
+# it is asserted rather than quietly raised.
+
+def test_the_default_window_would_TRUNCATE_the_shared_store_at_80_turns():
+    """States the defect as a measurement, so the fix cannot be mistaken for a
+    preference."""
+    from tlon.act2.llm import LLMSpeaker, transcript_block
+    hist = ["t%d" % i for i in range(81)]
+    kept = transcript_block(hist, LLMSpeaker.history_limit).strip().split("\n")
+    assert len(kept) == 60
+    assert "t0" not in kept[0], "the OLDEST turns are the ones dropped"
+
+
+def test_store_was_shared_FAILS_when_the_model_could_not_attend_to_it():
+    """⛔⛔ A CHECK ON WHAT WAS HANDED IS NOT A CHECK ON WHAT WAS USED. Given the
+    window, `store_was_shared` must refuse a transcript whose store outgrew it."""
+    from act2_two_speaker import exchange_two, store_was_shared
+    log = exchange_two(Spy("A"), Recording(["r%d" % i for i in range(40)]),
+                       turns=80, seed_history=["s0"], mode=SHARED)
+    assert store_was_shared(log, turns=80) is True          # handed in full
+    assert store_was_shared(log, turns=80, attended_limit=60) is False
+    assert store_was_shared(log, turns=80, attended_limit=200) is True
+
+
+def test_the_attended_check_does_not_fire_when_the_window_is_wide_enough():
+    """Non-vacuity: the check must be able to PASS, or it just blocks the run."""
+    from act2_two_speaker import exchange_two, store_was_shared
+    log = exchange_two(Spy("A"), Recording(["r%d" % i for i in range(6)]),
+                       turns=12, seed_history=["s0"], mode=SHARED)
+    assert store_was_shared(log, turns=12, attended_limit=60) is True
