@@ -124,9 +124,71 @@ def cmd_provision(a):
     return 0
 
 
+def cmd_env(a):
+    """Put the credentials the ON-INSTANCE watchdog needs onto the box.
+
+    ⛔⛔ A SELF-TERMINATING WATCHDOG NEEDS A CREDENTIAL THAT CAN TERMINATE. There
+    is no narrower Lambda key, so this one can terminate any instance on the
+    account — including other projects'. That is a real exposure and the reason
+    it is written 0600, to a file, on a box that is itself terminated at the end
+    of the run. The alternative is a watchdog that cannot fire, which is what
+    the previous arrangement had and what it cost.
+
+    ⛔ Shipped over STDIN, never on the command line: argv is visible in the
+    remote process list and lands in shell history.
+    """
+    import os
+    import re
+    key = os.environ.get("LAMBDA_API_KEY")
+    if not key:
+        raise TransferError("LAMBDA_API_KEY is not set locally")
+    hf = ""
+    envf = pathlib.Path(r"D:\physics_detector\.env")
+    if envf.exists():
+        m = re.search(r"^HF_TOKEN=(.+)$",
+                      envf.read_text(encoding="utf-8", errors="replace"), re.M)
+        hf = m.group(1).strip().strip('"').strip("'") if m else ""
+    body = "\n".join(("export LAMBDA_API_KEY=%s" % key,
+                      "export LAMBDA_INSTANCE_ID=%s" % a.instance,
+                      "export HF_TOKEN=%s" % hf, ""))
+    # ⛔⛔ BYTES, NOT `text=True`. On Windows, text mode translates "\n" to
+    # "\r\n" on the way into the pipe, so every exported value arrives with a
+    # trailing carriage return. The file then has the right line count and the
+    # right permissions and every value is one character wrong — an invalid HTTP
+    # header, and the watchdog cannot terminate. Caught by a LENGTH check (89 on
+    # the box against 88 locally); the shape check passed happily.
+    subprocess.run(["ssh", "-i", str(KEY), "ubuntu@%s" % a.host,
+                    "cat > ~/.tlon_env && chmod 600 ~/.tlon_env"],
+                   input=body.encode("utf-8"), check=True)
+    # ⛔ Verify by SHAPE and LENGTH, never by echoing the values back. Shape
+    # alone cannot see a value that is right except for one invisible byte.
+    n = ssh(a.host, KEY, ". ~/.tlon_env && echo ${#LAMBDA_API_KEY}")
+    if n.strip() != str(len(key)):
+        raise TransferError("the key arrived %s bytes long, sent %d — the "
+                            "transfer altered it" % (n.strip(), len(key)))
+    print("  ✅ key length matches (%s bytes)" % n.strip())
+    out = ssh(a.host, KEY, "wc -l < ~/.tlon_env; stat -c %a ~/.tlon_env")
+    print("  ✅ ~/.tlon_env written (%s) — 3 vars, perms 0600 expected"
+          % " / ".join(out.split()))
+    probe = ssh(a.host, KEY,
+                ". ~/.tlon_env && cd ~/tlon && ~/venv/bin/python -c "
+                "'import sys;sys.path.insert(0,\"tools\");"
+                "from act2_watchdog import terminate_reachable;"
+                "print(terminate_reachable())'")
+    print("  watchdog kill-path from the box: %s" % probe)
+    if "True" not in probe:
+        raise TransferError("the watchdog cannot reach the terminate API FROM "
+                            "THE BOX — it would refuse to arm, and the pipeline "
+                            "would halt. Fix before training.")
+    print("  ✅ the box can terminate itself")
+    return 0
+
+
 def cmd_train(a):
+    # ⛔ Sources the credential file so the watchdog it spawns inherits the
+    # key it needs. A non-interactive ssh does NOT read ~/.bashrc.
     ssh(a.host, KEY,
-        "cd ~/tlon && nohup bash tools/pipeline_retrain.sh "
+        "cd ~/tlon && . ~/.tlon_env && nohup bash tools/pipeline_retrain.sh "
         "> ~/retrain_stdout.log 2>&1 &")
     print("  ✅ pipeline launched under nohup; the on-instance watchdog arms "
           "itself in stage 3")
@@ -228,6 +290,9 @@ def main() -> int:
                      ("poll", cmd_poll), ("collect", cmd_collect)):
         q = sub.add_parser(name); q.set_defaults(fn=fn)
         q.add_argument("--host", required=True)
+    q = sub.add_parser("env"); q.set_defaults(fn=cmd_env)
+    q.add_argument("--host", required=True)
+    q.add_argument("--instance", required=True)
     q = sub.add_parser("persist"); q.set_defaults(fn=cmd_persist)
     q = sub.add_parser("terminate"); q.set_defaults(fn=cmd_terminate)
     q.add_argument("--instance", required=True)
