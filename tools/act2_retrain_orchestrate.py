@@ -95,14 +95,32 @@ def cmd_provision(a):
                             "against code this run was not designed against"
                             % (got, sha))
     print("  ✅ box pinned at %s" % got)
+    # ⛔⛔ PINNED, AND THE PIN IS THE RUNBOOK'S. Installing "latest" pulled
+    # torch 2.14.0+cu130 against a 12.8 driver, and `torch.cuda.is_available()`
+    # came back False — the pipeline would have trained on CPU for forty hours.
+    # RUNBOOK §5 records the exact versions the code demonstrably ran on and
+    # that the cu128 index is REQUIRED. Environment drift is not a detail.
     ssh(a.host, KEY,
         "python3 -m venv ~/venv && ~/venv/bin/pip -q install -U pip && "
-        "~/venv/bin/pip -q install torch transformers peft datasets "
-        "accelerate huggingface_hub numpy scipy pytest")
-    print("  ✅ venv built")
-    print(ssh(a.host, KEY, "~/venv/bin/python -c "
-                           "'import torch;print(\"torch\",torch.__version__,"
-                           "\"cuda\",torch.cuda.is_available())'"))
+        "~/venv/bin/pip -q install --index-url https://download.pytorch.org/whl/cu128 "
+        "torch==2.11.0 && "
+        "~/venv/bin/pip -q install transformers==5.8.1 peft==0.19.1 "
+        "datasets==4.8.5 numpy==2.2.6 jinja2==3.1.6 accelerate "
+        "huggingface_hub scipy pytest")
+    print("  ✅ venv built (runbook-pinned, cu128)")
+
+    # ⛔⛔ REFUSE, DO NOT PRINT. A box whose torch cannot see the GPU will train
+    # on CPU without erroring — slowly, expensively, and to completion.
+    probe = ssh(a.host, KEY, "~/venv/bin/python -c "
+                             "'import torch;print(torch.__version__, "
+                             "torch.cuda.is_available(), torch.version.cuda)'")
+    print("  torch probe: %s" % probe)
+    if "True" not in probe.split():
+        raise TransferError(
+            "CUDA IS NOT AVAILABLE on the box (%s). Refusing to hand off to "
+            "training — it would run on CPU to completion and bill for it. "
+            "Check the driver against the wheel's CUDA version." % probe)
+    print("  ✅ CUDA verified available")
     return 0
 
 
