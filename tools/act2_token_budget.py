@@ -77,6 +77,22 @@ def main() -> int:
                     help="rewrite train.jsonl without rows that would truncate")
     a = ap.parse_args()
 
+    # ⛔⛔ REFUSE TO OVERWRITE THE FILE BEING COMPARED AGAINST. `--out` defaults
+    # to `runs/act2/corpus/token_budget.json`, which is ALSO the natural
+    # `--baseline` — so the obvious invocation reads the reference, compares
+    # against it, and then writes the NEW numbers over it. The comparison
+    # succeeds and the baseline it succeeded against no longer exists, so the
+    # NEXT corpus is measured against this one while believing it is run 3.
+    # ⭐ A destroyed reference is silent: every later run still prints a delta.
+    if a.baseline and pathlib.Path(a.baseline).resolve() == \
+            pathlib.Path(a.out).resolve():
+        raise SystemExit(
+            "⛔⛔ --out and --baseline are the same file (%s). Writing the new "
+            "numbers over the reference would leave every later corpus "
+            "comparing itself against this one while reporting it as the "
+            "baseline. Pass --out inside the corpus being measured."
+            % pathlib.Path(a.out).as_posix())
+
     from transformers import AutoTokenizer
     tok = AutoTokenizer.from_pretrained(a.model)
 
