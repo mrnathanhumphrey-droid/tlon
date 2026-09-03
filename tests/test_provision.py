@@ -148,3 +148,41 @@ def test_a_record_missing_its_name_is_refused_rather_than_skipped():
     ok, why = may_terminate([{"local_md5": OK, "box_md5": OK,
                               "durable_uri": "hf://x"}])
     assert ok is False
+
+
+# ── 4 · the collection planner — the box manifest is the source of truth ────
+
+def test_plan_collection_marks_a_MISSING_local_file_as_absent(tmp_path):
+    """⛔ A build that never arrived must show `local_md5: None`, which
+    `may_terminate` then refuses. Not an exception here — the planner's job is
+    to describe reality, and the gate's job is to refuse it."""
+    from act2_retrain_orchestrate import plan_collection
+    manifest = {"s20624": {"md5": OK, "bytes": 1, "remote_path": "/x"}}
+    recs = plan_collection(manifest, tmp_path)
+    assert recs[0]["local_md5"] is None
+    ok, why = may_terminate(recs)
+    assert ok is False and "s20624" in why
+
+
+def test_plan_collection_reads_the_BOX_md5_not_a_recomputed_one(tmp_path):
+    """⛔⛔ The remote checksum must come from the manifest the box wrote BEFORE
+    the pull. A checksum taken from the copy, after the copy, verifies the copy
+    against itself."""
+    from act2_retrain_orchestrate import plan_collection
+    d = tmp_path / "adapter_s20624"
+    d.mkdir()
+    (d / "adapter_model.safetensors").write_bytes(b"hello")
+    manifest = {"s20624": {"md5": OTHER, "bytes": 5, "remote_path": "/x"}}
+    r = plan_collection(manifest, tmp_path)[0]
+    assert r["box_md5"] == OTHER              # straight from the manifest
+    assert r["local_md5"] not in (None, OTHER)  # actually hashed on disk
+    with pytest.raises(TransferError):
+        verify_checksum(r["name"], local=r["local_md5"], remote=r["box_md5"])
+
+
+def test_plan_collection_covers_EVERY_build_the_box_reported(tmp_path):
+    from act2_retrain_orchestrate import plan_collection
+    manifest = {n: {"md5": OK, "bytes": 1, "remote_path": "/x"}
+                for n in ("s20624", "s20625", "s20626")}
+    assert [r["name"] for r in plan_collection(manifest, tmp_path)] == \
+        ["s20624", "s20625", "s20626"]
