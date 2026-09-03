@@ -31,6 +31,31 @@
 > ⛔⛔ **NEVER PUT A SPEND NUMBER IN COMMITTED PROSE.** The ledgers are
 > gitignored; a dollar figure typed into a sentence walks straight past that.
 
+# ⛔⛔ ADAPTER `s20620` IS LOST — 2026-09-02
+
+It existed **only** on a terminated Lambda box. `runs/act2/adapter/` (the
+default `--out`, and the runbook's `scp -r` target) is an **empty directory from
+2026-08-24**: the copy made a folder, moved no file, raised nothing, and the
+instance was terminated. Not in git (weights are gitignored), not on HF, on no
+disk here.
+
+⭐ **ROOT CAUSE FIXED, NOT JUST THE SYMPTOM.** `tools/act2_provision.py` verifies
+every transfer by checksum on **both** ends, compares the **set** of artifacts
+that arrived against the set requested (an empty directory and a directory
+nobody asked for look identical afterwards), and **refuses to terminate** while
+any artifact lacks a matching box-side checksum or a durable location. Fifteen
+tests; all three guards demonstrated to fire against their naive
+implementations. ⛔ An empty ledger is refused too — `all([])` is True, and that
+is the exact state `s20620` was lost in.
+
+⭐ **The six survivors are persisted and verified off this machine:**
+`hf://keyzersoze04/tlon-act2-adapters` (private), ledger at
+`runs/act2/adapter_ledger.json`.
+
+⚠️ The frozen ruler ([C1](MEASUREMENTS.md#c1), sd `0.2454`) was computed over
+seven builds **including** `s20620`. It stays authoritative for prior results
+and must be **recomputed over the surviving population for any new design**.
+
 # ✅ WHERE THINGS ACTUALLY STAND — 2026-09-01
 
 | | status |

@@ -344,6 +344,25 @@ distance = one build-to-build sd**.
 measurement.
 
 **Current value: `0.2454`** (7 builds, n=14 each).
+
+⛔⛔ **ONE OF THOSE SEVEN BUILDS NO LONGER EXISTS.** `s20620` was lost
+2026-09-02: it lived only on a terminated Lambda instance. `runs/act2/adapter/`
+— the path `act2_finetune.py --out` defaults to, and the path the runbook's
+`scp -r` targeted — is an **empty directory created 2026-08-24 and never
+populated**. The copy made a folder, moved no file, and said nothing. It is not
+in git (weights are gitignored, so it was never committed to lose), not on HF,
+and on no disk here. Pinned md5 `c1c6d9c2…` matches none of the 33 local
+adapters.
+
+⇒ **This ruler describes a population that can no longer be assembled.** It
+stays FROZEN and authoritative for anything compared against prior results —
+the drift run, the [A1](#a1)/[A2](#a2) values, `FLOOR_ka`. ⛔ But **any NEW
+design must recompute the sd over the surviving population**, because a ruler
+built partly on a speaker the run cannot include is not that run's ruler.
+
+⭐ The six survivors are now persisted and checksum-verified off this machine:
+`runs/act2/adapter_ledger.json` → `hf://keyzersoze04/tlon-act2-adapters`
+(private). Local-only is the same exposure class that lost `s20620`.
 ⚠️ **Numerically adjacent to h = 0.2519 ([C2](#c2)) and they are DIFFERENT
 QUANTITIES IN DIFFERENT UNITS** — this one is a `force:ka` proportion, that one
 is a standardised-W2 sd computed *after* dividing by this one.

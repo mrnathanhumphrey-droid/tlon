@@ -1,0 +1,106 @@
+{
+  "repo": "keyzersoze04/tlon-act2-adapters",
+  "private": true,
+  "note": "durable persistence for the surviving Act-2 adapters, each verified against the hub's own checksum after upload. s20620 is LOST and has no entry: it existed only on a terminated box.",
+  "lost": [
+    "s20620"
+  ],
+  "adapters": [
+    {
+      "name": "s20621",
+      "local_dir": "runs/act2/recipe_var/adapter_s20621",
+      "files": {
+        "adapter_model.safetensors": {
+          "md5": "03aab6f54c0c10fbae2be48664ba115a",
+          "sha256": "cd7ab7000ee77ef4feb9bda5c038027f6f5e7cc5b88c6449ff5554e0919e7589",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20621/adapter_model.safetensors"
+        },
+        "adapter_config.json": {
+          "md5": "3d45723d920282a3380e31ff48e8c825",
+          "sha256": "65ed7d1db703375126797b14aaf338ad60f2a46866988b609f439dd677212b4e",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20621/adapter_config.json"
+        }
+      }
+    },
+    {
+      "name": "s20622",
+      "local_dir": "runs/act2/recipe_var/adapter_s20622",
+      "files": {
+        "adapter_model.safetensors": {
+          "md5": "f451c60aad3e9580ee0dd8013388411f",
+          "sha256": "1c3fa9396753bfb41413e80c6a9f60164249457107115b73c59fb4c43edc6fdc",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20622/adapter_model.safetensors"
+        },
+        "adapter_config.json": {
+          "md5": "4f37dddd4aafe7054f68faaa0e624a04",
+          "sha256": "6c7037c762dc912ba5f2d61ca25bf48865559fff2ed869e2cc20838b53b5e444",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20622/adapter_config.json"
+        }
+      }
+    },
+    {
+      "name": "s20623",
+      "local_dir": "runs/act2/recipe_var/adapter_s20623",
+      "files": {
+        "adapter_model.safetensors": {
+          "md5": "6ae36200571862f0e0eeed957c8d885d",
+          "sha256": "cdc899c18b3de47921eee9d7b07906ab9fdf8b4b7e8021a3e8ff49796caa374c",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20623/adapter_model.safetensors"
+        },
+        "adapter_config.json": {
+          "md5": "db9a7a54576e51ac372cb71e1002589b",
+          "sha256": "dcd2cf9bf398df018b241db588a1ac878023f50c01e644cdc94262e3b8adb0ab",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20623/adapter_config.json"
+        }
+      }
+    },
+    {
+      "name": "t30001",
+      "local_dir": "runs/act2/var_decomp/adapter_t30001",
+      "files": {
+        "adapter_model.safetensors": {
+          "md5": "1e772c64c3097d631b10cfb957946ee0",
+          "sha256": "8a06d04b81660620d02178d270db0c8fdb584a09adcea720d58258732d82442e",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30001/adapter_model.safetensors"
+        },
+        "adapter_config.json": {
+          "md5": "dc62090af6c4521d7c99787d53373cc9",
+          "sha256": "165c73559ba41d628b4a856b2867328a096a9c8091674eb0de9846849c655368",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30001/adapter_config.json"
+        }
+      }
+    },
+    {
+      "name": "t30002",
+      "local_dir": "runs/act2/var_decomp/adapter_t30002",
+      "files": {
+        "adapter_model.safetensors": {
+          "md5": "3a889872dfbf14d9c686c640a5b07fe5",
+          "sha256": "07152993eff39be8b253912fe8fc0533537571e22f751a3733e0aa9e540e8a9e",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30002/adapter_model.safetensors"
+        },
+        "adapter_config.json": {
+          "md5": "687edad997cf729aac51f257ff094a34",
+          "sha256": "6dcf71d4cb3d90a7e5891cb38a185faaaf4fd0ef92db659197e3691b8d898b17",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30002/adapter_config.json"
+        }
+      }
+    },
+    {
+      "name": "t30003",
+      "local_dir": "runs/act2/var_decomp/adapter_t30003",
+      "files": {
+        "adapter_model.safetensors": {
+          "md5": "acbde5c9c1be43a0b3a840a35bcfe5fc",
+          "sha256": "43ecd1838859444af51c9dfce25b68a3b0c3a78f8d7ebbfc69fcad0c5cb41211",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30003/adapter_model.safetensors"
+        },
+        "adapter_config.json": {
+          "md5": "34b532b4f840bbcb9ed84959eac375ca",
+          "sha256": "2f69ed9c67367aff5f07b65a05a40720629ca665a1cdc5ee1a9621db930888aa",
+          "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30003/adapter_config.json"
+        }
+      }
+    }
+  ]
+}

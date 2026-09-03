@@ -1,0 +1,24 @@
+ADAPTER SIZING — power at delta = 0.100 ka (the locked FLOOR_ka)
+  28 replicates/cloud · 400 sims x 1000 bootstrap · MC se ~0.025
+  ⛔ s20620 is LOST; the population is the 6 on disk + new builds
+  target: power >= 0.90 at the floor
+
+  adapters  pairs           h=0.00         h=0.30         h=0.50
+  6         6               0.757         0.690         0.703
+  7         7               0.838         0.797         0.743
+  8         8               0.877         0.835         0.800
+  9         9               0.938 *         0.890         0.830
+  10        10              0.955         0.917 *         0.868
+  12        12              0.985         0.975         0.925 *
+  14        14              1.000         0.990         0.968
+  16        16              1.000         1.000         0.990
+
+  first count to reach 0.90:
+    h=0.00 -> 9 adapters  (train 3 new)
+    h=0.30 -> 10 adapters  (train 4 new)
+    h=0.50 -> 12 adapters  (train 6 new)
+
+  ⛔ Size on the h>0 column. The h=0 column is the optimistic model whose assumption — every pair closes by the same delta — is the one
+     known to be wrong.
+
+  wrote runs\act2\adapter_sizing.json

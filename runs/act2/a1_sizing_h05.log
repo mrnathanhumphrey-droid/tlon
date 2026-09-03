@@ -1,0 +1,57 @@
+  ⚠ replicates overridden: measured 7 -> design 28
+A1 DETECTION FLOOR -- planted convergence, real estimator
+  measured off the real run (12 pairs):
+    within-speaker replicate sd : 0.1056 ka
+    grand mean force:ka         : 0.4641
+    replicates per cloud        : 28
+  frozen ruler (cold table):
+    between-build sd            : 0.2454 ka
+  design: 6 pairs / 6 adapters, balanced ring, families alternating
+    s20620|t30001 t30001|s20621 s20621|t30002 t30002|s20622 s20622|t30003 t30003|s20620
+  400 sims x 1000 bootstrap per delta
+
+  delta ka   in sd units       power wrong-side
+  0.000      0.000             0.020      0.025
+  0.013      0.051             0.050      0.000
+  0.025      0.102             0.130      0.000
+  0.037      0.153             0.237      0.000
+  0.050      0.204             0.388      0.000
+  0.075      0.306             0.632      0.000
+  0.100      0.408             0.745      0.000
+  0.150      0.611             0.780      0.000
+  0.200      0.815             0.787      0.000
+  0.300      1.223             0.792      0.000
+  0.400      1.630             0.792      0.000
+  COMPLETE   (gap -> 0)        0.792      0.000
+
+  FLOOR_ka: DOES NOT EXIST AT THIS DESIGN.
+  Power CEILING at complete convergence = 0.792, below the 0.80 target.
+  => the registered 6-pair/6-adapter design cannot clear its own
+     gate even if the two speakers converge COMPLETELY.
+  false-positive rate at delta=0: 0.020 (nominal 0.025 one-sided)
+
+  ADAPTERS NEEDED -- power at COMPLETE convergence, ring design
+  ⛔ clusters = ADAPTERS. More pairs from the same adapters do not buy power.
+  adapters   pairs       power
+  6          6           0.782
+  8          8           0.943  <= first to clear
+  10         10          0.985
+  12         12          1.000
+  14         14          1.000
+  18         18          1.000
+  24         24          1.000
+
+  ON DISK: 7 adapters. NEEDED for 80% power at COMPLETE convergence: 8
+
+  REPLICATES PER CLOUD -- power at COMPLETE convergence
+  adapters   reps          power
+  6          7             0.615
+  6          14            0.700
+  6          28            0.823
+  6          56            0.850
+  7          7             0.698
+  7          14            0.805
+  7          28            0.873
+  7          56            0.948
+
+  wrote runs\act2\a1_sizing_h05.json

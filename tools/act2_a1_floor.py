@@ -130,7 +130,7 @@ def measure_real_structure():
             "n_pairs_real": len(pairs)}
 
 
-def one_run(rng, s, delta, design):
+def one_run(rng, s, delta, design, propensity_sd=0.0):
     """Simulate ONE positive-control run at planted convergence `delta` (ka).
 
     ⛔ `delta` is the amount the two speakers' MARGINAL CENTROIDS close by in the
@@ -149,11 +149,20 @@ def one_run(rng, s, delta, design):
 
     deltas, adapters = [], []
     for x, y in design:
+        # ⛔⛔ THE `h` TERM THE SIMULATION ORIGINALLY OMITTED. Every pair closing
+        # by the SAME delta is the assumption that made this model optimistic:
+        # real adapters may differ in HOW MUCH they converge, not only in where
+        # they start. `propensity_sd` gives each pair its own closure, drawn
+        # log-normally so it stays positive, with the same mean.
+        d_pair = delta
+        if propensity_sd > 0 and delta != FULL:
+            d_pair = delta * float(rng.lognormal(-0.5 * propensity_sd ** 2,
+                                                 propensity_sd))
         gap = mu[y] - mu[x]
         # ⛔ Closure is capped at |gap|/2 per speaker: they meet, they do not
         # cross. `delta=inf` is therefore COMPLETE convergence, not an infinite
         # effect — it is this design's ceiling.
-        step = min(delta / 2.0, abs(gap) / 2.0) * np.sign(gap)
+        step = min(d_pair / 2.0, abs(gap) / 2.0) * np.sign(gap)
         d = pair_delta(cloud(mu[x] + step), cloud(mu[y] - step),   # LIVE: closed
                        cloud(mu[x]), cloud(mu[y]),                 # YOKED: as-is
                        s["scale"])
@@ -162,7 +171,7 @@ def one_run(rng, s, delta, design):
     return deltas, adapters
 
 
-def power_at(delta, s, *, sims, boot, seed, design):
+def power_at(delta, s, *, sims, boot, seed, design, propensity_sd=0.0):
     """Fraction of runs whose clustered CI excludes zero ON THE COUPLING SIDE.
 
     ⛔ Sign matters: an interval excluding zero from ABOVE is a divergence
@@ -172,7 +181,7 @@ def power_at(delta, s, *, sims, boot, seed, design):
     rng = np.random.default_rng(seed)
     hits = wrong_side = 0
     for i in range(sims):
-        deltas, adapters = one_run(rng, s, delta, design)
+        deltas, adapters = one_run(rng, s, delta, design, propensity_sd)
         cb = cluster_bootstrap(deltas, adapters, n_boot=boot, seed=int(rng.integers(1 << 31)))
         lo, hi = cb["ci"]
         if hi < 0:
@@ -192,6 +201,9 @@ def main() -> int:
                     help="run the delta curve on a ring over N REAL builds")
     ap.add_argument("--reps", type=int, default=None,
                     help="replicates per cloud (default: as measured, 7)")
+    ap.add_argument("--propensity-sd", type=float, default=0.0,
+                    help="per-pair convergence-propensity heterogeneity (the h "
+                         "term the first version of this model omitted)")
     ap.add_argument("--no-sweeps", action="store_true",
                     help="delta curve + ceiling only")
     a = ap.parse_args()
@@ -232,7 +244,8 @@ def main() -> int:
 
     # ── the ceiling ────────────────────────────────────────────────────────
     ceil_p, ceil_w = power_at(FULL, s, sims=a.sims, boot=a.boot,
-                              seed=a.seed, design=design)
+                              seed=a.seed, design=design,
+                              propensity_sd=a.propensity_sd)
     print("  %-10s %-14s %8.3f %10.3f" % ("COMPLETE", "(gap -> 0)", ceil_p, ceil_w))
 
     print()
@@ -257,7 +270,8 @@ def main() -> int:
         print("  %-10s %-8s %8s" % ("adapters", "pairs", "power"))
         for n in ADAPTER_SWEEP:
             p, _w = power_at(FULL, s, sims=a.sims, boot=a.boot,
-                             seed=a.seed + n, design=ring(n))
+                             seed=a.seed + n, design=ring(n),
+                             propensity_sd=a.propensity_sd)
             sweep.append({"n_adapters": n, "n_pairs": n, "power_complete": p})
             flag = ""
             if p >= TARGET_POWER and need is None:
@@ -282,7 +296,8 @@ def main() -> int:
                 s_r = dict(s, n_reps=r)
                 p, _w = power_at(FULL, s_r, sims=a.sims, boot=a.boot,
                                  seed=a.seed + 1000 * n_ad + r,
-                                 design=ring(n_ad))
+                                 design=ring(n_ad),
+                                 propensity_sd=a.propensity_sd)
                 reps_sweep.append({"n_adapters": n_ad, "n_reps": r,
                                    "power_complete": p})
                 print("  %-10d %-10d %8.3f" % (n_ad, r, p))
@@ -298,6 +313,7 @@ def main() -> int:
          "power_ceiling_complete_convergence": ceil_p,
          "adapter_sweep_at_complete_convergence": sweep,
          "replicate_sweep_at_complete_convergence": reps_sweep,
+         "propensity_sd": a.propensity_sd,
          "monte_carlo_se_note": "power se = sqrt(p(1-p)/sims); ~0.02 at p=0.8, sims=400",
          "adapters_on_disk": 7,
          "adapters_needed_for_target": need,
