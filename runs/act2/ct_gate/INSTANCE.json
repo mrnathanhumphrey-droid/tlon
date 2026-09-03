@@ -1,0 +1,14 @@
+{
+  "instance_id": "90405e793bf343a88ed3ca23c8e67e24",
+  "name": "tlon-ct-gate",
+  "instance_type": "gpu_1x_a100_sxm4",
+  "region": "us-west-2",
+  "price_usd_per_hour": 1.99,
+  "launched_utc": "2026-09-03T23:27:37.586148Z",
+  "purpose": "GATE: train ct-s20624 and read the MODEL-side lag profile. Prereg PREREG_CONTENT_TRANSIENT_MODEL_GATE_2026_09_03.md LOCK abde6124.",
+  "code_pinned_at": "92dbf3a",
+  "expected_gpu_h": 4.3,
+  "expected_usd": 8.6,
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance 90405e793bf343a88ed3ca23c8e67e24",
+  "NOTE": "This file exists because s20620 was lost by having no durable record of what lived on a box. The instance id is the first thing that must not exist only in a terminal scrollback."
+}
