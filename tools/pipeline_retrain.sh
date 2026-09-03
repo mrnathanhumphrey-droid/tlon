@@ -74,7 +74,9 @@ PY
 # ── 2 · CORPORA ─────────────────────────────────────────────────────────────
 step corpora
 for S in $NEW; do
-  $PY tools/act2_build_multiturn.py --chains 1445 --multiturn-fraction 0.5 \
+  # ⛔ --recipe is REQUIRED and EXPLICIT: this batch is the factorial's
+  #    CONTROL arm, and an implicit recipe is an adapter in no cell.
+  $PY tools/act2_build_multiturn.py --recipe content-free --chains 1445 --multiturn-fraction 0.5 \
     --map derived --seed $S --out $ROOT/corpus_s$S 2>&1 | tee -a $LOG
 done
 # ⛔ These seeds are NEW, so there is no prior sha to pin against. Record the

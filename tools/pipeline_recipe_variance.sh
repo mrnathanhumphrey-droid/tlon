@@ -61,7 +61,8 @@ python -m pytest tests/ -q 2>&1 | tee -a $LOG | tail -3
 # ── 1 · THE THREE CORPORA, REBUILT AND PINNED ──────────────────────────────
 step corpora
 for S in $SEEDS; do
-  python tools/act2_build_multiturn.py --chains 1445 --multiturn-fraction 0.5 \
+  # ⛔ --recipe REQUIRED: this pipeline builds the CONTROL arm.
+  python tools/act2_build_multiturn.py --recipe content-free --chains 1445 --multiturn-fraction 0.5 \
     --map derived --seed $S --out $ROOT/corpus_s$S 2>&1 | tee -a $LOG
 done
 

@@ -38,6 +38,8 @@ from tlon.act2 import schema_bridge as SB                      # noqa: E402
 from tlon.discourse import force_map as FM                     # noqa: E402
 from tlon.discourse import multiturn as MT                     # noqa: E402
 from tlon.discourse import provocation as PV                   # noqa: E402
+from tlon.discourse import transient as TR                     # noqa: E402
+from tlon.grammar import classes as C                          # noqa: E402
 from tlon.grammar.parse import parse, render                   # noqa: E402
 
 
@@ -82,6 +84,19 @@ def main() -> int:
                     help="⛔ REQUIRED to build a stipulated corpus. An explicit "
                          "second key, so a probe corpus cannot be produced by a "
                          "typo in --map.")
+    # ⛔⛔ THE FACTORIAL'S CORPUS AXIS. REQUIRED, NO DEFAULT — this is the
+    # variable the whole two-arm design turns on, and a default would make every
+    # historical build's recipe a matter of inference rather than record.
+    ap.add_argument("--recipe", required=True,
+                    choices=(TR.CONTENT_FREE, TR.CONTENT_TRANSIENT),
+                    help="content-free = the CONTROL arm (response independent "
+                         "of its provocation). content-transient = the FIX "
+                         "(response provoked by its provocation; that content "
+                         "dies at the end of the turn).")
+    ap.add_argument("--responsiveness", type=float,
+                    default=TR.RESPONSIVENESS_LEDGERED,
+                    help="content-transient only: how often a response must "
+                         "echo its provocation. Ledgered at 1.0.")
     a = ap.parse_args()
 
     if not 0.0 < a.multiturn_fraction < 1.0:
@@ -104,8 +119,15 @@ def main() -> int:
     if not fmap.is_stipulated:
         fmap.assert_derived("a non-probe corpus")
 
-    print(f"MULTI-TURN CORPUS · Markov depth-1 · content-free · "
+    print(f"MULTI-TURN CORPUS · Markov depth-1 · RECIPE={a.recipe} · "
           f"MULTITURN_FRACTION={a.multiturn_fraction}")
+    if a.recipe == TR.CONTENT_TRANSIENT:
+        print("  ⭐ CONTENT-TRANSIENT: the response is provoked BY its "
+              "provocation's content,\n     and that content dies at the end of "
+              "the turn. Perceive, respond, release.")
+    else:
+        print("  ⭐ CONTENT-FREE (CONTROL ARM): the response is independent of "
+              "its provocation.")
     print(fmap.describe())
     print(f"\n  separation (max reachable fidelity band): "
           f"{fmap.separation():.4f}")
@@ -114,10 +136,46 @@ def main() -> int:
               f"common uniform rows = {list(FM.COMMON_UNIFORM_ROWS)}")
 
     pool_pairs = C1.build(a.pool_n, seed=a.seed)
-    chains = MT.build(a.chains, turns=a.turns, pairs=pool_pairs, seed=a.seed,
-                      fmap=fmap)
+    # ⛔⛔ ONE KNOB. Both arms run the SAME force map, the SAME seed and the SAME
+    # pool; the only thing `--recipe` changes is whether the painting is drawn
+    # near its provocation or from the whole space. `build_transient` splits the
+    # RNG so the FORCE sequence is byte-identical across recipes at a given seed
+    # -- without that split, content-free-seed-X and content-transient-seed-X
+    # would differ in two variables and no contrast between them would be
+    # attributable to content.
+    #
+    # ⛔⛔ BOTH ARMS GO THROUGH ONE GENERATOR, AND THE CONTROL IS `responsiveness=0`.
+    # Routing content-free through `MT.build` instead LOOKS equivalent — the draw
+    # is uniform either way — but `MT.build` takes force AND content from a SINGLE
+    # RNG stream, so its force sequence is perturbed by its content draws and the
+    # two arms at one seed no longer share a force sequence. Measured: the
+    # force-transition multisets did NOT match. Distributionally the same, as a
+    # PAIRED design not the same, and the pairing is the reason for matched seeds.
+    #
+    # ⚠️ CONSEQUENCE, RECORDED RATHER THAN PAPERED OVER: every adapter built
+    # before this change (s20621-23, t30001-3, and the s20624-29 batch now
+    # cooking) used the legacy single-stream path. Those pair with a
+    # content-transient build BY SEED but NOT by force sequence — an unbiased
+    # contrast (same map, same stationary distribution) that is unpaired, so it
+    # carries more variance. New builds on both arms are exactly paired.
+    chains = TR.build_transient(
+        a.chains, turns=a.turns, pairs=pool_pairs, seed=a.seed,
+        responsiveness=(a.responsiveness if a.recipe == TR.CONTENT_TRANSIENT
+                        else 0.0),
+        fmap=fmap, verify=False)
     # refuses BEFORE writing
     fair = MT.check_force_pair_fairness(chains, fmap=fmap)
+
+    # ⛔⛔ THE RECIPE LABEL IS A MEASURED CLAIM, NOT A FLAG THAT WAS TYPED. Both
+    # arms are verified on the same instrument, and a mislabelled corpus is
+    # refused here rather than discovered as a shrunken effect months later.
+    lex_r = C.load()["classes"]["R"]
+    trans = TR.verify_recipe(chains, a.recipe, lex_r=lex_r, seed=a.seed)
+    print("\n  ✅ recipe verified as %s" % trans["verdict"])
+    print("     lag profile " + "  ".join(
+        "lag%d %.4f" % (k, v) for k, v in sorted(trans["lag_profile"].items())))
+    print("     z vs permutation null " + "  ".join(
+        "lag%d %+.2f" % (k, v) for k, v in sorted(trans["z"].items())))
     print(f"\n  ✅ force-pair fairness: worst live cell {fair['worst_cell']} at "
           f"{fair['worst_ratio']:.3f} of its row share "
           f"(floor {fair['floor']:.4f})")
@@ -197,6 +255,20 @@ def main() -> int:
 
     counts = MT.transition_counts(chains)
     manifest = {
+        # ⛔⛔ THE RECIPE IS THE FIRST FIELD, ABOVE EVEN THE MAP. It is the
+        # factorial's corpus axis, and an adapter whose recipe is ambiguous is an
+        # adapter that belongs to no cell — it cannot be paired with its matched
+        # seed in the other arm, and it silently degrades the matrix into a pile.
+        "recipe": a.recipe,
+        "recipe_responsiveness": (a.responsiveness
+                                  if a.recipe == TR.CONTENT_TRANSIENT else None),
+        "recipe_VERIFIED": trans["verdict"],
+        "recipe_lag_profile": trans["lag_profile"],
+        "recipe_z_vs_permutation_null": trans["z"],
+        "recipe_null": trans["null"],
+        # ⭐ The matched-seed rule, recorded IN the artifact so the pairing is a
+        # property of the corpus rather than of somebody's notes.
+        "factorial_pair_key": f"seed{a.seed}",
         # ⛔⛔ THE MAP'S IDENTITY IS THE FIRST FIELD IN THE MANIFEST, AND THE
         # STIPULATION IS A BOOLEAN NOT A FOOTNOTE. A corpus that cannot say
         # which map made it is a corpus nobody can attribute a result to.
@@ -225,8 +297,21 @@ def main() -> int:
         "force_pair_counts": {f"{a_}->{b_}": n for (a_, b_), n in
                               sorted(counts.items())},
         "fairness": {k: v for k, v in fair.items() if k != "counts"},
-        "NOT_IN_THIS_CORPUS": [
-            "content-adjacency of any kind (C-D2: association is total)",
+        # ⛔⛔ RECIPE-DEPENDENT, AND IT HAS TO BE. This list previously asserted
+        # "content-adjacency of any kind" was absent — TRUE for content-free and
+        # FLATLY FALSE for content-transient, whose whole purpose is within-pair
+        # content adjacency. A fixed list here would have shipped a manifest that
+        # denied the corpus's defining property, and the caveat would have
+        # decayed exactly where it is least recoverable: inside the artifact that
+        # outlives everyone's memory of the build.
+        "NOT_IN_THIS_CORPUS": (
+            ["content-adjacency of any kind (C-D2: association is total)"]
+            if a.recipe == TR.CONTENT_FREE else
+            ["CROSS-PAIR content adjacency (content dies at the end of its "
+             "turn; within-pair adjacency is PRESENT and is this recipe's "
+             "defining property — see recipe_lag_profile)",
+             "own-chain content persistence (lag 2 is at the permutation null)"]
+        ) + [
             "directional evidential adjacency (empirical, the arena's target)",
             "non-forced force-map cells (uniform, not guessed)",
             "the base convention table (§8.1, deferred — base_convention raises)",
