@@ -285,3 +285,64 @@ def test_the_force_machinery_is_UNCHANGED_between_recipes(rig):
     assert [t.force for t in a] == [t.force for t in b], \
         "responsiveness perturbed the force sequence — the arms differ in two " \
         "variables and no contrast between them is attributable"
+
+
+# ── 5 · ⛔⛔ the corpus must rebuild from its seed, in ANY process ──────────
+
+def test_the_generator_is_DETERMINISTIC_ACROSS_HASH_SEEDS(rig):
+    """⛔⛔ A CORPUS THAT CANNOT BE REBUILT VOIDS EVERY sha PIN IN THE PROJECT.
+
+    `responsive_choice` iterated `provocation_roots - barred` -- a FROZENSET --
+    and set iteration order follows Python's randomised string hashing. The same
+    seed in a different process produced a different corpus. It escaped notice
+    because the corpus is VALID either way: it passes the recipe gate
+    identically, so nothing looks wrong except that it does not reproduce.
+
+    Measured before the fix: PYTHONHASHSEED 1 -> 526a490bb9674ce1,
+    2 -> 8674d1f2629cfaac, and 1 again -> 526a490bb9674ce1.
+
+    ⭐ THIS TEST CANNOT SEE THE BUG IN-PROCESS. Hash randomisation is fixed for
+    the life of an interpreter, so it must spawn CHILDREN with different
+    PYTHONHASHSEED values -- an in-process assertion would pass against the
+    broken code.
+    """
+    import hashlib
+    import os
+    import subprocess
+
+    script = (
+        "import sys, hashlib; sys.path.insert(0, %r)\n"
+        "from tlon.act2 import corpus as C1\n"
+        "from tlon.discourse.transient import build_transient\n"
+        # ⛔ Sized so check_force_pair_fairness is satisfied; a smaller build
+        # starves a live cell and the child dies on COVERAGE, which would look
+        # like a determinism failure and is a different thing entirely.
+        "ch = build_transient(200, turns=10, pairs=C1.build(300, seed=20624),\n"
+        "                     seed=20624, responsiveness=1.0, verify=False)\n"
+        "print(hashlib.sha256('|'.join(t.surface for c in ch for t in c)"
+        ".encode()).hexdigest()[:16])\n"
+        % str(pathlib.Path(__file__).resolve().parents[1])
+    )
+    sigs = []
+    for hseed in ("1", "2", "12345"):
+        env = dict(os.environ, PYTHONHASHSEED=hseed, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([sys.executable, "-c", script], capture_output=True,
+                           text=True, env=env)
+        assert r.returncode == 0, r.stderr[-600:]
+        sigs.append(r.stdout.strip())
+    assert len(set(sigs)) == 1, (
+        "the corpus depends on PYTHONHASHSEED: %s. Same seed, different "
+        "process, different corpus -- every sha pin in the project is void."
+        % dict(zip(("1", "2", "12345"), sigs)))
+
+
+def test_no_BARE_SET_ITERATION_feeds_a_random_draw():
+    """⛔ The mechanism, guarded directly: any set fed to an ordered operation
+    must be sorted first. A future edit that drops `sorted` reintroduces a
+    nondeterminism that no in-process test can see."""
+    import inspect
+    from tlon.discourse import transient as T
+    src = inspect.getsource(T.responsive_choice)
+    assert "sorted(" in src, \
+        "responsive_choice no longer sorts its candidate roots; set iteration " \
+        "order is hash-randomised and the corpus stops reproducing"

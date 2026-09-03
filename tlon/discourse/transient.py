@@ -155,7 +155,20 @@ def responsive_choice(idx_force, pool_force, provocation_roots, barred,
                 "reports success")
         return not (roots_of(s, lex_r) & barred)
 
-    offerable = [r for r in (provocation_roots - barred) if r in idx_force]
+    # ⛔⛔ `sorted`, NOT bare set iteration. `provocation_roots - barred` is a
+    # frozenset, and set iteration order follows Python's RANDOMISED string
+    # hashing -- so the candidate order, and therefore `rng.shuffle` and every
+    # draw after it, differed between processes. Same seed, different corpus.
+    #
+    # Measured: the same build at PYTHONHASHSEED=1 and =2 produced different
+    # chains, and reproduced within a hash seed. It escaped notice because the
+    # corpus is VALID either way -- it passes the recipe gate identically -- so
+    # nothing was wrong with it except that it could not be rebuilt. This
+    # project pins corpora by sha (`EXPECT_TRAIN=263fe3c8…`, "rebuilt from seed
+    # and sha-checked"), and an unreproducible corpus silently voids that.
+    #
+    # ⭐ The content-FREE arm was never affected: it draws from a list.
+    offerable = sorted(r for r in (provocation_roots - barred) if r in idx_force)
     fallback = [s for s in pool_force if clean(s)] or pool_force
     if not offerable:
         return rng.choice(fallback), None

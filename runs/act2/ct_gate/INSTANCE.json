@@ -11,5 +11,15 @@
   "expected_usd": 8.6,
   "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance 90405e793bf343a88ed3ca23c8e67e24",
   "NOTE": "This file exists because s20620 was lost by having no durable record of what lived on a box. The instance id is the first thing that must not exist only in a terminal scrollback.",
-  "ip": "129.146.33.67"
+  "ip": "129.146.33.67",
+  "corpus_sha256_train": "7611772c436fdc8201ec58c904946b6f1903f76aad8b33cb2d2ee06e9cb37e47",
+  "corpus_sha256_eval": "615fcc7d6dd76441a3139d7cea31186781888478d183c2b6c83ff345b821a9b7",
+  "corpus_rows_train": 60105,
+  "corpus_recipe_verified": {
+    "lag1_z": 545.29,
+    "lag2_z": -12.54,
+    "lag3_z": -2.03,
+    "lag4_z": 2.28
+  },
+  "CORPUS_IS_PRE_DETERMINISM_FIX": "This corpus was built BEFORE the PYTHONHASHSEED fix in transient.py, so it is one of a family of valid draws and CANNOT be rebuilt from its seed. It is a legitimate content-transient corpus (gate-verified above) and it answers the GATE question, which asks whether the property transmits to a model at all -- not which draw. \u26d4 It must NOT be treated as a pinnable population member: if the gate returns GO, the batch is rebuilt with the deterministic generator and ct-s20624 is rebuilt with it."
 }
