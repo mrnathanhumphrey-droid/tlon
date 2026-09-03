@@ -8,8 +8,8 @@
 # measured against S_combined = 0.1549, where seed drove BOTH corpus and trainer.
 set -uo pipefail
 trap 'rc=$?; if [ $rc -ne 0 ]; then
-        echo "⛔ FAILED at stage: $STAGE (rc=$rc)" | tee -a $LOG
-        echo "$STAGE rc=$rc" > ~/FAILED
+        echo "⛔ FAILED at stage: ${STAGE:-<before init>} (rc=$rc)" | tee -a "${LOG:-/dev/null}"
+        echo "${STAGE:-<before init>} rc=$rc" > ~/FAILED
       fi' EXIT
 set -e
 

@@ -32,6 +32,14 @@ from tlon.discourse import transient as TR                      # noqa: E402
 
 PIPELINES = ("tools/pipeline_retrain.sh", "tools/pipeline_recipe_variance.sh")
 
+#: ⛔⛔ THE SCOPE WIDENED, SO THE RULE IS RE-DERIVED RATHER THAN STRETCHED. The
+#: fragile-handler defect was found in one pipeline and was present in SEVEN of
+#: eight — including `pipeline_positive_control.sh`, which had not run yet. A
+#: guard scoped to the file where a defect was noticed only ever catches that
+#: file again.
+ALL_PIPELINES = sorted(p.as_posix()
+                       for p in (_ROOT / "tools").glob("pipeline_*.sh"))
+
 
 # ── 1 · matched seeds, matched forces ──────────────────────────────────────
 
@@ -109,10 +117,43 @@ def test_every_pipeline_names_its_recipe_EXPLICITLY(path):
         if "act2_build_multiturn.py" in line and not line.strip().startswith("#"):
             assert "--recipe" in line, \
                 "%s invokes the corpus builder without naming a recipe" % path
-            assert any(r in line for r in TR.RECIPES)
+            if any(r in line for r in TR.RECIPES):
+                break                       # a literal recipe — unambiguous
+            # ⭐ A SHELL VARIABLE IS ALSO FINE, BUT ONLY IF IT HAS NO DEFAULT.
+            # `--recipe $RECIPE` with `RECIPE=${RECIPE:?…}` is stronger than a
+            # literal: one pipeline serves both arms and neither can be reached
+            # by forgetting to set it. `RECIPE=${RECIPE:-content-free}` would be
+            # the opposite — a default that silently files a batch in an arm.
+            m = re.search(r"--recipe\s+\$\{?(\w+)", line)
+            assert m, "%s: --recipe has neither a literal nor a variable" % path
+            var = m.group(1)
+            assert re.search(r"^%s=\$\{%s:\?" % (var, var), src, re.M), (
+                "%s: --recipe uses $%s, but %s is not declared required "
+                "(${%s:?...}). A defaulted recipe files a batch in an arm "
+                "nobody chose." % (path, var, var, var))
             break
     else:
         pytest.skip("%s does not build a corpus" % path)
+
+
+@pytest.mark.parametrize("path", ALL_PIPELINES)
+def test_an_EXIT_trap_cannot_depend_on_variables_set_after_it(path):
+    """⛔⛔ The trap is armed before $STAGE/$LOG exist. Under `set -u` a bare
+    $STAGE makes the HANDLER fail on any early exit -- and the handler is the
+    only thing that reports why the run stopped, so its own failure erases the
+    diagnosis exactly when there is one to report."""
+    src = (_ROOT / path).read_text(encoding="utf-8")
+    # ⛔ The handler is sometimes an inline `trap '...' EXIT` and sometimes a
+    # `finish()` function -- scoping this to the inline form would have missed
+    # pipeline_act2.sh, which carries the same defect in the other shape.
+    for line in src.splitlines():
+        if "FAILED at stage" not in line:
+            continue
+        assert "${STAGE:" in line, (
+            "%s: the failure handler dereferences $STAGE without a default. It "
+            "is armed BEFORE $STAGE exists, so under `set -u` the handler dies "
+            "on an early exit -- erasing the diagnosis exactly when there is "
+            "one to report. Offending line: %s" % (path, line.strip()))
 
 
 @pytest.mark.parametrize("path", PIPELINES)

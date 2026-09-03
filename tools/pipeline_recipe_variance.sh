@@ -11,8 +11,8 @@
 # a switch, not a cap, and the unspecified third case cost ~$13.)
 set -uo pipefail
 trap 'rc=$?; if [ $rc -ne 0 ]; then
-        echo "⛔ FAILED at stage: $STAGE (rc=$rc)" | tee -a $LOG
-        echo "$STAGE rc=$rc" > ~/FAILED
+        echo "⛔ FAILED at stage: ${STAGE:-<before init>} (rc=$rc)" | tee -a "${LOG:-/dev/null}"
+        echo "${STAGE:-<before init>} rc=$rc" > ~/FAILED
       fi' EXIT
 set -e
 

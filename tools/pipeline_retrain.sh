@@ -19,13 +19,36 @@
 # build is lost; GPU training is not bit-deterministic; a substitute under the
 # lost label is the caveat-in-the-name failure.
 set -uo pipefail
+# ⛔ THE TRAP IS ARMED BEFORE $STAGE/$LOG EXIST, so it must not depend on them.
+# Under `set -u` a bare $STAGE here makes the handler ITSELF fail on any early
+# exit — and the handler is the only thing that reports why the run stopped, so
+# its failure erases the diagnosis exactly when there is one.
 trap 'rc=$?; if [ $rc -ne 0 ]; then
-        echo "⛔ FAILED at stage: $STAGE (rc=$rc)" | tee -a $LOG
-        echo "$STAGE rc=$rc" > ~/FAILED
+        echo "⛔ FAILED at stage: ${STAGE:-<before init>} (rc=$rc)" | tee -a "${LOG:-/dev/null}"
+        echo "${STAGE:-<before init>} rc=$rc" > ~/FAILED
       fi' EXIT
 set -e
 
-ROOT=runs/act2/retrain12
+# ⛔⛔ THE RECIPE IS REQUIRED AND HAS NO DEFAULT. It is the factorial's corpus
+# axis, and a defaulted recipe makes a whole batch's arm a matter of inference
+# rather than record. One pipeline serves BOTH arms on purpose: a second copy
+# for the transient arm would be two spellings of one procedure, free to drift,
+# and then a difference between the arms could be the procedure rather than the
+# recipe. Everything below is held identical across arms except `--recipe`.
+#
+#   RECIPE=content-free      bash tools/pipeline_retrain.sh     # the CONTROL
+#   RECIPE=content-transient bash tools/pipeline_retrain.sh     # the FIX
+#
+RECIPE=${RECIPE:?⛔ RECIPE is required: content-free | content-transient}
+case "$RECIPE" in
+  content-free)      RCODE=cf ;;
+  content-transient) RCODE=ct ;;
+  *) echo "⛔⛔ unknown RECIPE '$RECIPE' — valid: content-free, content-transient"; exit 2 ;;
+esac
+
+# ⭐ Separate roots, so the two arms can never write into each other's tree and
+# a directory listing says which arm it is.
+ROOT=${ROOT:-runs/act2/retrain12_$RCODE}
 mkdir -p $ROOT/logs
 LOG=$ROOT/pipeline_retrain.log
 STAGE=init
@@ -36,7 +59,11 @@ PY=${PY:-$HOME/venv/bin/python}
 MODEL=Qwen/Qwen2.5-7B-Instruct
 SEQ=384; BATCH=4; ACCUM=4          # recipe_var, verified
 TURNS=40; N_PER_BUILD=14           # asym_recert solo, verified
+# ⛔⛔ THE SAME SEEDS IN BOTH ARMS. This literal list IS the matched-pair rule:
+# cf-s20624 and ct-s20624 must exist and differ in exactly one variable. Change
+# it in one arm only and the factorial silently becomes a pile.
 NEW="20624 20625 20626 20627 20628 20629"
+echo "═══ RECIPE=$RECIPE ($RCODE) · seeds: $NEW · root $ROOT ═══"
 
 # Measured marginals from the runs that made the survivors:
 #   train 12,960 s · flocal 495 s · solo 2,143 s  = 15,598 s per adapter.
@@ -74,17 +101,17 @@ PY
 # ── 2 · CORPORA ─────────────────────────────────────────────────────────────
 step corpora
 for S in $NEW; do
-  # ⛔ --recipe is REQUIRED and EXPLICIT: this batch is the factorial's
-  #    CONTROL arm, and an implicit recipe is an adapter in no cell.
-  $PY tools/act2_build_multiturn.py --recipe content-free --chains 1445 --multiturn-fraction 0.5 \
-    --map derived --seed $S --out $ROOT/corpus_s$S 2>&1 | tee -a $LOG
+  # ⛔ --recipe is REQUIRED and EXPLICIT. The builder verifies the label in BOTH
+  #    directions and refuses a corpus that does not measure as what it claims.
+  $PY tools/act2_build_multiturn.py --recipe $RECIPE --chains 1445 --multiturn-fraction 0.5 \
+    --map derived --seed $S --out $ROOT/corpus_$RCODE-s$S 2>&1 | tee -a $LOG
 done
 # ⛔ These seeds are NEW, so there is no prior sha to pin against. Record the
 # shas so the NEXT run can pin, rather than pretending this one was pinned.
 step corpus_record
 for S in $NEW; do
-  echo "  corpus_s$S train $(sha256sum $ROOT/corpus_s$S/train.jsonl | cut -c1-16)" | tee -a $LOG
-  echo "  corpus_s$S eval  $(sha256sum $ROOT/corpus_s$S/eval.jsonl  | cut -c1-16)" | tee -a $LOG
+  echo "  corpus_$RCODE-s$S train $(sha256sum $ROOT/corpus_$RCODE-s$S/train.jsonl | cut -c1-16)" | tee -a $LOG
+  echo "  corpus_$RCODE-s$S eval  $(sha256sum $ROOT/corpus_$RCODE-s$S/eval.jsonl  | cut -c1-16)" | tee -a $LOG
 done
 
 # ── 3 · WATCHDOG BEFORE ANY GPU TIME ────────────────────────────────────────
@@ -106,30 +133,36 @@ echo "  ⏱ setup wall (one-time): $((SETUP_END-T_START)) s" | tee -a $LOG
 # ── 4 · TRAIN · GATE · MEASURE ──────────────────────────────────────────────
 N=0
 for S in $NEW; do
-  N=$((N+1)); A=$ROOT/adapter_s$S
+  # ⭐ THE CELL IS IN THE FILENAME. `adapter_s20624` cannot say which arm it is
+  # in; `adapter_ct-s20624` can, and the matrix is rebuilt from exactly these
+  # strings once the scrollback is gone.
+  N=$((N+1)); CELL=$RCODE-s$S; A=$ROOT/adapter_$CELL
   T0=$(date +%s)
 
-  step train_s$S
+  step train_$CELL
   $PY tools/act2_finetune.py --model $MODEL --out $A \
-    --corpus $ROOT/corpus_s$S --seq $SEQ --batch $BATCH --accum $ACCUM \
+    --corpus $ROOT/corpus_$RCODE-s$S --seq $SEQ --batch $BATCH --accum $ACCUM \
     --seed $S 2>&1 | tee -a $LOG
 
-  step flocal_s$S
+  step flocal_$CELL
   # ⛔ F-LOCAL is the F1 gate: cardless, unconstrained. A build that does not
   # clear it is not a fluent speaker and must not enter the population.
   $PY tools/act2_flocal.py --model $MODEL --adapter $A \
     --n 64 --n-comp 64 2>&1 | tee -a $LOG
 
-  step solo_s$S
+  step solo_$CELL
   # ⭐ THE RULER'S OWN PROCEDURE, matching ASYM_BUILDS exactly.
   for i in $(seq 1 $N_PER_BUILD); do
     $PY tools/act2_two_speaker_probe.py --model $MODEL \
       --adapter-a $A --no-injections --turns $TURNS \
-      --out $ROOT/logs/s${S}_solo_$i.json 2>&1 | tee -a $LOG
+      --out $ROOT/logs/${CELL}_solo_$i.json 2>&1 | tee -a $LOG
   done
 
   T1=$(date +%s); W=$((T1-T0))
-  echo "  ⏱ s$S total wall: $W s (measured reference 15598 s)" | tee -a $LOG
+  echo "  ⏱ $CELL total wall: $W s (measured reference 15598 s)" | tee -a $LOG
+  # ⛔ The factorial fields ride WITH the artifact, so an adapter pulled off a
+  # dead box still knows its cell.
+  $PY -c "import json,sys; sys.path.insert(0,'.'); from tlon.act2 import factorial as F; print(json.dumps(F.entry('$CELL', recipe='$RECIPE', seed=$S, manifest=json.load(open('$ROOT/corpus_$RCODE-s$S/manifest.json'))), indent=2))"     > $A/factorial.json
   md5sum $A/adapter_model.safetensors | tee -a $ROOT/adapter_md5.txt
 
   if [ $N -eq 1 ]; then

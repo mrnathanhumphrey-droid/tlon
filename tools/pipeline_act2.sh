@@ -24,8 +24,8 @@ STAGE="init"
 finish() {
   rc=$?
   if [ $rc -ne 0 ]; then
-    echo "⛔ FAILED at stage: $STAGE (rc=$rc)" | tee -a $LOG
-    echo "$STAGE rc=$rc" > ~/FAILED
+    echo "⛔ FAILED at stage: ${STAGE:-<before init>} (rc=$rc)" | tee -a "${LOG:-/dev/null}"
+    echo "${STAGE:-<before init>} rc=$rc" > ~/FAILED
     rm -f ~/DONE
   fi
 }
