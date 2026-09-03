@@ -269,6 +269,21 @@ def main() -> int:
         # ⭐ The matched-seed rule, recorded IN the artifact so the pairing is a
         # property of the corpus rather than of somebody's notes.
         "factorial_pair_key": f"seed{a.seed}",
+        # ⛔⛔ THE GENERATOR'S IDENTITY, AND IT DECIDES A VARIANCE REGIME. The
+        # legacy path coupled force to content in one RNG stream, so its force
+        # sequence cannot match a partner's; the split-stream path holds force
+        # identical across recipes at a seed. A manifest with NO such field is
+        # therefore LEGACY — `factorial.generator_of` defaults that way on
+        # purpose, because defaulting an unlabelled corpus to the split-stream
+        # id would file the adapters whose pairing is UNKNOWN as the ones whose
+        # pairing is BEST.
+        "generator": TR.GENERATOR_SPLIT_STREAM,
+        "pairing_capability_side": TR.PAIRED_SEED_AND_FORCE,
+        "pairing_NOTE": (
+            "A PAIR is `seed+force` only if BOTH arms came off the split-stream "
+            "generator. One legacy side makes the whole pair `seed`-only: "
+            "unbiased (same map, same stationary distribution) but UNPAIRED, "
+            "so higher variance. s20621-23, t30001-3 and s20624-29 are legacy."),
         # ⛔⛔ THE MAP'S IDENTITY IS THE FIRST FIELD IN THE MANIFEST, AND THE
         # STIPULATION IS A BOOLEAN NOT A FOOTNOTE. A corpus that cannot say
         # which map made it is a corpus nobody can attribute a result to.

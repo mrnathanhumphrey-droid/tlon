@@ -20,6 +20,23 @@
           "sha256": "65ed7d1db703375126797b14aaf338ad60f2a46866988b609f439dd677212b4e",
           "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20621/adapter_config.json"
         }
+      },
+      "factorial": {
+        "seed": 20621,
+        "corpus_seed": 20621,
+        "trainer_seed": 20621,
+        "generator": "multiturn.build/1-stream/legacy",
+        "pairing_capability_side": "seed",
+        "factorial_pair_key": "seed20621",
+        "recipe": "content-free",
+        "recipe_source": "measured",
+        "within_pair_lag1": 0.04163,
+        "permutation_null_mean": 0.04258,
+        "permutation_null_sd": 0.00159,
+        "z_lag1": -0.6,
+        "n_provoke_rows": 15590,
+        "corpus_dir": "runs/act2/recipe_var/corpus_s20621",
+        "cell": "cf-s20621"
       }
     },
     {
@@ -36,6 +53,23 @@
           "sha256": "6c7037c762dc912ba5f2d61ca25bf48865559fff2ed869e2cc20838b53b5e444",
           "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20622/adapter_config.json"
         }
+      },
+      "factorial": {
+        "seed": 20622,
+        "corpus_seed": 20622,
+        "trainer_seed": 20622,
+        "generator": "multiturn.build/1-stream/legacy",
+        "pairing_capability_side": "seed",
+        "factorial_pair_key": "seed20622",
+        "recipe": "content-free",
+        "recipe_source": "measured",
+        "within_pair_lag1": 0.04223,
+        "permutation_null_mean": 0.04249,
+        "permutation_null_sd": 0.00152,
+        "z_lag1": -0.17,
+        "n_provoke_rows": 15583,
+        "corpus_dir": "runs/act2/recipe_var/corpus_s20622",
+        "cell": "cf-s20622"
       }
     },
     {
@@ -52,6 +86,23 @@
           "sha256": "dcd2cf9bf398df018b241db588a1ac878023f50c01e644cdc94262e3b8adb0ab",
           "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/s20623/adapter_config.json"
         }
+      },
+      "factorial": {
+        "seed": 20623,
+        "corpus_seed": 20623,
+        "trainer_seed": 20623,
+        "generator": "multiturn.build/1-stream/legacy",
+        "pairing_capability_side": "seed",
+        "factorial_pair_key": "seed20623",
+        "recipe": "content-free",
+        "recipe_source": "measured",
+        "within_pair_lag1": 0.04217,
+        "permutation_null_mean": 0.04221,
+        "permutation_null_sd": 0.00163,
+        "z_lag1": -0.03,
+        "n_provoke_rows": 15581,
+        "corpus_dir": "runs/act2/recipe_var/corpus_s20623",
+        "cell": "cf-s20623"
       }
     },
     {
@@ -68,6 +119,24 @@
           "sha256": "165c73559ba41d628b4a856b2867328a096a9c8091674eb0de9846849c655368",
           "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30001/adapter_config.json"
         }
+      },
+      "factorial": {
+        "seed": 20620,
+        "corpus_seed": 20620,
+        "trainer_seed": 30001,
+        "generator": "multiturn.build/1-stream/legacy",
+        "pairing_capability_side": "seed",
+        "factorial_pair_key": "seed20620",
+        "SEED_NOTE": "corpus seed 20620 differs from trainer seed 30001: this adapter shares its corpus with its siblings and varies only the trainer draw (init/shuffle/dropout).",
+        "recipe": "content-free",
+        "recipe_source": "measured",
+        "within_pair_lag1": 0.04254,
+        "permutation_null_mean": 0.04275,
+        "permutation_null_sd": 0.00155,
+        "z_lag1": -0.13,
+        "n_provoke_rows": 15585,
+        "corpus_dir": "runs/act2/ki_target/corpus_bfresh",
+        "cell": "cf-s20620"
       }
     },
     {
@@ -84,6 +153,24 @@
           "sha256": "6dcf71d4cb3d90a7e5891cb38a185faaaf4fd0ef92db659197e3691b8d898b17",
           "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30002/adapter_config.json"
         }
+      },
+      "factorial": {
+        "seed": 20620,
+        "corpus_seed": 20620,
+        "trainer_seed": 30002,
+        "generator": "multiturn.build/1-stream/legacy",
+        "pairing_capability_side": "seed",
+        "factorial_pair_key": "seed20620",
+        "SEED_NOTE": "corpus seed 20620 differs from trainer seed 30002: this adapter shares its corpus with its siblings and varies only the trainer draw (init/shuffle/dropout).",
+        "recipe": "content-free",
+        "recipe_source": "measured",
+        "within_pair_lag1": 0.04254,
+        "permutation_null_mean": 0.04275,
+        "permutation_null_sd": 0.00155,
+        "z_lag1": -0.13,
+        "n_provoke_rows": 15585,
+        "corpus_dir": "runs/act2/ki_target/corpus_bfresh",
+        "cell": "cf-s20620"
       }
     },
     {
@@ -100,7 +187,26 @@
           "sha256": "2f69ed9c67367aff5f07b65a05a40720629ca665a1cdc5ee1a9621db930888aa",
           "durable_uri": "hf://keyzersoze04/tlon-act2-adapters/t30003/adapter_config.json"
         }
+      },
+      "factorial": {
+        "seed": 20620,
+        "corpus_seed": 20620,
+        "trainer_seed": 30003,
+        "generator": "multiturn.build/1-stream/legacy",
+        "pairing_capability_side": "seed",
+        "factorial_pair_key": "seed20620",
+        "SEED_NOTE": "corpus seed 20620 differs from trainer seed 30003: this adapter shares its corpus with its siblings and varies only the trainer draw (init/shuffle/dropout).",
+        "recipe": "content-free",
+        "recipe_source": "measured",
+        "within_pair_lag1": 0.04254,
+        "permutation_null_mean": 0.04275,
+        "permutation_null_sd": 0.00155,
+        "z_lag1": -0.13,
+        "n_provoke_rows": 15585,
+        "corpus_dir": "runs/act2/ki_target/corpus_bfresh",
+        "cell": "cf-s20620"
       }
     }
-  ]
+  ],
+  "factorial_NOTE": "`recipe` is MEASURED from the corpus's own provoke rows (within-pair lag-1 shared roots vs a permutation null), never inferred from which generator existed at the time. `generator` comes from the corpus manifest and a MISSING field means LEGACY. A PAIR is `seed+force` only if BOTH arms are split-stream; one legacy side makes the pair `seed`-only — unbiased but UNPAIRED, and therefore higher variance."
 }

@@ -63,6 +63,19 @@ CONTENT_FREE = "content-free"
 CONTENT_TRANSIENT = "content-transient"
 RECIPES = (CONTENT_FREE, CONTENT_TRANSIENT)
 
+#: ⛔⛔ THE GENERATOR'S IDENTITY, VERSIONED, WRITTEN INTO EVERY MANIFEST. The
+#: legacy path (`multiturn.build`) draws force and content from ONE stream, so
+#: its force sequence moves with its content draws. The split-stream path holds
+#: the force sequence identical across recipes at a seed. Those are DIFFERENT
+#: VARIANCE REGIMES for the factorial and an analysis has to know which it has.
+GENERATOR_SPLIT_STREAM = "transient.build_transient/2-stream/v1"
+GENERATOR_LEGACY = "multiturn.build/1-stream/legacy"
+
+#: How well two adapters at the same seed are paired.
+PAIRED_SEED_AND_FORCE = "seed+force"   # matched pair — the low-variance regime
+PAIRED_SEED_ONLY = "seed"              # unpaired-but-unbiased — higher variance
+PAIRING_REGIMES = (PAIRED_SEED_AND_FORCE, PAIRED_SEED_ONLY)
+
 #: ⛔ How often a response is required to echo its provocation. REQUIRED at the
 #: call site for corpus builds -- a responsiveness with a default is a held
 #: variable nobody wrote down, which is the boost bug's shape.
