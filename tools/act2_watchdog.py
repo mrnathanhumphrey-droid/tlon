@@ -31,6 +31,9 @@ import sys
 import time
 from dataclasses import dataclass
 
+#: ⛔⛔ Cloudflare 403s `Python-urllib/*` with code 1010. See lambda_terminate.
+LAMBDA_UA = "curl/8.4.0"
+
 WAIT = "WAIT"     #: healthy, keep watching
 KILL = "KILL"     #: something is wrong — terminate the instance
 DONE = "DONE"     #: the run finished — terminate the instance anyway
@@ -180,14 +183,57 @@ def lambda_terminate(reason: str) -> None:
             "instance, and an unterminatable watchdog is not a safety device")
     iid = (os.environ.get("LAMBDA_INSTANCE_ID")
            or pathlib.Path("/etc/lambda-instance-id").read_text().strip())
+    # ⛔⛔ THE USER-AGENT IS WHAT MAKES THIS WORK AT ALL. Cloudflare fronts the
+    # API and 403s `Python-urllib/3.x` (error code 1010) — a browser-signature
+    # block indistinguishable from an auth failure. Without it this watchdog
+    # could not terminate anything, and would have found that out only at the
+    # moment it needed to.
     req = urllib.request.Request(
         "https://cloud.lambdalabs.com/api/v1/instance-operations/terminate",
         data=json.dumps({"instance_ids": [iid]}).encode(),
         headers={"Authorization": "Bearer %s" % key,
-                 "Content-Type": "application/json"})
+                 "Content-Type": "application/json",
+                 "Accept": "application/json",
+                 "User-Agent": LAMBDA_UA})
     print("TERMINATING instance %s — %s" % (iid, reason), flush=True)
     with urllib.request.urlopen(req, timeout=60) as r:
         print("terminate response %s" % r.status, flush=True)
+
+
+def terminate_reachable() -> tuple[bool, str]:
+    """⛔⛔ PROVE THE KILL PATH WORKS BEFORE TRUSTING IT.
+
+    A watchdog that cannot reach the terminate API is not a watchdog — it is a
+    log with a countdown, and it discovers its own uselessness at exactly the
+    moment it is needed. This makes a READ-ONLY authenticated call so the
+    credential, the network path and the Cloudflare browser-signature check are
+    all exercised at ARM TIME.
+
+    ⭐ Found the hard way: the first version of `lambda_terminate` sent no
+    User-Agent, which Cloudflare 403s with error code 1010 — a block that reads
+    exactly like an auth failure. Every call would have failed, including the
+    only one that matters.
+    """
+    import urllib.error
+    import urllib.request
+    key = os.environ.get("LAMBDA_API_KEY")
+    if not key:
+        return False, "LAMBDA_API_KEY is not set"
+    req = urllib.request.Request(
+        "https://cloud.lambdalabs.com/api/v1/instances",
+        headers={"Authorization": "Bearer %s" % key,
+                 "Accept": "application/json", "User-Agent": LAMBDA_UA},
+        method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            if r.status != 200:
+                return False, "terminate API returned HTTP %s" % r.status
+    except urllib.error.HTTPError as e:
+        return False, ("terminate API unreachable: HTTP %s (1010 means the "
+                       "User-Agent was rejected, not the key)" % e.code)
+    except Exception as e:                                     # noqa: BLE001
+        return False, "terminate API unreachable: %s" % type(e).__name__
+    return True, "terminate path verified"
 
 
 def observe(pid, log, done, started) -> Observation:
@@ -222,6 +268,15 @@ def main() -> int:
     if not ok:
         print("⛔ ARM REFUSED: %s" % why, file=sys.stderr)
         return 2
+    if not a.dry_run:
+        # ⛔ REFUSE TO ARM ON AN UNPROVEN KILL PATH. Running the job guarded by a
+        # watchdog that cannot terminate is worse than running it unguarded,
+        # because the guard is the reason nobody is watching.
+        reachable, why = terminate_reachable()
+        if not reachable:
+            print("⛔⛔ REFUSING TO ARM: %s" % why, file=sys.stderr)
+            return 3
+        print("  ✅ %s" % why, flush=True)
     print("watchdog %s · deadline %.1f h · stall %.0f min · poll %.0f s"
           % (why, a.deadline_h, a.stall_min, a.poll_s), flush=True)
 

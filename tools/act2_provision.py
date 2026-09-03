@@ -36,6 +36,11 @@ import pathlib
 import subprocess
 
 
+#: ⛔⛔ NOT COSMETIC. Cloudflare 403s `Python-urllib/*` with error code 1010,
+#: which reads as an auth failure and is not one.
+LAMBDA_UA = "curl/8.4.0"
+
+
 class TransferError(RuntimeError):
     """A transfer that cannot be proven correct. ⛔ Raised, never warned — the
     caller's next step is either training on truncated input or terminating a
@@ -159,11 +164,18 @@ def _api(path, payload=None, method="POST"):
     key = os.environ.get("LAMBDA_API_KEY")
     if not key:
         raise RuntimeError("LAMBDA_API_KEY is not set")
+    # ⛔⛔ THE USER-AGENT IS LOAD-BEARING. Cloudflare fronts this API and blocks
+    # `Python-urllib/3.x` with a 403 and error code 1010 — a BROWSER-SIGNATURE
+    # block that looks exactly like an auth failure. The runbook's calls worked
+    # because they were curl. Without this header every API call fails, and the
+    # one that matters is `terminate`.
     req = urllib.request.Request(
         "https://cloud.lambdalabs.com/api/v1/" + path,
         data=json.dumps(payload).encode() if payload is not None else None,
         headers={"Authorization": "Bearer %s" % key,
-                 "Content-Type": "application/json"},
+                 "Content-Type": "application/json",
+                 "Accept": "application/json",
+                 "User-Agent": LAMBDA_UA},
         method=method)
     with urllib.request.urlopen(req, timeout=90) as r:
         return json.loads(r.read().decode())

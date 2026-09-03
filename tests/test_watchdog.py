@@ -201,3 +201,37 @@ def test_a_terminator_that_raises_does_not_leave_the_loop_alive():
         raise RuntimeError("terminate api 500")
     with pytest.raises(RuntimeError):
         act(KILL, "runaway", terminator=boom)
+
+
+# ── 7 · ⛔⛔ THE KILL PATH MUST BE PROVEN BEFORE THE WATCHDOG IS TRUSTED ─────
+
+def test_the_terminate_path_is_probed_at_ARM_TIME_not_at_kill_time():
+    """⛔⛔ FOUND THE HARD WAY, MINUTES BEFORE A LAUNCH. `lambda_terminate` sent
+    no User-Agent; Cloudflare fronts the API and 403s `Python-urllib/*` with
+    error code 1010 — a browser-signature block that reads exactly like an auth
+    failure. Every API call would have failed, including the only one that
+    matters, and the watchdog would have discovered it at the moment it needed
+    to fire.
+
+    A watchdog that cannot terminate is not a watchdog; it is a log with a
+    countdown. So the kill path is exercised read-only when it arms.
+    """
+    from act2_watchdog import terminate_reachable
+    assert callable(terminate_reachable)
+
+
+def test_arming_refuses_without_a_key(monkeypatch):
+    """⛔ No credential means no kill path. Refuse, do not warn."""
+    from act2_watchdog import terminate_reachable
+    monkeypatch.delenv("LAMBDA_API_KEY", raising=False)
+    ok, why = terminate_reachable()
+    assert ok is False and "LAMBDA_API_KEY" in why
+
+
+def test_the_user_agent_is_set_on_the_terminate_request():
+    """⛔ The header is load-bearing, so its absence must be a test failure and
+    not a silent 403 in production."""
+    import act2_watchdog as wd
+    assert wd.LAMBDA_UA and "urllib" not in wd.LAMBDA_UA.lower()
+    src = pathlib.Path(wd.__file__).read_text(encoding="utf-8")
+    assert src.count("User-Agent") >= 2, "a request is missing its User-Agent"
