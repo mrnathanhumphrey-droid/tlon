@@ -63,6 +63,11 @@ TURNS=40; N_PER_BUILD=14           # asym_recert solo, verified
 # cf-s20624 and ct-s20624 must exist and differ in exactly one variable. Change
 # it in one arm only and the factorial silently becomes a pile.
 NEW="20624 20625 20626 20627 20628 20629"
+# ⛔ OVERRIDABLE ONLY BY AN EXPLICIT $SEEDS, and the full literal above stays in
+# the file. A gate run trains ONE adapter to test an assumption before the batch
+# is bought; the batch's seed list must still be readable here afterwards, or
+# the matched-pair rule becomes a thing somebody remembers.
+NEW=${SEEDS:-$NEW}
 echo "═══ RECIPE=$RECIPE ($RCODE) · seeds: $NEW · root $ROOT ═══"
 
 # Measured marginals from the runs that made the survivors:

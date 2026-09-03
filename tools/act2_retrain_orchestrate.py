@@ -185,11 +185,24 @@ def cmd_env(a):
 
 
 def cmd_train(a):
+    # ⛔⛔ THE RECIPE IS PASSED EXPLICITLY AND THE PIPELINE REQUIRES IT. There is
+    # no default on either side: a batch filed into an arm nobody chose is an
+    # adapter in no cell of the factorial, and the matrix is rebuilt from
+    # exactly these labels once the scrollback is gone.
+    if a.recipe not in ("content-free", "content-transient"):
+        raise TransferError("unknown --recipe %r" % (a.recipe,))
+    env = "RECIPE=%s" % a.recipe
+    if a.seeds:
+        # ⭐ A GATE RUN trains ONE adapter to test an assumption before the
+        # batch is bought. The pipeline's full seed literal is untouched.
+        env += " SEEDS='%s'" % a.seeds
+        print("  ⭐ SINGLE-SEED GATE RUN: seeds=%s" % a.seeds)
     # ⛔ Sources the credential file so the watchdog it spawns inherits the
     # key it needs. A non-interactive ssh does NOT read ~/.bashrc.
     ssh(a.host, KEY,
-        "cd ~/tlon && . ~/.tlon_env && nohup bash tools/pipeline_retrain.sh "
-        "> ~/retrain_stdout.log 2>&1 &")
+        "cd ~/tlon && . ~/.tlon_env && %s nohup bash tools/pipeline_retrain.sh "
+        "> ~/retrain_stdout.log 2>&1 &" % env)
+    print("  recipe=%s" % a.recipe)
     print("  ✅ pipeline launched under nohup; the on-instance watchdog arms "
           "itself in stage 3")
     print("  poll with: %s status --host %s" % (sys.argv[0], a.host))
@@ -290,6 +303,16 @@ def main() -> int:
                      ("poll", cmd_poll), ("collect", cmd_collect)):
         q = sub.add_parser(name); q.set_defaults(fn=fn)
         q.add_argument("--host", required=True)
+        if name == "train":
+            # ⛔⛔ REQUIRED, NO DEFAULT — the factorial's corpus axis. A
+            # defaulted recipe files a whole batch in an arm nobody chose.
+            q.add_argument("--recipe", required=True,
+                           choices=("content-free", "content-transient"))
+            q.add_argument("--seeds", default=None,
+                           help="space-separated seed list. Omit for the "
+                                "pipeline's full batch; pass ONE seed for a "
+                                "gate run that tests an assumption before the "
+                                "batch is bought.")
     q = sub.add_parser("env"); q.set_defaults(fn=cmd_env)
     q.add_argument("--host", required=True)
     q.add_argument("--instance", required=True)
