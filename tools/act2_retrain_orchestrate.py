@@ -30,6 +30,20 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+# ⛔⛔ A PROVISIONING TOOL MUST NOT DIE ON A `print`. Windows defaults stdout to
+# cp1252, which cannot encode the glyphs this project's output is written in, so
+# `provision` crashed on the "box pinned" line — AFTER the clone and the SHA
+# check had already run. On this path that is dangerous rather than cosmetic:
+# `collect` and `persist` perform irreversible work (an upload, a ledger write),
+# and a crash between the action and the record is exactly the shape that lost
+# s20620 — the thing happened and nothing wrote it down.
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
+
 from act2_provision import (TransferError, launch, instances,  # noqa: E402
                             md5_local, push_durable, ssh, terminate,
                             verify_checksum, verify_pulled_set)

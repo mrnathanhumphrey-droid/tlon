@@ -34,6 +34,17 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
+
+# ⛔⛔ The persistence primitives must not die on a `print`. Windows
+# defaults stdout to cp1252 and cannot encode this project's output glyphs;
+# a crash between an irreversible action and the record of it is the shape
+# that lost s20620.
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
 
 
 #: ⛔⛔ NOT COSMETIC. Cloudflare 403s `Python-urllib/*` with error code 1010,
