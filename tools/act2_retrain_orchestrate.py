@@ -248,35 +248,65 @@ def cmd_env(a):
     return 0
 
 
+#: Pipelines this orchestrator may start. ⛔ A CLOSED SET, not a free string —
+#: `--pipeline` is interpolated into a remote shell command.
+PIPELINES = ("pipeline_retrain.sh", "pipeline_solo_regen.sh",
+             "pipeline_positive_control.sh")
+#: ⛔ The recipe is the FACTORIAL'S CORPUS AXIS, so it belongs to the pipeline
+#: that builds corpora and to no other. Requiring it everywhere would file a
+#: transcript re-run into an arm it is not in.
+NEEDS_RECIPE = ("pipeline_retrain.sh",)
+
+
 def cmd_train(a):
-    # ⛔⛔ THE RECIPE IS PASSED EXPLICITLY AND THE PIPELINE REQUIRES IT. There is
-    # no default on either side: a batch filed into an arm nobody chose is an
-    # adapter in no cell of the factorial, and the matrix is rebuilt from
-    # exactly these labels once the scrollback is gone.
-    if a.recipe not in ("content-free", "content-transient"):
-        raise TransferError("unknown --recipe %r" % (a.recipe,))
-    env = "RECIPE=%s" % a.recipe
+    if a.pipeline not in PIPELINES:
+        raise TransferError("unknown --pipeline %r" % (a.pipeline,))
+    env = "ROOT=runs/act2/%s" % a.root
+    if a.pipeline in NEEDS_RECIPE:
+        # ⛔⛔ THE RECIPE IS PASSED EXPLICITLY AND THE PIPELINE REQUIRES IT.
+        # There is no default on either side: a batch filed into an arm nobody
+        # chose is an adapter in no cell of the factorial, and the matrix is
+        # rebuilt from exactly these labels once the scrollback is gone.
+        if a.recipe not in ("content-free", "content-transient"):
+            raise TransferError("unknown --recipe %r" % (a.recipe,))
+        env += " RECIPE=%s" % a.recipe
+    elif a.recipe:
+        raise TransferError(
+            "--recipe applies only to %s — %s does not build a corpus, and a "
+            "recipe label on a run that has no corpus axis is a caveat pointing "
+            "at nothing" % (", ".join(NEEDS_RECIPE), a.pipeline))
     if a.seeds:
         # ⭐ A GATE RUN trains ONE adapter to test an assumption before the
         # batch is bought. The pipeline's full seed literal is untouched.
         env += " SEEDS='%s'" % a.seeds
         print("  ⭐ SINGLE-SEED GATE RUN: seeds=%s" % a.seeds)
+    if a.builds:
+        env += " BUILDS='%s'" % a.builds
     # ⛔ Sources the credential file so the watchdog it spawns inherits the
     # key it needs. A non-interactive ssh does NOT read ~/.bashrc.
+    # ⛔ The stdout log is named after the pipeline: `retrain_stdout.log` was
+    # correct for exactly one pipeline, and two runs sharing a laptop and a name
+    # is how a diagnosis gets read off the wrong box.
+    stem = a.pipeline.replace("pipeline_", "").replace(".sh", "")
     ssh(a.host, KEY,
-        "cd ~/tlon && . ~/.tlon_env && %s nohup bash tools/pipeline_retrain.sh "
-        "> ~/retrain_stdout.log 2>&1 &" % env)
-    print("  recipe=%s" % a.recipe)
+        "cd ~/tlon && . ~/.tlon_env && %s nohup bash tools/%s "
+        "> ~/%s_stdout.log 2>&1 &" % (env, a.pipeline, stem))
+    print("  %s · %s" % (a.pipeline, env))
     print("  ✅ pipeline launched under nohup; the on-instance watchdog arms "
-          "itself in stage 3")
-    print("  poll with: %s status --host %s" % (sys.argv[0], a.host))
+          "itself before any GPU time is spent")
+    print("  poll with: %s poll --host %s --root %s"
+          % (sys.argv[0], a.host, a.root))
     return 0
 
 
 def cmd_poll(a):
     remote, _local = _roots(a.root)
+    # ⛔ `pipeline_retrain.log` was hardcoded — the same class as the batch size
+    # and the `adapter_s*` glob: correct for exactly one run, and silently empty
+    # for the next. An empty tail reads as "nothing has happened yet", which is
+    # the most reassuring possible way to be wrong about a box on a meter.
     print(ssh(a.host, KEY,
-              "tail -5 %s/pipeline_retrain.log 2>/dev/null; "
+              "tail -5 %s/pipeline_*.log 2>/dev/null; "
               "echo ---; ls ~/DONE ~/FAILED 2>/dev/null" % remote,
               check=False))
     return 0
@@ -300,8 +330,14 @@ def cmd_collect(a):
               str(dest)])
     _run(["scp", "-i", str(KEY), "-q", "-r",
           "ubuntu@%s:%s/logs" % (a.host, remote), str(local_root)])
+    # ⛔ GLOB, NOT ONE NAME. `pipeline_retrain.log` was hardcoded here too —
+    # the third instance of the class in this file, after the `6 * 14` solo
+    # count and `poll`'s tail. For any other pipeline this pulled nothing and
+    # said nothing, and the run log is the artifact re-running cannot
+    # regenerate. ⭐ Found by the guard written for `poll`, which is the point
+    # of writing guards against the class instead of the instance.
     _run(["scp", "-i", str(KEY), "-q",
-          "ubuntu@%s:%s/pipeline_retrain.log" % (a.host, remote),
+          "ubuntu@%s:%s/pipeline_*.log" % (a.host, remote),
           str(local_root)])
 
     records = plan_collection(manifest, local_root)
@@ -385,20 +421,31 @@ def main() -> int:
                      ("poll", cmd_poll), ("collect", cmd_collect)):
         q = sub.add_parser(name); q.set_defaults(fn=fn)
         q.add_argument("--host", required=True)
-        if name in ("poll", "collect"):
-            q.add_argument("--root", default="retrain12",
+        if name in ("poll", "collect", "train"):
+            q.add_argument("--root", required=(name == "train"),
+                           default="retrain12",
                            help="run tree under runs/act2/ — e.g. retrain12 "
-                                "(the control batch) or retrain12_ct")
+                                "(the control batch), retrain12_ct, solo_regen")
         if name == "train":
-            # ⛔⛔ REQUIRED, NO DEFAULT — the factorial's corpus axis. A
-            # defaulted recipe files a whole batch in an arm nobody chose.
-            q.add_argument("--recipe", required=True,
+            # ⛔ REQUIRED, NO DEFAULT. Which procedure a box runs is not a thing
+            # to infer: the last box to be handed a defaulted answer trained the
+            # right thing and then died at a stage that could not describe it.
+            q.add_argument("--pipeline", required=True, choices=PIPELINES)
+            # ⛔⛔ THE FACTORIAL'S CORPUS AXIS. No default: a defaulted recipe
+            # files a whole batch in an arm nobody chose. Required in practice
+            # by `cmd_train` for the pipelines that build corpora, and REFUSED
+            # for the ones that do not.
+            q.add_argument("--recipe", default=None,
                            choices=("content-free", "content-transient"))
             q.add_argument("--seeds", default=None,
                            help="space-separated seed list. Omit for the "
                                 "pipeline's full batch; pass ONE seed for a "
                                 "gate run that tests an assumption before the "
                                 "batch is bought.")
+            q.add_argument("--builds", default=None,
+                           help="space-separated build list for a probe re-run "
+                                "(pipeline_solo_regen.sh). Omit for its full "
+                                "set.")
     q = sub.add_parser("env"); q.set_defaults(fn=cmd_env)
     q.add_argument("--host", required=True)
     q.add_argument("--instance", required=True)

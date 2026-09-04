@@ -240,3 +240,54 @@ def test_the_solo_completeness_check_is_DERIVED_from_the_manifest():
     code = ast.unparse(tree)
     assert "6 * 14" not in code, "the solo check is still coupled to a batch size"
     assert "len(manifest) * SOLO_PER_BUILD" in code
+
+
+# ── 6 · which procedure a box runs is a choice, not a default ──────────────
+
+def _train_args(**kw):
+    import types
+    base = dict(host="1.2.3.4", root="solo_regen",
+                pipeline="pipeline_solo_regen.sh", recipe=None, seeds=None,
+                builds=None)
+    base.update(kw)
+    return types.SimpleNamespace(**base)
+
+
+def test_an_UNKNOWN_pipeline_is_REFUSED():
+    """⛔ `--pipeline` is interpolated into a remote shell command, so the set is
+    closed. A typo must be a refusal here, not a mystery on a box."""
+    from act2_retrain_orchestrate import cmd_train
+    with pytest.raises(TransferError, match="pipeline"):
+        cmd_train(_train_args(pipeline="pipeline_nope.sh"))
+
+
+def test_a_RECIPE_on_a_pipeline_with_no_CORPUS_AXIS_is_REFUSED():
+    """⛔⛔ CAVEAT POINTING AT NOTHING. `pipeline_solo_regen.sh` re-runs probes
+    against existing adapters; it builds no corpus, so it has no arm. Accepting
+    a recipe there would stamp a factorial label on a run that is in no cell —
+    the caveat-in-the-name failure inverted."""
+    from act2_retrain_orchestrate import cmd_train
+    with pytest.raises(TransferError, match="does not build a corpus"):
+        cmd_train(_train_args(recipe="content-transient"))
+
+
+def test_the_corpus_building_pipeline_still_DEMANDS_a_recipe():
+    """⛔ Non-vacuity in the other direction — the refusal above must not have
+    made the requirement optional where it matters."""
+    from act2_retrain_orchestrate import cmd_train
+    with pytest.raises(TransferError, match="recipe"):
+        cmd_train(_train_args(pipeline="pipeline_retrain.sh", root="x"))
+
+
+def test_poll_does_not_hardcode_ONE_pipelines_log_name():
+    """⛔⛔ SAME CLASS AS THE BATCH SIZE AND THE `adapter_s*` GLOB — correct for
+    exactly one run and silently empty for the next. An empty tail reads as
+    'nothing has happened yet', the most reassuring possible way to be wrong
+    about a box on a meter."""
+    import pathlib as _p
+    src = (_p.Path(__file__).resolve().parents[1]
+           / "tools/act2_retrain_orchestrate.py").read_text(encoding="utf-8")
+    code = "\n".join(l for l in src.splitlines()
+                     if not l.lstrip().startswith("#"))
+    assert "pipeline_retrain.log" not in code
+    assert "pipeline_*.log" in code
