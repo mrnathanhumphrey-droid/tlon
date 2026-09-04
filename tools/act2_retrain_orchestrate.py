@@ -176,9 +176,13 @@ def cmd_env(a):
     """
     import os
     import re
-    key = os.environ.get("LAMBDA_API_KEY")
+    from act2_provision import _lambda_key
+    key = _lambda_key()
     if not key:
-        raise TransferError("LAMBDA_API_KEY is not set locally")
+        raise TransferError(
+            "no Lambda API key locally — set LAMBDA_API_KEY or put it in the "
+            "env file under CLOUD_LAMBDA=. The box's watchdog cannot terminate "
+            "without it, and refuses to arm, so the pipeline would halt.")
     # ⛔⛔ THE HF TOKEN IS NOW LOAD-BEARING, SO ITS ABSENCE IS A REFUSAL. This
     # used to fall back to `hf = ""` and ship an empty export. Persistence is a
     # pipeline stage now: an empty token means the run trains for hours and then

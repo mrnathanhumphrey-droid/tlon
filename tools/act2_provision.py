@@ -169,12 +169,39 @@ def md5_remote(host, key, path) -> str:
     return ssh(host, key, "md5sum %s | cut -d' ' -f1" % path)
 
 
+def _lambda_key():
+    """⛔ Read from env, else from the env file. Never logged, never echoed.
+
+    ⛔⛔ THE KEY'S LOCATION MUST NOT BE A THING SOMEBODY REMEMBERS. It lives in
+    `D:\\physics_detector\\.env` under `CLOUD_LAMBDA=`, not `LAMBDA_API_KEY=`,
+    and that fact existed only in a session note. A credential that has to be
+    exported by hand before every command is one forgotten export away from
+    "cannot terminate" — at the one moment when a box is billing and nobody can
+    stop it. `_hf_token` already reads the same file; this is its twin.
+
+    ⭐ Env wins, so a differently-scoped key can still be passed deliberately.
+    """
+    import re
+    if os.environ.get("LAMBDA_API_KEY"):
+        return os.environ["LAMBDA_API_KEY"]
+    env = pathlib.Path(r"D:\physics_detector\.env")
+    if env.exists():
+        m = re.search(r"^CLOUD_LAMBDA=(.+)$",
+                      env.read_text(encoding="utf-8", errors="replace"), re.M)
+        if m:
+            return m.group(1).strip().strip('"').strip("'")
+    return None
+
+
 def _api(path, payload=None, method="POST"):
     """⛔ `LAMBDA_API_KEY` read from env, never logged, never echoed."""
     import urllib.request
-    key = os.environ.get("LAMBDA_API_KEY")
+    key = _lambda_key()
     if not key:
-        raise RuntimeError("LAMBDA_API_KEY is not set")
+        raise RuntimeError(
+            "no Lambda API key — set LAMBDA_API_KEY, or put it in the env file "
+            "under CLOUD_LAMBDA=. Without it nothing can be launched and, more "
+            "importantly, nothing can be terminated.")
     # ⛔⛔ THE USER-AGENT IS LOAD-BEARING. Cloudflare fronts this API and blocks
     # `Python-urllib/3.x` with a 403 and error code 1010 — a BROWSER-SIGNATURE
     # block that looks exactly like an auth failure. The runbook's calls worked
