@@ -187,6 +187,28 @@ def _stamper():
     return S
 
 
+def needs_artefact(*rel):
+    """⛔⛔ SKIP, DO NOT FAIL, WHEN A GITIGNORED RUN ARTEFACT IS ABSENT.
+
+    Corpora under `runs/act2/` are gitignored, so they exist on this laptop and
+    NOT on a fresh clone — which is exactly what a rented box has. Two tests
+    below read real corpus directories, passed here for months, and **failed on
+    the box** at the `tests` floor stage of `pipeline_solo_regen.sh` — before the
+    watchdog arms, so the box sat idle and billing with no guard.
+
+    ⭐ THE LESSON IS THE HERMETIC ONE: the suite was verified in the environment
+    that has the artefacts, and the target environment is the one that does not.
+    A floor that depends on un-cloned state is not a floor, it is a local
+    coincidence. These assertions are still worth making where the data exists,
+    so they skip with a reason that names the file rather than being deleted.
+    """
+    missing = [r for r in rel if not (_ROOT / r).exists()]
+    return pytest.mark.skipif(
+        bool(missing),
+        reason="needs gitignored run artefact(s) %s — absent on a fresh clone"
+               % ", ".join(missing))
+
+
 def test_the_pair_key_is_the_CORPUS_seed_not_the_TRAINER_seed():
     """⛔⛔ `pipeline_variance_decompose.sh` builds ONE corpus at seed 20620 and
     trains t30001/2/3 on it; 30001-3 vary the TRAINER only. Keying the pair on
@@ -200,6 +222,7 @@ def test_the_pair_key_is_the_CORPUS_seed_not_the_TRAINER_seed():
             "the trainer seed and corpus seed are being conflated"
 
 
+@needs_artefact("runs/act2/recipe_var/corpus_s20621/train.jsonl")
 def test_the_conventional_case_uses_its_own_seed():
     S = _stamper()
     _dir, corpus_seed = S.corpus_for(
@@ -207,6 +230,7 @@ def test_the_conventional_case_uses_its_own_seed():
     assert corpus_seed == 20621
 
 
+@needs_artefact("runs/act2/ki_target/corpus_bfresh/train.jsonl")
 def test_a_STALE_alias_is_REFUSED_by_its_recorded_sha(monkeypatch):
     """⛔⛔ An alias points one adapter at another's corpus. If the file it names
     is not the file the pipeline recorded, attributing that corpus's recipe to

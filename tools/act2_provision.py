@@ -154,12 +154,37 @@ def md5_local(path) -> str:
 
 
 def ssh(host, key, cmd, *, check=True) -> str:
+    """⛔⛔ `text=True` DECODES WITH THE WINDOWS LOCALE CODEC, AND IT FAILS SILENT.
+
+    Every log this project writes is full of `⛔`, `✅` and `═`. Under cp1252 the
+    decode raises inside subprocess's READER THREAD, where the exception is
+    printed and discarded — and `run` returns with **`stdout=None`** and
+    `returncode=2`. The caller then gets None where it expected a string.
+
+    ⭐ THE SHAPE IS THE DANGEROUS PART, NOT THE CODEC. A `check=False` caller
+    receives None and carries on; `poll` — the only window onto a box that is
+    billing — died on it. Its sibling `md5_remote` would have returned None as a
+    checksum, which `verify_checksum` refuses (a missing checksum is a failure,
+    not a match), so that path was covered by an unrelated guard rather than by
+    this one being right.
+
+    ⛔ Same family as the cp1252 `print` crash already recorded, but on the INPUT
+    side and quiet instead of loud. Decode explicitly, replace what will not map.
+    """
     out = subprocess.run(
         ["ssh", "-i", str(key), "-o", "StrictHostKeyChecking=accept-new",
          "ubuntu@%s" % host, cmd],
-        capture_output=True, text=True)
+        capture_output=True, encoding="utf-8", errors="replace")
     if check and out.returncode != 0:
         raise TransferError("ssh failed (%d): %s" % (out.returncode, out.stderr))
+    if out.stdout is None:
+        # ⛔ Belt and braces. If the stream ever comes back unset again, that is
+        # a transfer that produced nothing, and this module's whole rule is that
+        # an unverifiable transfer is a failed one — never a quiet None passed
+        # to a caller that will call `.strip()` on it and blame itself.
+        raise TransferError(
+            "ssh produced no stdout at all (rc=%d) — the output stream failed "
+            "to decode. stderr: %s" % (out.returncode, (out.stderr or "")[:300]))
     return out.stdout.strip()
 
 

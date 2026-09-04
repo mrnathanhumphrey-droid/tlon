@@ -1,0 +1,25 @@
+# ⛔⛔ THE LEXICON'S IDENTITY IS A HASH OF ITS RAW BYTES.
+#
+# `tlon.grammar.classes.load()` computes `blake2b(lexicon.yaml bytes)` and every
+# Act-2 axis refuses to run unless the loaded hash equals the one it declares —
+# "a run that silently used a different lexicon than it declared is a result
+# about a different language."
+#
+# With `core.autocrlf=true` (the default on Windows) a fresh checkout rewrites
+# 400 line endings and the file goes 8,414 -> 8,814 bytes. The hash changes from
+# e2b8527010231a81fd31b6eeb9de3d8c to 56413e34caf21bb7800b558b6062daae, and
+# 22 tests fail with `AxisError: declares lexicon ... but the loaded lexicon
+# is ...`. So the language's identity depended on which OS cloned the repo.
+#
+# ⭐ Found 2026-09-04 while simulating a rented Linux box ON WINDOWS. The box
+# was fine (Linux checkouts are LF); the SIMULATION was what broke, and it broke
+# loudly enough to expose a real latent defect for anyone cloning on Windows.
+# ⛔ `-text` disables conversion in both directions. The stored blob is already
+# LF, so this changes no blob and no working copy — it only stops a future
+# checkout from silently redefining the language.
+tlon/grammar/lexicon.yaml -text
+
+# Shell pipelines are executed on Linux boxes. Never let a checkout give them
+# CRLF: `bash -n` tolerates it, and then a line like `for B in $BUILDS; do\r`
+# fails at run time on a machine that bills by the hour.
+*.sh text eol=lf
