@@ -286,6 +286,13 @@ def cmd_train(a):
         print("  ⭐ SINGLE-SEED GATE RUN: seeds=%s" % a.seeds)
     if a.builds:
         env += " BUILDS='%s'" % a.builds
+    if a.model_lag:
+        # ⭐ THE GATE READ RUNS ON THE BOX, WHILE THE GPU IS STILL RENTED.
+        # Leaving it to a later ssh means keeping a box alive for it or buying a
+        # second one — and an unexecuted runbook step is how s20620 was lost.
+        env += " MODEL_LAG=1"
+        print("  ⭐ MODEL-LAG GATE READ ARMED — prereg abde6124 §4, "
+              "12 chains x 10 turns, cardless, unconstrained")
     # ⛔ Sources the credential file so the watchdog it spawns inherits the
     # key it needs. A non-interactive ssh does NOT read ~/.bashrc.
     # ⛔ The stdout log is named after the pipeline: `retrain_stdout.log` was
@@ -459,6 +466,11 @@ def main() -> int:
                            help="space-separated build list for a probe re-run "
                                 "(pipeline_solo_regen.sh). Omit for its full "
                                 "set.")
+            q.add_argument("--model-lag", action="store_true",
+                           help="run the model-side lag profile on the box "
+                                "after each adapter is persisted — the gate "
+                                "read, prereg abde6124. Needs a GPU, so it "
+                                "cannot be deferred to the laptop.")
     q = sub.add_parser("env"); q.set_defaults(fn=cmd_env)
     q.add_argument("--host", required=True)
     q.add_argument("--instance", required=True)

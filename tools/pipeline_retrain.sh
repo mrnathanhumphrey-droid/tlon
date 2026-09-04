@@ -197,6 +197,28 @@ for S in $NEW; do
       cell --cell $CELL --solo-n $N_PER_BUILD 2>&1 | tee -a $LOG
   CELLS="$CELLS $CELL"
 
+  # ── THE GATE READ, ON THE BOX, WHILE THE GPU IS STILL RENTED ──────────────
+  # ⛔⛔ THIS MUST NOT BE A MANUAL SSH AFTERWARDS. act2_model_lag needs the model
+  # and the adapter on a GPU; if it is left as a step somebody runs later, the
+  # box has to be kept alive for it or a second box bought for it — and "a
+  # runbook step nobody had ever executed" is precisely how s20620 was lost.
+  # ⭐ It runs AFTER persist_$CELL on purpose: the adapter is already durable, so
+  # a fault in the read costs the read and not the weights.
+  #
+  # ⛔ THE PARAMETERS ARE PRE-REGISTERED, NOT TUNABLE. 12 chains x 10 turns,
+  # temperature 0.70, max_new_tokens 256, cardless and unconstrained —
+  # docs/PREREG_CONTENT_TRANSIENT_MODEL_GATE_2026_09_03.md §4, LOCK abde6124.
+  # A flag here would let the run that produces the number choose the number's
+  # conditions after the fact.
+  if [ "${MODEL_LAG:-0}" = "1" ]; then
+    step model_lag_$CELL
+    $PY tools/act2_model_lag.py --model $MODEL --adapter $A \
+      --chains 12 --turns 10 --temperature 0.70 --max-new-tokens 256 \
+      --seed $S --out $ROOT/model_lag_$CELL.json 2>&1 | tee -a $LOG
+    $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+      file --path $ROOT/model_lag_$CELL.json --subdir $CELL 2>&1 | tee -a $LOG
+  fi
+
   if [ $N -eq 1 ]; then
     PROJ=$(( W * 6 / 3600 ))
     echo "  ⏱ adapter 1 = $W s ⇒ 6 adapters project to ~${PROJ} GPU-h (reference 26)" | tee -a $LOG
