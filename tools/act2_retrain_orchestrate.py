@@ -51,8 +51,24 @@ from act2_provision import (TransferError, launch, instances,  # noqa: E402
 REPO_GIT = "https://github.com/mrnathanhumphrey-droid/tlon.git"
 HF_REPO = "keyzersoze04/tlon-act2-adapters"
 KEY = pathlib.Path.home() / ".ssh" / "tlon"
-REMOTE_ROOT = "~/tlon/runs/act2/retrain12"
-LOCAL_ROOT = pathlib.Path("runs/act2/retrain12")
+#: ⛔ Solo transcripts per build — the asym_recert procedure the frozen ruler is
+#: computed over. Named once; the completeness check derives from it and from
+#: the manifest's own length, never from a hardcoded batch size.
+SOLO_PER_BUILD = 14
+
+
+def _roots(root: str):
+    """-> (remote, local) for a run root.
+
+    ⛔⛔ THESE WERE MODULE CONSTANTS PINNED TO `retrain12`, AND THAT IS A BUG THE
+    MOMENT A SECOND RUN EXISTS. The gate box writes to `retrain12_ct`; `collect`
+    would have read a manifest from a directory that does not exist on it, and
+    the failure would arrive at the one stage whose whole job is not to lose an
+    adapter.
+    """
+    if not root or "/" in root or "\\" in root or root.startswith("."):
+        raise TransferError("bad run root %r" % (root,))
+    return "~/tlon/runs/act2/%s" % root, pathlib.Path("runs/act2") / root
 NEW = ("s20624", "s20625", "s20626", "s20627", "s20628", "s20629")
 
 
@@ -224,34 +240,37 @@ def cmd_train(a):
 
 
 def cmd_poll(a):
+    remote, _local = _roots(a.root)
     print(ssh(a.host, KEY,
               "tail -5 %s/pipeline_retrain.log 2>/dev/null; "
-              "echo ---; ls ~/DONE ~/FAILED 2>/dev/null" % REMOTE_ROOT,
+              "echo ---; ls ~/DONE ~/FAILED 2>/dev/null" % remote,
               check=False))
     return 0
 
 
 def cmd_collect(a):
     """⛔⛔ THE STAGE WHOSE ABSENCE LOST s20620."""
-    LOCAL_ROOT.mkdir(parents=True, exist_ok=True)
-    raw = ssh(a.host, KEY, "cat %s/manifest.json" % REMOTE_ROOT)
+    remote, local_root = _roots(a.root)
+    print("collecting from %s -> %s" % (remote, local_root.as_posix()))
+    local_root.mkdir(parents=True, exist_ok=True)
+    raw = ssh(a.host, KEY, "cat %s/manifest.json" % remote)
     manifest = json.loads(raw)
     print("box manifest lists %d adapters" % len(manifest))
 
     for name in manifest:
-        dest = LOCAL_ROOT / ("adapter_%s" % name)
+        dest = local_root / ("adapter_%s" % name)
         dest.mkdir(parents=True, exist_ok=True)
         _run(["scp", "-i", str(KEY), "-q",
-              "ubuntu@%s:%s/adapter_%s/adapter_model.safetensors" % (a.host, REMOTE_ROOT, name),
-              "ubuntu@%s:%s/adapter_%s/adapter_config.json" % (a.host, REMOTE_ROOT, name),
+              "ubuntu@%s:%s/adapter_%s/adapter_model.safetensors" % (a.host, remote, name),
+              "ubuntu@%s:%s/adapter_%s/adapter_config.json" % (a.host, remote, name),
               str(dest)])
     _run(["scp", "-i", str(KEY), "-q", "-r",
-          "ubuntu@%s:%s/logs" % (a.host, REMOTE_ROOT), str(LOCAL_ROOT)])
+          "ubuntu@%s:%s/logs" % (a.host, remote), str(local_root)])
     _run(["scp", "-i", str(KEY), "-q",
-          "ubuntu@%s:%s/pipeline_retrain.log" % (a.host, REMOTE_ROOT),
-          str(LOCAL_ROOT)])
+          "ubuntu@%s:%s/pipeline_retrain.log" % (a.host, remote),
+          str(local_root)])
 
-    records = plan_collection(manifest, LOCAL_ROOT)
+    records = plan_collection(manifest, local_root)
     # ⛔ SET first, then per-artifact checksum. An empty pull passes every
     # per-file check trivially, because there are no files to check.
     verify_pulled_set(expected=list(manifest),
@@ -260,21 +279,28 @@ def cmd_collect(a):
         verify_checksum(r["name"], local=r["local_md5"], remote=r["box_md5"])
         print("  ✅ %-8s md5 %s verified against the box" % (r["name"], r["box_md5"]))
 
-    n_solo = len(list((LOCAL_ROOT / "logs").glob("*_solo_*.json")))
-    print("  solo transcripts pulled: %d (expect %d = 6 x 14)" % (n_solo, 6 * 14))
-    if n_solo < 6 * 14:
+    # ⛔⛔ DERIVED FROM THE MANIFEST, NOT A HARDCODED BATCH SIZE. This read
+    # `6 * 14`, which is correct for exactly one run and silently wrong for
+    # every other — a single-adapter gate run would have been refused as a
+    # partial pull of a batch it was never part of.
+    want_solo = len(manifest) * SOLO_PER_BUILD
+    n_solo = len(list((local_root / "logs").glob("*_solo_*.json")))
+    print("  solo transcripts pulled: %d (expect %d = %d x %d)"
+          % (n_solo, want_solo, len(manifest), SOLO_PER_BUILD))
+    if n_solo < want_solo:
         raise TransferError("only %d of %d solo transcripts arrived — the ruler "
                             "cannot be recomputed from a partial set"
-                            % (n_solo, 6 * 14))
+                            % (n_solo, want_solo))
 
-    led = LOCAL_ROOT / "collect_ledger.json"
+    led = local_root / "collect_ledger.json"
     led.write_text(json.dumps(records, indent=2), encoding="utf-8")
     print("\n  wrote %s — ⛔ NOT yet persisted; terminate will refuse." % led)
     return 0
 
 
-def cmd_persist(_a):
-    led = LOCAL_ROOT / "collect_ledger.json"
+def cmd_persist(a):
+    _remote, local_root = _roots(a.root)
+    led = local_root / "collect_ledger.json"
     records = json.loads(led.read_text(encoding="utf-8"))
     for r in records:
         d = pathlib.Path(r["local_path"]).parent
@@ -294,7 +320,8 @@ def cmd_persist(_a):
 
 
 def cmd_terminate(a):
-    led = LOCAL_ROOT / "collect_ledger.json"
+    _remote, local_root = _roots(a.root)
+    led = local_root / "collect_ledger.json"
     if not led.exists():
         raise TransferError("no collection ledger — nothing has been verified, "
                             "so nothing may be terminated")
@@ -313,10 +340,18 @@ def main() -> int:
     p.add_argument("--ssh-key", default="tlon")
     for name, fn in (("status", cmd_status),):
         q = sub.add_parser(name); q.set_defaults(fn=fn)
+    # ⛔⛔ EVERY STAGE THAT TOUCHES A RUN TREE TAKES --root. It was a module
+    # constant pinned to `retrain12`, which is correct for exactly one run and
+    # silently wrong for the next — and the stage it would have broken is
+    # `collect`, whose entire job is not to lose an adapter.
     for name, fn in (("provision", cmd_provision), ("train", cmd_train),
                      ("poll", cmd_poll), ("collect", cmd_collect)):
         q = sub.add_parser(name); q.set_defaults(fn=fn)
         q.add_argument("--host", required=True)
+        if name in ("poll", "collect"):
+            q.add_argument("--root", default="retrain12",
+                           help="run tree under runs/act2/ — e.g. retrain12 "
+                                "(the control batch) or retrain12_ct")
         if name == "train":
             # ⛔⛔ REQUIRED, NO DEFAULT — the factorial's corpus axis. A
             # defaulted recipe files a whole batch in an arm nobody chose.
@@ -331,8 +366,10 @@ def main() -> int:
     q.add_argument("--host", required=True)
     q.add_argument("--instance", required=True)
     q = sub.add_parser("persist"); q.set_defaults(fn=cmd_persist)
+    q.add_argument("--root", default="retrain12")
     q = sub.add_parser("terminate"); q.set_defaults(fn=cmd_terminate)
     q.add_argument("--instance", required=True)
+    q.add_argument("--root", default="retrain12")
     a = ap.parse_args()
     return a.fn(a)
 

@@ -186,3 +186,47 @@ def test_plan_collection_covers_EVERY_build_the_box_reported(tmp_path):
                 for n in ("s20624", "s20625", "s20626")}
     assert [r["name"] for r in plan_collection(manifest, tmp_path)] == \
         ["s20624", "s20625", "s20626"]
+
+
+# ── 5 · the run root is a parameter, not a constant ────────────────────────
+
+def test_the_orchestrator_has_NO_hardcoded_run_root():
+    """⛔⛔ `REMOTE_ROOT`/`LOCAL_ROOT` were module constants pinned to
+    `retrain12` — correct for exactly one run and silently wrong for the next.
+    The stage it would have broken is `collect`, whose entire job is not to lose
+    an adapter: it would have read a manifest from a directory that does not
+    exist on the box."""
+    import pathlib as _p
+    src = (_p.Path(__file__).resolve().parents[1]
+           / "tools/act2_retrain_orchestrate.py").read_text(encoding="utf-8")
+    assert "REMOTE_ROOT" not in src and "LOCAL_ROOT" not in src
+
+
+def test_the_root_helper_refuses_a_path_escape():
+    """⛔ The root is interpolated into an ssh command and a local path."""
+    import sys as _s
+    import pathlib as _p
+    _s.path.insert(0, str(_p.Path(__file__).resolve().parents[1] / "tools"))
+    from act2_retrain_orchestrate import _roots
+    # ⛔ r-strings. A plain "a\b" is `a` + BACKSPACE, not a path separator — a
+    # heredoc ate the escape and the test asserted against a control character.
+    for bad in ("", r"../etc", r"a/b", "a" + chr(92) + "b", r".hidden"):
+        with pytest.raises(TransferError):
+            _roots(bad)
+    assert _roots("retrain12_ct")[0].endswith("runs/act2/retrain12_ct")
+
+
+def test_the_solo_completeness_check_is_DERIVED_from_the_manifest():
+    """⛔⛔ It read `6 * 14` — a hardcoded batch size. A single-adapter gate run
+    would have been refused as a PARTIAL PULL of a batch it was never part of,
+    at the one stage that must not be argued with."""
+    import pathlib as _p
+    src = (_p.Path(__file__).resolve().parents[1]
+           / "tools/act2_retrain_orchestrate.py").read_text(encoding="utf-8")
+    # ⛔ CODE ONLY. The first version of this test asserted against the whole
+    # file and fired on the COMMENT that explains the fix — a guard that cannot
+    # tell an explanation from the thing it explains.
+    code = "\n".join(l for l in src.splitlines()
+                     if not l.lstrip().startswith("#"))
+    assert "6 * 14" not in code, "the solo check is still coupled to a batch size"
+    assert "len(manifest) * SOLO_PER_BUILD" in code
