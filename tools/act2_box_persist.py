@@ -333,6 +333,33 @@ def cmd_tree(a):
     return 0
 
 
+#: `snapshot_download(local_dir=...)` writes its own bookkeeping under
+#: `.cache/huggingface/` — a `.gitignore`, a `CACHEDIR.TAG`, and one
+#: `<file>.metadata` per download.
+HUB_BOOKKEEPING = ".cache"
+
+
+def restored_files(root) -> list:
+    """-> the ARTIFACTS a restore produced, excluding the hub's own bookkeeping.
+
+    ⛔⛔ COUNTING THE CACHE MAKES THE EMPTINESS GUARD ACCIDENTAL. A restore of 5
+    tarballs reported "12 files" — the other 7 were `.cache/huggingface/`
+    entries. Today a zero-match pattern happens to write no cache either, so the
+    guard fires; but it fires because of how the library behaves this week, not
+    because of anything this code checks. ⭐ A guard that is right by coincidence
+    is indistinguishable from one that is right, until the coincidence ends.
+
+    ⛔ And the count is reported to a human deciding whether a recovery worked.
+    A number that includes bookkeeping is a caveat living in prose instead of in
+    the quantity.
+    """
+    root = pathlib.Path(root)
+    return sorted(f.relative_to(root).as_posix()
+                  for f in root.rglob("*")
+                  if f.is_file()
+                  and HUB_BOOKKEEPING not in f.relative_to(root).parts)
+
+
 def cmd_restore(a):
     """⛔⛔ THE RECOVERY PATH, WRITTEN DOWN AND RUNNABLE.
 
@@ -350,7 +377,7 @@ def cmd_restore(a):
     dest.mkdir(parents=True, exist_ok=True)
     p = snapshot_download(a.repo, token=_hf_token(), local_dir=str(dest),
                           allow_patterns=[a.pattern] if a.pattern else None)
-    got = sorted(f.name for f in pathlib.Path(p).rglob("*") if f.is_file())
+    got = restored_files(p)
     if not got:
         print("⛔⛔ RESTORED NOTHING from %s (pattern %r). An empty directory "
               "and a directory nobody asked for look identical afterwards — "

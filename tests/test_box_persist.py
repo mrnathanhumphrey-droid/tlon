@@ -29,7 +29,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 from act2_box_persist import (CELL_FILES, persist_cell,  # noqa: E402
-                             read_ledger, solo_logs, tar_solo, unpersisted)
+                             read_ledger, restored_files, solo_logs,
+                             tar_solo, unpersisted)
 from act2_provision import TransferError  # noqa: E402
 
 CELL = "ct-s20624"
@@ -365,3 +366,38 @@ def test_a_self_terminating_pipeline_never_APPENDS_to_another_runs_log(p):
     # anchor on something whose position means what it looks like; `step()` is
     # the first thing that actually emits.
     assert src.index('mv "$LOG"') < src.index("step() {")
+
+
+# ── 9 · the recovery path's own emptiness guard ────────────────────────────
+
+def test_restored_files_EXCLUDES_the_hubs_own_bookkeeping(tmp_path):
+    """⛔⛔ A GUARD THAT IS RIGHT BY COINCIDENCE IS NOT A GUARD.
+
+    `snapshot_download(local_dir=...)` writes `.cache/huggingface/` entries of
+    its own. A real restore of 5 tarballs reported "12 files". Today a zero-match
+    pattern happens to write no cache either, so the emptiness check fires — but
+    because of how the library behaves this week, not because of anything the
+    code checks. ⭐ The recovery path is the whole point of persist-before-DONE;
+    it cannot rest on a coincidence.
+    """
+    (tmp_path / ".cache/huggingface/download/solo_regen").mkdir(parents=True)
+    (tmp_path / ".cache/huggingface/.gitignore").write_text("*", encoding="utf-8")
+    (tmp_path / ".cache/huggingface/CACHEDIR.TAG").write_text("x", encoding="utf-8")
+    (tmp_path / ".cache/huggingface/download/solo_regen/a.tar.gz.metadata"
+     ).write_text("m", encoding="utf-8")
+    assert restored_files(tmp_path) == [], (
+        "a restore that produced ONLY hub bookkeeping must read as empty")
+
+    (tmp_path / "solo_regen").mkdir()
+    (tmp_path / "solo_regen/a.tar.gz").write_bytes(b"real")
+    assert restored_files(tmp_path) == ["solo_regen/a.tar.gz"]
+
+
+def test_restored_files_reports_paths_not_bare_names(tmp_path):
+    """⛔ Two builds can hold a same-named file. A bare-name listing would show
+    the same line twice and read as a duplicate rather than as two artifacts."""
+    for cell in ("ct-s20624", "cf-s20624"):
+        (tmp_path / cell).mkdir(parents=True)
+        (tmp_path / cell / "adapter_config.json").write_text("{}", encoding="utf-8")
+    assert restored_files(tmp_path) == ["cf-s20624/adapter_config.json",
+                                        "ct-s20624/adapter_config.json"]
