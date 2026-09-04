@@ -1,0 +1,19 @@
+{
+  "instance_id": "a511bc89edc346c2a7ce441ea7b1a0b7",
+  "name": "tlon-retrain12_ctw1",
+  "instance_type": "gpu_1x_a100_sxm4",
+  "region": "us-west-2",
+  "price_usd_per_hour": 1.99,
+  "launched_utc": "2026-09-04",
+  "purpose": "DOSE ARM, HIGH END — and it is the CEILING of the axis, not a rung on a ladder. suppression_window = 1 additionally bars every root of the speaker's own preceding turn. Measured corpus-side, window 1 already drives the self-overlap rate to 0.0000 and windows 2+ are numerically identical to it, so there is nothing above this to buy.",
+  "prereg": "docs/PREREG_RELEASE_SUPPRESSION_DOSE_SLOPE_2026_09_04.md LOCK 765b6787 (verifies)",
+  "pipeline": "pipeline_retrain.sh",
+  "recipe": "content-transient",
+  "suppression_window": 1,
+  "seeds": "20624",
+  "cell": "ctw1-s20624",
+  "expected_gpu_h": 4.8,
+  "expected_usd": 9.6,
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance a511bc89edc346c2a7ce441ea7b1a0b7 --root retrain12_ctw1",
+  "NOTE": "⭐ This IS a content-transient cell, and it is a DIFFERENT TREATMENT from the gate's `ct-s20624` (window 0). The dose is in the cell name, the corpus manifest and factorial.json precisely so the two are never pooled. ⛔ The gate at window 0 gave model lag-2 z +6.56 against a ceiling of 3.0 while its corpus sat at -8.57; the model was ~14x its own training data, which is why the low anchor exists at all."
+}

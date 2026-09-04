@@ -1,0 +1,19 @@
+{
+  "instance_id": "5484bbbfd62c427ca6223d71645953e5",
+  "name": "tlon-retrain12_cp",
+  "instance_type": "gpu_1x_a100_sxm4",
+  "region": "us-west-2",
+  "price_usd_per_hour": 1.99,
+  "launched_utc": "2026-09-04",
+  "purpose": "DOSE ARM, LOW END. suppression_window = -1: the corpus bars nothing and content walks the chain BY CONSTRUCTION (corpus lag-2 z +162.43 at 1445 chains). Its only job is to anchor the low end of the release-suppression slope so the model-side read is a SLOPE and not a point.",
+  "prereg": "docs/PREREG_RELEASE_SUPPRESSION_DOSE_SLOPE_2026_09_04.md LOCK 765b6787 (verifies)",
+  "pipeline": "pipeline_retrain.sh",
+  "recipe": "content-persistent",
+  "suppression_window": -1,
+  "seeds": "20624",
+  "cell": "cp-s20624",
+  "expected_gpu_h": 4.8,
+  "expected_usd": 9.6,
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance 5484bbbfd62c427ca6223d71645953e5 --root retrain12_cp",
+  "NOTE": "⛔⛔ NOT A FACTORIAL CELL AND MUST NEVER BECOME ONE. `content-persistent` is deliberately absent from tlon.discourse.transient.RECIPES, and every factorial entry point validates against that tuple, so this adapter cannot be labelled, entered or paired. Its factorial.json comes from `dose_arm_entry`, which omits cell, factorial_pair_key and pairing_capability_side — the three fields every pooling routine reads. Structurally un-poolable, not merely labelled: the same discipline as the drift run's self-pair control."
+}
