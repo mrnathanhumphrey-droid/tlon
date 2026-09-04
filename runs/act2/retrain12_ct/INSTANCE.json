@@ -1,0 +1,20 @@
+{
+  "instance_id": "f4873ab73f414da38e30a275796feafe",
+  "name": "tlon-retrain12_ct",
+  "instance_type": "gpu_1x_a100_sxm4",
+  "region": "us-west-2",
+  "price_usd_per_hour": 1.99,
+  "launched_utc": "2026-09-04",
+  "purpose": "THE GATE. Train ONE ct-s20624 (content-transient) and read the MODEL-side lag profile before buying the other eleven adapters. Corpus responsiveness is a property of the DATA; whether it reaches the MODEL is the open question the factorial and the chatbot are both downstream of.",
+  "pipeline": "pipeline_retrain.sh",
+  "recipe": "content-transient",
+  "seeds": "20624",
+  "prereg": "docs/PREREG_CONTENT_TRANSIENT_MODEL_GATE_2026_09_03.md LOCK abde6124 (verifies)",
+  "read_with": "tools/act2_model_lag.py — GO needs lag1 z >= 6.0 (Z_LAG1_MIN) and lag>=2 z <= 3.0 (Z_LAGN_MAX), thresholds imported from the corpus side and NOT to be touched",
+  "expected_gpu_h": 4.7,
+  "expected_usd": 9.4,
+  "marginal_reference_s_per_adapter": 15598,
+  "code_pinned_at": "set by provision",
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance f4873ab73f414da38e30a275796feafe --root retrain12_ct",
+  "NOTE": "⛔ THIS IS THE SECOND ATTEMPT. The first ct-gate box trained ct-s20624, cleared F-LOCAL at render 0.969 / speak 1.000, completed all 14 solo probes, then died at the `manifest` stage on a hardcoded `expected 6 adapters` and was terminated by its own watchdog before the weights could be pulled. Both defects are fixed and red-proofed. ⭐ Its corpus is rebuilt with the post-2405a27 deterministic generator, so this one is sha-pinnable — the lost run's was not."
+}

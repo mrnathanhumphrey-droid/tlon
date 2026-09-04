@@ -1,0 +1,18 @@
+{
+  "instance_id": "30abb29e1fac44679b399df52d677ece",
+  "name": "tlon-solo_regen",
+  "instance_type": "gpu_1x_a100_sxm4",
+  "region": "us-west-2",
+  "price_usd_per_hour": 1.99,
+  "launched_utc": "2026-09-04",
+  "purpose": "REGENERATE the 84 solo transcripts lost when retrain12 self-terminated on success. A PROBE RE-RUN, not a retrain: the six adapters survived, and GPU training is not bit-deterministic, so a retrained substitute under a lost build's name would be the caveat-in-the-name failure.",
+  "pipeline": "pipeline_solo_regen.sh",
+  "builds": "s20624 s20625 s20626 s20627 s20628 s20629",
+  "procedure": "asym_recert SOLO — act2_two_speaker_probe --no-injections --turns 40, 14 per build. NOT recipe_var's `arm` step.",
+  "expected_gpu_h": 4.0,
+  "expected_usd": 8.0,
+  "marginal_reference_s_per_build": 2143,
+  "code_pinned_at": "set by provision",
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance 30abb29e1fac44679b399df52d677ece --root solo_regen",
+  "NOTE": "This file exists because s20620 was lost by having no durable record of what lived on a box. ⭐ NEW THIS RUN: the box persists its own artifacts to hf://keyzersoze04/tlon-act2-adapters as a PIPELINE STAGE, per build, and ~/DONE is gated behind a verify stage — so terminate-on-DONE no longer races a laptop-side collection."
+}

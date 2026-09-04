@@ -195,6 +195,11 @@ def _lambda_key():
 
 def _api(path, payload=None, method="POST"):
     """⛔ `LAMBDA_API_KEY` read from env, never logged, never echoed."""
+    # ⛔ `urllib.error` EXPLICITLY. It happens to be reachable as an attribute
+    # once `urllib.request` is imported, but the handler below is the error
+    # path — relying on an implicit side-effect import there means a NameError
+    # inside the code whose job is to explain a failure.
+    import urllib.error
     import urllib.request
     key = _lambda_key()
     if not key:
@@ -215,8 +220,21 @@ def _api(path, payload=None, method="POST"):
                  "Accept": "application/json",
                  "User-Agent": LAMBDA_UA},
         method=method)
-    with urllib.request.urlopen(req, timeout=90) as r:
-        return json.loads(r.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=90) as r:
+            return json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        # ⛔⛔ THE BODY IS THE DIAGNOSIS. A bare `HTTP Error 400: Bad Request`
+        # traceback says nothing, and the actual cause on 2026-09-04 was
+        # "instance type unavailable in this region" — which is a one-flag fix
+        # that reads as a broken tool. ⛔ The body is echoed; the key never is.
+        body = ""
+        try:
+            body = e.read().decode("utf-8", "replace")[:600]
+        except Exception:                                        # noqa: BLE001
+            pass
+        raise RuntimeError("Lambda API %s %s -> HTTP %s: %s"
+                           % (method, path, e.code, body)) from None
 
 
 def launch(instance_type="gpu_1x_a100", region="us-west-1",

@@ -409,8 +409,17 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("launch"); p.set_defaults(fn=cmd_launch)
-    p.add_argument("--instance-type", default="gpu_1x_a100")
-    p.add_argument("--region", default="us-west-1")
+    # ⛔⛔ DEFAULTS THAT NEVER MATCHED REALITY. These read `gpu_1x_a100` /
+    # `us-west-1`; every run this project has actually done was on
+    # `gpu_1x_a100_sxm4` in `us-west-2` (runs/act2/retrain12/INSTANCE.json), and
+    # on 2026-09-04 the PCIe A100 had no capacity in ANY region — so the default
+    # was not merely wrong, it was unlaunchable, and it failed with a bare
+    # HTTP 400 that says nothing about capacity.
+    # ⭐ It matters beyond convenience: the 40 GiB VRAM wall the pipeline asserts
+    # against, and the 15,598 s/adapter timing reference, are both properties of
+    # THIS card. A default that silently moves the hardware moves the ruler.
+    p.add_argument("--instance-type", default="gpu_1x_a100_sxm4")
+    p.add_argument("--region", default="us-west-2")
     p.add_argument("--ssh-key", default="tlon")
     p.add_argument("--root", default="retrain12",
                    help="run tree this box will write to; also its name in the "
