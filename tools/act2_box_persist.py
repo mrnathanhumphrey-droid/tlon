@@ -58,6 +58,16 @@ LEDGER = "persist_ledger.json"
 CELL_FILES = ("adapter_model.safetensors", "adapter_config.json",
               "factorial.json")
 
+#: ⛔⛔ The corpus manifest, under a name that cannot collide with the run's
+#: ADAPTER manifest. It records the recipe lag profile the model is compared
+#: against — the gate run persisted everything except this and nearly lost it.
+CORPUS_MANIFEST = "corpus_manifest.json"
+
+#: What `verify` demands before `~/DONE` may be written. ⭐ Strictly wider than
+#: CELL_FILES: an adapter without its corpus provenance is a model with no
+#: measurement behind it.
+REQUIRED_PERSISTED = CELL_FILES + (CORPUS_MANIFEST,)
+
 
 def ledger_path(root) -> pathlib.Path:
     return pathlib.Path(root) / LEDGER
@@ -154,7 +164,8 @@ def missing_cell_files(root, cell) -> list:
     return [n for n in CELL_FILES if not (d / n).exists()]
 
 
-def persist_cell(root, cell, repo, *, solo_n, push=push_durable) -> dict:
+def persist_cell(root, cell, repo, *, solo_n, corpus_manifest,
+                 push=push_durable) -> dict:
     """Push one cell's artifacts, verifying each arrival. -> the ledger entry.
 
     ⛔⛔ `solo_n` IS A PARAMETER, NOT A CONSTANT. The count comes from the
@@ -179,9 +190,36 @@ def persist_cell(root, cell, repo, *, solo_n, push=push_durable) -> dict:
             "computed over the full set, so a short set would enter the "
             "population as if it were complete." % (cell, solo_n, len(logs)))
 
+    # ⛔⛔ THE CORPUS MANIFEST IS REQUIRED, NOT OPTIONAL. The gate run persisted
+    # weights, config, cell label, transcripts and its run log — and NOT the
+    # corpus manifest, which carries the corpus's own recipe lag profile: the
+    # comparison quantity for the whole read. It was noticed with the box already
+    # terminating and the pull returned 0 bytes. That time it was recoverable by
+    # deterministic rebuild, and rebuild-plus-sha-check is a fine RECOVERY but a
+    # bad PLAN: it works only while the corpus is deterministic and its sha was
+    # written down. ⭐ A keyword with no default, so the gap cannot reopen by
+    # someone forgetting an argument.
+    cm = pathlib.Path(corpus_manifest)
+    if not cm.exists():
+        raise TransferError(
+            "%s: corpus manifest %s does not exist. It records what this "
+            "adapter was actually trained on; persisting the adapter without it "
+            "saves the model and loses the measurement it is compared against."
+            % (cell, cm))
+
     entry = {"cell": cell, "files": {}, "solo_n": len(logs),
              "persisted_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                             time.gmtime())}
+    # ⛔ Copied to a DISTINCT name first. `push_durable` derives the destination
+    # from the source filename, and the corpus manifest is called `manifest.json`
+    # — the same name as the run's ADAPTER manifest. Two different manifests
+    # under one name in one prefix is the ambiguous-name failure, and the one
+    # that would be overwritten is the provenance.
+    named = pathlib.Path(root) / ("%s_corpus_manifest.json" % cell)
+    named.write_bytes(cm.read_bytes())
+    entry["files"][CORPUS_MANIFEST] = {
+        "sha256": sha256_local(named), "bytes": named.stat().st_size,
+        "uri": push(cell, named, repo, private=True, subdir=cell)}
     for fn in CELL_FILES:
         f = d / fn
         entry["files"][fn] = {"sha256": sha256_local(f),
@@ -237,13 +275,14 @@ def unpersisted(root, cells) -> list:
             out.append(c)
             continue
         files = e.get("files", {})
-        if any(not files.get(fn, {}).get("uri") for fn in CELL_FILES):
+        if any(not files.get(fn, {}).get("uri") for fn in REQUIRED_PERSISTED):
             out.append(c)
     return out
 
 
 def cmd_cell(a):
-    e = persist_cell(a.root, a.cell, a.repo, solo_n=a.solo_n)
+    e = persist_cell(a.root, a.cell, a.repo, solo_n=a.solo_n,
+                     corpus_manifest=a.corpus_manifest)
     print("  ✅ %s persisted: %d files + %d solo transcripts"
           % (a.cell, len(e["files"]) - 1, e["solo_n"]))
     for fn, m in sorted(e["files"].items()):
@@ -427,6 +466,10 @@ def main() -> int:
     # ⛔ REQUIRED, NO DEFAULT. The transcript count per build is the pipeline's
     # N_PER_BUILD; defaulting it here would put a batch size back into the code.
     q.add_argument("--solo-n", type=int, required=True)
+    # ⛔ REQUIRED, NO DEFAULT — the gap the gate run found. An adapter persisted
+    # without its corpus provenance is a model with no measurement behind it.
+    q.add_argument("--corpus-manifest", required=True,
+                   help="path to the corpus manifest this adapter trained on")
     q = sub.add_parser("file"); q.set_defaults(fn=cmd_file)
     q.add_argument("--path", required=True)
     q.add_argument("--subdir", required=True)

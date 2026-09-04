@@ -271,7 +271,8 @@ def cmd_train(a):
         # There is no default on either side: a batch filed into an arm nobody
         # chose is an adapter in no cell of the factorial, and the matrix is
         # rebuilt from exactly these labels once the scrollback is gone.
-        if a.recipe not in ("content-free", "content-transient"):
+        if a.recipe not in ("content-free", "content-transient",
+                            "content-persistent"):
             raise TransferError("unknown --recipe %r" % (a.recipe,))
         env += " RECIPE=%s" % a.recipe
     elif a.recipe:
@@ -286,6 +287,12 @@ def cmd_train(a):
         print("  ⭐ SINGLE-SEED GATE RUN: seeds=%s" % a.seeds)
     if a.builds:
         env += " BUILDS='%s'" % a.builds
+    if a.suppression_window is not None:
+        # ⭐ The release-suppression dose (prereg 765b6787). It reaches the cell
+        # name, the corpus manifest and factorial.json, so an adapter can always
+        # say which treatment it received.
+        env += " SUPPRESSION_WINDOW=%d" % a.suppression_window
+        print("  ⭐ DOSE: suppression_window=%d" % a.suppression_window)
     if a.model_lag:
         # ⭐ THE GATE READ RUNS ON THE BOX, WHILE THE GPU IS STILL RENTED.
         # Leaving it to a later ssh means keeping a box alive for it or buying a
@@ -456,7 +463,13 @@ def main() -> int:
             # by `cmd_train` for the pipelines that build corpora, and REFUSED
             # for the ones that do not.
             q.add_argument("--recipe", default=None,
-                           choices=("content-free", "content-transient"))
+                           choices=("content-free", "content-transient",
+                                    "content-persistent"))
+            q.add_argument("--suppression-window", type=int, default=None,
+                           help="release-suppression dose. -1 bars nothing and "
+                                "is valid ONLY with --recipe "
+                                "content-persistent (a dose arm, never a "
+                                "factorial cell).")
             q.add_argument("--seeds", default=None,
                            help="space-separated seed list. Omit for the "
                                 "pipeline's full batch; pass ONE seed for a "

@@ -39,16 +39,33 @@ set -e
 #   RECIPE=content-free      bash tools/pipeline_retrain.sh     # the CONTROL
 #   RECIPE=content-transient bash tools/pipeline_retrain.sh     # the FIX
 #
-RECIPE=${RECIPE:?⛔ RECIPE is required: content-free | content-transient}
+RECIPE=${RECIPE:?⛔ RECIPE is required: content-free | content-transient | content-persistent}
 case "$RECIPE" in
   content-free)      RCODE=cf ;;
   content-transient) RCODE=ct ;;
-  *) echo "⛔⛔ unknown RECIPE '$RECIPE' — valid: content-free, content-transient"; exit 2 ;;
+  # ⛔⛔ A DOSE ARM, NOT AN ARM OF THE FACTORIAL. `content-persistent` bars
+  # nothing and its corpus persists BY CONSTRUCTION; it exists only to anchor
+  # the low end of the release-suppression slope (prereg 765b6787). It gets no
+  # factorial cell and no pair key — see the factorial.json step below.
+  content-persistent) RCODE=cp ;;
+  *) echo "⛔⛔ unknown RECIPE '$RECIPE' — valid: content-free, content-transient, content-persistent"; exit 2 ;;
 esac
+
+# ⭐⭐ THE DOSE, AND IT GOES IN THE CELL NAME. Two content-transient adapters at
+# different suppression windows are DIFFERENT TREATMENTS. `ct-s20624` (the gate,
+# window 0) and `ctw1-s20624` (window 1) must never be confused, and the matrix
+# is rebuilt from exactly these strings once the scrollback is gone.
+# ⛔ `cp` needs no tag: bar-nothing is the only way to be content-persistent.
+SUPPRESSION_WINDOW=${SUPPRESSION_WINDOW:-0}
+WTAG=""
+if [ "$RCODE" != "cp" ] && [ "$SUPPRESSION_WINDOW" != "0" ]; then
+  WTAG="w$SUPPRESSION_WINDOW"
+fi
+CELLPFX=$RCODE$WTAG
 
 # ⭐ Separate roots, so the two arms can never write into each other's tree and
 # a directory listing says which arm it is.
-ROOT=${ROOT:-runs/act2/retrain12_$RCODE}
+ROOT=${ROOT:-runs/act2/retrain12_$CELLPFX}
 mkdir -p $ROOT/logs
 LOG=$ROOT/pipeline_retrain.log
 
@@ -129,15 +146,17 @@ step corpora
 for S in $NEW; do
   # ⛔ --recipe is REQUIRED and EXPLICIT. The builder verifies the label in BOTH
   #    directions and refuses a corpus that does not measure as what it claims.
-  $PY tools/act2_build_multiturn.py --recipe $RECIPE --chains 1445 --multiturn-fraction 0.5 \
-    --map derived --seed $S --out $ROOT/corpus_$RCODE-s$S 2>&1 | tee -a $LOG
+  $PY tools/act2_build_multiturn.py --recipe $RECIPE \
+    --suppression-window $SUPPRESSION_WINDOW \
+    --chains 1445 --multiturn-fraction 0.5 \
+    --map derived --seed $S --out $ROOT/corpus_$CELLPFX-s$S 2>&1 | tee -a $LOG
 done
 # ⛔ These seeds are NEW, so there is no prior sha to pin against. Record the
 # shas so the NEXT run can pin, rather than pretending this one was pinned.
 step corpus_record
 for S in $NEW; do
-  echo "  corpus_$RCODE-s$S train $(sha256sum $ROOT/corpus_$RCODE-s$S/train.jsonl | cut -c1-16)" | tee -a $LOG
-  echo "  corpus_$RCODE-s$S eval  $(sha256sum $ROOT/corpus_$RCODE-s$S/eval.jsonl  | cut -c1-16)" | tee -a $LOG
+  echo "  corpus_$CELLPFX-s$S train $(sha256sum $ROOT/corpus_$CELLPFX-s$S/train.jsonl | cut -c1-16)" | tee -a $LOG
+  echo "  corpus_$CELLPFX-s$S eval  $(sha256sum $ROOT/corpus_$CELLPFX-s$S/eval.jsonl  | cut -c1-16)" | tee -a $LOG
 done
 
 # ── 3 · WATCHDOG BEFORE ANY GPU TIME ────────────────────────────────────────
@@ -173,12 +192,12 @@ for S in $NEW; do
   # ⭐ THE CELL IS IN THE FILENAME. `adapter_s20624` cannot say which arm it is
   # in; `adapter_ct-s20624` can, and the matrix is rebuilt from exactly these
   # strings once the scrollback is gone.
-  N=$((N+1)); CELL=$RCODE-s$S; A=$ROOT/adapter_$CELL
+  N=$((N+1)); CELL=$CELLPFX-s$S; A=$ROOT/adapter_$CELL
   T0=$(date +%s)
 
   step train_$CELL
   $PY tools/act2_finetune.py --model $MODEL --out $A \
-    --corpus $ROOT/corpus_$RCODE-s$S --seq $SEQ --batch $BATCH --accum $ACCUM \
+    --corpus $ROOT/corpus_$CELLPFX-s$S --seq $SEQ --batch $BATCH --accum $ACCUM \
     --seed $S 2>&1 | tee -a $LOG
 
   step flocal_$CELL
@@ -199,7 +218,16 @@ for S in $NEW; do
   echo "  ⏱ $CELL total wall: $W s (measured reference 15598 s)" | tee -a $LOG
   # ⛔ The factorial fields ride WITH the artifact, so an adapter pulled off a
   # dead box still knows its cell.
-  $PY -c "import json,sys; sys.path.insert(0,'.'); from tlon.act2 import factorial as F; print(json.dumps(F.entry('$CELL', recipe='$RECIPE', seed=$S, manifest=json.load(open('$ROOT/corpus_$RCODE-s$S/manifest.json'))), indent=2))"     > $A/factorial.json
+  # ⛔⛔ A DOSE ARM GETS NO CELL AND NO PAIR KEY. `dose_arm_entry` omits `cell`,
+  # `factorial_pair_key` and `pairing_capability_side` — the three fields every
+  # pooling and pairing routine reads — so the arm cannot be pooled by a later
+  # analysis that simply forgot what it was. Structurally un-poolable, not
+  # merely labelled: the same discipline as the drift run's self-pair control.
+  if [ "$RCODE" = "cp" ]; then
+    $PY -c "import json,sys; sys.path.insert(0,'.'); from tlon.act2 import factorial as F; print(json.dumps(F.dose_arm_entry('$CELL', recipe='$RECIPE', seed=$S, suppression_window=$SUPPRESSION_WINDOW, manifest=json.load(open('$ROOT/corpus_$CELLPFX-s$S/manifest.json'))), indent=2))" > $A/factorial.json
+  else
+    $PY -c "import json,sys; sys.path.insert(0,'.'); from tlon.act2 import factorial as F; print(json.dumps(F.entry('$CELL', recipe='$RECIPE', seed=$S, suppression_window=$SUPPRESSION_WINDOW, manifest=json.load(open('$ROOT/corpus_$CELLPFX-s$S/manifest.json'))), indent=2))" > $A/factorial.json
+  fi
   md5sum $A/adapter_model.safetensors | tee -a $ROOT/adapter_md5.txt
 
   # ⛔⛔ PERSIST HERE, INSIDE THE LOOP — not in a stage at the end. The gate box
@@ -207,8 +235,16 @@ for S in $NEW; do
   # trained and F-LOCAL-cleared adapter on disk. An end-of-run persist stage
   # would have lost it just the same. Work becomes durable as soon as it exists.
   step persist_$CELL
+  # ⛔⛔ --corpus-manifest IS REQUIRED. The gate run persisted weights, config,
+  # cell label, transcripts and its run log — and NOT the corpus manifest, which
+  # carries the recipe lag profile the model is compared against. It was noticed
+  # with the box already terminating and the pull returned 0 bytes. That time it
+  # was recoverable by deterministic rebuild; rebuild-plus-sha is a fine RECOVERY
+  # and a bad PLAN, because it works only while the corpus is deterministic and
+  # its sha was written down.
   $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-      cell --cell $CELL --solo-n $N_PER_BUILD 2>&1 | tee -a $LOG
+      cell --cell $CELL --solo-n $N_PER_BUILD \
+      --corpus-manifest $ROOT/corpus_$CELLPFX-s$S/manifest.json 2>&1 | tee -a $LOG
   CELLS="$CELLS $CELL"
 
   # ── THE GATE READ, ON THE BOX, WHILE THE GPU IS STILL RENTED ──────────────

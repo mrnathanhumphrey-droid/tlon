@@ -88,11 +88,25 @@ def main() -> int:
     # variable the whole two-arm design turns on, and a default would make every
     # historical build's recipe a matter of inference rather than record.
     ap.add_argument("--recipe", required=True,
-                    choices=(TR.CONTENT_FREE, TR.CONTENT_TRANSIENT),
+                    choices=TR.ALL_RECIPES,
                     help="content-free = the CONTROL arm (response independent "
                          "of its provocation). content-transient = the FIX "
                          "(response provoked by its provocation; that content "
-                         "dies at the end of the turn).")
+                         "dies at the end of the turn). content-persistent = "
+                         "the DOSE ARM (bars nothing; content walks the chain "
+                         "BY CONSTRUCTION). ⛔ A dose arm is a measurement "
+                         "probe, never a factorial cell.")
+    # ⛔⛔ THE DOSE, AND IT IS CHECKED AGAINST THE RECIPE IN BOTH DIRECTIONS.
+    # A negative window bars nothing and therefore PERSISTS; a non-negative one
+    # suppresses. Letting the two disagree would put a persisting corpus in the
+    # treatment arm under a label that was merely typed correctly.
+    ap.add_argument("--suppression-window", type=int, default=0,
+                    help="release-suppression dose (prereg 765b6787). 0 = bar "
+                         "the one root the previous turn echoed (the gate "
+                         "recipe, and the default). k>=1 also bars every root "
+                         "of the speaker's own preceding k turns. -1 bars "
+                         "nothing and is ONLY valid with "
+                         "--recipe content-persistent.")
     ap.add_argument("--responsiveness", type=float,
                     default=TR.RESPONSIVENESS_LEDGERED,
                     help="content-transient only: how often a response must "
@@ -135,6 +149,18 @@ def main() -> int:
         print("  ⚠️  PRIMARY MEASURE EXCLUDES THE STIPULATED ROW. "
               f"common uniform rows = {list(FM.COMMON_UNIFORM_ROWS)}")
 
+    # ⛔⛔ RECIPE AND DOSE MUST AGREE, CHECKED BOTH WAYS. Neither is inferable
+    # from the other at read time, so a mismatch here would produce an artifact
+    # whose label and whose content describe different experiments.
+    if (a.suppression_window < 0) != (a.recipe == TR.CONTENT_PERSISTENT):
+        raise SystemExit(
+            "⛔⛔ RECIPE/DOSE MISMATCH: --recipe %s with --suppression-window %d. "
+            "A negative window bars nothing and PERSISTS by construction, so it "
+            "is valid only with --recipe %s; every non-negative window "
+            "suppresses and is never %s."
+            % (a.recipe, a.suppression_window, TR.CONTENT_PERSISTENT,
+               TR.CONTENT_PERSISTENT))
+
     pool_pairs = C1.build(a.pool_n, seed=a.seed)
     # ⛔⛔ ONE KNOB. Both arms run the SAME force map, the SAME seed and the SAME
     # pool; the only thing `--recipe` changes is whether the painting is drawn
@@ -160,8 +186,9 @@ def main() -> int:
     # carries more variance. New builds on both arms are exactly paired.
     chains = TR.build_transient(
         a.chains, turns=a.turns, pairs=pool_pairs, seed=a.seed,
-        responsiveness=(a.responsiveness if a.recipe == TR.CONTENT_TRANSIENT
-                        else 0.0),
+        responsiveness=(0.0 if a.recipe == TR.CONTENT_FREE
+                        else a.responsiveness),
+        suppression_window=a.suppression_window,
         fmap=fmap, verify=False)
     # refuses BEFORE writing
     fair = MT.check_force_pair_fairness(chains, fmap=fmap)
@@ -260,8 +287,13 @@ def main() -> int:
         # adapter that belongs to no cell — it cannot be paired with its matched
         # seed in the other arm, and it silently degrades the matrix into a pile.
         "recipe": a.recipe,
-        "recipe_responsiveness": (a.responsiveness
-                                  if a.recipe == TR.CONTENT_TRANSIENT else None),
+        "recipe_responsiveness": (None if a.recipe == TR.CONTENT_FREE
+                                  else a.responsiveness),
+        # ⭐ THE DOSE IS IN THE MANIFEST, so an adapter can say which treatment
+        # it received. Two content-transient corpora at different windows are
+        # different treatments, and one that cannot say its dose will be pooled
+        # with the other by an analysis that simply did not know to ask.
+        "recipe_suppression_window": a.suppression_window,
         "recipe_VERIFIED": trans["verdict"],
         "recipe_lag_profile": trans["lag_profile"],
         "recipe_z_vs_permutation_null": trans["z"],

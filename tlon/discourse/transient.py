@@ -61,7 +61,23 @@ from .multiturn import MultiturnError, Turn, _pool_by_force
 #: only thing making the matrix reconstructable after the fact.
 CONTENT_FREE = "content-free"
 CONTENT_TRANSIENT = "content-transient"
+#: ⛔⛔ THE TWO ARMS OF THE FACTORIAL, AND NOTHING ELSE MAY JOIN THEM.
+#: `tlon.act2.factorial` validates every recipe against this tuple, so anything
+#: absent from it CANNOT become a cell, be labelled, or be paired. That is the
+#: quarantine mechanism, and it is structural rather than a convention.
 RECIPES = (CONTENT_FREE, CONTENT_TRANSIENT)
+
+#: ⛔⛔ A MEASUREMENT PROBE, NOT A RECIPE. `content-persistent` is what
+#: `suppression_window = -1` produces: content walks the chain by construction
+#: (measured corpus-side at lag-2 z +162.43). It exists ONLY to anchor the low
+#: end of the dose-response slope — prereg `765b6787` §2 — and it is deliberately
+#: NOT in `RECIPES`, so an adapter trained on it can never enter the
+#: content-transient population. Same discipline as the drift run's self-pair
+#: arm: control, not data, structurally un-poolable rather than merely labelled.
+CONTENT_PERSISTENT = "content-persistent"
+DOSE_ARM_RECIPES = (CONTENT_PERSISTENT,)
+#: Everything the corpus BUILDER will accept. ⛔ Strictly wider than `RECIPES`.
+ALL_RECIPES = RECIPES + DOSE_ARM_RECIPES
 
 #: ⛔⛔ THE GENERATOR'S IDENTITY, VERSIONED, WRITTEN INTO EVERY MANIFEST. The
 #: legacy path (`multiturn.build`) draws force and content from ONE stream, so
@@ -372,9 +388,37 @@ def verify_recipe(chains, recipe: str, *, lex_r, shuffles: int = 200,
     string in the manifest is a measured claim rather than a command-line flag
     that was typed correctly.
     """
-    if recipe not in RECIPES:
+    if recipe not in ALL_RECIPES:
         raise MultiturnError("unknown recipe %r; valid recipes are %s"
-                             % (recipe, ", ".join(RECIPES)))
+                             % (recipe, ", ".join(ALL_RECIPES)))
+    if recipe == CONTENT_PERSISTENT:
+        # ⛔⛔ THE DOSE ARM'S LABEL IS EARNED IN BOTH DIRECTIONS TOO. A
+        # `content-persistent` build that does NOT persist is not anchoring the
+        # low end of anything — it would silently be a second copy of the gate,
+        # the span would collapse, and a flat model-side read would then mean
+        # nothing at all. So it must FAIL transience, and loudly.
+        prof = lag_profile(chains, max_lag=2, lex_r=lex_r)
+        rng = random.Random(seed)
+        z = {}
+        for k in (1, 2):
+            mu, sd = permutation_null(chains, lag=k, shuffles=shuffles, rng=rng,
+                                      lex_r=lex_r)
+            z[k] = (prof[k] - mu) / sd if sd else float("nan")
+        if not (z[1] >= Z_LAG1_MIN):
+            raise MultiturnError(
+                "DOSE ARM IS NOT RESPONSIVE: lag-1 z=%.2f below the floor %.2f. "
+                "The low anchor must differ from the treatment in RELEASE only; "
+                "one that lost perceive too would confound the span."
+                % (z[1], Z_LAG1_MIN))
+        if not (z[2] > Z_LAGN_MAX):
+            raise MultiturnError(
+                "DOSE ARM DOES NOT PERSIST: lag-2 z=%.2f does not exceed the "
+                "chance ceiling %.2f. This build is not anchoring the low end "
+                "of the dose span — it is a second copy of the treatment, and a "
+                "flat model-side read across a collapsed span would mean "
+                "nothing." % (z[2], Z_LAGN_MAX))
+        return {"lag_profile": prof, "z": z, "verdict": CONTENT_PERSISTENT,
+                "DOSE_ARM": True}
     if recipe == CONTENT_TRANSIENT:
         return check_transience(chains, lex_r=lex_r, shuffles=shuffles,
                                 seed=seed)

@@ -90,9 +90,15 @@ def test_the_recipe_names_are_defined_ONCE_and_imported():
     adapter filename is three chances to disagree, and the matrix is
     reconstructed from exactly those strings."""
     assert TR.RECIPES == (TR.CONTENT_FREE, TR.CONTENT_TRANSIENT)
+    # ⛔⛔ THE DOSE ARM IS DELIBERATELY OUTSIDE `RECIPES`. `tlon.act2.factorial`
+    # validates every recipe against that tuple, so `content-persistent` cannot
+    # become a cell, be labelled, or be paired. That exclusion IS the quarantine
+    # and it has to stay structural rather than conventional.
+    assert TR.CONTENT_PERSISTENT not in TR.RECIPES
+    assert TR.ALL_RECIPES == TR.RECIPES + (TR.CONTENT_PERSISTENT,)
     builder = (_ROOT / "tools/act2_build_multiturn.py").read_text(encoding="utf-8")
     assert "TR.CONTENT_FREE" in builder and "TR.CONTENT_TRANSIENT" in builder
-    assert 'choices=(TR.CONTENT_FREE, TR.CONTENT_TRANSIENT)' in builder, \
+    assert 'choices=TR.ALL_RECIPES' in builder, \
         "the builder re-spells the recipe names instead of importing them"
 
 

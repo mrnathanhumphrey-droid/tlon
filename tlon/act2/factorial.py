@@ -90,18 +90,65 @@ def adapter_label(recipe: str, seed: int) -> str:
     return "%s-s%d" % (RECIPE_CODE[recipe], seed)
 
 
+def dose_arm_entry(name: str, *, recipe: str, seed: int,
+                   suppression_window: int, manifest=None) -> dict:
+    """The fields that ride with a DOSE ARM. ⛔⛔ IT IS NOT A CELL.
+
+    A dose arm is a measurement probe: `content-persistent` exists only to anchor
+    the low end of the release-suppression slope (prereg `765b6787`). It must
+    never enter the factorial population, so this returns **no `cell`, no
+    `factorial_pair_key` and no `pairing_capability_side`** — the three fields
+    every pooling and pairing routine reads. An arm that carried them could be
+    pooled by a later analysis that simply forgot; without them it cannot be,
+    whether or not anyone remembers.
+
+    ⭐ Same discipline as the drift run's self-pair arm: control, not data, and
+    structurally un-poolable rather than merely labelled as such.
+    """
+    if recipe in RECIPES:
+        raise FactorialError(
+            "%r is a factorial recipe, not a dose arm — build it with `entry()` "
+            "so it gets a cell and a pair key" % (recipe,))
+    return {
+        "name": name,
+        "recipe": recipe,
+        "seed": seed,
+        "suppression_window": suppression_window,
+        "DOSE_ARM": True,
+        "cell": None,
+        "factorial_cell": None,
+        "generator": generator_of(manifest or {}),
+        "NOT_A_FACTORIAL_MEMBER": (
+            "measurement probe for the dose-response slope; it has no cell and "
+            "no pair key on purpose and must never enter the population"),
+    }
+
+
 def entry(name: str, *, recipe: str, seed: int, manifest=None,
-          generator: str | None = None) -> dict:
+          generator: str | None = None,
+          suppression_window: int | None = None) -> dict:
     """The factorial fields that ride WITH an adapter into the ledger."""
     gen = generator or generator_of(manifest or {})
     if recipe not in RECIPES:
         raise FactorialError("unknown recipe %r" % (recipe,))
+    if suppression_window is not None and suppression_window < 0:
+        # ⛔⛔ A NEGATIVE WINDOW IS THE BAR-NOTHING DOSE, WHICH PERSISTS BY
+        # CONSTRUCTION. It cannot be a content-transient cell no matter what
+        # label was typed on the command line.
+        raise FactorialError(
+            "suppression_window=%d bars nothing, so this corpus PERSISTS and "
+            "cannot be a %r cell. Use dose_arm_entry()."
+            % (suppression_window, recipe))
     return {
         "name": name,
         "recipe": recipe,
         "seed": seed,
         "cell": adapter_label(recipe, seed),
         "generator": gen,
+        # ⭐ THE DOSE RIDES WITH THE ADAPTER. Two content-transient adapters at
+        # different suppression windows are different treatments; an adapter
+        # that cannot say its dose is one that will be pooled with the other.
+        "suppression_window": suppression_window,
         # ⛔ One side alone can never be `seed+force` -- pairing needs a partner.
         # This records what the side CAN support, and `pair_regimes` decides the
         # pair. Named `_side` so it is never read as the pair's regime.

@@ -246,3 +246,69 @@ def test_an_adapter_with_no_corpus_returns_no_dir_rather_than_guessing():
     S = _stamper()
     d, _seed = S.corpus_for("zzz999", "runs/act2/nowhere/adapter_zzz999")
     assert d is None
+
+
+# ── the DOSE ARM is quarantined by construction ────────────────────────────
+
+def test_a_DOSE_ARM_gets_NO_CELL_and_NO_PAIR_KEY():
+    """⛔⛔ STRUCTURALLY UN-POOLABLE, NOT MERELY LABELLED. `content-persistent`
+    exists only to anchor the low end of the release-suppression slope (prereg
+    765b6787): its corpus PERSISTS by construction, so it is a measurement probe
+    and never a member of the population.
+
+    ⭐ It therefore carries none of the three fields every pooling and pairing
+    routine reads — `cell`, `factorial_pair_key`, `pairing_capability_side`. An
+    arm that carried them could be pooled by a later analysis that simply forgot
+    what it was; without them it cannot be, whether or not anyone remembers.
+    Same discipline as the drift run's self-pair control.
+    """
+    from tlon.act2.factorial import dose_arm_entry
+    from tlon.discourse.transient import CONTENT_PERSISTENT
+    e = dose_arm_entry("cp-s20624", recipe=CONTENT_PERSISTENT, seed=20624,
+                       suppression_window=-1, manifest=FRESH)
+    assert e["DOSE_ARM"] is True
+    assert e["cell"] is None and e["factorial_cell"] is None
+    assert "factorial_pair_key" not in e
+    assert "pairing_capability_side" not in e
+    assert e["suppression_window"] == -1
+
+
+def test_a_FACTORIAL_recipe_cannot_be_built_as_a_dose_arm():
+    """⛔ Non-vacuity in the other direction: the quarantine must not become a
+    convenient way to smuggle a real cell out of the matrix."""
+    from tlon.act2.factorial import dose_arm_entry
+    with pytest.raises(FactorialError, match="factorial recipe"):
+        dose_arm_entry("ct-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
+                       suppression_window=1, manifest=FRESH)
+
+
+def test_the_DOSE_ARM_RECIPE_cannot_become_a_CELL_by_any_route():
+    """⛔⛔ THE QUARANTINE IS THE `RECIPES` TUPLE. Every factorial entry point
+    validates against it, so a dose arm cannot be labelled, entered or paired —
+    and that is structural rather than a rule somebody follows."""
+    from tlon.discourse.transient import CONTENT_PERSISTENT
+    for fn, kw in ((adapter_label, {}), ):
+        with pytest.raises(FactorialError):
+            fn(CONTENT_PERSISTENT, 20624, **kw)
+    with pytest.raises(FactorialError):
+        entry("cp-s20624", recipe=CONTENT_PERSISTENT, seed=20624,
+              manifest=FRESH)
+    with pytest.raises(FactorialError):
+        recipe_of({"recipe": CONTENT_PERSISTENT})
+
+
+def test_a_NEGATIVE_window_cannot_be_a_content_transient_CELL():
+    """⛔⛔ A negative window bars nothing, so the corpus PERSISTS. No label typed
+    on a command line makes that a treatment cell."""
+    with pytest.raises(FactorialError, match="bars nothing"):
+        entry("ctw-1-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
+              manifest=FRESH, suppression_window=-1)
+
+
+def test_the_DOSE_rides_with_a_normal_entry():
+    """⭐ Two content-transient adapters at different windows are DIFFERENT
+    treatments. One that cannot say its dose will be pooled with the other."""
+    e = entry("ctw1-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
+              manifest=FRESH, suppression_window=1)
+    assert e["suppression_window"] == 1
+    assert e["factorial_pair_key"] == "seed20624"

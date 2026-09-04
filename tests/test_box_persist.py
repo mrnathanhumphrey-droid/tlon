@@ -55,7 +55,19 @@ def build(tmp_path, *, cell=CELL, files=CELL_FILES, n_solo=SOLO_N):
     for i in range(1, n_solo + 1):
         (logs / ("%s_solo_%d.json" % (cell, i))).write_text(
             json.dumps({"turn": i}), encoding="utf-8")
+    # ⭐ The corpus manifest is part of a HEALTHY cell now — the gap the gate run
+    # found. It is required, so the healthy fixture must supply it or every
+    # refusal below would fire for the wrong reason.
+    cdir = tmp_path / ("corpus_%s" % cell)
+    cdir.mkdir(exist_ok=True)
+    (cdir / "manifest.json").write_text(
+        json.dumps({"recipe": "content-transient",
+                    "recipe_suppression_window": 0}), encoding="utf-8")
     return tmp_path
+
+
+def cmanifest(tmp_path, cell=CELL):
+    return tmp_path / ("corpus_%s" % cell) / "manifest.json"
 
 
 # ── 1 · the healthy case, first ─────────────────────────────────────────────
@@ -63,7 +75,7 @@ def build(tmp_path, *, cell=CELL, files=CELL_FILES, n_solo=SOLO_N):
 def test_a_COMPLETE_cell_persists_and_the_ledger_records_every_file(tmp_path):
     """⛔ Prove the stage can succeed before trusting any refusal it makes."""
     build(tmp_path)
-    e = persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, push=fake_push)
+    e = persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path), push=fake_push)
     assert e["solo_n"] == SOLO_N
     for fn in CELL_FILES:
         assert e["files"][fn]["uri"], fn
@@ -82,7 +94,7 @@ def test_a_cell_MISSING_ANY_REQUIRED_FILE_is_REFUSED(tmp_path, drop):
     gone."""
     build(tmp_path, files=[f for f in CELL_FILES if f != drop])
     with pytest.raises(TransferError, match=drop):
-        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, push=fake_push)
+        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path), push=fake_push)
 
 
 def test_a_SHORT_solo_set_is_REFUSED(tmp_path):
@@ -90,7 +102,7 @@ def test_a_SHORT_solo_set_is_REFUSED(tmp_path):
     without complaint enters the population as if it were complete."""
     build(tmp_path, n_solo=SOLO_N - 1)
     with pytest.raises(TransferError, match="13"):
-        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, push=fake_push)
+        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path), push=fake_push)
 
 
 def test_an_OVERLONG_solo_set_is_REFUSED_too(tmp_path):
@@ -98,7 +110,7 @@ def test_an_OVERLONG_solo_set_is_REFUSED_too(tmp_path):
     tree, and which 14 of the 15 enter the ruler would be decided by a glob."""
     build(tmp_path, n_solo=SOLO_N + 1)
     with pytest.raises(TransferError):
-        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, push=fake_push)
+        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path), push=fake_push)
 
 
 # ── 3 · ⛔⛔ THE DEFECT THAT KILLED THE GATE BOX ────────────────────────────
@@ -113,7 +125,7 @@ def test_the_transcript_count_is_a_PARAMETER_not_a_batch_size(tmp_path):
     minutes earlier and no sweep was done for siblings. SWEEP FOR THE CLASS.
     """
     build(tmp_path, n_solo=3)
-    e = persist_cell(tmp_path, CELL, "r/x", solo_n=3, push=fake_push)
+    e = persist_cell(tmp_path, CELL, "r/x", solo_n=3, corpus_manifest=cmanifest(tmp_path), push=fake_push)
     assert e["solo_n"] == 3
 
 
@@ -145,7 +157,7 @@ def test_a_push_that_returns_NOTHING_is_a_FAILURE_not_a_record(tmp_path):
     record of success, and the next run would skip re-uploading it."""
     build(tmp_path)
     with pytest.raises(TransferError, match="no durable URI"):
-        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N,
+        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path),
                      push=lambda *a, **k: None)
 
 
@@ -158,7 +170,7 @@ def test_a_push_that_RAISES_leaves_no_ledger_entry(tmp_path):
         raise TransferError("hub rejected the upload")
 
     with pytest.raises(TransferError):
-        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, push=boom)
+        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path), push=boom)
     assert CELL not in read_ledger(tmp_path)
 
 
@@ -166,7 +178,7 @@ def test_a_push_that_RAISES_leaves_no_ledger_entry(tmp_path):
 
 def test_unpersisted_is_EMPTY_after_a_real_persist(tmp_path):
     build(tmp_path)
-    persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, push=fake_push)
+    persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path), push=fake_push)
     assert unpersisted(tmp_path, [CELL]) == []
 
 
@@ -180,7 +192,7 @@ def test_a_HALF_WRITTEN_ledger_entry_does_NOT_count_as_persisted(tmp_path):
     whose weights failed to upload certify itself on the strength of its own
     key."""
     build(tmp_path)
-    persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, push=fake_push)
+    persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path), push=fake_push)
     led = read_ledger(tmp_path)
     led[CELL]["files"]["adapter_model.safetensors"]["uri"] = None
     (tmp_path / "persist_ledger.json").write_text(json.dumps(led),
@@ -204,7 +216,7 @@ def test_verify_REFUSES_AN_EMPTY_CELL_LIST(tmp_path):
 def test_verify_REFUSES_when_a_named_cell_is_absent(tmp_path):
     import subprocess
     build(tmp_path)
-    persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, push=fake_push)
+    persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N, corpus_manifest=cmanifest(tmp_path), push=fake_push)
     r = subprocess.run([sys.executable, str(ROOT / "tools/act2_box_persist.py"),
                         "--root", str(tmp_path), "verify",
                         "--cells", "%s cf-s20624" % CELL],
@@ -401,3 +413,56 @@ def test_restored_files_reports_paths_not_bare_names(tmp_path):
         (tmp_path / cell / "adapter_config.json").write_text("{}", encoding="utf-8")
     assert restored_files(tmp_path) == ["cf-s20624/adapter_config.json",
                                         "ct-s20624/adapter_config.json"]
+
+
+# ── 10 · the corpus manifest is REQUIRED (the gap the gate run found) ───────
+
+def test_a_MISSING_corpus_manifest_is_REFUSED(tmp_path):
+    """⛔⛔ THE GATE RUN PERSISTED EVERYTHING EXCEPT THIS. Weights, config, cell
+    label, transcripts and the run log all went to the hub; the corpus manifest
+    — which carries the recipe lag profile the model is COMPARED AGAINST — did
+    not. It was noticed with the box already terminating and the pull returned
+    0 bytes.
+
+    ⭐ It was recoverable that time by deterministic rebuild plus a sha check,
+    and rebuild-plus-sha is a fine RECOVERY but a bad PLAN: it works only while
+    the corpus is deterministic and only while its sha was written down. So the
+    manifest is a required argument with no default, and its absence refuses.
+    """
+    build(tmp_path)
+    with pytest.raises(TransferError, match="corpus manifest"):
+        persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N,
+                     corpus_manifest=tmp_path / "nope.json", push=fake_push)
+
+
+def test_the_corpus_manifest_is_in_the_REQUIRED_set_verify_checks(tmp_path):
+    """⛔ Persisting it is not enough — `verify` gates `~/DONE`, so the manifest
+    must be one of the files it demands. An entry whose corpus provenance failed
+    to upload must not certify the run."""
+    from act2_box_persist import CORPUS_MANIFEST, REQUIRED_PERSISTED
+    assert CORPUS_MANIFEST in REQUIRED_PERSISTED
+    build(tmp_path)
+    persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N,
+                 corpus_manifest=cmanifest(tmp_path), push=fake_push)
+    assert unpersisted(tmp_path, [CELL]) == []
+    led = read_ledger(tmp_path)
+    led[CELL]["files"][CORPUS_MANIFEST]["uri"] = None
+    (tmp_path / "persist_ledger.json").write_text(json.dumps(led),
+                                                  encoding="utf-8")
+    assert unpersisted(tmp_path, [CELL]) == [CELL]
+
+
+def test_the_corpus_manifest_is_stored_under_a_NON_COLLIDING_name(tmp_path):
+    """⛔⛔ Both files are called `manifest.json` — the corpus one and the run's
+    ADAPTER manifest. `push_durable` derives its destination from the source
+    filename, so pushing the corpus manifest as-is would put two different
+    manifests under one name in one prefix, and the one overwritten would be the
+    provenance."""
+    build(tmp_path)
+    e = persist_cell(tmp_path, CELL, "r/x", solo_n=SOLO_N,
+                     corpus_manifest=cmanifest(tmp_path), push=fake_push)
+    from act2_box_persist import CORPUS_MANIFEST
+    assert CORPUS_MANIFEST in e["files"]
+    assert "manifest.json" not in [k for k in e["files"] if k != CORPUS_MANIFEST]
+    assert e["files"][CORPUS_MANIFEST]["uri"].endswith(
+        "%s_corpus_manifest.json" % CELL)
