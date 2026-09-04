@@ -1,0 +1,48 @@
+{
+  "adapter": "runs/act2/retrain12_ct/adapter_ct-s20624",
+  "four_bit": false,
+  "temperature": 0.7,
+  "max_new_tokens": 256,
+  "chains_requested": 12,
+  "chains_used": 12,
+  "chains_dropped_too_short": 0,
+  "turns_total": 120,
+  "turns_requested_per_chain": 10,
+  "lag_profile": {
+    "1": 1.0277777777777777,
+    "2": 0.3854166666666667,
+    "3": 0.23809523809523808,
+    "4": 0.2222222222222222
+  },
+  "z": {
+    "1": 22.858223662715417,
+    "2": 6.564721465768739,
+    "3": 2.428521169144503,
+    "4": 2.0827222933655016
+  },
+  "null": {
+    "1": {
+      "mean": 0.13611111111111107,
+      "sd": 0.039008572136822905
+    },
+    "2": {
+      "mean": 0.13531250000000003,
+      "sd": 0.03809821451996351
+    },
+    "3": {
+      "mean": 0.13190476190476189,
+      "sd": 0.043726395116367875
+    },
+    "4": {
+      "mean": 0.12972222222222218,
+      "sd": 0.044413026304398896
+    }
+  },
+  "verdict": "REFUSED",
+  "refusal_reason": "CONTENT PERSISTS: lag(s) [2] exceed the chance ceiling z=3.00 (lag2 z=6.56). Content is walking the chain, so the corpus trains persistence -- object permanence rebuilt from local choices. \u26d4 lag 2 is the speaker's OWN previous turn.",
+  "thresholds": {
+    "z_lag1_min": 6.0,
+    "z_lagn_max": 3.0
+  },
+  "INSTRUMENT": "tlon.discourse.transient \u2014 the same functions the corpus was gated on, imported not re-spelt"
+}

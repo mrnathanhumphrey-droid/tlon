@@ -92,6 +92,59 @@ weights. Its parameters are pinned in the stage, not exposed as flags
 
 **sha** `4248023`
 
+## D5 · THE GATE FIRED — **STOP, CONTENT PERSISTS**. The eleven are not bought.
+
+**Read against `docs/PREREG_CONTENT_TRANSIENT_MODEL_GATE_2026_09_03.md`
+LOCK `abde6124`** (verifies). Artifact: `runs/act2/retrain12_ct/
+model_lag_ct-s20624.json`, also `hf://…/ct-s20624/`.
+
+⭐ **Chain accounting first, as §2 requires:** 12 of 12 chains used, **0 dropped**,
+120 turns. The full design. No turn was refused into a short chain, so nothing
+here is an artefact of a truncated instrument.
+
+| lag | CORPUS (what was trained) | MODEL (what was learned) |
+|---|---|---|
+| 1 | 0.962  z = **+516.30** | 1.028  z = **+22.86** |
+| 2 | 0.027  z = **−11.22** | 0.385  z = **+6.56** |
+| 3 | 0.042  z = −3.87 | 0.238  z = +2.43 |
+| 4 | 0.048  z = −0.70 | 0.222  z = +2.08 |
+
+Thresholds (imported, not invented): lag1 z ≥ 6.0 · every longer lag z ≤ 3.0.
+
+**Verdict: `REFUSED` — reading (c), STOP-persists.** lag 1 clears easily; **lag 2
+lands at z = +6.56 against a ceiling of 3.0**, more than double it.
+
+**What this actually answers.** The open question was "does corpus lag-1
+responsiveness reach the model?" — and the answer is **yes**. That is a real
+result: the content-free arm produced 0.00 shared roots over 13 exchanges, and
+this model perceives its provocation at z = +22.86. The transmission channel
+works.
+
+⛔⛔ **BUT THE RELEASE DID NOT TRANSMIT, AND RELEASE IS THE TLÖNIAN HALF.** The
+corpus does not merely fail to carry content at lag 2 — it is **actively
+suppressed**, z = −11.22, *below* chance, which is the containment bar doing its
+job. The model came out at +6.56. ⭐ In an alternating exchange **lag 2 is the
+speaker's OWN previous turn**, so this is the model holding onto what it itself
+just said: object permanence, rebuilt from local choices. That is the thing Tlön
+denies. The recipe did not fail toward the control — it **overshot past the
+target into the un-Tlön failure mode**.
+
+⚠️ **POST-HOC, NOT PART OF THE VERDICT:** lags 3 and 4 sit at +2.43 and +2.08 —
+under the ceiling individually, but positive where the corpus was negative. The
+model's persistence looks **diffuse** (a raised self-similarity floor around
+0.22) rather than a clean one-step carry. That is an observation to design
+against, not a finding; it was not pre-declared and nothing follows from it.
+
+**Consequences, per the locked document.**
+- The remaining eleven adapters are **NOT bought**.
+- The chatbot deliverable is **NOT unblocked**.
+- ⛔⛔ **NO THRESHOLD CHANGE IS AUTHORISED.** The prereg says so, and the margin
+  makes it moot: 6.56 against 3.0 is not a near miss.
+- ⛔ The underpowered clause does **not** apply — it covers lag-1 landing between
+  3 and 6, and lag 1 is +22.86.
+
+**sha** to follow; artifacts saved locally and hub-verified.
+
 ---
 
 # ⛔⛔ RETRACTIONS AND CORRECTIONS
@@ -158,6 +211,29 @@ in any region** — so the default was not merely wrong, it was unlaunchable, an
 it failed with a bare `HTTP 400` whose body (`insufficient-capacity`) was
 discarded. ⭐ It matters past convenience: the 40 GiB wall the pipeline asserts
 against and the 15,598 s/adapter reference are properties of *that card*.
+
+## R6 · The corpus manifest was not in the persist set — and determinism saved it
+
+The gate box persisted its weights, config, cell label, transcripts, run log and
+adapter manifest. It did **not** persist `corpus_ct-s20624/manifest.json`, which
+carries the corpus's own recipe lag profile — the comparison quantity for D5. The
+box was `terminating` by the time that was noticed and the pull returned **0
+bytes**.
+
+⛔ And it wrote a 0-byte file, which is the s20620 shape in miniature: an empty
+arrival and a file nobody asked for look identical afterwards. Deleted rather
+than left to be found.
+
+⭐⭐ **RECOVERED BY REBUILD, AND PROVEN.** The corpus was regenerated locally at
+seed 20624 and its `train.jsonl` sha256 came back **`dd40e22f85b0b6e4`**, equal
+to the value the box recorded in its persisted log. This is exactly what the
+determinism fix (`2405a27`, R4 of the previous arc) was for: an artifact outside
+the persist set was recovered by reconstruction and *verified* to be the same
+one, rather than assumed to be.
+
+⛔ **Still a gap.** Reconstruction only works because this corpus is
+deterministic and its sha was written down. The persist set should include the
+corpus manifest. Not yet fixed.
 
 ## R5b · The watcher watched nothing for an hour, and silence looked like health
 
