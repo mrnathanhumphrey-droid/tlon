@@ -180,10 +180,27 @@ def responsive_choice(idx_force, pool_force, provocation_roots, barred,
     return rng.choice(fallback), None
 
 
+def own_turn_roots(out, window: int, lex_r) -> set:
+    """Roots of the speaker's OWN preceding `window` turns. -> a set.
+
+    ⭐ IN AN ALTERNATING EXCHANGE THE SPEAKER'S OWN TURNS ARE AT -2, -4, -6 …
+    That is the whole reason this function exists as the dose axis: the model
+    that failed the gate was cohering with its own last utterance (lag 2), not
+    with its partner's (lag 1). Barring the partner's roots would destroy
+    perceive; barring the speaker's own roots is pressure on release alone.
+    """
+    roots = set()
+    for j in range(2, 2 * window + 1, 2):
+        if len(out) >= j:
+            roots |= roots_of(out[-j].surface, lex_r)
+    return roots
+
+
 def chain_transient(pool, idx, *, turns: int, rng: random.Random,
                     responsiveness: float, lex_r,
                     seed_force: str | None = None, fmap=None,
-                    rng_content: random.Random | None = None) -> list[TTurn]:
+                    rng_content: random.Random | None = None,
+                    suppression_window: int = 0) -> list[TTurn]:
     """One exchange: force-connected AND content-responsive, without persistence.
 
     ⛔⛔ TWO RANDOM STREAMS, AND THAT IS A FACTORIAL REQUIREMENT, NOT TIDINESS.
@@ -212,10 +229,35 @@ def chain_transient(pool, idx, *, turns: int, rng: random.Random,
         dist = m.row(f)
         nxt = rng.choices(FM.ORDER, weights=[dist[x] for x in FM.ORDER])[0]
         prev = out[-1]
+        # ⭐⭐ THE DOSE. `suppression_window=0` bars exactly the one root the
+        # previous turn echoed — the gate run's recipe, and the default, so a
+        # dose-0 corpus must rebuild byte-identically to `dd40e22f85b0b6e4`
+        # (red-proofed). Each step up additionally bars EVERY root of one more
+        # of the speaker's own preceding turns.
+        #
+        # ⛔ THE BAR MUST STAY OFF THE PARTNER'S TURN. `provocation_roots` below
+        # is `roots_of(prev.surface)` and `offerable` is
+        # `provocation_roots - barred`, so widening the bar onto -1 would empty
+        # the echo set and collapse perceive. Own turns only: -2, -4, -6 …
+        #
+        # ⛔ `suppression_window = -1` bars NOTHING. It is the deliberately
+        # WEAKENED dose and it exists because the axis turned out to be almost
+        # exhausted at 0: measured corpus-side, window 1 already drives the
+        # speaker's self-overlap rate to 0.0000, and windows 2+ change nothing.
+        # A curve needs a low end to have a slope, and -1 is the only direction
+        # with room. It is NOT a valid content-transient recipe — `verify` will
+        # refuse it — and it may only be built as a deliberate dose arm.
+        if suppression_window < 0:
+            barred = frozenset()
+        else:
+            barred = prev.inherited
+            if suppression_window:
+                barred = frozenset(
+                    barred | own_turn_roots(out, suppression_window, lex_r))
         if rc.random() < responsiveness:
             surface, echoed = responsive_choice(
                 idx[nxt], pool[nxt], roots_of(prev.surface, lex_r),
-                prev.inherited, rc, lex_r=lex_r)
+                barred, rc, lex_r=lex_r)
         else:
             # ⭐ The un-responsive draw is the control's behaviour, reachable on
             # purpose so `responsiveness` is a real dial and not a boolean.
@@ -352,7 +394,8 @@ def verify_recipe(chains, recipe: str, *, lex_r, shuffles: int = 200,
 
 
 def build_transient(n_chains: int, *, turns: int, pairs, seed: int,
-                    responsiveness: float, fmap=None, verify: bool = True):
+                    responsiveness: float, fmap=None, verify: bool = True,
+                    suppression_window: int = 0):
     """Generate, then REFUSE if it is not actually transient — before writing."""
     from .multiturn import check_force_pair_fairness
     # ⛔ Derived, not two arbitrary seeds: the FORCE stream must depend only on
@@ -364,7 +407,8 @@ def build_transient(n_chains: int, *, turns: int, pairs, seed: int,
     idx = index_by_root(pool, lex_r)
     chains = [chain_transient(pool, idx, turns=turns, rng=rng,
                               responsiveness=responsiveness, lex_r=lex_r,
-                              fmap=fmap, rng_content=rng_content)
+                              fmap=fmap, rng_content=rng_content,
+                              suppression_window=suppression_window)
               for _ in range(n_chains)]
     # ⭐ The force gate is UNCHANGED and still runs. The recipes differ in one
     # variable; they do not differ in which invariants they must satisfy.

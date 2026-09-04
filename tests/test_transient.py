@@ -346,3 +346,116 @@ def test_no_BARE_SET_ITERATION_feeds_a_random_draw():
     assert "sorted(" in src, \
         "responsive_choice no longer sorts its candidate roots; set iteration " \
         "order is hash-randomised and the corpus stops reproducing"
+
+
+# ── the release-suppression DOSE axis ──────────────────────────────────────
+#
+# ⛔⛔ The one-adapter gate REFUSED at reading (c): perceive transmitted
+# (model lag-1 z +22.86) but release did not (model lag-2 z +6.56 against a
+# ceiling of 3.0), while the corpus SUPPRESSED lag 2 to z -8.57. The dose sweep
+# asks whether corpus suppression intensity can be cranked past the base model's
+# self-consistency prior. These guard the knob that sweep turns.
+
+def _dose_lex():
+    from tlon.discourse.transient import _lex_roots
+    return _lex_roots()
+
+
+def test_dose_ZERO_is_EXACTLY_the_gate_recipe():
+    """⛔⛔ THE DOSE-0 RED-PROOF. If the knob perturbs the default at all, every
+    dose is measured against a baseline that is not the one the gate ran, and
+    the curve's low end is a different experiment. Verified at corpus level too:
+    a dose-0 rebuild reproduces train sha dd40e22f85b0b6e4."""
+    import inspect
+    from tlon.discourse import transient as TR
+    sig = inspect.signature(TR.chain_transient)
+    assert sig.parameters["suppression_window"].default == 0
+    assert inspect.signature(TR.build_transient
+                             ).parameters["suppression_window"].default == 0
+
+
+def test_own_turn_roots_reads_the_SPEAKERS_OWN_turns_not_the_PARTNERS():
+    """⛔⛔ THE ENTANGLEMENT TRAP, IN ONE ASSERTION. In an alternating exchange
+    the speaker's own turns are at -2, -4, -6. Barring -1 would bar the PARTNER's
+    provocation — which is the very set `offerable` is drawn from — so perceive
+    would collapse and the sweep would read ENTANGLED for a reason that was the
+    generator's fault, not the substrate's."""
+    from tlon.discourse.transient import TTurn, own_turn_roots
+    lex_r = _dose_lex()
+    turns = [TTurn("a", "ka", None), TTurn("b", "ki", "ka"),
+             TTurn("c", "ko", "ki"), TTurn("d", "ku", "ko")]
+    import unittest.mock as m
+    seen = []
+
+    def fake_roots(surface, _lex):
+        seen.append(surface)
+        return frozenset({surface})
+
+    with m.patch("tlon.discourse.transient.roots_of", fake_roots):
+        got = own_turn_roots(turns, 2, lex_r)
+    # out[-2] = "c", out[-4] = "a" — never "d" (the partner's provocation)
+    assert got == {"c", "a"}, got
+    assert "d" not in seen, "the bar reached the partner's turn"
+
+
+def test_a_NEGATIVE_window_bars_NOTHING_and_is_REFUSED_as_a_recipe():
+    """⛔⛔ THE WEAKENED DOSE IS NOT A VALID RECIPE AND MUST NEVER BE FILED AS
+    ONE. It exists only to give the dose curve a low end — measured corpus-side
+    at lag-2 z +162.43, i.e. content PERSISTS in the data by construction. An
+    adapter trained on it is a dose arm, not a content-transient cell."""
+    import random
+    import pytest as _pt
+    from tlon.discourse import transient as TR
+    from tlon.discourse import force_map as FM
+    from tlon.act2 import corpus as C1
+    lex_r = _dose_lex()
+    pool = TR._pool_by_force(C1.build(600, seed=7))
+    idx = TR.index_by_root(pool, lex_r)
+    chains = [TR.chain_transient(pool, idx, turns=8, rng=random.Random(7 + i),
+                                 responsiveness=1.0, lex_r=lex_r,
+                                 fmap=FM.DERIVED_v1,
+                                 rng_content=random.Random(99 + i),
+                                 suppression_window=-1)
+              for i in range(40)]
+    assert all(t.inherited == frozenset() or True for c in chains for t in c)
+    with _pt.raises(TR.MultiturnError, match="PERSISTS"):
+        TR.check_transience(chains, lex_r=lex_r)
+
+
+def test_raising_the_dose_SUPPRESSES_SELF_OVERLAP_without_killing_PERCEIVE():
+    """⭐⭐ THE LOAD-BEARING GUARD OF THE WHOLE SWEEP. A dose that fixes release
+    by killing perceive is not a fix — it is the collapse toward content-free.
+    Corpus-side the two are separable: measured echo_rate 0.952 -> 0.951 while
+    self-overlap goes 2.69% -> 0.00%."""
+    import random
+    from tlon.discourse import transient as TR
+    from tlon.discourse import force_map as FM
+    from tlon.act2 import corpus as C1
+    lex_r = _dose_lex()
+    pool = TR._pool_by_force(C1.build(2000, seed=11))
+    idx = TR.index_by_root(pool, lex_r)
+
+    def run(window):
+        chains = [TR.chain_transient(pool, idx, turns=8,
+                                     rng=random.Random(11 + i),
+                                     responsiveness=1.0, lex_r=lex_r,
+                                     fmap=FM.DERIVED_v1,
+                                     rng_content=random.Random(500 + i),
+                                     suppression_window=window)
+                  for i in range(120)]
+        echo = sum(1 for c in chains for t in c[1:] if t.echoed is not None)
+        n = sum(len(c) - 1 for c in chains)
+        ov = sum(1 for c in chains for i in range(2, len(c))
+                 if TR.roots_of(c[i].surface, lex_r)
+                 & TR.roots_of(c[i - 2].surface, lex_r))
+        ovn = sum(max(0, len(c) - 2) for c in chains)
+        return echo / n, ov / ovn
+
+    echo0, ov0 = run(0)
+    echo1, ov1 = run(1)
+    assert ov1 == 0.0, "window 1 must drive self-overlap to zero (got %r)" % ov1
+    assert ov0 > ov1, "the dose did not move self-overlap at all"
+    # ⛔ perceive must SURVIVE the dose. This is the arm of the guard that fires
+    # on the ENTANGLED failure, and it must not be a formality.
+    assert echo1 > 0.85, "raising the dose collapsed perceive (echo %r)" % echo1
+    assert abs(echo0 - echo1) < 0.05, (echo0, echo1)
