@@ -145,6 +145,72 @@ against, not a finding; it was not pre-declared and nothing follows from it.
 
 **sha** to follow; artifacts saved locally and hub-verified.
 
+## D6 · THE DOSE SLOPE IS FLAT — **ARCHITECTURAL FLOOR, DECISIVE**
+
+Read against `docs/PREREG_RELEASE_SUPPRESSION_DOSE_SLOPE_2026_09_04.md`
+**LOCK `765b6787`** (verifies). Artifacts on the hub under `cp-s20624/` and
+`ctw1-s20624/`, saved to `runs/act2/retrain12_cp/` and `retrain12_ctw1/`.
+
+⭐ **Chain accounting first, as §4 requires.** 12/12 chains used and **0 dropped**
+at every dose. ⚠️ Dose −1 produced **113 turns** against 120 for the other two:
+no chain was dropped, but some ended early (a refused turn ends its chain by
+design). 6 % fewer turns; it does not explain what follows.
+
+| dose | corpus lag-2 | corpus z₂ | **model lag-2** | **model z₂** | model z₁ |
+|---|---|---|---|---|---|
+| **−1** `cp-s20624` | 0.443 | **+200.86** | 0.337 | **+5.40** | +23.60 |
+| **0** `ct-s20624` | 0.027 | **−11.22** | 0.385 | **+6.56** | +22.86 |
+| **+1** `ctw1-s20624` | 0.000 | **−29.13** | 0.333 | **+5.30** | +22.58 |
+
+**corpus z₂ span = 229.99. model z₂ span = 1.26, and NOT ORDERED BY DOSE** —
+dose 0 is the highest, with both extremes below it.
+**Δ_model (dose −1 minus dose +1) = +0.09** across the full span.
+
+⭐⭐ **STATED IN THE RAW QUANTITY, WHICH IS STARKER THAN THE z.** The training
+data's mean shared roots at lag 2 went **0.443 → 0.027 → 0.000** — a 0.443 swing,
+monotone, spanning from "content demonstrably walks the chain" to *literally
+zero*. The model went **0.337 → 0.385 → 0.333**: a 0.052 swing, unordered, and
+it lands on ≈0.35 every time. **The model has its own set-point** — below the
+persisting corpus, far above the suppressed ones — and the corpus does not move
+it.
+
+**VERDICT: ARCHITECTURAL FLOOR.** The lag-2 persistence is **endogenous to the
+base weights**. It is not transmitted from the corpus, at any dose the axis can
+produce. ⭐ **The flatness IS the evidence** — not "we could not push hard
+enough" but "we pushed the entire available range, 230 z, and the model did not
+move."
+
+**What this closes.**
+- ⛔ The twelve-adapter batch is **NOT bought**, and not at any dose.
+- ⛔ The chatbot is **NOT unblocked** on this path.
+- ⛔ **No LoRA-on-frozen-weights recipe fixes it at this rank.** Corpus-signal
+  strength is exhausted as a lever; that is now measured, not suspected.
+
+**What it does NOT close.** Rank was held fixed on purpose (§5), so this says
+nothing about capacity. The next question is a LoRA-rank sweep or a heavier
+intervention, and it is a **separate decision**.
+
+⚠️ **NOT claimed: that the gain is exactly zero.** With 12 chains the sampling
+noise on a z is plausibly ±1–2, so the 1.26 spread is consistent with pure noise.
+What is claimed is bounded and sufficient: **any channel is smaller than the
+noise of this read across the entire achievable corpus range**, and the dose
+required to reach the ceiling does not exist on this axis.
+
+⭐ **PERCEIVE IS UNTOUCHED AT EVERY DOSE** — model lag-1 z +22.58 / +22.86 /
++23.60, a span of 1.02 against a floor of 6.0. The ENTANGLED fork, eliminated
+corpus-side in §3, stays eliminated model-side. And F-LOCAL render was
+0.984 / 1.000 / 0.969 — **unordered by dose**, so the flat lag-2 cannot be
+explained by one arm simply being a worse speaker.
+
+⛔ **CORRECTION TO THE PREREG'S OWN FIGURE.** §2 quotes a 182-z span from the
+exploratory corpus-side sweep (1445 chains, `runs/act2/dose_curve_corpus.json`).
+The corpora actually trained on span **229.99 z** (+200.86 to −29.13), read from
+their own persisted manifests. The realized span is *larger* than pre-declared —
+which strengthens the conclusion rather than weakening it, and is recorded here
+because a number that moved in the evidence's favour still moved.
+
+**sha** to follow; both boxes self-terminated after persisting.
+
 ---
 
 # ⛔⛔ RETRACTIONS AND CORRECTIONS
