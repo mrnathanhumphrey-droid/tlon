@@ -340,3 +340,28 @@ def test_the_tree_archive_is_DETERMINISTIC_and_complete(tmp_path):
     assert sha256_local(a) == sha256_local(b)
     with tarfile.open(a) as tf:
         assert sorted(tf.getnames()) == ["r_%d.json" % i for i in range(5)]
+
+
+@pytest.mark.parametrize("p", self_terminating_pipelines(), ids=lambda p: p.name)
+def test_a_self_terminating_pipeline_never_APPENDS_to_another_runs_log(p):
+    """⛔⛔ SOME RUN LOGS ARE COMMITTED, so a fresh clone arrives holding a
+    previous run's file and every `tee -a` writes into it.
+
+    The gate box did exactly that on 2026-09-04: its log opened with a stage line
+    from the run that DIED, an hour before that box existed. Nothing is lost that
+    way — but two runs share one record, and a reader can attribute one run's
+    numbers to the other. That is caveat decay with the caveat simply absent, and
+    these pipelines PERSIST their logs, so the merged file is what survives.
+
+    ⭐ Rotate rather than delete: the old record is still somebody's evidence.
+    """
+    src = p.read_text(encoding="utf-8")
+    assert '.prev' in src and 'mv "$LOG"' in src, (
+        "%s appends to whatever log is already there" % p.name)
+    # ⛔ Before anything WRITES, or the rotation moves a file this run has
+    # already appended to. ⛔⛔ NOT "before the first `tee -a`" — that landmark is
+    # inside the EXIT trap at the top of every one of these files, which fires
+    # at exit rather than where it is written. A source-order guard has to
+    # anchor on something whose position means what it looks like; `step()` is
+    # the first thing that actually emits.
+    assert src.index('mv "$LOG"') < src.index("step() {")

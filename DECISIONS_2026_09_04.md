@@ -159,6 +159,31 @@ it failed with a bare `HTTP 400` whose body (`insufficient-capacity`) was
 discarded. ⭐ It matters past convenience: the 40 GiB wall the pipeline asserts
 against and the 15,598 s/adapter reference are properties of *that card*.
 
+## R5b · The watcher watched nothing for an hour, and silence looked like health
+
+**Claimed.** A monitor was armed on both boxes, emitting on stage transitions,
+`FAILED`, `DONE`, stalls and self-termination.
+
+**Actually.** Its log paths were relative to the repo, and a non-interactive ssh
+lands in `$HOME`, not `~/tlon`. `grep` and `stat` matched nothing for sixty
+minutes. Both boxes were in fact healthy — but the watcher could not have told
+anyone otherwise.
+
+⭐ **The only reason it surfaced is that the stall branch fires on
+NOT-CHANGING rather than on bad news.** A monitor written to emit progress alone
+would have been silent, and silent is indistinguishable from healthy. That is
+the same argument the on-instance watchdog is built on, arriving from the other
+direction.
+
+⭐⭐ **THIS IS THE THIRD TIME TODAY THE SAME REMEDY APPLIED:** prove the path at
+ARM TIME. `terminate_reachable()` does it for the kill path; the new provision
+probe does it for the save path; the monitor now refuses to arm unless its log
+is readable AND already contains stage lines. **A watcher that cannot see is
+worse than no watcher, because it is the reason nobody looks.**
+
+⛔ Also: a missing size is now reported as *"the watcher lost its instrument"*,
+not as a stall. They are different facts and only one of them is about the box.
+
 ## R5 · The `tests` floor runs before the watchdog arms
 
 `pipeline_solo_regen.sh` failed its `tests` stage — which is stage 2, and the

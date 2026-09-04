@@ -24,6 +24,20 @@ set -e
 ROOT=runs/act2/poscontrol
 mkdir -p $ROOT/logs $ROOT/control
 LOG=$ROOT/pipeline_positive_control.log
+
+# ⛔⛔ NEVER APPEND TO ANOTHER RUN'S LOG. Some run logs are committed, so a fresh
+# clone arrives holding a previous run's file and every `tee -a` below writes
+# into it. The gate box did exactly that on 2026-09-04: its log opened with a
+# stage line from the run that DIED, an hour before this box existed. Nothing is
+# lost that way, but two runs share one record and a reader can attribute one
+# run's numbers to the other -- the caveat-decay failure, with the caveat simply
+# absent. ⭐ Rotate rather than delete: the old record is still somebody's
+# evidence.
+if [ -s "$LOG" ]; then
+  PREV="$LOG.$(date -u +%Y%m%dT%H%M%SZ).prev"
+  mv "$LOG" "$PREV"
+  echo "⚠ an earlier log was already here; moved it to $PREV"
+fi
 STAGE=init
 T_START=$(date +%s)
 step() { STAGE="$1"; echo "=== [$1] $(date -u +%H:%M:%S) ===" | tee -a $LOG; }
