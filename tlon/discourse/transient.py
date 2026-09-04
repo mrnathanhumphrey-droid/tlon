@@ -399,11 +399,12 @@ def verify_recipe(chains, recipe: str, *, lex_r, shuffles: int = 200,
         # nothing at all. So it must FAIL transience, and loudly.
         prof = lag_profile(chains, max_lag=2, lex_r=lex_r)
         rng = random.Random(seed)
-        z = {}
+        z, null = {}, {}
         for k in (1, 2):
             mu, sd = permutation_null(chains, lag=k, shuffles=shuffles, rng=rng,
                                       lex_r=lex_r)
             z[k] = (prof[k] - mu) / sd if sd else float("nan")
+            null[k] = {"mean": mu, "sd": sd}
         if not (z[1] >= Z_LAG1_MIN):
             raise MultiturnError(
                 "DOSE ARM IS NOT RESPONSIVE: lag-1 z=%.2f below the floor %.2f. "
@@ -417,8 +418,13 @@ def verify_recipe(chains, recipe: str, *, lex_r, shuffles: int = 200,
                 "of the dose span — it is a second copy of the treatment, and a "
                 "flat model-side read across a collapsed span would mean "
                 "nothing." % (z[2], Z_LAGN_MAX))
-        return {"lag_profile": prof, "z": z, "verdict": CONTENT_PERSISTENT,
-                "DOSE_ARM": True}
+        # ⛔⛔ EVERY BRANCH OF THIS FUNCTION MUST RETURN THE SAME KEYS. The first
+        # version of this branch omitted `null`, and the builder — which writes
+        # `trans["null"]` into the manifest — died with a bare KeyError on a
+        # rented box, AFTER the corpus had been generated and written. Guarded
+        # by a test that sweeps all three branches rather than checking this one.
+        return {"lag_profile": prof, "z": z, "null": null,
+                "verdict": CONTENT_PERSISTENT, "DOSE_ARM": True}
     if recipe == CONTENT_TRANSIENT:
         return check_transience(chains, lex_r=lex_r, shuffles=shuffles,
                                 seed=seed)

@@ -459,3 +459,47 @@ def test_raising_the_dose_SUPPRESSES_SELF_OVERLAP_without_killing_PERCEIVE():
     # on the ENTANGLED failure, and it must not be a formality.
     assert echo1 > 0.85, "raising the dose collapsed perceive (echo %r)" % echo1
     assert abs(echo0 - echo1) < 0.05, (echo0, echo1)
+
+
+def test_EVERY_verify_recipe_BRANCH_returns_the_SAME_KEYS():
+    """⛔⛔ THE BRANCH-SHAPE TRAP, AND IT COST A BOX. `verify_recipe` has three
+    branches and the builder writes `trans["lag_profile"]`, `trans["z"]`,
+    `trans["null"]` and `trans["verdict"]` into the manifest from whichever one
+    ran. The `content-persistent` branch omitted `null`, so the builder died on
+    a bare KeyError — on a rented box, in the `corpora` stage, AFTER generating
+    and writing 60,187 rows, and before the watchdog had armed.
+
+    ⭐ The fix is not "add the key". It is a guard that sweeps ALL branches, so
+    the next branch anybody adds is held to the shape its consumer reads.
+    """
+    import random
+    from tlon.discourse import transient as TR
+    from tlon.discourse import force_map as FM
+    from tlon.act2 import corpus as C1
+    lex_r = _dose_lex()
+    pool = TR._pool_by_force(C1.build(1200, seed=5))
+    idx = TR.index_by_root(pool, lex_r)
+
+    def chains_at(window, responsiveness):
+        return [TR.chain_transient(pool, idx, turns=8,
+                                   rng=random.Random(5 + i),
+                                   responsiveness=responsiveness, lex_r=lex_r,
+                                   fmap=FM.DERIVED_v1,
+                                   rng_content=random.Random(700 + i),
+                                   suppression_window=window)
+                for i in range(120)]
+
+    cases = {TR.CONTENT_FREE: chains_at(0, 0.0),
+             TR.CONTENT_TRANSIENT: chains_at(0, 1.0),
+             TR.CONTENT_PERSISTENT: chains_at(-1, 1.0)}
+    shapes = {}
+    for recipe, chains in cases.items():
+        rep = TR.verify_recipe(chains, recipe, lex_r=lex_r)
+        shapes[recipe] = rep
+        # ⛔ Exactly the keys `act2_build_multiturn` reads off this object.
+        for key in ("lag_profile", "z", "null", "verdict"):
+            assert key in rep, "%s branch is missing %r" % (recipe, key)
+        assert set(rep["z"]) == set(rep["null"]), (
+            "%s reports z at lags it reports no null for" % recipe)
+    assert shapes[TR.CONTENT_PERSISTENT]["verdict"] == TR.CONTENT_PERSISTENT
+    assert shapes[TR.CONTENT_FREE]["verdict"] == TR.CONTENT_FREE
