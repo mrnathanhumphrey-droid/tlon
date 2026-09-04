@@ -1,0 +1,125 @@
+{
+  "recipe": "content-transient",
+  "recipe_responsiveness": 1.0,
+  "recipe_suppression_window": 1,
+  "recipe_VERIFIED": "content-transient",
+  "recipe_lag_profile": {
+    "1": 0.9599245045611827,
+    "2": 0.0,
+    "3": 0.020607458669742406,
+    "4": 0.041003460207612454
+  },
+  "recipe_z_vs_permutation_null": {
+    "1": 522.1444067993258,
+    "2": -29.13202817369432,
+    "3": -14.145996111707703,
+    "4": -4.007350703650602
+  },
+  "recipe_null": {
+    "1": {
+      "mean": 0.048947782321484744,
+      "sd": 0.0017446834829158877
+    },
+    "2": {
+      "mean": 0.04917404844290662,
+      "sd": 0.0016879720199951568
+    },
+    "3": {
+      "mean": 0.048991541714725105,
+      "sd": 0.002006510027349087
+    },
+    "4": {
+      "mean": 0.0487781141868512,
+      "sd": 0.0019400982230370347
+    }
+  },
+  "factorial_pair_key": "seed20624",
+  "generator": "transient.build_transient/2-stream/v1",
+  "pairing_capability_side": "seed+force",
+  "pairing_NOTE": "A PAIR is `seed+force` only if BOTH arms came off the split-stream generator. One legacy side makes the whole pair `seed`-only: unbiased (same map, same stationary distribution) but UNPAIRED, so higher variance. s20621-23, t30001-3 and s20624-29 are legacy.",
+  "map_label": "DERIVED_v1",
+  "map_is_STIPULATED": false,
+  "map_stipulated_cells": {},
+  "map_forced_cells": {
+    "ki": "ka"
+  },
+  "map_stationary": {
+    "ka": 0.33333333333329884,
+    "ki": 0.16666666666667562,
+    "ko": 0.16666666666667562,
+    "ku": 0.16666666666667562,
+    "kä": 0.16666666666667562
+  },
+  "PRIMARY_MEASURE_ROWS_common_uniform": [
+    "ka",
+    "ku",
+    "kä"
+  ],
+  "PRIMARY_MEASURE_EXPECTATION": 0.2,
+  "multiturn_fraction_requested_BY_COMPUTE": 0.5,
+  "multiturn_fraction_by_rows_DERIVED": 0.25906609078314724,
+  "held_variable": "compute (char/token share); rows are the dial",
+  "n_multiturn_rows": 15895,
+  "n_singleturn_rows": 45460,
+  "singleturn_directions": [
+    "read",
+    "write"
+  ],
+  "chains": 1445,
+  "turns": 12,
+  "seed": 20624,
+  "direction": "provoke",
+  "provocation_sha": "47ea5a7fd712be0c",
+  "uniform_rows": [
+    "ka",
+    "ko",
+    "ku",
+    "kä"
+  ],
+  "separation": 0.22222222222223165,
+  "design_zeros": [
+    "ki->ki",
+    "ki->ko",
+    "ki->ku",
+    "ki->kä"
+  ],
+  "force_pair_counts": {
+    "ka->ka": 975,
+    "ka->ki": 1022,
+    "ka->ko": 1034,
+    "ka->ku": 1030,
+    "ka->kä": 1018,
+    "ki->ka": 2655,
+    "ko->ka": 541,
+    "ko->ki": 553,
+    "ko->ko": 535,
+    "ko->ku": 559,
+    "ko->kä": 561,
+    "ku->ka": 538,
+    "ku->ki": 513,
+    "ku->ko": 577,
+    "ku->ku": 553,
+    "ku->kä": 539,
+    "kä->ka": 560,
+    "kä->ki": 526,
+    "kä->ko": 540,
+    "kä->ku": 543,
+    "kä->kä": 523
+  },
+  "fairness": {
+    "total_transitions": 15895,
+    "worst_cell": [
+      "ku",
+      "ki"
+    ],
+    "worst_ratio": 0.9430147058823529,
+    "floor": 0.01
+  },
+  "NOT_IN_THIS_CORPUS": [
+    "CROSS-PAIR content adjacency (content dies at the end of its turn; within-pair adjacency is PRESENT and is this recipe's defining property — see recipe_lag_profile)",
+    "own-chain content persistence (lag 2 is at the permutation null)",
+    "directional evidential adjacency (empirical, the arena's target)",
+    "non-forced force-map cells (uniform, not guessed)",
+    "the base convention table (§8.1, deferred — base_convention raises)"
+  ]
+}

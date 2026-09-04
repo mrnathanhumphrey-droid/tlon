@@ -78,16 +78,32 @@ def pairing_regime(*manifests) -> str:
     return PAIRED_SEED_ONLY
 
 
-def adapter_label(recipe: str, seed: int) -> str:
-    """`ct-s20624` / `cf-s20624`. ⭐ The cell, in the filename.
+def adapter_label(recipe: str, seed: int,
+                  suppression_window: int | None = None) -> str:
+    """`ct-s20624` / `cf-s20624` / `ctw1-s20624`. ⭐ The cell, in the filename.
 
     ⛔ A directory called `adapter_s20624` cannot say which arm it is in, and the
     matrix is reconstructed from exactly these strings once the terminal
     scrollback is gone.
+
+    ⛔⛔ AND THE DOSE IS PART OF THE CELL. This ignored `suppression_window`, so
+    `ctw1-s20624` — window 1 — wrote `"cell": "ct-s20624"`, the GATE's cell, with
+    the gate's pair key. Two different treatments claiming one cell: the run
+    directory and the hub prefix were right, and the field every pooling routine
+    actually reads was wrong. Caught by reading the artifact off the hub instead
+    of trusting that it said what the directory said.
+
+    ⭐ Window 0 keeps the bare label so every existing cell name is unchanged
+    (`ct-s20624` IS the window-0 gate); only a non-default dose adds `w<n>`.
     """
     if recipe not in RECIPES:
         raise FactorialError("unknown recipe %r" % (recipe,))
-    return "%s-s%d" % (RECIPE_CODE[recipe], seed)
+    if suppression_window is not None and suppression_window < 0:
+        raise FactorialError(
+            "suppression_window=%d bars nothing and PERSISTS; it has no cell"
+            % suppression_window)
+    tag = ("w%d" % suppression_window) if suppression_window else ""
+    return "%s%s-s%d" % (RECIPE_CODE[recipe], tag, seed)
 
 
 def dose_arm_entry(name: str, *, recipe: str, seed: int,
@@ -143,7 +159,7 @@ def entry(name: str, *, recipe: str, seed: int, manifest=None,
         "name": name,
         "recipe": recipe,
         "seed": seed,
-        "cell": adapter_label(recipe, seed),
+        "cell": adapter_label(recipe, seed, suppression_window),
         "generator": gen,
         # ⭐ THE DOSE RIDES WITH THE ADAPTER. Two content-transient adapters at
         # different suppression windows are different treatments; an adapter
@@ -155,7 +171,15 @@ def entry(name: str, *, recipe: str, seed: int, manifest=None,
         "pairing_capability_side": (PAIRED_SEED_AND_FORCE
                                     if gen == GENERATOR_SPLIT_STREAM
                                     else PAIRED_SEED_ONLY),
-        "factorial_pair_key": "seed%d" % seed,
+        # ⛔⛔ THE DOSE IS PART OF THE PAIR KEY TOO. A pair is a contrast that
+        # differs in ONE variable. `ct-s20624` (window 0) and `ctw1-s20624`
+        # (window 1) are both content-transient at seed 20624, so a key of
+        # `seed20624` alone would make them each other's partner — pairing two
+        # cells of the SAME arm that differ in the dose, which is not a
+        # cross-recipe contrast at all. The matched pair for a dosed adapter is
+        # the control at the SAME dose, and there is not one yet.
+        "factorial_pair_key": ("seed%d" % seed if not suppression_window
+                               else "seed%d/w%d" % (seed, suppression_window)),
     }
 
 

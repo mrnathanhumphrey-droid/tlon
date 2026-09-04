@@ -311,4 +311,49 @@ def test_the_DOSE_rides_with_a_normal_entry():
     e = entry("ctw1-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
               manifest=FRESH, suppression_window=1)
     assert e["suppression_window"] == 1
-    assert e["factorial_pair_key"] == "seed20624"
+    # ⛔ This asserted `"seed20624"` when it was written, which encoded the
+    # collision rather than catching it: the dosed adapter would have shared the
+    # gate's pair key. The dose belongs in the key.
+    assert e["factorial_pair_key"] == "seed20624/w1"
+    assert e["cell"] == "ctw1-s20624"
+
+
+def test_the_DOSE_is_part_of_the_CELL_and_of_the_PAIR_KEY():
+    """⛔⛔ THE COLLISION THAT SHIPPED. `adapter_label` ignored the suppression
+    window, so `ctw1-s20624` (window 1) wrote `"cell": "ct-s20624"` — the GATE's
+    cell, window 0 — carrying the gate's pair key. Two different treatments
+    claiming one cell.
+
+    ⭐ The run directory (`adapter_ctw1-s20624`) and the hub prefix were both
+    right; the field every pooling routine actually READS was wrong. Caught by
+    reading the artifact back off the hub rather than trusting that it agreed
+    with the directory it came from.
+
+    ⛔ And the pair key matters as much as the cell: keyed on the seed alone,
+    the window-0 and window-1 content-transient adapters become each other's
+    partner — pairing two cells of the SAME arm that differ only in dose, which
+    is not a cross-recipe contrast at all.
+    """
+    gate = entry("ct-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
+                 manifest=FRESH, suppression_window=0)
+    dosed = entry("ctw1-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
+                  manifest=FRESH, suppression_window=1)
+    assert gate["cell"] == "ct-s20624"
+    assert dosed["cell"] == "ctw1-s20624"
+    assert gate["cell"] != dosed["cell"]
+    assert gate["factorial_pair_key"] != dosed["factorial_pair_key"]
+    # ⭐ Window 0 keeps the bare label, so no existing cell name moves.
+    assert entry("ct-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
+                 manifest=FRESH)["cell"] == "ct-s20624"
+
+
+def test_two_DOSES_of_one_recipe_are_NOT_counted_as_a_PAIR():
+    """⛔⛔ The consequence, at the level that would actually corrupt a result:
+    `pair_regimes` must not report a pair for two same-arm adapters that differ
+    only in dose."""
+    rows = [entry("ct-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
+                  manifest=FRESH, suppression_window=0),
+            entry("ctw1-s20624", recipe=CONTENT_TRANSIENT, seed=20624,
+                  manifest=FRESH, suppression_window=1)]
+    assert pair_regimes(rows) == {}, \
+        "two doses of ONE arm were counted as a cross-recipe pair"
