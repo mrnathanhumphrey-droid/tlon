@@ -220,13 +220,23 @@ def test_the_solo_completeness_check_is_DERIVED_from_the_manifest():
     """⛔⛔ It read `6 * 14` — a hardcoded batch size. A single-adapter gate run
     would have been refused as a PARTIAL PULL of a batch it was never part of,
     at the one stage that must not be argued with."""
+    import ast
     import pathlib as _p
     src = (_p.Path(__file__).resolve().parents[1]
            / "tools/act2_retrain_orchestrate.py").read_text(encoding="utf-8")
     # ⛔ CODE ONLY. The first version of this test asserted against the whole
     # file and fired on the COMMENT that explains the fix — a guard that cannot
     # tell an explanation from the thing it explains.
-    code = "\n".join(l for l in src.splitlines()
-                     if not l.lstrip().startswith("#"))
+    # ⛔⛔ AND STRIPPING `#` LINES IS NOT ENOUGH: a DOCSTRING quoting the defect
+    # survives that filter intact. Caught on 2026-09-04 when the identically
+    # shaped guard in `test_box_persist.py` fired on its own module's docstring.
+    # ⭐ Sweeping the class, not the instance — which is the lesson this whole
+    # arc is about.
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                             ast.AsyncFunctionDef)) and ast.get_docstring(node):
+            node.body = node.body[1:]
+    code = ast.unparse(tree)
     assert "6 * 14" not in code, "the solo check is still coupled to a batch size"
     assert "len(manifest) * SOLO_PER_BUILD" in code

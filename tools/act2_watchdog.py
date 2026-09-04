@@ -136,6 +136,55 @@ def act(action: str, reason: str, *, terminator) -> None:
         terminator(reason)
 
 
+def run_flush(cmd: str, *, timeout_s: float = 900.0, runner=None) -> bool:
+    """⛔⛔ LAST WORDS. Push whatever is still only on this box before it dies.
+
+    ⭐ BEST-EFFORT BY DESIGN, AND IT CAN NEVER BLOCK THE TERMINATE. This runs on
+    a box that is already being killed for stalling, overrunning, or dying — it
+    is burning money for nothing at the moment this executes. A flush that
+    raised, hung, or aborted the shutdown would convert a bounded failure into
+    an unbounded bill, which is the one thing this module exists to prevent.
+
+    ⛔ So: everything is caught, there is a hard timeout, and the return value is
+    reported rather than acted on. The failure is LOUD in the log and silent in
+    the control flow.
+    """
+    import subprocess
+    print("FLUSH: %s" % cmd, flush=True)
+    try:
+        r = (runner or subprocess.run)(
+            cmd, shell=True, capture_output=True, text=True, timeout=timeout_s)
+    except Exception as e:                                       # noqa: BLE001
+        print("⛔ FLUSH FAILED (%s: %s) — terminating anyway"
+              % (type(e).__name__, e), flush=True)
+        return False
+    for line in (getattr(r, "stdout", "") or "").splitlines():
+        print("  flush| %s" % line, flush=True)
+    rc = getattr(r, "returncode", 1)
+    if rc != 0:
+        print("⛔ FLUSH exited %s — terminating anyway: %s"
+              % (rc, (getattr(r, "stderr", "") or "")[:400]), flush=True)
+    return rc == 0
+
+
+def with_flush(terminator, flush_cmd, *, timeout_s: float = 900.0,
+               runner=None):
+    """Wrap a terminator so it flushes FIRST. ⛔ Before, never instead of.
+
+    ⛔⛔ THE ORDER IS THE WHOLE POINT. `retrain12` succeeded, wrote `~/DONE`, and
+    was terminated within one 300 s poll with 84 solo transcripts and its run log
+    still on it. The transcripts are regenerable; the log is not.
+    """
+    if not flush_cmd:
+        return terminator
+
+    def _terminate_after_flush(reason: str) -> None:
+        run_flush(flush_cmd, timeout_s=timeout_s, runner=runner)
+        terminator(reason)
+
+    return _terminate_after_flush
+
+
 def arm(*, pid: int, marker: str, cmdline_reader) -> tuple[object, str]:
     """Refuse to start watching unless the thing being watched is really there.
 
@@ -260,6 +309,14 @@ def main() -> int:
     ap.add_argument("--deadline-h", type=float, default=40.0)
     ap.add_argument("--stall-min", type=float, default=90.0)
     ap.add_argument("--poll-s", type=float, default=300.0)
+    # ⛔⛔ WHAT TO SAVE ON THE WAY OUT. Without it, a box killed for a stall or a
+    # dead process takes its run log with it — the record of WHY, which is the
+    # one artifact that re-running cannot regenerate.
+    ap.add_argument("--flush-cmd", default=None,
+                    help="shell command run BEFORE terminating, on every "
+                         "terminating verdict. Best-effort: its failure is "
+                         "logged and never blocks the terminate.")
+    ap.add_argument("--flush-timeout-s", type=float, default=900.0)
     ap.add_argument("--dry-run", action="store_true",
                     help="print the verdict instead of terminating")
     a = ap.parse_args()
@@ -283,6 +340,11 @@ def main() -> int:
     started = time.time()
     terminator = ((lambda r: print("DRY-RUN would terminate: %s" % r, flush=True))
                   if a.dry_run else lambda_terminate)
+    terminator = with_flush(terminator, a.flush_cmd,
+                            timeout_s=a.flush_timeout_s)
+    if a.flush_cmd:
+        print("  flush-on-exit armed (timeout %.0f s): %s"
+              % (a.flush_timeout_s, a.flush_cmd), flush=True)
     while True:
         o = observe(a.pid, a.log, a.done, started)
         action, reason = decide(o, marker=a.marker,

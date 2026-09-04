@@ -235,3 +235,91 @@ def test_the_user_agent_is_set_on_the_terminate_request():
     assert wd.LAMBDA_UA and "urllib" not in wd.LAMBDA_UA.lower()
     src = pathlib.Path(wd.__file__).read_text(encoding="utf-8")
     assert src.count("User-Agent") >= 2, "a request is missing its User-Agent"
+
+
+# ── 6 · LAST WORDS: flush before terminate ─────────────────────────────────
+#
+# ⛔⛔ THE 2026-09-04 LOSS. `retrain12` SUCCEEDED, wrote `~/DONE`, and this
+# watchdog terminated it within one 300 s poll — taking 84 solo transcripts and
+# the run log. The gate box died at `manifest` with a trained, F-LOCAL-cleared
+# adapter on disk and was terminated for a dead process.
+#
+# ⭐ BOTH VERDICTS WERE CORRECT. One run had finished and one had died; both
+# boxes were billing for nothing. The defect was that the artifacts still lived
+# only on the box. The pipeline now persists per-adapter as it goes, and this is
+# the remaining seam: the run LOG is not regenerable by re-running, so a
+# terminating verdict must try to save it on the way out.
+#
+# ⛔ AND THE FLUSH MUST NEVER BE ABLE TO PREVENT THE TERMINATE. It executes on a
+# box that is already burning money for nothing.
+
+def test_the_flush_runs_BEFORE_the_terminate():
+    from act2_watchdog import with_flush
+    order = []
+    t = with_flush(lambda r: order.append("terminate"), "echo hi",
+                   runner=lambda *a, **k: order.append("flush") or _rc(0))
+    t("because")
+    assert order == ["flush", "terminate"]
+
+
+class _rc:
+    """A stand-in for CompletedProcess."""
+
+    def __init__(self, code, out="", err=""):
+        self.returncode, self.stdout, self.stderr = code, out, err
+
+
+def test_a_flush_that_RAISES_still_terminates():
+    """⛔⛔ THE COST INVERSION. A flush that aborted the shutdown would turn a
+    bounded failure into an unbounded bill — the exact thing this module exists
+    to prevent. Loud in the log, silent in the control flow."""
+    from act2_watchdog import with_flush
+    done = []
+
+    def explode(*a, **k):
+        raise RuntimeError("hub unreachable")
+
+    with_flush(lambda r: done.append(r), "x", runner=explode)("stalled")
+    assert done == ["stalled"]
+
+
+def test_a_flush_that_TIMES_OUT_still_terminates():
+    import subprocess
+    from act2_watchdog import with_flush
+    done = []
+
+    def hang(*a, **k):
+        raise subprocess.TimeoutExpired("x", 1)
+
+    with_flush(lambda r: done.append(r), "x", runner=hang)("deadline")
+    assert done == ["deadline"]
+
+
+def test_a_flush_that_FAILS_nonzero_still_terminates():
+    from act2_watchdog import with_flush
+    done = []
+    with_flush(lambda r: done.append(r), "x",
+               runner=lambda *a, **k: _rc(2, "", "no token"))("dead")
+    assert done == ["dead"]
+
+
+def test_NO_flush_cmd_leaves_the_terminator_UNCHANGED():
+    """⛔ Non-vacuity in the other direction: the wrapper must be a no-op when
+    nothing was asked for, or every run pays for a shell it did not request."""
+    from act2_watchdog import with_flush
+    t = object()
+    assert with_flush(t, None) is t and with_flush(t, "") is t
+
+
+def test_a_HEALTHY_run_never_flushes():
+    """⛔ `act` gates on the verdict, so WAIT must reach neither the flush nor
+    the terminator. A flush on every poll would upload the log 480 times in a
+    40-hour run."""
+    from act2_watchdog import with_flush
+    calls = []
+    t = with_flush(lambda r: calls.append("terminate"), "x",
+                   runner=lambda *a, **k: calls.append("flush") or _rc(0))
+    act(WAIT, "healthy", terminator=t)
+    assert calls == []
+    act(DONE, "complete", terminator=t)
+    assert calls == ["flush", "terminate"]

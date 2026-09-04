@@ -30,6 +30,9 @@ step() { STAGE="$1"; echo "=== [$1] $(date -u +%H:%M:%S) ===" | tee -a $LOG; }
 
 PY=${PY:-$HOME/venv/bin/python}
 MODEL=Qwen/Qwen2.5-7B-Instruct
+# ⛔⛔ DURABLE STORAGE IS A STAGE, NOT A LATER ERRAND. `~/DONE` used to mean
+# COMPUTED while the collection it implied lived on another machine.
+HF_REPO=${HF_REPO:-keyzersoze04/tlon-act2-adapters}
 TURNS=80
 REPS=28
 COLD_SHA=84c2a1b5128229037c979776a5693776369c11edb86c5ff27c6b68dacc9c1ade
@@ -123,10 +126,17 @@ step watchdog
 # drops and silence looks like health. Identity is PID + /proc/<pid>/cmdline —
 # never a pattern search, which matches the watchdog's own argv.
 rm -f ~/DONE ~/FAILED
+# ⛔⛔ --flush-cmd: LAST WORDS BEFORE A KILL. This pipeline's own header records
+# that its throughput log "has been lost to a kill once already", and on
+# 2026-09-04 the same watchdog terminated `retrain12` on SUCCESS with 84 solo
+# transcripts still on the box. The verdict was right both times — the box was
+# billing for nothing — so the fix is that the work leaves the box, not that the
+# watchdog hesitates.
 nohup $PY tools/act2_watchdog.py \
       --pid $$ --marker pipeline_positive_control.sh \
       --log $LOG --done $HOME/DONE \
       --deadline-h 40 --stall-min 90 --poll-s 300 \
+      --flush-cmd "$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO flush" \
       > $ROOT/watchdog.log 2>&1 &
 WD=$!
 sleep 5
@@ -185,9 +195,22 @@ for S in $SELF; do
   echo "  ⏱ ${S}|self marginal wall: $((T1-T0)) s for $REPS replicates" | tee -a $LOG
 done
 
+# ── PERSIST BEFORE ~/DONE ───────────────────────────────────────────────────
+# ⛔⛔ THE MARKER MUST MEAN PERSISTED. The watchdog terminates within one 300 s
+# poll of seeing `~/DONE` — correctly, since a finished run that keeps billing
+# is pure waste. On 2026-09-04 that took 84 solo transcripts off a run that had
+# SUCCEEDED. The transcripts below are this experiment's entire output.
+step persist
+$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+    tree --dir logs --name poscontrol_pairs 2>&1 | tee -a $LOG
+$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+    tree --dir control --name poscontrol_selfpairs 2>&1 | tee -a $LOG
+$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+    file --path $LOG --subdir poscontrol 2>&1 | tee -a $LOG
+
 step done
 echo "⭐ ALL STAGES PASSED — 7 real + 7 self pairs x $REPS reps, SHARED vs YOKED" | tee -a $LOG
-echo "⛔ PULL $LOG AND $ROOT/ BEFORE KILLING THE BOX — the throughput log has" | tee -a $LOG
-echo "   been lost to a kill once already." | tee -a $LOG
+echo "  transcripts and log are in hf://$HF_REPO and hub-verified; the local" | tee -a $LOG
+echo "  pull is a convenience, not the only path off this box." | tee -a $LOG
 echo "  total wall: $(( $(date +%s) - T_START )) s" | tee -a $LOG
 touch ~/DONE

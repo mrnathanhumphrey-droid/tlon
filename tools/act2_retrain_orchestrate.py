@@ -69,7 +69,10 @@ def _roots(root: str):
     if not root or "/" in root or "\\" in root or root.startswith("."):
         raise TransferError("bad run root %r" % (root,))
     return "~/tlon/runs/act2/%s" % root, pathlib.Path("runs/act2") / root
-NEW = ("s20624", "s20625", "s20626", "s20627", "s20628", "s20629")
+# ⛔ `NEW = ("s20624", ...)` lived here, unused, a hardcoded batch list one
+# careless reference away from becoming the thing that decides what a run
+# contains. Same class as the `== 6` that killed the gate box. Deleted rather
+# than left to be found.
 
 
 def plan_collection(manifest: dict, local_root) -> list[dict]:
@@ -99,8 +102,12 @@ def _run(cmd, **kw):
 
 
 def cmd_launch(a):
+    # ⛔ The instance NAME is how a human tells two live boxes apart. Pinned to
+    # "tlon-retrain12", both arms of the factorial would wear one label in the
+    # console — and the first thing anyone does in a bad moment is read that
+    # console. Defaults to the run root it will write to.
     r = launch(instance_type=a.instance_type, region=a.region,
-               ssh_key_name=a.ssh_key, name="tlon-retrain12")
+               ssh_key_name=a.ssh_key, name="tlon-%s" % a.root)
     print(json.dumps(r, indent=2))
     print("\n⛔ RECORD THE INSTANCE ID. Nothing else can terminate it for you.")
     return 0
@@ -172,12 +179,22 @@ def cmd_env(a):
     key = os.environ.get("LAMBDA_API_KEY")
     if not key:
         raise TransferError("LAMBDA_API_KEY is not set locally")
-    hf = ""
+    # ⛔⛔ THE HF TOKEN IS NOW LOAD-BEARING, SO ITS ABSENCE IS A REFUSAL. This
+    # used to fall back to `hf = ""` and ship an empty export. Persistence is a
+    # pipeline stage now: an empty token means the run trains for hours and then
+    # cannot save anything, discovered at the one moment when the artifacts
+    # exist only on a box that is already terminating itself.
+    hf = os.environ.get("HF_TOKEN", "")
     envf = pathlib.Path(r"D:\physics_detector\.env")
-    if envf.exists():
+    if not hf and envf.exists():
         m = re.search(r"^HF_TOKEN=(.+)$",
                       envf.read_text(encoding="utf-8", errors="replace"), re.M)
         hf = m.group(1).strip().strip('"').strip("'") if m else ""
+    if not hf:
+        raise TransferError(
+            "no HF_TOKEN — refusing to provision. The box persists its own "
+            "artifacts as a pipeline stage, so a run without a write token is a "
+            "run that cannot save what it makes.")
     body = "\n".join(("export LAMBDA_API_KEY=%s" % key,
                       "export LAMBDA_INSTANCE_ID=%s" % a.instance,
                       "export HF_TOKEN=%s" % hf, ""))
@@ -211,6 +228,23 @@ def cmd_env(a):
                             "THE BOX — it would refuse to arm, and the pipeline "
                             "would halt. Fix before training.")
     print("  ✅ the box can terminate itself")
+
+    # ⛔⛔ AND PROVE THE SAVE PATH, NOT ONLY THE KILL PATH. The two are symmetric
+    # obligations: a box that cannot terminate costs money, and a box that
+    # cannot persist costs the work. Only the second one is unrecoverable, and
+    # it is the one that had no arm-time probe until now. ⭐ It WRITES — a
+    # read-only token passes a read probe and fails at the end of the run.
+    save = ssh(a.host, KEY,
+               ". ~/.tlon_env && cd ~/tlon && ~/venv/bin/python "
+               "tools/act2_box_persist.py --root /tmp/_probe --repo %s probe"
+               % HF_REPO, check=False)
+    print("  persist path from the box: %s" % save.strip().splitlines()[-1:])
+    if "verified writable" not in save:
+        raise TransferError(
+            "the box CANNOT WRITE to hf://%s (%s). Persistence is a pipeline "
+            "stage; without it the run would train for hours and then have "
+            "nowhere to put the result." % (HF_REPO, save.strip()[-300:]))
+    print("  ✅ the box can persist its own artifacts")
     return 0
 
 
@@ -338,6 +372,9 @@ def main() -> int:
     p.add_argument("--instance-type", default="gpu_1x_a100")
     p.add_argument("--region", default="us-west-1")
     p.add_argument("--ssh-key", default="tlon")
+    p.add_argument("--root", default="retrain12",
+                   help="run tree this box will write to; also its name in the "
+                        "Lambda console, so two live boxes are tellable apart")
     for name, fn in (("status", cmd_status),):
         q = sub.add_parser(name); q.set_defaults(fn=fn)
     # ⛔⛔ EVERY STAGE THAT TOUCHES A RUN TREE TAKES --root. It was a module

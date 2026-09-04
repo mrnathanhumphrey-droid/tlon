@@ -57,6 +57,13 @@ step() { STAGE="$1"; echo "=== [$1] $(date -u +%H:%M:%S) ===" | tee -a $LOG; }
 
 PY=${PY:-$HOME/venv/bin/python}
 MODEL=Qwen/Qwen2.5-7B-Instruct
+# ⛔⛔ DURABLE STORAGE IS A STAGE OF THIS PIPELINE, NOT A LATER ERRAND. See
+# tools/act2_box_persist.py for the full reasoning; the short version is that
+# `~/DONE` used to mean COMPUTED while the collection it implied lived on
+# another machine, so every run had a five-minute window in which the only copy
+# of the work sat on a box that was already terminating itself. Both losses on
+# 2026-09-04 happened inside that window.
+HF_REPO=${HF_REPO:-keyzersoze04/tlon-act2-adapters}
 SEQ=384; BATCH=4; ACCUM=4          # recipe_var, verified
 TURNS=40; N_PER_BUILD=14           # asym_recert solo, verified
 # ⛔⛔ THE SAME SEEDS IN BOTH ARMS. This literal list IS the matched-pair rule:
@@ -122,10 +129,16 @@ done
 # ── 3 · WATCHDOG BEFORE ANY GPU TIME ────────────────────────────────────────
 step watchdog
 rm -f ~/DONE ~/FAILED
+# ⛔⛔ --flush-cmd IS THE KILL PATH'S LAST WORDS. A box terminated for a stall or
+# a dead process still holds its run log — the record of WHY, and the one
+# artifact re-running cannot regenerate. `retrain12/pipeline_retrain.log` was
+# lost exactly that way. The flush is best-effort and cannot block the
+# terminate: this fires on a box that is already burning money for nothing.
 nohup $PY tools/act2_watchdog.py \
       --pid $$ --marker pipeline_retrain.sh \
       --log $LOG --done $HOME/DONE \
       --deadline-h 40 --stall-min 90 --poll-s 300 \
+      --flush-cmd "$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO flush" \
       > $ROOT/watchdog.log 2>&1 &
 WD=$!
 sleep 5
@@ -135,8 +148,13 @@ echo "  ✅ watchdog armed, pid $WD, watching $$" | tee -a $LOG
 SETUP_END=$(date +%s)
 echo "  ⏱ setup wall (one-time): $((SETUP_END-T_START)) s" | tee -a $LOG
 
-# ── 4 · TRAIN · GATE · MEASURE ──────────────────────────────────────────────
+# ── 4 · TRAIN · GATE · MEASURE · PERSIST ────────────────────────────────────
 N=0
+# ⭐ The cells this run actually produced, accumulated as they are made. The
+# final verify reads THIS, not the seed list — so a run that stopped early is
+# certified over what it built, and a build that never happened cannot be
+# certified by a list typed in advance.
+CELLS=""
 for S in $NEW; do
   # ⭐ THE CELL IS IN THE FILENAME. `adapter_s20624` cannot say which arm it is
   # in; `adapter_ct-s20624` can, and the matrix is rebuilt from exactly these
@@ -170,6 +188,15 @@ for S in $NEW; do
   $PY -c "import json,sys; sys.path.insert(0,'.'); from tlon.act2 import factorial as F; print(json.dumps(F.entry('$CELL', recipe='$RECIPE', seed=$S, manifest=json.load(open('$ROOT/corpus_$RCODE-s$S/manifest.json'))), indent=2))"     > $A/factorial.json
   md5sum $A/adapter_model.safetensors | tee -a $ROOT/adapter_md5.txt
 
+  # ⛔⛔ PERSIST HERE, INSIDE THE LOOP — not in a stage at the end. The gate box
+  # died at `manifest`, which is BETWEEN the last adapter and the end, with a
+  # trained and F-LOCAL-cleared adapter on disk. An end-of-run persist stage
+  # would have lost it just the same. Work becomes durable as soon as it exists.
+  step persist_$CELL
+  $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+      cell --cell $CELL --solo-n $N_PER_BUILD 2>&1 | tee -a $LOG
+  CELLS="$CELLS $CELL"
+
   if [ $N -eq 1 ]; then
     PROJ=$(( W * 6 / 3600 ))
     echo "  ⏱ adapter 1 = $W s ⇒ 6 adapters project to ~${PROJ} GPU-h (reference 26)" | tee -a $LOG
@@ -192,7 +219,10 @@ $PY - <<PY 2>&1 | tee -a $LOG
 import hashlib, json, pathlib
 root = pathlib.Path("$ROOT")
 out = {}
-for d in sorted(root.glob("adapter_s*")):
+# ⛔⛔ `adapter_s*` MATCHED NOTHING once the cell went into the filename. The
+# directories are `adapter_ct-s20624`, so this glob returned an empty manifest
+# for EVERY run under the new naming, not just the gate run.
+for d in sorted(root.glob("adapter_*")):
     f = d / "adapter_model.safetensors"
     if not f.exists():
         continue
@@ -207,13 +237,37 @@ for d in sorted(root.glob("adapter_s*")):
 print("  manifest: %d adapters" % len(out))
 for k, v in out.items():
     print("   ", k, v["md5"], v["bytes"])
-assert len(out) == 6, "expected 6 adapters, manifest has %d" % len(out)
+# ⛔⛔ DERIVED FROM THIS RUN, NEVER A BATCH SIZE. This read `== 6`, which is
+# right for exactly one run and silently wrong for every other — a gate run that
+# trains ONE adapter to test an assumption before the batch is bought could not
+# pass it. It didn't: this line is what killed the ct-gate box, and the same
+# defect had been fixed in act2_retrain_orchestrate.py ninety minutes earlier
+# with no sweep for siblings. ⭐ SWEEP FOR THE CLASS, not the instance.
+want = $N
+assert len(out) == want, "trained %d adapters, manifest has %d" % (want, len(out))
 PY
 
+# ── 6 · THE RUN-LEVEL ARTIFACTS, AND THE GATE ON ~/DONE ─────────────────────
+step persist_run
+# ⛔ The log and the manifest are run-level: not regenerable by re-running,
+# because what they record is THIS run.
+$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+    file --path $ROOT/manifest.json --subdir $(basename $ROOT) 2>&1 | tee -a $LOG
+$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+    file --path $LOG --subdir $(basename $ROOT) 2>&1 | tee -a $LOG
+
+step verify_persisted
+# ⛔⛔ THE GATE ON ~/DONE. The watchdog terminates within one poll of seeing that
+# marker — correctly, because a finished run that keeps billing is pure waste.
+# So the marker must mean PERSISTED, not COMPUTED. Until this exits 0 the run's
+# output exists only on a box that is trying to end itself.
+$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+    verify --cells "$CELLS" 2>&1 | tee -a $LOG
+
 step done
-echo "⭐ ALL STAGES PASSED — 6 new adapters + $N_PER_BUILD solo logs each" | tee -a $LOG
-echo "⛔ PULL $LOG, $ROOT/manifest.json, the adapters AND $ROOT/logs/ BEFORE" | tee -a $LOG
-echo "   KILLING THE BOX. The last box was terminated with an adapter still on" | tee -a $LOG
-echo "   it and that adapter is gone permanently." | tee -a $LOG
+echo "⭐ ALL STAGES PASSED — $N adapters + $N_PER_BUILD solo logs each, PERSISTED" | tee -a $LOG
+echo "  cells: $CELLS" | tee -a $LOG
+echo "  everything above is in hf://$HF_REPO and hub-verified. The local" | tee -a $LOG
+echo "  collect is now a convenience, not the only path off this box." | tee -a $LOG
 echo "  total wall: $(( $(date +%s) - T_START )) s" | tee -a $LOG
 touch ~/DONE
