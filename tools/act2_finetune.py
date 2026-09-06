@@ -550,15 +550,17 @@ def main() -> int:
             output_dir=a.out, per_device_train_batch_size=a.batch,
             gradient_accumulation_steps=a.accum, num_train_epochs=a.epochs,
             learning_rate=a.lr, bf16=True, gradient_checkpointing=True,
-            logging_steps=25, eval_strategy="steps", eval_steps=500,
+            # ⛔ ONE SOURCE FOR THIS VALUE. It was `logging_steps=25` here PLUS a
+            # conditional `**{"logging_steps": 1}` below, which is a duplicate
+            # keyword and a TypeError — caught only on the box, after the model
+            # had loaded. A conditional that ADDS a key a literal already sets
+            # is not a conditional, it is a collision.
+            logging_steps=(1 if a.trace_out else 25),
+            eval_strategy="steps", eval_steps=500,
             save_strategy=("steps" if a.save_steps else "epoch"),
             save_steps=(a.save_steps or 500),
             save_total_limit=(None if a.save_steps else 2),
             report_to=[], seed=a.seed,
-            # ⭐ EVERY STEP WHEN TRACING. The original logged every 25, so its
-            # first sample was 7.548 and its second was ~0 -- the collapse is
-            # bracketed between step 1 and 25 and nothing narrows it.
-            **({"logging_steps": 1} if a.trace_out else {}),
             **({"max_steps": a.max_steps} if a.max_steps else {}),
             **({"optim": a.optim} if a.full else {})))
     trace = None
