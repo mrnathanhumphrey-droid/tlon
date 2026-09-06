@@ -1,0 +1,19 @@
+{
+  "instance_id": "cd24d84e628d41579a1c7ed8ba52212f",
+  "name": "tlon-fullft_nockpt",
+  "instance_type": "gpu_1x_h100_pcie",
+  "region": "us-west-3",
+  "price_usd_per_hour": 3.29,
+  "launched_utc": "2026-09-06T16:33:14Z",
+  "code_sha": "63f84b0",
+  "purpose": "ABLATION. Identical to fwtrace-s20624 except gradient checkpointing and enable_input_require_grads() are OFF. Tests whether the step-13 gradient NaN is the checkpointing x frozen-stack interaction. Memory case for keeping them was 0.5 GiB.",
+  "reads": {
+    "NaN gone": "checkpointing x frozen-stack named as the cause",
+    "NaN persists": "fault is the mixed-dtype/autocast path; instrument the forward next"
+  },
+  "cost_estimate_usd": {
+    "expected": 4,
+    "watchdog_hard_cap_4h": 13.16
+  },
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance cd24d84e628d41579a1c7ed8ba52212f --root fullft_nockpt"
+}

@@ -60,9 +60,22 @@ class StepTrace:
         self.step = 0
         self.first_nonfinite = None
 
-    def record(self, *, loss, grads, weights, moments):
-        """`grads`/`weights`/`moments`: {name: (rank, finite: bool, norm|None)}."""
-        row = {"step": self.step, "loss": loss}
+    def record(self, *, loss, grads, weights, moments,
+               raw_loss=None, activations=None):
+        """`grads`/`weights`/`moments`: {name: (rank, finite: bool, norm|None)}.
+
+        ⛔⛔ `loss` IS THE FRAMEWORK'S FILTERED VALUE AND IS NAMED SO. It is
+        recorded only to show the divergence; `raw_loss` comes from the model
+        output and is the arbiter. The first version of this trace had one field
+        called `loss`, holding the filtered number, and it read finite at the
+        step every gradient in the model had already died.
+        """
+        row = {"step": self.step,
+               "loss_LOGGED_FILTERED": loss,
+               "loss_raw": raw_loss,
+               "loss_raw_finite": (None if raw_loss is None
+                                   else bool(raw_loss == raw_loss
+                                             and abs(raw_loss) != float("inf")))}
         for label, d in (("grad", grads), ("weight", weights),
                          ("moment", moments)):
             bad = sorted(n for n, (_, fin, _) in d.items() if not fin)
@@ -98,6 +111,16 @@ class StepTrace:
         if self.step < self.dense_until:
             row["per_module_grad_norm"] = {
                 n: v[2] for n, v in sorted(grads.items()) if v[2] is not None}
+        # ⭐⭐ MAGNITUDES ACROSS THE APPROACH TO A KNOWN CLIFF. Determinism is
+        # what makes this worth recording: the break is at the same step in two
+        # runs with different assemblies, so this is a quantity crossing a
+        # threshold at a fixed count, and the absmax at 11 -> 12 -> 13 names
+        # WHAT was growing. Finiteness alone only says that it broke.
+        if activations:
+            row["activation_absmax"] = {
+                n: v[1] for n, v in sorted(activations.items())}
+            row["activation_nonfinite"] = sorted(
+                n for n, v in activations.items() if not v[0])
         self.fh.write(json.dumps(row) + "\n")
         # ⛔ FLUSHED EVERY ROW. A buffered trace dies with the process it was
         # watching, and dying processes are the subject.
@@ -111,7 +134,7 @@ class StepTrace:
         self.fh.close()
 
 
-def make_callback(trace: StepTrace):
+def make_callback(trace: StepTrace, *, probe=None, loss_holder=None):
     """A `TrainerCallback` writing into `trace`. Imported lazily so this module
     stays importable (and testable) without transformers."""
     import torch
@@ -149,6 +172,13 @@ def make_callback(trace: StepTrace):
                     out[n] = (rank_of(p), fin, None)
             return out
 
+        def on_step_begin(self, args, state, control, **kw):
+            # ⭐ Arm the forward probe only inside its window, before the
+            # micro-batches of this step run.
+            if probe is not None:
+                probe.arm(trace.step)
+            return control
+
         def on_pre_optimizer_step(self, args, state, control, **kw):
             self.model = kw.get("model", self.model)
             self.optimizer = kw.get("optimizer", self.optimizer)
@@ -166,6 +196,9 @@ def make_callback(trace: StepTrace):
                 return control
             grads = self.pending_grads or {}
             trace.record(loss=self.last_loss,
+                         raw_loss=(loss_holder or {}).get("raw"),
+                         activations=(probe.snapshot() if probe is not None
+                                      else None),
                          grads=grads,
                          weights=self._scan("weight"),
                          moments=self._scan("moment"))
@@ -178,3 +211,74 @@ def make_callback(trace: StepTrace):
             return control
 
     return _Trace()
+
+
+#: ⛔⛔ THE FOUNDING NUMBER OF THIS INVESTIGATION WAS A MASK. `logging_nan_inf_filter`
+#: defaults to True, so when the loss is NaN or Inf transformers SUBSTITUTES the
+#: running average and logs that. The full-weight run's "loss 7.548 -> 0" never
+#: happened: the loss went NaN at step 13 and the substituted average decayed
+#: toward zero. Hours of hypotheses were spent explaining a logging artifact.
+#:
+#: ⭐ And the first version of THIS module inherited the same flaw — it read the
+#: loss from `on_log`, which is the filtered value, so its row 13 showed
+#: `loss=0.6404, finite=True` while every gradient in the model was already
+#: gone. The trace was showing the mask.
+#:
+#: ⭐⭐ SO: THE RAW LOSS COMES FROM THE MODEL OUTPUT AND NOWHERE ELSE. A
+#: framework's logged value is a proxy; the value the model returned is the
+#: arbiter, and the two diverge exactly when something is wrong — which is
+#: precisely when anyone is looking.
+RAW_LOSS_ONLY = True
+
+
+class ForwardProbe:
+    """Per-module forward-output finiteness AND MAGNITUDE, inside a step window.
+
+    ⭐⭐ MAGNITUDES, NOT ONLY FINITENESS, AND THAT IS WHAT DETERMINISM BUYS. The
+    failure fires at exactly step 13 in two runs with different assemblies, so
+    it is not stochastic — it is a deterministic quantity crossing a threshold
+    at a fixed count. Finiteness alone says "it broke at 13"; magnitude across
+    11 -> 12 -> 13 says WHAT WAS GROWING. There is no need to sample a flaky
+    event, so the instrument can be pointed exactly where it will fire.
+
+    ⛔ Windowed. A hook on every Linear recording an absmax every step of a
+    300-step run would cost more than the run; the window is the few steps
+    around a break whose location is already known.
+    """
+
+    def __init__(self, model, *, window):
+        import torch
+        self.window = window
+        self.active = False
+        self.records = {}
+        self.handles = []
+        for name, mod in model.named_modules():
+            if isinstance(mod, torch.nn.Linear) or name.endswith("norm"):
+                self.handles.append(
+                    mod.register_forward_hook(self._make(name)))
+
+    def _make(self, name):
+        import torch
+
+        def hook(_mod, _inp, out):
+            if not self.active:
+                return
+            t = out[0] if isinstance(out, tuple) else out
+            if not torch.is_tensor(t) or not t.is_floating_point():
+                return
+            f = t.detach().float()
+            self.records[name] = (bool(torch.isfinite(f).all()),
+                                  float(f.abs().max()))
+        return hook
+
+    def arm(self, step):
+        self.active = step in self.window
+        if self.active:
+            self.records = {}
+
+    def snapshot(self):
+        return dict(self.records)
+
+    def close(self):
+        for h in self.handles:
+            h.remove()

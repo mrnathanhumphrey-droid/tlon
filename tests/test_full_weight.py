@@ -6,6 +6,7 @@ nothing, and whose zero movement then reads as (b) -- the terminal substrate
 finding. So the tests that matter here are the ones that check the REFUSALS.
 """
 import math
+import pathlib
 
 import pytest
 
@@ -350,3 +351,57 @@ def test_a_healthy_run_is_unaffected_by_the_new_branch():
     rep = measure(p, snap, lr=1e-5)
     assert rep["verdict"] == OK
     assert rep["fraction_nonfinite"] == 0.0
+
+
+# ── the trace must never report the framework's filtered loss as the answer ──
+
+def test_the_trace_separates_raw_loss_from_the_filtered_one():
+    """⛔⛔ THE FOUNDING NUMBER OF THE WHOLE DIAGNOSIS WAS A MASK.
+    `logging_nan_inf_filter` defaults True, so transformers substitutes the
+    running average whenever the loss is NaN — which is why the failing run
+    logged "loss 7.548 -> 0" and never once logged nan. The first version of
+    this trace read that filtered number into a field called `loss`, and its
+    row 13 read finite at the step every gradient had already died."""
+    import json
+    import tempfile
+    from tlon.act2.step_trace import StepTrace
+    d = pathlib.Path(tempfile.mkdtemp()) / "t.jsonl"
+    tr = StepTrace(d)
+    g = {"a.w": ("2d", True, 1.0)}
+    tr.record(loss=0.64, raw_loss=float("nan"), grads=g, weights=g, moments=g)
+    tr.close()
+    row = json.loads(d.read_text(encoding="utf-8").splitlines()[0])
+    # ⭐ The filtered value is kept, but under a name nobody can mistake for the
+    # arbiter — caveat in the key, not in a comment.
+    assert row["loss_LOGGED_FILTERED"] == 0.64
+    assert "loss" not in row
+    assert row["loss_raw_finite"] is False
+
+
+def test_activation_magnitudes_are_recorded_not_just_finiteness():
+    """⭐⭐ Determinism is what makes magnitude worth the cost: the break is at
+    the same step in two runs with different assemblies, so something crosses a
+    threshold at a fixed count, and absmax across the approach names WHAT grew.
+    Finiteness alone only says that it broke."""
+    import json
+    import tempfile
+    from tlon.act2.step_trace import StepTrace
+    d = pathlib.Path(tempfile.mkdtemp()) / "t.jsonl"
+    tr = StepTrace(d)
+    g = {"a.w": ("2d", True, 1.0)}
+    tr.record(loss=1.0, raw_loss=1.0, grads=g, weights=g, moments=g,
+              activations={"L27.mlp.down_proj": (True, 412.5),
+                           "L27.mlp.up_proj": (False, float("inf"))})
+    tr.close()
+    row = json.loads(d.read_text(encoding="utf-8").splitlines()[0])
+    assert row["activation_absmax"]["L27.mlp.down_proj"] == 412.5
+    assert row["activation_nonfinite"] == ["L27.mlp.up_proj"]
+
+
+def test_the_trainer_turns_the_nan_filter_off_when_tracing():
+    """⛔ Un-masking the logger is necessary but not sufficient — the raw loss
+    still comes from the model output. Both are asserted."""
+    src = (pathlib.Path(__file__).resolve().parents[1]
+           / "tools/act2_finetune.py").read_text(encoding="utf-8")
+    assert '"logging_nan_inf_filter": False' in src
+    assert "trainer.compute_loss = _capture" in src

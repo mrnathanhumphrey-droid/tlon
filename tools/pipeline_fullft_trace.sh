@@ -39,7 +39,10 @@ LR=1e-5
 SEQ=384
 BATCH=4; ACCUM=4
 CORPUS_SHA=dd40e22f85b0b6e4
+# ⭐ THE BREAK IS AT STEP 13 IN TWO RUNS WITH DIFFERENT ASSEMBLIES, so it is a
+# fixed event, not a flaky one: the instrument is pointed, not swept.
 MAX_STEPS=${MAX_STEPS:-300}
+WIN_FROM=${WIN_FROM:-10}; WIN_TO=${WIN_TO:-14}
 # ⭐ THE ABLATION SWITCH. GRAD_CKPT=0 removes gradient checkpointing AND the
 # enable_input_require_grads() it necessitates -- the two prime suspects, which
 # come off together. The memory case for keeping them is 0.5 GiB at this shape.
@@ -49,6 +52,12 @@ if [ "$GRAD_CKPT" = "0" ]; then
   CKPT_FLAG="--no-grad-checkpointing"
   CELL=fwnockpt-s$SEED
 fi
+
+# ⛔⛔ AND AN EXPLICIT OVERRIDE, because two runs of the SAME arm are still two
+# different experiments. The un-filtered-loss run uses the same config as the
+# first trace, so without a distinct cell it would overwrite that trace's hub
+# prefix — destroying the very artifact the comparison is against.
+CELL=${CELL_OVERRIDE:-$CELL}
 
 # ⛔ ROOT AND THE LOG ARE INITIALISED AFTER THE ABLATION SWITCH, so a
 # checkpointing-off run cannot write into the checkpointing-on run's tree and be
@@ -100,6 +109,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --full --unfreeze-top $UNFREEZE_TOP --optim $OPTIM \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
     --max-steps $MAX_STEPS --trace-out $TRACE $CKPT_FLAG \
+    --trace-window-from $WIN_FROM --trace-window-to $WIN_TO \
     --seed $SEED 2>&1 | tee -a $LOG
 
 # ⛔⛔ THE TRACE IS THE DELIVERABLE, SO IT PERSISTS BEFORE ANYTHING ELSE CAN GO
@@ -122,10 +132,24 @@ rows = [json.loads(l) for l in
         pathlib.Path("$TRACE").read_text(encoding="utf-8").splitlines() if l.strip()]
 steps = [r for r in rows if "step" in r]
 summary = next((r["SUMMARY"] for r in rows if "SUMMARY" in r), None)
-losses = [(r["step"], r["loss"]) for r in steps if r.get("loss") is not None]
+# ⛔ READS `loss_raw`, THE MODEL'S OWN VALUE. The filtered field prints beside
+# it so the divergence is visible rather than inferred.
+losses = [(r["step"], r.get("loss_raw")) for r in steps]
+filt = [(r["step"], r.get("loss_LOGGED_FILTERED")) for r in steps]
 print("  steps recorded: %d" % len(steps))
-print("  loss first 8 : %s" % [(s, round(l, 4)) for s, l in losses[:8]])
-print("  loss last 5  : %s" % [(s, round(l, 4)) for s, l in losses[-5:]])
+def _f(v):
+    return None if v is None else round(v, 4)
+print("  RAW loss  first 16: %s" % [(s, _f(l)) for s, l in losses[:16]])
+print("  FILTERED  first 16: %s" % [(s, _f(l)) for s, l in filt[:16]])
+nanstep = next((s for s, l in losses if l is not None and l != l), None)
+print("  FIRST NaN *RAW* LOSS at step: %s" % nanstep)
+for r in steps:
+    if r.get("activation_absmax"):
+        am = sorted(r["activation_absmax"].items(), key=lambda kv: -kv[1])[:4]
+        print("  step %-3d act absmax top4: %s  nonfinite=%s"
+              % (r["step"],
+                 [(k.replace("model.layers.", "L"), round(v, 1)) for k, v in am],
+                 (r.get("activation_nonfinite") or [])[:3]))
 gn = [(r["step"], r.get("grad_norm_total")) for r in steps]
 print("  grad_norm first 8: %s" % [(s, None if g is None else round(g, 6)) for s, g in gn[:8]])
 print("  grad_norm last 5 : %s" % [(s, None if g is None else round(g, 6)) for s, g in gn[-5:]])

@@ -370,6 +370,10 @@ def main() -> int:
     ap.add_argument("--no-grad-checkpointing", action="store_true",
                     help="disable gradient checkpointing AND the "
                          "enable_input_require_grads() it necessitates")
+    ap.add_argument("--trace-window-from", type=int, default=10,
+                    help="first step to capture per-module ACTIVATION "
+                         "magnitudes (expensive; the break is known to be at 13)")
+    ap.add_argument("--trace-window-to", type=int, default=14)
     ap.add_argument("--trace-out", default=None,
                     help="JSONL per-step trace: loss, per-module finiteness on "
                          "gradient AND weight AND optimizer moment, in order.")
@@ -582,14 +586,44 @@ def main() -> int:
             save_steps=(a.save_steps or 500),
             save_total_limit=(None if a.save_steps else 2),
             report_to=[], seed=a.seed,
+            # ⛔⛔ OFF WHEN TRACING. Default True makes transformers SUBSTITUTE
+            # the running average whenever the loss is NaN or Inf, which is why
+            # the failing run logged "loss -> 0" and never once logged nan.
+            **({"logging_nan_inf_filter": False} if a.trace_out else {}),
             **({"max_steps": a.max_steps} if a.max_steps else {}),
             **({"optim": a.optim} if a.full else {})))
     trace = None
     if a.trace_out:
-        from tlon.act2.step_trace import StepTrace, make_callback
+        from tlon.act2.step_trace import ForwardProbe, StepTrace, make_callback
         trace = StepTrace(a.trace_out)
-        trainer.add_callback(make_callback(trace))
-        print("⭐ per-step trace -> %s" % a.trace_out)
+        # ⛔⛔ THE RAW LOSS, FROM THE MODEL OUTPUT. `logging_nan_inf_filter` is
+        # off above, but that only un-masks what the LOGGER prints; the arbiter
+        # is the value the model returned, captured here before anything can
+        # substitute for it. The founding symptom of this whole investigation —
+        # "loss 7.548 -> 0" — was that substitution, and the first version of
+        # this trace read the logged number and inherited the mask.
+        holder = {"raw": None}
+        _orig_compute_loss = trainer.compute_loss
+
+        def _capture(model, inputs, *args, **kw):
+            out = _orig_compute_loss(model, inputs, *args, **kw)
+            loss = out[0] if isinstance(out, tuple) else out
+            try:
+                holder["raw"] = float(loss.detach().float())
+            except Exception:                                    # noqa: BLE001
+                holder["raw"] = None
+            return out
+
+        trainer.compute_loss = _capture
+        # ⭐ Windowed around the KNOWN break. The failure is deterministic at
+        # step 13 across two runs with different assemblies, so the instrument
+        # is pointed rather than swept.
+        window = set(range(max(0, a.trace_window_from), a.trace_window_to + 1))
+        probe = ForwardProbe(model, window=window)
+        trainer.add_callback(make_callback(trace, probe=probe,
+                                           loss_holder=holder))
+        print("⭐ per-step trace -> %s (activation window %s)"
+              % (a.trace_out, sorted(window)))
 
     trainer.train()
     if trace is not None:
