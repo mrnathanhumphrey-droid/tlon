@@ -153,3 +153,39 @@ alongside a guard that the write probe itself still runs at provision time.
 is pinned at `2d80803`, which does not contain the line above; its bitsandbytes
 was installed by hand and that remains true of the run now in flight. The fix
 applies to the next `_w` box, not this one.
+
+---
+
+## D-7 · The card is an SXM5 H100, not the PCIe H100 §5 declares
+
+**Run:** the pre-clip gradient trace, `fwpreclip-s20624`, box
+`de358aee14e340ddb2a5125583b0dcf0`, `gpu_1x_h100_sxm5` in `us-south-3` at
+$4.29/hr. Pinned at `51b32a3`.
+
+**What happened.** `gpu_1x_h100_pcie` showed capacity in `us-west-3` at the
+moment of the check and returned `insufficient-capacity` at the moment of the
+launch, seconds later. A re-poll showed the PCIe H100 gone from every region.
+`gpu_1x_h100_sxm5` — the same 80 GiB H100 silicon on a different board, single
+card — was available and was taken.
+
+**Why it is a deviation.** §5 names `gpu_1x_h100_pcie`, and a card is not a
+detail: the VRAM wall the pipeline asserts against and every timing reference
+are properties of specific hardware. ⭐ But this run buys a **trace, not a
+model**, and the quantity it reads — which tensor's gradient goes non-finite
+first, at which step — is not a throughput measurement.
+
+⛔⛔ **AND IT IS NOT A FREE SUBSTITUTION, BECAUSE IT CHANGES WHAT A CLEAN RUN
+WOULD MEAN.** The reading is pre-declared here so it cannot be chosen afterwards:
+
+- **The break reproduces at step 13** → the fault is card-independent, the
+  substitution cost nothing, and the pre-clip scan names the origin. This is
+  the third assembly to fail identically and the determinism is strengthened.
+- **The run trains clean for 20 steps** → ⛔ this does **NOT** read as "fixed"
+  and must not be written up as one. It would mean the failure is
+  hardware-dependent, which is a *different and larger* finding than the one
+  being chased, and it must be confirmed by re-running on a PCIe H100 before
+  anything is concluded. A diagnostic that stops failing after the hardware
+  changed has not been solved; it has been moved.
+
+**Not applicable to the release run.** Nothing in the §5 verdict table may be
+read off this box. The prereg run still requires the declared card.

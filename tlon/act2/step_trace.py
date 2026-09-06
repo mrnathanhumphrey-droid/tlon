@@ -73,7 +73,7 @@ class StepTrace:
 
         ⛔⛔ AND `grads` IS THE **POST-CLIP** GRADIENT, WHICH IS WHY IT NAMES 168
         CASUALTIES AND NOT ONE CAUSE. `on_pre_optimizer_step` fires at
-        trainer.py:1761; `_clip_grad_norm` ran at 1758. `clip_grad_norm_`
+        trainer.py:1762; `_clip_grad_norm` ran at 1759. `clip_grad_norm_`
         computes ONE GLOBAL NORM over every parameter, so a single overflowing
         tensor makes the total norm non-finite, the clip coefficient non-finite,
         and multiplies EVERY gradient by it. A scan positioned after that point
@@ -365,8 +365,8 @@ class PreClipGradProbe:
     running average, so the trace read the mask. Then `clip_grad_norm_` — which
     computes ONE norm across ALL parameters — turned one tensor's overflow into
     a non-finite coefficient applied to all 168 gradients, and the scan at
-    `on_pre_optimizer_step` (trainer.py:1761) runs after that clip
-    (trainer.py:1758). Both times the probe was reading a value the framework
+    `on_pre_optimizer_step` (trainer.py:1762) runs after that clip
+    (trainer.py:1759). Both times the probe was reading a value the framework
     had already transformed, and both times the transformation destroyed exactly
     the signal being looked for.
 
