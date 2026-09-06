@@ -38,9 +38,22 @@ OPTIM=adamw_bnb_8bit            # fp32 master params, 8-bit moments (FORCED)
 LR=1e-5                         # 5e-6 is the (c) dial-back, a NEW prereg
 SEQ=384                         # the gate's actual seq, not 256
 BATCH=4; ACCUM=4                # effective 16, the gate's shape
-VRAM_WALL=80                    # gpu_1x_h100_pcie
+VRAM_WALL=80                    # D-7: gpu_1x_h100_sxm5, also 80 GiB (see DEVIATIONS)
 TRAINABLE_B=3.263
 CORPUS_SHA=dd40e22f85b0b6e4     # §5: sha-verified BEFORE training
+# ⛔⛔ D-8, DECLARED AGAINST LOCK a0450b36 BEFORE FIRING. §5 named no attention
+# implementation, so every run of this arm silently took the transformers
+# default (fused SDPA) -- which is precisely how it stayed a constant nobody
+# recorded. Under SDPA this arm produces deterministic non-finite gradients at
+# step 13 (KERNEL_IMPLICATED, FINDINGS §10: 159 non-finite under SDPA and ZERO
+# under eager, from identical weights on identical inputs). So this is pinned,
+# not defaulted, and it appears in BOTH legs below.
+# ⛔ FROM STEP 0, NOT AS A SWAP. The two kernels' forwards drift apart with
+# training -- 1.2% at step 0, 10.9% by step 13 -- so weights fitted under one
+# are measurably worse under the other. A leg that silently reverted to SDPA
+# would be exactly that mid-flight swap, which is why the flag is on leg 2 as
+# well as leg 1.
+ATTN_IMPL=eager
 
 # ── 1 · WATCHDOG FIRST, BEFORE THE FLOORS ───────────────────────────────────
 # ⛔⛔ THE ORDER IS THE PREREG'S (§8, R5) AND IT IS A CHANGE FROM THE LoRA ARM.
@@ -53,7 +66,16 @@ step watchdog
 # at 21.3 h, so a 24 h deadline would have let a hung run bill $79 — past the
 # alert, by design, with nothing to stop it. 20 h caps the worst case at $65.80
 # and still leaves ~2.5x headroom over the ~8 h estimate.
-tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_fullft.sh 20 90 $$
+# ⭐ DEADLINE 14 h, NOT 20 — AN OPERATIONAL PARAMETER, NOT A §5 VALUE.
+# The run is now PRICED rather than guessed: 7,520 steps at a measured upper
+# bound of 1.90 s/step is ~4 h, ~5 h with load, eval and checkpoint saves. A 20 h
+# deadline on a $4.29/h card is $86, ABOVE the $70/run cost alert -- so the
+# backstop itself could have breached the budget rule it exists to protect.
+# 14 h is $60, under the alert, and still 2.8x the estimate. The 90 min stall
+# detector, not the deadline, is what catches a hang.
+# ⛔ And a deadline kill is not total loss: leg 1 persists and its epoch-1
+# verdict is a readable result on its own (§5's mandatory epoch-1 read).
+tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_fullft.sh 14 90 $$
 
 # ── 2 · FLOORS ──────────────────────────────────────────────────────────────
 step syntax_floor
@@ -127,6 +149,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
     --full --unfreeze-top $UNFREEZE_TOP --optim $OPTIM \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
+    --attn-impl $ATTN_IMPL \
     --seed $SEED --delta-snapshot-out $SNAP 2>&1 | tee -a $LOG
 
 step factorial_json
@@ -205,6 +228,7 @@ else
       --corpus $ROOT/corpus_ct-s$SEED \
       --full --unfreeze-top $UNFREEZE_TOP --optim $OPTIM \
       --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
+      --attn-impl $ATTN_IMPL \
       --seed $SEED --delta-snapshot-in $SNAP 2>&1 | tee -a $LOG
 
   step persist_leg2

@@ -189,3 +189,83 @@ WOULD MEAN.** The reading is pre-declared here so it cannot be chosen afterwards
 
 **Not applicable to the release run.** Nothing in the §5 verdict table may be
 read off this box. The prereg run still requires the declared card.
+
+---
+
+## D-7 (EXTENDED) · the SXM5 card now applies to the RELEASE run, not only a diagnostic
+
+D-7 above was written for a diagnostic trace, where a card substitution is
+cheap. **It now applies to the release run**, which is a heavier thing and is
+recorded as such rather than inherited quietly.
+
+**The choice.** §5 declares `gpu_1x_h100_pcie` at $3.29/h. `gpu_1x_h100_sxm5` is
+$4.29/h — **24% more**. PCIe showed capacity at a check and returned
+`insufficient-capacity` seconds later at the launch, twice on 2026-09-06, and
+was absent from every region in between. SXM5 is **proven across four runs
+today** for this exact config, including the optimizer write probe
+(fp32 256/256, bf16 0/256) on each.
+
+**Why the more expensive card for this one.** For a diagnostic, a failed launch
+costs almost nothing, so the cheap flickering card is right. This is the run
+that answers the substrate question and the one nobody wants to re-run; a
+capacity flicker mid-launch costs the window and may force the SXM5 fallback
+anyway after wasted provisions. **The ~24% premium buys launch certainty on the
+highest-stakes run.** Both cards are 80 GiB, so `VRAM_WALL` is unchanged.
+
+⛔ Recorded, not smoothed: **the release verdict will have been measured on a
+card §5 does not name.** Nothing in the §5 verdict table depends on the card,
+but the sentence "measured on the declared hardware" is not available and must
+not be written.
+
+---
+
+## D-8 · `attn_implementation=eager`, from step 0 — the fix, declared against the lock
+
+**§5 named no attention implementation.** That is not an oversight to paper
+over: it is exactly how the fused SDPA kernel stayed a **constant nobody
+recorded** across four failing runs. The release run now pins it, so it is a
+declared value rather than a default.
+
+**Why.** Under the transformers default (fused SDPA) this arm produces
+deterministic non-finite gradients at step 13. `FINDINGS_FULLFT_TRACE_2026_09_06`
+§10: from **identical weights on identical inputs**, with `attention_dropout`
+0.0 so no stochastic path exists, SDPA produced **159 non-finite gradients** and
+eager produced **zero** — verdict `KERNEL_IMPLICATED`, with a harness leg that
+reproduced the trainer's own count and tensor names before the comparison was
+allowed to count.
+
+**⛔⛔ From step 0, and the reason is measured, not stylistic.** The two kernels'
+forwards drift apart *with training*: **1.2% at step 0 on identical pretrained
+weights, 10.9% by step 13** after twelve steps of fitting to SDPA's gradients.
+Weights fitted under one kernel are measurably worse under the other. So this is
+**not** a mid-flight swap and not a rescue of a broken run — a resumed run would
+carry SDPA-fitted weights into an eager evaluation and train, without any NaN to
+warn anyone, on inherited numerical mismatch. The flag is pinned on **both**
+training legs; `tests/test_release_pipeline_config.py` fails if either loses it.
+
+**⭐ What this deviation does NOT change, checked against §5 clause by clause.**
+It changes the attention implementation and nothing else:
+
+- **unchanged:** frozen `embed_tokens`+`lm_head`, top 14 of 28 layers, LR 1e-5,
+  the 5e-6 dial-back path, seq 384, batch 4 x accum 4, `adamw_bnb_8bit`,
+  frozen-bf16/trainable-fp32, the corpus and its sha `dd40e22f85b0b6e4`
+- **unchanged:** the §4.1 weight-delta assertion and its precondition on the
+  whole verdict table, the `DIVERGED` verdict, the three-axis GO, the mandatory
+  epoch-1 read and its pre-declared early stop, the §7.1 escalation ladder
+- **unchanged:** every §4 reading and the crater → dial-back logic
+
+⭐ So the deviation is **additive** — it names a previously unrecorded constant
+and sets it to the value that works — without altering any pre-declared reading
+or the dial-back path. The run remains pre-registered; it is not re-registered.
+
+⚠️ **And it is not free of consequence for interpretation.** A STOP-floored
+result on this run is a result about *the eager kernel's* numerics as much as
+about the model, in the same way every earlier run was silently about SDPA's.
+The difference is that this time it is written down.
+
+**Cost.** Not a factor, and measured rather than feared. Fitting five SDPA runs
+across n=20..300 gives **marginal 2.01 s/step over 192 s fixed**; the single
+eager run bounds eager at **at most 1.90 s/step** even crediting it zero fixed
+cost. Attention is **0.68% of FLOPs** at seq 384 (d 3584, d_ff 18944), so the
+kernel barely touches throughput — "eager is slow" is a long-sequence concern
+that does not apply at this shape. Projected: **~4 h, $15-20.**
