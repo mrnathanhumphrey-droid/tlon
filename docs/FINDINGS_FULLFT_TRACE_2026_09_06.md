@@ -111,3 +111,83 @@ decision, not a bug fix.
   itself — §4.1's arithmetic confirmed on the hardware for the third time.
 - **Watchdog-first with a 4 h deadline**: the run finished, marked `~/DONE`
   after persisting, and the box terminated itself.
+
+---
+
+## 6 · The clip is a spreader, and its post-clip signature says WHICH kind of bad value started it
+
+Added 2026-09-06, after reading the installed transformers source.
+
+`Trainer._inner_training_loop` calls `self._clip_grad_norm(...)` at
+**trainer.py:1758** and fires `on_pre_optimizer_step` at **trainer.py:1761**.
+Every gradient this investigation has measured was therefore read **after** the
+clip. And `clip_grad_norm_` computes **one global norm across all parameters**,
+so it is a spreader by construction: one tensor's bad value makes the total norm
+bad, the clip coefficient bad, and multiplies every gradient by it.
+
+⭐⭐ **So "all 168 at once" was never 168 events. It was one event and a global
+coefficient** — and the instrument was sitting downstream of the transformation
+that erased the distinction. This is the same structural error as
+`logging_nan_inf_filter`: both times the probe read a value the framework had
+already processed, and both times the processing destroyed exactly the signal
+being looked for.
+
+### ⭐⭐ The free discrimination, measured on this laptop (`tests/test_preclip_probe.py`)
+
+The two ways a gradient can be non-finite do **not** produce the same aftermath:
+
+| pre-clip origin | total_norm | clip_coef | post-clip result |
+|---|---|---|---|
+| one tensor **inf** | `inf` | `1/inf` = **0** | that tensor `inf*0` = NaN; **every other tensor exactly 0, still finite** |
+| one tensor **NaN** | `nan` | **nan** | **every tensor NaN** |
+
+Both rows are asserted against the real `torch.nn.utils.clip_grad_norm_`.
+
+⛔⛔ **The failing run reported 168 of 168 non-finite after the clip. That is the
+NaN row, not the inf row.** So the originating value was a **NaN**, not a
+magnitude that grew too large — which agrees with the standing warning that bf16
+carries fp32's exponent range, and points at `inf - inf`, `0 * inf` or `0 / 0`
+inside the backward rather than at simple overflow.
+
+This was bought for nothing: the prediction was wrong on the first write of the
+test, the assertion failed, and the failure was the finding.
+
+### The instrument
+
+`PreClipGradProbe` (`tlon/act2/step_trace.py`) registers
+`register_post_accumulate_grad_hook` on every trainable parameter. The hook
+fires as each gradient is finalised **inside the backward**, before any clip
+exists. It records, without a single device synchronisation inside the backward:
+
+- per-parameter **finiteness** and **L2 norm** → the pre-clip global norm,
+  computed independently of HF's
+- per-parameter **absmax**, so the trajectory across 11 → 12 → 13 says whether
+  the fault **compounded** (growing step over step) or was **triggered** (flat,
+  then a jump) — which selects the fix class
+- **arrival order within the backward**, because gradients finalise in reverse
+  topological order, so the earliest-arriving offender is nearest the origin
+
+Alongside it, HF's own logged `grad_norm` is captured — it is the value
+`clip_grad_norm_` returns, i.e. the **pre-clip** total — and stored *with the
+global step it was logged for*, so alignment is checked rather than assumed.
+Two instruments, different routes, one quantity.
+
+### ⛔ A third instrument bug, found while fixing the second
+
+`ForwardProbe.snapshot()` returned its record dict unconditionally, while
+`arm()` only cleared it *inside* the window. So every step after the window
+re-emitted the last armed step's numbers under the current step's number. In the
+raw-loss trace, **rows 15–19 are five identical copies of step 14** wearing later
+step numbers — they read as a stable post-break plateau and were not
+measurements. Fixed to return nothing when not armed, and pinned by a test.
+
+⭐ **The pattern, three for three: an instrument that keeps answering after it
+stops looking reports its own memory as data.**
+
+### Field names changed
+
+`grad_*` in a trace row is now `grad_POSTCLIP_*`; the pre-clip scan is
+`grad_PRECLIP_*`; `grad_norm_total` is now `grad_norm_total_POSTCLIP` beside
+`grad_norm_total_PRECLIP_ours`. The un-suffixed name is asserted absent — the
+last reading was built on a quantity whose name did not say which side of the
+clip it came from.

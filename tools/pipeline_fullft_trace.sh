@@ -150,14 +150,70 @@ for r in steps:
               % (r["step"],
                  [(k.replace("model.layers.", "L"), round(v, 1)) for k, v in am],
                  (r.get("activation_nonfinite") or [])[:3]))
-gn = [(r["step"], r.get("grad_norm_total")) for r in steps]
-print("  grad_norm first 8: %s" % [(s, None if g is None else round(g, 6)) for s, g in gn[:8]])
-print("  grad_norm last 5 : %s" % [(s, None if g is None else round(g, 6)) for s, g in gn[-5:]])
+def _r(v, k=6):
+    return None if v is None else round(v, k)
+print("  grad_norm POSTCLIP first 8: %s"
+      % [(r["step"], _r(r.get("grad_norm_total_POSTCLIP"))) for r in steps[:8]])
+print("  grad_norm PRECLIP  first 8: %s"
+      % [(r["step"], _r(r.get("grad_norm_total_PRECLIP_ours"))) for r in steps[:8]])
+# ⭐⭐ TWO INDEPENDENT INSTRUMENTS ON THE SAME QUANTITY. Ours is summed from the
+# per-parameter hooks; HF's comes back from clip_grad_norm_ itself. They should
+# agree, and both should be non-finite at the break.
+print("  --- PRE-CLIP GLOBAL NORM: ours vs HF's own ---")
+for r in steps[:20]:
+    hf = r.get("grad_norm_HF_preclip") or {}
+    print("    step %-3d ours=%-14s   HF=%-14s (HF step %s)"
+          % (r["step"], _r(r.get("grad_norm_total_PRECLIP_ours"), 3),
+             _r(hf.get("value"), 3) if isinstance(hf.get("value"), float) else hf.get("value"),
+             hf.get("hf_global_step")))
+# ⛔⛔ THE COUNT THAT SEPARATES CAUSE FROM CASUALTY. If the pre-clip count is
+# small and the post-clip count is 168 at the SAME step, the global clip norm
+# did the spreading and the small set is the origin.
+print("  --- NON-FINITE COUNT: pre-clip (cause) vs post-clip (spread) ---")
+for r in steps[:20]:
+    pre = r.get("grad_PRECLIP_nonfinite_n")
+    post = r.get("grad_POSTCLIP_nonfinite_n")
+    if pre or post:
+        print("    step %-3d PRECLIP n=%-4s %s   POSTCLIP n=%s"
+              % (r["step"], pre, (r.get("grad_PRECLIP_nonfinite_first") or [])[:3], post))
+# ⭐⭐ THE TRAJECTORY ON THE CULPRIT. Compounding vs triggered is the whole
+# difference between a fix aimed at the optimizer and a fix aimed at the data.
+culprit = None
+for r in steps:
+    bad = r.get("grad_PRECLIP_nonfinite_first") or []
+    if bad:
+        culprit = bad[0]
+        break
+print("  FIRST PRE-CLIP OFFENDER: %s" % culprit)
+if culprit:
+    print("  --- absmax trajectory (pre-clip) on the offender and the top movers ---")
+    watch = [culprit]
+    for r in steps:
+        am = r.get("grad_absmax_PRECLIP")
+        if am:
+            watch += [k for k, _ in sorted(am.items(), key=lambda kv: -(kv[1] if kv[1] == kv[1] else 0))[:4]]
+            break
+    seen = []
+    for w in watch:
+        if w not in seen:
+            seen.append(w)
+    for w in seen[:5]:
+        traj = [(r["step"], _r((r.get("grad_absmax_PRECLIP") or {}).get(w), 3))
+                for r in steps if r.get("grad_absmax_PRECLIP")]
+        print("    %-52s %s" % (w.replace("model.layers.", "L"), traj))
+for r in steps:
+    arr = r.get("preclip_arrival_order")
+    bad = set(r.get("grad_PRECLIP_nonfinite_first") or [])
+    if arr and bad:
+        order = [n for m, n in arr if m == 0]
+        pos = [(i, n) for i, n in enumerate(order) if n in bad]
+        print("  ARRIVAL ORDER at step %s: %d tensors finalised; first bad at position %s"
+              % (r["step"], len(order), pos[:3]))
+        break
 fn = summary.get("first_nonfinite") if summary else None
 print("  FIRST NON-FINITE: %s" % fn)
-# ⛔ The four pre-declared readings, decided here.
+# ⛔ The pre-declared readings, decided here.
 if fn is None:
-    zero = [g for _, g in gn if g is not None and g < 1e-8]
     if losses and losses[-1][1] is not None and losses[-1][1] < 0.01:
         print("  READING: DEGENERATE OBJECTIVE — loss collapsed with NO non-finite")
         print("           value anywhere. The NaN in the full run is downstream;")
@@ -165,9 +221,15 @@ if fn is None:
     else:
         print("  READING: TRAINED CLEANLY within %s steps — the fast-collapse" % len(steps))
         print("           regime is ruled out; a longer run is the next question.")
-elif fn["quantity"] == "grad":
-    print("  READING: FORWARD/BACKWARD NUMERICAL — the GRADIENT went non-finite")
-    print("           first, on %s tensors (rank %s). Upstream of the optimizer." % (fn["n"], fn["rank"]))
+elif fn["quantity"] == "grad_PRECLIP":
+    print("  READING: BACKWARD NUMERICAL, NAMED. %s tensor(s) went non-finite" % fn["n"])
+    print("           INSIDE the backward, before any clipping: %s" % fn["tensors"][:4])
+    print("           n=%s at step %s (rank %s)." % (fn["n"], fn["step"], fn["rank"]))
+elif fn["quantity"] == "grad_POSTCLIP":
+    print("  ⛔ READING: POST-CLIP ONLY — the pre-clip hook saw NOTHING non-finite")
+    print("     at the step the post-clip scan did. That is not the clip spreading")
+    print("     an overflow; it means the CLIP ITSELF produced the non-finite value")
+    print("     from finite inputs, which is a different mechanism entirely.")
 else:
     print("  READING: OPTIMIZER PATH — weights/moments went non-finite before any")
     print("           gradient did (%s, rank %s)." % (fn["quantity"], fn["rank"]))

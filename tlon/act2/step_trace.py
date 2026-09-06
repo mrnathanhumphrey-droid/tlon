@@ -61,7 +61,8 @@ class StepTrace:
         self.first_nonfinite = None
 
     def record(self, *, loss, grads, weights, moments,
-               raw_loss=None, activations=None):
+               raw_loss=None, activations=None, preclip=None,
+               grad_norm_hf=None, preclip_absmax=None, arrivals=None):
         """`grads`/`weights`/`moments`: {name: (rank, finite: bool, norm|None)}.
 
         ⛔⛔ `loss` IS THE FRAMEWORK'S FILTERED VALUE AND IS NAMED SO. It is
@@ -69,6 +70,17 @@ class StepTrace:
         output and is the arbiter. The first version of this trace had one field
         called `loss`, holding the filtered number, and it read finite at the
         step every gradient in the model had already died.
+
+        ⛔⛔ AND `grads` IS THE **POST-CLIP** GRADIENT, WHICH IS WHY IT NAMES 168
+        CASUALTIES AND NOT ONE CAUSE. `on_pre_optimizer_step` fires at
+        trainer.py:1761; `_clip_grad_norm` ran at 1758. `clip_grad_norm_`
+        computes ONE GLOBAL NORM over every parameter, so a single overflowing
+        tensor makes the total norm non-finite, the clip coefficient non-finite,
+        and multiplies EVERY gradient by it. A scan positioned after that point
+        can only ever see the aftermath. `preclip` comes from
+        `register_post_accumulate_grad_hook`, which fires as each parameter's
+        gradient is finalised inside the backward — upstream of the clip — and
+        is therefore the only one of the two that can name an origin.
         """
         row = {"step": self.step,
                "loss_LOGGED_FILTERED": loss,
@@ -76,8 +88,13 @@ class StepTrace:
                "loss_raw_finite": (None if raw_loss is None
                                    else bool(raw_loss == raw_loss
                                              and abs(raw_loss) != float("inf")))}
-        for label, d in (("grad", grads), ("weight", weights),
-                         ("moment", moments)):
+        # ⛔ THE PRE-CLIP SCAN IS FIRST IN THE ORDERING so that `first_nonfinite`
+        # resolves to the cause rather than to the globalised effect that
+        # follows it in the same step.
+        quantities = ([("grad_PRECLIP", preclip)] if preclip is not None else [])
+        quantities += [("grad_POSTCLIP", grads), ("weight", weights),
+                       ("moment", moments)]
+        for label, d in quantities:
             bad = sorted(n for n, (_, fin, _) in d.items() if not fin)
             row["%s_nonfinite_n" % label] = len(bad)
             row["%s_nonfinite_1d" % label] = sum(
@@ -89,16 +106,30 @@ class StepTrace:
             # that distinction is the fingerprint.
             row["%s_nonfinite_first" % label] = bad[:3]
         norms = [v[2] for v in grads.values() if v[2] is not None and v[1]]
-        row["grad_norm_total"] = (sum(n * n for n in norms) ** 0.5
-                                  if norms else None)
-        row["grad_norm_max"] = max(norms) if norms else None
+        row["grad_norm_total_POSTCLIP"] = (sum(n * n for n in norms) ** 0.5
+                                           if norms else None)
+        row["grad_norm_max_POSTCLIP"] = max(norms) if norms else None
+        if preclip is not None:
+            pn = [v[2] for v in preclip.values() if v[2] is not None and v[1]]
+            # ⭐ OUR OWN pre-clip global norm, computed from the per-parameter
+            # squared norms captured inside the backward. This is the same
+            # quantity transformers logs as `grad_norm`, arrived at by a
+            # different route -- so the two either corroborate or the
+            # disagreement is itself the finding.
+            row["grad_norm_total_PRECLIP_ours"] = (
+                sum(n * n for n in pn) ** 0.5 if pn else None)
+            row["grad_norm_max_PRECLIP"] = max(pn) if pn else None
+        # ⛔ HF's OWN VALUE, CARRIED WITH THE STEP IT BELONGS TO. `on_log` fires
+        # AFTER `on_step_end`, so the number available while writing row N was
+        # computed for a different step. Recording the pair rather than the
+        # scalar makes any misalignment visible instead of silently absorbed.
+        row["grad_norm_HF_preclip"] = grad_norm_hf
         # ⛔⛔ THE ANSWER, RECORDED THE INSTANT IT EXISTS. Which quantity went
         # non-finite first, and on which tensor, is the whole deliverable; a
         # trace that requires post-hoc reconstruction to answer it can be
         # mis-reconstructed.
         if self.first_nonfinite is None:
-            for label, d in (("grad", grads), ("weight", weights),
-                             ("moment", moments)):
+            for label, d in quantities:
                 bad = sorted(n for n, (_, fin, _) in d.items() if not fin)
                 if bad:
                     self.first_nonfinite = {
@@ -108,6 +139,17 @@ class StepTrace:
                     }
                     row["FIRST_NONFINITE"] = self.first_nonfinite
                     break
+        # ⭐⭐ MAGNITUDE PER TENSOR, PRE-CLIP, ACROSS THE APPROACH. Finiteness
+        # says WHICH tensor; the absmax trajectory across 11 -> 12 -> 13 says
+        # whether it grew into the overflow (compounding) or jumped into it
+        # (triggered) -- and that distinction selects the fix class.
+        if preclip_absmax:
+            row["grad_absmax_PRECLIP"] = dict(sorted(preclip_absmax.items()))
+        # ⛔ ARRIVAL ORDER INSIDE THE BACKWARD. Gradients finalise in reverse
+        # topological order, so the earliest-arriving non-finite tensor is the
+        # one closest to where the backward first produced a non-finite value.
+        if arrivals:
+            row["preclip_arrival_order"] = arrivals
         if self.step < self.dense_until:
             row["per_module_grad_norm"] = {
                 n: v[2] for n, v in sorted(grads.items()) if v[2] is not None}
@@ -134,7 +176,8 @@ class StepTrace:
         self.fh.close()
 
 
-def make_callback(trace: StepTrace, *, probe=None, loss_holder=None):
+def make_callback(trace: StepTrace, *, probe=None, preclip=None,
+                  loss_holder=None):
     """A `TrainerCallback` writing into `trace`. Imported lazily so this module
     stays importable (and testable) without transformers."""
     import torch
@@ -145,7 +188,9 @@ def make_callback(trace: StepTrace, *, probe=None, loss_holder=None):
             self.model = None
             self.optimizer = None
             self.pending_grads = None
+            self.pending_preclip = None
             self.last_loss = None
+            self.last_grad_norm = None
 
         def _scan(self, which):
             out = {}
@@ -173,20 +218,25 @@ def make_callback(trace: StepTrace, *, probe=None, loss_holder=None):
             return out
 
         def on_step_begin(self, args, state, control, **kw):
-            # ⭐ Arm the forward probe only inside its window, before the
+            # ⭐ Arm the probes only inside their window, before the
             # micro-batches of this step run.
             if probe is not None:
                 probe.arm(trace.step)
+            if preclip is not None:
+                preclip.arm(trace.step)
             return control
 
         def on_pre_optimizer_step(self, args, state, control, **kw):
             self.model = kw.get("model", self.model)
             self.optimizer = kw.get("optimizer", self.optimizer)
-            # ⭐ GRADIENTS ARE ONLY ALIVE HERE. After the step they are zeroed
-            # or stale, so a post-step scan cannot see a NaN gradient at all —
-            # which is exactly the branch that would name a forward/backward
-            # cause.
+            # ⛔⛔ THIS SCAN IS POST-CLIP AND THE FIELD NAMES SAY SO. The clip
+            # ran three lines earlier in the trainer and its norm is GLOBAL, so
+            # what this sees at the break step is 168 tensors carrying one
+            # tensor's overflow. `preclip` below was filled during the backward,
+            # upstream of that.
             self.pending_grads = self._scan("grad")
+            self.pending_preclip = (preclip.snapshot()
+                                    if preclip is not None else None)
             return control
 
         def on_step_end(self, args, state, control, **kw):
@@ -195,19 +245,34 @@ def make_callback(trace: StepTrace, *, probe=None, loss_holder=None):
             if self.model is None:
                 return control
             grads = self.pending_grads or {}
+            pc = self.pending_preclip
             trace.record(loss=self.last_loss,
                          raw_loss=(loss_holder or {}).get("raw"),
                          activations=(probe.snapshot() if probe is not None
                                       else None),
                          grads=grads,
+                         preclip=(pc[0] if pc else None),
+                         preclip_absmax=(pc[1] if pc else None),
+                         arrivals=(pc[2] if pc else None),
+                         grad_norm_hf=self.last_grad_norm,
                          weights=self._scan("weight"),
                          moments=self._scan("moment"))
             self.pending_grads = None
+            self.pending_preclip = None
             return control
 
         def on_log(self, args, state, control, logs=None, **kw):
             if logs and "loss" in logs:
                 self.last_loss = logs["loss"]
+            # ⭐ HF's `grad_norm` IS THE PRE-CLIP TOTAL — `clip_grad_norm_`
+            # returns the norm it measured BEFORE scaling, and the trainer logs
+            # that. It should read inf/nan at the break step, which corroborates
+            # the pre-clip hook from a source the hook has nothing to do with.
+            # Carried WITH its own step because `on_log` runs after
+            # `on_step_end`, so the alignment must be checked, not assumed.
+            if logs and "grad_norm" in logs:
+                self.last_grad_norm = {"hf_global_step": state.global_step,
+                                       "value": logs["grad_norm"]}
             return control
 
     return _Trace()
@@ -277,7 +342,122 @@ class ForwardProbe:
             self.records = {}
 
     def snapshot(self):
-        return dict(self.records)
+        # ⛔⛔ RETURNS NOTHING OUTSIDE THE WINDOW, AND THAT IS A BUG FIX. This
+        # used to return `dict(self.records)` unconditionally, so every step
+        # after the window re-emitted the LAST ARMED STEP's numbers under the
+        # current step's number. In the raw-loss trace, rows 15-19 are that:
+        # five identical "measurements" of step 14, which read as a stable
+        # post-break plateau and were not measurements at all. An instrument
+        # that keeps answering after it stops looking reports its own memory as
+        # data.
+        return dict(self.records) if self.active else None
+
+    def close(self):
+        for h in self.handles:
+            h.remove()
+
+
+class PreClipGradProbe:
+    """Per-parameter gradient magnitude AS EACH GRADIENT IS FINALISED.
+
+    ⛔⛔ THE INSTRUMENT WAS DOWNSTREAM OF THE THING IT WAS WATCHING, FOR THE
+    SECOND TIME. First `logging_nan_inf_filter` replaced a NaN loss with a
+    running average, so the trace read the mask. Then `clip_grad_norm_` — which
+    computes ONE norm across ALL parameters — turned one tensor's overflow into
+    a non-finite coefficient applied to all 168 gradients, and the scan at
+    `on_pre_optimizer_step` (trainer.py:1761) runs after that clip
+    (trainer.py:1758). Both times the probe was reading a value the framework
+    had already transformed, and both times the transformation destroyed exactly
+    the signal being looked for.
+
+    ⭐⭐ `register_post_accumulate_grad_hook` fires as each parameter's `.grad`
+    is finalised inside the backward pass, BEFORE any clipping exists to
+    homogenise it. So this names the originating tensor instead of the
+    casualties, and its absmax across the approach says whether the overflow was
+    COMPOUNDING (growing step over step) or TRIGGERED (flat, then a jump).
+
+    ⛔ NO SYNCHRONISATION INSIDE THE BACKWARD. The hook writes a 0-dim device
+    tensor into a preallocated buffer; 168 tensors times 4 micro-batches would
+    otherwise be 672 device-to-host stalls per step. Everything is read once, at
+    the optimizer step.
+    """
+
+    def __init__(self, model, *, window):
+        import torch
+        params = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
+        if not params:
+            raise ValueError("no trainable parameters to probe")
+        p0 = params[0][1]
+        if not hasattr(p0, "register_post_accumulate_grad_hook"):
+            raise RuntimeError(
+                "torch %s has no register_post_accumulate_grad_hook; the "
+                "pre-clip reading is not available on this build and a "
+                "post-clip scan CANNOT substitute for it" % torch.__version__)
+        self.window = window
+        self.active = False
+        self.names = [n for n, _ in params]
+        self._idx = {n: i for i, n in enumerate(self.names)}
+        self._rank = {n: rank_of(p) for n, p in params}
+        n = len(params)
+        dev = p0.device
+        self._absmax = torch.zeros(n, dtype=torch.float32, device=dev)
+        self._sqnorm = torch.zeros(n, dtype=torch.float32, device=dev)
+        self._bad = torch.zeros(n, dtype=torch.float32, device=dev)
+        self._arrivals = []
+        self._seen = set()
+        self._micro = 0
+        self.handles = [p.register_post_accumulate_grad_hook(self._make(nm))
+                        for nm, p in params]
+
+    def _make(self, name):
+        import torch
+
+        def hook(p):
+            g = p.grad
+            if g is None:
+                return
+            i = self._idx[name]
+            f = g.detach().float()
+            self._absmax[i] = f.abs().max()
+            self._sqnorm[i] = (f * f).sum()
+            self._bad[i] = (~torch.isfinite(f)).any().to(torch.float32)
+            if self.active:
+                # ⭐ A NAME ARRIVING TWICE MEANS A NEW MICRO-BATCH's backward
+                # began — there is no callback for that boundary, and with
+                # accumulation 4 the step contains four of them.
+                if name in self._seen:
+                    self._micro += 1
+                    self._seen = set()
+                self._seen.add(name)
+                self._arrivals.append((self._micro, name))
+        return hook
+
+    def arm(self, step):
+        self.active = step in self.window
+        self._arrivals = []
+        self._seen = set()
+        self._micro = 0
+        self._absmax.zero_()
+        self._sqnorm.zero_()
+        self._bad.zero_()
+
+    def snapshot(self):
+        """-> ({name: (rank, finite, l2norm)}, {name: absmax}|None, arrivals|None)
+
+        ⛔ ONE host transfer for the whole step, here and nowhere else.
+        """
+        import torch
+        stacked = torch.stack([self._absmax, self._sqnorm, self._bad]).cpu()
+        am, sq, bad = (stacked[0].tolist(), stacked[1].tolist(),
+                       stacked[2].tolist())
+        out = {}
+        for nm, i in self._idx.items():
+            fin = bad[i] == 0.0
+            out[nm] = (self._rank[nm], fin,
+                       (sq[i] ** 0.5 if fin else None))
+        dense = ({nm: am[i] for nm, i in self._idx.items()}
+                 if self.active else None)
+        return out, dense, (list(self._arrivals) if self.active else None)
 
     def close(self):
         for h in self.handles:

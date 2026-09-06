@@ -594,7 +594,8 @@ def main() -> int:
             **({"optim": a.optim} if a.full else {})))
     trace = None
     if a.trace_out:
-        from tlon.act2.step_trace import ForwardProbe, StepTrace, make_callback
+        from tlon.act2.step_trace import (ForwardProbe, PreClipGradProbe,
+                                          StepTrace, make_callback)
         trace = StepTrace(a.trace_out)
         # ⛔⛔ THE RAW LOSS, FROM THE MODEL OUTPUT. `logging_nan_inf_filter` is
         # off above, but that only un-masks what the LOGGER prints; the arbiter
@@ -620,10 +621,19 @@ def main() -> int:
         # is pointed rather than swept.
         window = set(range(max(0, a.trace_window_from), a.trace_window_to + 1))
         probe = ForwardProbe(model, window=window)
-        trainer.add_callback(make_callback(trace, probe=probe,
+        # ⛔⛔ THE SCAN THIS RUN EXISTS FOR. Everything the trace has said about
+        # gradients so far was measured AFTER `clip_grad_norm_`, whose norm is
+        # GLOBAL — one tensor's overflow becomes a non-finite coefficient on all
+        # 168. `register_post_accumulate_grad_hook` fires inside the backward,
+        # before any clip exists, so this is the first look at the origin rather
+        # than at what the origin was spread onto.
+        preclip = PreClipGradProbe(model, window=window)
+        trainer.add_callback(make_callback(trace, probe=probe, preclip=preclip,
                                            loss_holder=holder))
-        print("⭐ per-step trace -> %s (activation window %s)"
+        print("⭐ per-step trace -> %s (magnitude window %s)"
               % (a.trace_out, sorted(window)))
+        print("⭐ PRE-CLIP gradient hook armed on %d trainable tensors"
+              % len(preclip.names))
 
     trainer.train()
     if trace is not None:
