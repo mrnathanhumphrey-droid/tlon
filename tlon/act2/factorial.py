@@ -140,13 +140,89 @@ def dose_arm_entry(name: str, *, recipe: str, seed: int,
     }
 
 
+#: How the weights were obtained. ⭐ NOT the recipe — a full-weight model and a
+#: LoRA adapter can be trained on the SAME corpus under the SAME recipe, and it
+#: is the training mode, not the data, that decides which measurement category
+#: the resulting object belongs to.
+LORA = "lora"
+FULL_WEIGHT = "full-weight"
+TRAINING_MODES = (LORA, FULL_WEIGHT)
+
+#: PREREG_ACT2_DRIFT §0.2 / MEASUREMENTS C8. Inference-only objects are `_ctx`;
+#: anything whose weights were changed is `_w`, and the two must never be
+#: reported under one word or measured against one ruler.
+CATEGORY_CTX = "_ctx"
+CATEGORY_W = "_w"
+
+
+def weight_arm_entry(name: str, *, recipe: str, seed: int, unfreeze_top: int,
+                     prereg: str, manifest=None) -> dict:
+    """The fields that ride with a `_w` OBJECT. ⛔⛔ IT IS NOT A CELL EITHER.
+
+    A full-weight model is not a member of the `{content-free, content-transient}
+    × seeds` factorial, and the reason is sharper than "it is a different run":
+    every cell of that factorial is an inference-only `_ctx` object measured
+    against the frozen 7-build ruler (C1, `84c2a1b5`). This object's weights
+    moved. Pooling it into a `_ctx` contrast, or measuring it against that
+    ruler, compares two categories under one scale — the C8 prohibition.
+
+    ⛔ So, exactly like `dose_arm_entry`: **no `cell`, no `factorial_pair_key`,
+    no `pairing_capability_side`.** The three fields every pooling and pairing
+    routine reads are absent, so no later analysis can pool this object by
+    forgetting what it is. Structural, not conventional.
+
+    ⭐ AND THE RECIPE STAYS TRUE. Unlike the dose arm, this object IS trained on
+    a factorial recipe — `content-transient`, dose 0, corpus `dd40e22f85b0b6e4`.
+    Refusing the recipe would be a lie about what it was trained on; refusing the
+    CELL is the accurate statement. What disqualifies it is the training mode.
+    """
+    if recipe not in RECIPES:
+        raise FactorialError("unknown recipe %r" % (recipe,))
+    if unfreeze_top < 1:
+        raise FactorialError(
+            "unfreeze_top=%d trains nothing; a model with no trainable layers "
+            "reports a zero weight delta and reads as a substrate floor."
+            % unfreeze_top)
+    return {
+        "name": name,
+        "recipe": recipe,
+        "seed": seed,
+        "training_mode": FULL_WEIGHT,
+        "measurement_category": CATEGORY_W,
+        "unfreeze_top": unfreeze_top,
+        "prereg": prereg,
+        "WEIGHT_ARM": True,
+        "cell": None,
+        "factorial_cell": None,
+        "generator": generator_of(manifest or {}),
+        "NOT_A_FACTORIAL_MEMBER": (
+            "a `_w` object: its weights were changed, so it has no cell and no "
+            "pair key on purpose, must never enter the `_ctx` population, and "
+            "must never be measured against the frozen inference ruler (C8)"),
+    }
+
+
 def entry(name: str, *, recipe: str, seed: int, manifest=None,
           generator: str | None = None,
-          suppression_window: int | None = None) -> dict:
+          suppression_window: int | None = None,
+          training_mode: str = LORA) -> dict:
     """The factorial fields that ride WITH an adapter into the ledger."""
     gen = generator or generator_of(manifest or {})
     if recipe not in RECIPES:
         raise FactorialError("unknown recipe %r" % (recipe,))
+    if training_mode not in TRAINING_MODES:
+        raise FactorialError("unknown training_mode %r" % (training_mode,))
+    if training_mode != LORA:
+        # ⛔⛔ THE DOOR THE `_w` OBJECT MUST NOT COME THROUGH. This function is
+        # the only place a `cell` and a `factorial_pair_key` are minted, so
+        # refusing here is what makes the C8 separation structural instead of
+        # remembered. Without it, one call with the right-looking arguments
+        # gives a weight-changed model a cell in the inference-only factorial
+        # and a matched partner it is not comparable to.
+        raise FactorialError(
+            "training_mode=%r cannot take a factorial cell: its weights were "
+            "changed, so it is a `_w` object and the factorial is `_ctx`. Use "
+            "weight_arm_entry()." % (training_mode,))
     if suppression_window is not None and suppression_window < 0:
         # ⛔⛔ A NEGATIVE WINDOW IS THE BAR-NOTHING DOSE, WHICH PERSISTS BY
         # CONSTRUCTION. It cannot be a content-transient cell no matter what
@@ -161,6 +237,12 @@ def entry(name: str, *, recipe: str, seed: int, manifest=None,
         "seed": seed,
         "cell": adapter_label(recipe, seed, suppression_window),
         "generator": gen,
+        # ⭐ THE CAVEAT IN THE FIELD, NOT IN A NOTE. Both sides of the `_ctx`/`_w`
+        # split now say which they are, so a pooling routine that reads the
+        # category can refuse a mixed set instead of relying on the absence of a
+        # cell to imply it.
+        "training_mode": training_mode,
+        "measurement_category": CATEGORY_CTX,
         # ⭐ THE DOSE RIDES WITH THE ADAPTER. Two content-transient adapters at
         # different suppression windows are different treatments; an adapter
         # that cannot say its dose is one that will be pooled with the other.
@@ -183,6 +265,37 @@ def entry(name: str, *, recipe: str, seed: int, manifest=None,
     }
 
 
+def refuse_non_members(entries) -> list:
+    """⛔⛔ THE GUARD THE ABSENT-CELL TRICK DOES NOT PROVIDE.
+
+    `dose_arm_entry` is safe from pooling almost by accident: its recipe is
+    `content-persistent`, which is not in `RECIPES`, so every routine that keys
+    on recipe drops it. A `_w` object has NO such protection — it is trained on
+    `content-transient` at a real seed, so `pair_regimes` would key it exactly
+    like the adapter it must never be pooled with, and the missing `cell` would
+    never be consulted.
+
+    ⭐ So the refusal is explicit and it RAISES rather than filters. Silently
+    dropping a non-member would leave the caller believing their population
+    included it, which is the same class of quiet wrongness in the other
+    direction: a count that is right for a reason nobody stated.
+    """
+    entries = list(entries)
+    bad = [e for e in entries
+           if e.get("NOT_A_FACTORIAL_MEMBER")
+           or e.get("measurement_category") not in (None, CATEGORY_CTX)]
+    if bad:
+        raise FactorialError(
+            "%d entry(ies) that are not factorial members were passed to a "
+            "pooling routine (first: %r, %s). They have no cell and no pair key "
+            "on purpose; reading them here is the pooling their absence of a "
+            "cell was meant to prevent."
+            % (len(bad), bad[0].get("name"),
+               bad[0].get("NOT_A_FACTORIAL_MEMBER") or
+               bad[0].get("measurement_category")))
+    return entries
+
+
 def pair_regimes(entries) -> dict:
     """{seed: regime} over seeds present in BOTH arms.
 
@@ -190,7 +303,7 @@ def pair_regimes(entries) -> dict:
     it would inflate the matched-cell count with contrasts that do not exist.
     """
     by = {}
-    for e in entries:
+    for e in refuse_non_members(entries):
         by.setdefault(e["seed"], {})[e["recipe"]] = e
     out = {}
     for seed, arms in by.items():
@@ -208,7 +321,7 @@ def unpaired(entries) -> dict:
     hidden: an unpartnered adapter is real training that buys no contrast, and
     that is a fact the design should have to look at."""
     by = {}
-    for e in entries:
+    for e in refuse_non_members(entries):
         by.setdefault(e["seed"], set()).add(e["recipe"])
     out = {r: [] for r in RECIPES}
     for seed, arms in sorted(by.items()):
@@ -226,7 +339,7 @@ def check_balanced(entries, *, require_pairs: int = 1) -> dict:
     one variable. This refuses that at the point it can still be fixed by
     training, rather than at analysis time when the GPU money is spent.
     """
-    entries = list(entries)
+    entries = refuse_non_members(entries)
     if not entries:
         raise FactorialError(
             "no adapters tracked — an empty factorial is indistinguishable "

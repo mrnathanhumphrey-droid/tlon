@@ -19,14 +19,13 @@
 # build is lost; GPU training is not bit-deterministic; a substitute under the
 # lost label is the caveat-in-the-name failure.
 set -uo pipefail
-# ⛔ THE TRAP IS ARMED BEFORE $STAGE/$LOG EXIST, so it must not depend on them.
-# Under `set -u` a bare $STAGE here makes the handler ITSELF fail on any early
-# exit — and the handler is the only thing that reports why the run stopped, so
-# its failure erases the diagnosis exactly when there is one.
-trap 'rc=$?; if [ $rc -ne 0 ]; then
-        echo "⛔ FAILED at stage: ${STAGE:-<before init>} (rc=$rc)" | tee -a "${LOG:-/dev/null}"
-        echo "${STAGE:-<before init>} rc=$rc" > ~/FAILED
-      fi' EXIT
+# ⛔⛔ THE SAFETY SCAFFOLDING IS SOURCED, NEVER COPIED. The failure handler, the
+# log rotation, the watchdog arming and the `~/DONE` gate are identical in every
+# self-terminating pipeline and were the site of both losses on 2026-09-04.
+# Copied into each script, the next fix lands in one copy and not the others —
+# and the box running the most expensive job is the one holding the stale copy.
+source "$(dirname "$0")/pipeline_lib.sh"
+tlon_trap_init
 set -e
 
 # ⛔⛔ THE RECIPE IS REQUIRED AND HAS NO DEFAULT. It is the factorial's corpus
@@ -66,25 +65,7 @@ CELLPFX=$RCODE$WTAG
 # ⭐ Separate roots, so the two arms can never write into each other's tree and
 # a directory listing says which arm it is.
 ROOT=${ROOT:-runs/act2/retrain12_$CELLPFX}
-mkdir -p $ROOT/logs
-LOG=$ROOT/pipeline_retrain.log
-
-# ⛔⛔ NEVER APPEND TO ANOTHER RUN'S LOG. Some run logs are committed, so a fresh
-# clone arrives holding a previous run's file and every `tee -a` below writes
-# into it. The gate box did exactly that on 2026-09-04: its log opened with a
-# stage line from the run that DIED, an hour before this box existed. Nothing is
-# lost that way, but two runs share one record and a reader can attribute one
-# run's numbers to the other -- the caveat-decay failure, with the caveat simply
-# absent. ⭐ Rotate rather than delete: the old record is still somebody's
-# evidence.
-if [ -s "$LOG" ]; then
-  PREV="$LOG.$(date -u +%Y%m%dT%H%M%SZ).prev"
-  mv "$LOG" "$PREV"
-  echo "⚠ an earlier log was already here; moved it to $PREV"
-fi
-STAGE=init
-T_START=$(date +%s)
-step() { STAGE="$1"; echo "=== [$1] $(date -u +%H:%M:%S) ===" | tee -a $LOG; }
+tlon_log_init "$ROOT" pipeline_retrain.log
 
 PY=${PY:-$HOME/venv/bin/python}
 MODEL=Qwen/Qwen2.5-7B-Instruct
@@ -134,7 +115,11 @@ $PY - <<PY 2>&1 | tee -a $LOG
 import sys; sys.path.insert(0, "tools")
 from act2_finetune import plan
 WORST, WALL = 1.253, 40.0        # the factor is NOT a constant; use the worst
-p = plan(7.62, "bf16", $SEQ, $BATCH, 152064)
+# ⛔ WAS `plan(..., $BATCH, 152064)` — the 5th positional is `grad_ckpt`, not
+# `vocab`. It passed the vocab into the checkpointing slot, where 152064 is
+# merely TRUTHY, and vocab then took its default of the same number. Right
+# answer, wrong call: a different vocab would have been silently ignored.
+p = plan(7.62, "bf16", $SEQ, $BATCH, True)
 raw = p["total_GiB"]
 print(f"  planner raw {raw:.1f} GiB x{WORST} -> {raw*WORST:.1f} vs {WALL} wall")
 assert raw * WORST < WALL, "⛔⛔ exceeds the wall"
@@ -161,22 +146,7 @@ done
 
 # ── 3 · WATCHDOG BEFORE ANY GPU TIME ────────────────────────────────────────
 step watchdog
-rm -f ~/DONE ~/FAILED
-# ⛔⛔ --flush-cmd IS THE KILL PATH'S LAST WORDS. A box terminated for a stall or
-# a dead process still holds its run log — the record of WHY, and the one
-# artifact re-running cannot regenerate. `retrain12/pipeline_retrain.log` was
-# lost exactly that way. The flush is best-effort and cannot block the
-# terminate: this fires on a box that is already burning money for nothing.
-nohup $PY tools/act2_watchdog.py \
-      --pid $$ --marker pipeline_retrain.sh \
-      --log $LOG --done $HOME/DONE \
-      --deadline-h 40 --stall-min 90 --poll-s 300 \
-      --flush-cmd "$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO flush" \
-      > $ROOT/watchdog.log 2>&1 &
-WD=$!
-sleep 5
-kill -0 $WD 2>/dev/null || { echo "⛔⛔ WATCHDOG DIED ON ARMING — refusing to run unguarded" | tee -a $LOG; cat $ROOT/watchdog.log | tee -a $LOG; exit 1; }
-echo "  ✅ watchdog armed, pid $WD, watching $$" | tee -a $LOG
+tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_retrain.sh 40 90 $$
 
 SETUP_END=$(date +%s)
 echo "  ⏱ setup wall (one-time): $((SETUP_END-T_START)) s" | tee -a $LOG
@@ -320,26 +290,5 @@ assert len(out) == want, "trained %d adapters, manifest has %d" % (want, len(out
 PY
 
 # ── 6 · THE RUN-LEVEL ARTIFACTS, AND THE GATE ON ~/DONE ─────────────────────
-step persist_run
-# ⛔ The log and the manifest are run-level: not regenerable by re-running,
-# because what they record is THIS run.
-$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-    file --path $ROOT/manifest.json --subdir $(basename $ROOT) 2>&1 | tee -a $LOG
-$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-    file --path $LOG --subdir $(basename $ROOT) 2>&1 | tee -a $LOG
-
-step verify_persisted
-# ⛔⛔ THE GATE ON ~/DONE. The watchdog terminates within one poll of seeing that
-# marker — correctly, because a finished run that keeps billing is pure waste.
-# So the marker must mean PERSISTED, not COMPUTED. Until this exits 0 the run's
-# output exists only on a box that is trying to end itself.
-$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-    verify --cells "$CELLS" 2>&1 | tee -a $LOG
-
-step done
-echo "⭐ ALL STAGES PASSED — $N adapters + $N_PER_BUILD solo logs each, PERSISTED" | tee -a $LOG
-echo "  cells: $CELLS" | tee -a $LOG
-echo "  everything above is in hf://$HF_REPO and hub-verified. The local" | tee -a $LOG
-echo "  collect is now a convenience, not the only path off this box." | tee -a $LOG
-echo "  total wall: $(( $(date +%s) - T_START )) s" | tee -a $LOG
-touch ~/DONE
+TLON_SUMMARY="⭐ ALL STAGES PASSED — $N adapters + $N_PER_BUILD solo logs each, PERSISTED"
+tlon_gate_done "$PY" "$ROOT" "$HF_REPO" "$CELLS" "$ROOT/manifest.json"

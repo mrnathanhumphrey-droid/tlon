@@ -36,6 +36,11 @@ CORPUS = _DEFAULT_CORPUS
 #: ⛔⛔ ONE PROMPT PER DIRECTION. Training both tasks under a single instruction
 #: would force the model to GUESS which one it is on from the input alone, and
 #: the two inputs are the two languages — exactly the discrimination that failed.
+from tlon.act2.full_weight import apply_scope as _apply_scope
+from tlon.act2.weight_delta import INSTRUMENT_FAULT as _FAULT
+from tlon.act2.weight_delta import OK as _DELTA_OK
+from tlon.act2.weight_delta import measure as _delta_measure
+from tlon.act2.weight_delta import snapshot as _delta_snapshot
 from tlon.discourse.provocation import DIRECTION as _PROVOKE
 from tlon.discourse.provocation import PROVOCATION as _PROVOCATION
 
@@ -135,7 +140,8 @@ RUNTIME_SLACK = 2.35
 
 
 def plan(params_b: float, dtype: str, seq: int, batch: int,
-         grad_ckpt: bool, vocab: int = 152064) -> dict:
+         grad_ckpt: bool, vocab: int = 152064, *,
+         trainable_b: float | None = None, moment_bytes: float = 2) -> dict:
     """VRAM arithmetic, stated so it can be checked rather than trusted.
 
     ⛔⛔ THE ORIGINAL FORMULA OMITTED THE LOGITS AND WAS WRONG BY ~3.4x. It
@@ -156,9 +162,29 @@ def plan(params_b: float, dtype: str, seq: int, batch: int,
     BOUND**, not an estimate, and never quote it as though it were measured.
     """
     bytes_per = {"bf16": 2, "fp16": 2, "4bit": 0.55}[dtype]
-    weights = params_b * bytes_per
-    # LoRA params are ~0.5 % of base; Adam keeps 2 fp32 moments each.
-    lora = params_b * 0.005 * (2 + 8)
+    # ⛔⛔ THE FULL-WEIGHT ARM HAS A DIFFERENT FIXED COST BY TWO ORDERS OF
+    # MAGNITUDE, AND A PLANNER THAT QUIETLY ANSWERS FOR THE LoRA ONE IS WORSE
+    # THAN NO PLANNER. The LoRA optimizer term is 0.381 GiB; full-weight AdamW
+    # over 6.53 B in fp32 is 91.44 -- 240x. PREREG a0450b36 §5 sizes the run on
+    # THIS arithmetic, so it lives here where it can be checked, not in a
+    # session's scratch script.
+    if trainable_b is None:
+        weights = params_b * bytes_per
+        # LoRA params are ~0.5 % of base; Adam keeps 2 fp32 moments each.
+        lora = params_b * 0.005 * (2 + 8)
+        master = grads = moments = 0.0
+    else:
+        if not 0 < trainable_b <= params_b:
+            raise ValueError("trainable_b %r outside (0, %r]"
+                             % (trainable_b, params_b))
+        # ⭐ Frozen weights stay in the resident dtype (they take no update, so
+        # their precision buys nothing); trainable weights are the fp32 MASTER,
+        # which is what lets a 1e-5 step land at all -- see §4.1.
+        master = trainable_b * 4
+        weights = (params_b - trainable_b) * bytes_per + master
+        grads = trainable_b * 4
+        moments = trainable_b * moment_bytes
+        lora = 0.0
     # Hidden-state activations. With checkpointing only layer boundaries are kept.
     act_per_tok = params_b * 0.00002 * (0.25 if grad_ckpt else 1.0)
     activations = act_per_tok * seq * batch
@@ -166,8 +192,14 @@ def plan(params_b: float, dtype: str, seq: int, batch: int,
     logits = batch * seq * vocab * 4 * 3 / 1024 ** 3
     overhead = 1.6                      # cuda context + cuBLAS workspaces
     live_variable = lora + activations + logits + overhead
-    total = weights + live_variable * RUNTIME_SLACK
+    # ⛔ Gradients and optimizer moments are FLAT allocations, like weights, so
+    # the slack (which models fragmentation of the churning terms) must not
+    # multiply them. Folding them into `live_variable` would inflate the full-
+    # weight estimate by 2.35x and reject configurations that fit.
+    total = weights + grads + moments + live_variable * RUNTIME_SLACK
     return {"weights_GiB": weights, "lora_optim_GiB": lora,
+            "master_GiB": master, "grads_GiB": grads, "moments_GiB": moments,
+            "trainable_b": trainable_b,
             "activations_GiB": activations, "logits_GiB": logits,
             "overhead_GiB": overhead, "slack": RUNTIME_SLACK,
             "live_variable_GiB": live_variable, "total_GiB": total,
@@ -191,6 +223,86 @@ def _fmt(p: dict, budget: float) -> str:
             f"{'FITS' if fits else '⛔ DOES NOT FIT'}")
 
 
+def probe_optim(*, lr: float = 1e-5, steps: int = 20) -> int:
+    """⛔⛔ PROVE THE OPTIMIZER CAN WRITE, BEFORE ANY GPU TIME IS BOUGHT.
+
+    PREREG a0450b36 §5 declares `adamw_bnb_8bit` over an fp32 master, and §4.1
+    records the arithmetic for why: under a bf16 master a 1e-5 Adam step is
+    0.08 ulp at a typical Qwen weight and rounds to zero, so the optimizer
+    writes nothing while appearing to train. That claim is arithmetic on paper.
+    This runs it ON THE BOX, on two tensors, in under a second:
+
+      * fp32 master  — the declared config. The value MUST change.
+      * bf16 master  — the rejected one. Expected NOT to change, which is the
+        on-hardware confirmation that the dead zone is real here and not just
+        in a docstring.
+
+    ⭐ It also fails if `bitsandbytes` is missing or its wheel will not load —
+    the thing that would otherwise be discovered after the model has downloaded
+    and the first step is attempted, hours into a paid run.
+
+    ⛔ THIS IS `assert_the_mutation` AS A PRE-FLIGHT. The probe does not check
+    that an optimizer object was constructed; it checks that a number moved.
+    """
+    import torch
+    print("⭐ OPTIMIZER WRITE PROBE — PREREG a0450b36 §4.1/§5, lr=%g" % lr)
+    try:
+        import bitsandbytes as bnb
+    except Exception as exc:                                     # noqa: BLE001
+        print("⛔⛔ bitsandbytes will not import: %r\n"
+              "   §5 declares adamw_bnb_8bit and fp32 moments DO NOT FIT on 80 "
+              "GiB. Without this wheel there is no declared config to run."
+              % (exc,))
+        return 1
+    print("   bitsandbytes %s" % getattr(bnb, "__version__", "?"))
+
+    # ⭐ 0.02 is Qwen's own `initializer_range`, read from its config.json — the
+    # magnitude §4.1's arithmetic is about, not a round number chosen here.
+    results = {}
+    for name, dtype in (("fp32 (declared)", torch.float32),
+                        ("bf16 (rejected)", torch.bfloat16)):
+        p = torch.nn.Parameter(torch.full((256,), 0.02, dtype=dtype))
+        before = p.detach().clone().float()
+        try:
+            opt = bnb.optim.AdamW8bit([p], lr=lr)
+        except Exception as exc:                                 # noqa: BLE001
+            print("⛔⛔ AdamW8bit would not instantiate on %s: %r" % (name, exc))
+            return 1
+        for _ in range(steps):
+            opt.zero_grad()
+            # A constant gradient: Adam normalises it, so the step size is ~lr
+            # regardless of the magnitude here. That is exactly why the ulp
+            # comparison in §4.1 is against `lr` and not against the gradient.
+            p.grad = torch.full_like(p, 1e-3)
+            opt.step()
+        moved = int((p.detach().float() != before).sum().item())
+        results[name] = moved
+        print("   %-16s %3d/256 values changed after %d steps"
+              % (name, moved, steps))
+
+    ok_fp32 = results["fp32 (declared)"] > 0
+    dead_bf16 = results["bf16 (rejected)"] == 0
+    if not ok_fp32:
+        print("⛔⛔ THE DECLARED CONFIG CANNOT WRITE AN UPDATE ON THIS BOX. "
+              "Training would produce a zero weight delta and §4.1 would "
+              "correctly refuse to read any verdict. Do not train.")
+        return 1
+    print("   ✅ the declared fp32-master config writes the update")
+    if dead_bf16:
+        print("   ✅ and the bf16 dead zone is CONFIRMED ON THIS HARDWARE — "
+              "the rejected config writes nothing, exactly as §4.1 predicts")
+    else:
+        # ⚠️ NOT A FAILURE. The declared config is what runs; a bf16 that moves
+        # here only means this box rounds more favourably than the worst case.
+        # Reported rather than silently passed, because it is evidence about
+        # §4.1's arithmetic and evidence is not discarded for being convenient.
+        print("   ⚠️ bf16 moved %d values — the dead zone is narrower on this "
+              "hardware than §4.1's worst case. Does not affect the declared "
+              "run; recorded because it bears on the §4.1 reasoning."
+              % results["bf16 (rejected)"])
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", help="HF id or local path. NO DEFAULT — Nate's call.")
@@ -206,6 +318,42 @@ def main() -> int:
     ap.add_argument("--epochs", type=float, default=2.0)
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--rank", type=int, default=32)
+    # ⛔⛔ THE FULL-WEIGHT ARM. PREREG a0450b36 §5. Neither of the two flags it
+    # needs has a default: the layer scope is what a STOP-floored would be ABOUT
+    # (§7.1's ladder is written in terms of it) and the optimizer is the choice
+    # that decides whether the update can be written at all (§4.1). A default on
+    # either would be that decision taken quietly, in the file whose own
+    # docstring refuses to default the backbone for the same reason.
+    ap.add_argument("--full", action="store_true",
+                    help="FULL-WEIGHT fine-tune (no LoRA), per PREREG a0450b36 "
+                         "§5. Requires --unfreeze-top and --optim.")
+    ap.add_argument("--unfreeze-top", type=int, default=None,
+                    help="train the top N transformer layers; everything below, "
+                         "plus embed_tokens and lm_head, is frozen. §5 = 14.")
+    ap.add_argument("--optim", default=None,
+                    help="HF optimizer id. §5 = adamw_bnb_8bit (fp32 master "
+                         "params, 8-bit moments -- fp32 moments do not fit).")
+    # ⛔ WITHOUT THIS, `--plan` ANSWERS FOR THE OTHER ARM. The planner prints
+    # LoRA rows by default, so sizing a full-weight run with it would report
+    # 26 GiB for a job that needs 51 -- the wrong number, in the confident shape
+    # of a right one. Billions of TRAINABLE parameters; §5 = 3.263.
+    ap.add_argument("--trainable-params", type=float, default=None,
+                    help="billions of trainable params, for --plan on the "
+                         "full-weight arm. §5 = 3.263 (top 14 of 28 layers).")
+    ap.add_argument("--moment-bytes", type=float, default=2,
+                    help="optimizer moment bytes per param: 2 = 8-bit m+v "
+                         "(§5), 8 = fp32 m+v.")
+    # ⛔⛔ THE DELTA IS MEASURED FROM THE BASE MODEL, ACROSS EVERY LEG. §5's
+    # epoch-1 early-stop means epoch 2 starts from the epoch-1 model, so a
+    # snapshot taken at the start of leg 2 would measure ONE EPOCH of movement
+    # and call it the total. A run whose first epoch moved the weights and whose
+    # second did not would then read INSTRUMENT FAULT — the guard firing on a
+    # run that worked. The snapshot is carried instead.
+    ap.add_argument("--delta-snapshot-out", default=None,
+                    help="write the §4.1 init snapshot here (leg 1)")
+    ap.add_argument("--delta-snapshot-in", default=None,
+                    help="measure against THIS snapshot instead of the weights "
+                         "at the start of this leg (leg 2+)")
     # ⛔⛔ WAS HARDCODED `seed=20620`. That made "run the recipe again" impossible
     # to express: the reproducibility probe needs to RE-ROLL what the recipe
     # re-rolls, and a welded seed silently pins the trainer while the caller
@@ -223,13 +371,43 @@ def main() -> int:
     # diversity number is measured at each of these and plotted against step.
     ap.add_argument("--save-steps", type=int, default=0,
                     help="checkpoint every N steps for the diversity-vs-step curve")
+    ap.add_argument("--probe-optim", action="store_true",
+                    help="$0 pre-flight: prove the declared optimizer can "
+                         "actually WRITE an update on this box. No model, no "
+                         "download, no training.")
     a = ap.parse_args()
     global CORPUS
     CORPUS = pathlib.Path(a.corpus)
 
+    if a.probe_optim:
+        return probe_optim(lr=a.lr if a.lr != 1e-4 else 1e-5)
+
     if a.plan:
         print(f"VRAM PLAN — {a.params}B params, budget {a.vram} GiB "
               f"(1 GiB held back for fragmentation)\n")
+        if a.trainable_params:
+            # ⭐ THE FULL-WEIGHT ROWS, AND THE +28 % ALONGSIDE. The planner is a
+            # documented LOWER BOUND that under-predicted its closest anchor by
+            # 28 %; printing only the raw figure invites someone to read a bound
+            # as an estimate and launch on 3 GiB of margin.
+            print(f"  FULL-WEIGHT arm: {a.trainable_params}B trainable of "
+                  f"{a.params}B, moments {a.moment_bytes} B/param\n")
+            for gc in (False, True):
+                p = plan(a.params, "bf16", a.seq, a.batch, gc,
+                         trainable_b=a.trainable_params,
+                         moment_bytes=a.moment_bytes)
+                tag = "grad-ckpt" if gc else "no ckpt  "
+                print(f"  {tag} bf16  seq {p['seq']:<4} batch {p['batch']:<3} "
+                      f"master {p['master_GiB']:5.1f} + grads "
+                      f"{p['grads_GiB']:5.1f} + moments {p['moments_GiB']:4.1f} "
+                      f"+ frozen "
+                      f"{p['weights_GiB'] - p['master_GiB']:5.1f} + var "
+                      f"{p['live_variable_GiB'] * p['slack']:5.1f} "
+                      f"= {p['total_GiB']:5.1f} GiB   "
+                      f"+28% -> {p['total_GiB'] * 1.28:5.1f}   "
+                      f"{'FITS' if p['total_GiB'] * 1.28 <= a.vram else '⛔ DOES NOT FIT'}")
+            print("\n⛔ nothing loaded, nothing downloaded, nothing trained.")
+            return 0
         for dt in ("bf16", "4bit"):
             for gc in (False, True):
                 p = plan(a.params, dt, a.seq, a.batch, gc)
@@ -265,6 +443,19 @@ def main() -> int:
             "⛔ --model is required and has no default. The backbone is Nate's "
             "call every time; run --plan first to size the options.")
 
+    if a.full and (a.unfreeze_top is None or not a.optim):
+        raise SystemExit(
+            "⛔ --full requires BOTH --unfreeze-top and --optim, neither of "
+            "which has a default. The layer scope is what a STOP-floored "
+            "verdict would be about (PREREG a0450b36 §7.1) and the optimizer "
+            "decides whether the update can be written at all (§4.1). §5 "
+            "declares --unfreeze-top 14 --optim adamw_bnb_8bit.")
+    if not a.full and (a.unfreeze_top is not None or a.optim):
+        raise SystemExit(
+            "⛔ --unfreeze-top / --optim are full-weight flags and do nothing "
+            "on the LoRA path. Silently ignoring them would let a caller "
+            "believe they had set a scope that was never applied.")
+
     import torch
     from datasets import load_dataset
     from peft import LoraConfig, get_peft_model
@@ -295,12 +486,51 @@ def main() -> int:
             bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
         kw.pop("dtype")
     model = AutoModelForCausalLM.from_pretrained(a.model, **kw)
-    model = get_peft_model(model, LoraConfig(
-        r=a.rank, lora_alpha=a.rank * 2, lora_dropout=0.05, bias="none",
-        task_type="CAUSAL_LM",
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                        "gate_proj", "up_proj", "down_proj"]))
-    model.print_trainable_parameters()
+    snap = scope = None
+    if a.full:
+        if a.dtype == "4bit":
+            raise SystemExit(
+                "⛔ --full with 4-bit weights is not the declared arm. §5 is an "
+                "fp32 master over bf16-resident frozen weights; quantised base "
+                "weights cannot hold an fp32 update.")
+        scope = _apply_scope(model, unfreeze_top=a.unfreeze_top)
+        print("⭐ FULL-WEIGHT scope — top %d of %d layers trainable: "
+              "%s trainable / %s frozen params"
+              % (scope["unfreeze_top"], scope["n_layers"],
+                 f"{scope['n_trainable_params']:,}",
+                 f"{scope['n_frozen_params']:,}"))
+        # ⛔⛔ FROZEN EMBEDDINGS + GRADIENT CHECKPOINTING = SILENTLY NO GRADIENTS.
+        # With embed_tokens frozen, the input to the first checkpointed block
+        # does not require grad, and reentrant checkpointing then skips the
+        # backward through that segment entirely -- every trainable layer gets
+        # NO gradient, training "succeeds", and the weights do not move. That is
+        # the §4.1 failure arriving through a completely different door, which
+        # is why the precondition is on the table rather than on the optimizer.
+        model.enable_input_require_grads()
+        if a.delta_snapshot_in:
+            # ⭐ CARRIED FROM LEG 1, so the delta stays "movement from the BASE
+            # model" no matter how many legs §5's early-stop rule produces.
+            snap = torch.load(a.delta_snapshot_in, weights_only=False)
+            print("⭐ §4.1 snapshot LOADED from %s (%d tensors) — the delta is "
+                  "measured from the base model, not from this leg's start"
+                  % (a.delta_snapshot_in, len(snap)))
+        else:
+            # ⭐ Taken AFTER the fp32 cast and BEFORE the first step: the
+            # snapshot must describe the tensors the optimizer will write to.
+            snap = _delta_snapshot(model.named_parameters(), seed=a.seed)
+            print("⭐ §4.1 snapshot: %d trainable tensors sampled" % len(snap))
+        if a.delta_snapshot_out:
+            pathlib.Path(a.delta_snapshot_out).parent.mkdir(parents=True,
+                                                            exist_ok=True)
+            torch.save(snap, a.delta_snapshot_out)
+            print("⭐ §4.1 snapshot -> %s" % a.delta_snapshot_out)
+    else:
+        model = get_peft_model(model, LoraConfig(
+            r=a.rank, lora_alpha=a.rank * 2, lora_dropout=0.05, bias="none",
+            task_type="CAUSAL_LM",
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                            "gate_proj", "up_proj", "down_proj"]))
+        model.print_trainable_parameters()
 
     trainer = Trainer(
         model=model, train_dataset=ds["train"], eval_dataset=ds["eval"],
@@ -313,10 +543,38 @@ def main() -> int:
             save_strategy=("steps" if a.save_steps else "epoch"),
             save_steps=(a.save_steps or 500),
             save_total_limit=(None if a.save_steps else 2),
-            report_to=[], seed=a.seed))
+            report_to=[], seed=a.seed,
+            **({"optim": a.optim} if a.full else {})))
     trainer.train()
     trainer.save_model(a.out)
-    print(f"\n⭐ adapter → {a.out}")
+
+    if a.full:
+        # ⛔⛔ THE §4.1 PRECONDITION, COMPUTED HERE AND NOWHERE ELSE. It is
+        # written beside the weights it describes, in the process that trained
+        # them, because the comparison is against tensors that exist only here.
+        rep = _delta_measure(model.named_parameters(), snap, lr=a.lr)
+        rep["scope"] = {k: v for k, v in scope.items()
+                        if k not in ("trainable", "frozen")}
+        out = pathlib.Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "weight_delta.json").write_text(
+            json.dumps(rep, indent=2), encoding="utf-8")
+        print("\n%s §4.1 WEIGHT DELTA: %s" % (
+            "⭐" if rep["verdict"] == _DELTA_OK else "⛔⛔", rep["verdict"]))
+        print("   fraction changed %.4f · working predicts 1.0 · bf16 dead "
+              "zone predicts %.4f" % (rep["fraction_changed"],
+                                      rep["prediction_bf16_dead_zone"]))
+        print("   " + rep["why"])
+        if rep["verdict"] == _FAULT:
+            # ⛔ NON-ZERO EXIT. The pipeline's `step` wrapper stops on it, so a
+            # faulted run cannot walk on to F-LOCAL and the lag read and arrive
+            # at a verdict table that §4.1 says may not be read.
+            print("⛔⛔ NO ROW OF THE VERDICT TABLE MAY BE READ. The weights "
+                  "did not move; this is not evidence about the substrate.")
+            return 3
+        print(f"\n⭐ full-weight model → {a.out}")
+    else:
+        print(f"\n⭐ adapter → {a.out}")
     print("⛔ NOT a result. Next: tools/act2_flocal.py measures F-LOCAL "
           "unconstrained and cardless. That is the gate.")
     return 0

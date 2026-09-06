@@ -248,6 +248,30 @@ def cmd_env(a):
             "the box CANNOT WRITE to hf://%s (%s). Persistence is a pipeline "
             "stage; without it the run would train for hours and then have "
             "nowhere to put the result." % (HF_REPO, save.strip()[-300:]))
+
+    # ⛔⛔ AND PROVE THE OPTIMIZER CAN WRITE. Three obligations now, not two: a
+    # box that cannot terminate costs money, a box that cannot persist costs the
+    # work, and a box whose optimizer cannot write an update costs the ANSWER —
+    # it trains for hours, moves nothing, and produces a zero weight delta that
+    # §4.1 must refuse to read. That is the most expensive of the three, because
+    # the other two announce themselves and this one looks like a finding.
+    #
+    # ⭐ Probed only when the full-weight arm is what this box is for. The LoRA
+    # arm does not declare an 8-bit optimizer and would fail a check it has no
+    # obligation to pass.
+    if getattr(a, "full_weight", False):
+        opt = ssh(a.host, KEY,
+                  ". ~/.tlon_env && cd ~/tlon && ~/venv/bin/python "
+                  "tools/act2_finetune.py --probe-optim --lr 1e-5",
+                  check=False)
+        print("  optimizer write probe:\n%s" % opt.strip())
+        if "the declared fp32-master config writes the update" not in opt:
+            raise TransferError(
+                "the declared optimizer CANNOT WRITE AN UPDATE on this box "
+                "(%s). PREREG a0450b36 §5 declares adamw_bnb_8bit over an fp32 "
+                "master; without it the run would train and move nothing."
+                % opt.strip()[-300:])
+        print("  ✅ the box's optimizer can write the update")
     print("  ✅ the box can persist its own artifacts")
     return 0
 
@@ -487,6 +511,12 @@ def main() -> int:
     q = sub.add_parser("env"); q.set_defaults(fn=cmd_env)
     q.add_argument("--host", required=True)
     q.add_argument("--instance", required=True)
+    # ⭐ Opt-in, because the probe asserts an obligation only the full-weight arm
+    # has. A default-on check would fail every LoRA provision for not meeting a
+    # requirement it never made.
+    q.add_argument("--full-weight", action="store_true",
+                   help="also probe that the declared 8-bit optimizer can "
+                        "WRITE an update (PREREG a0450b36 §5)")
     q = sub.add_parser("persist"); q.set_defaults(fn=cmd_persist)
     q.add_argument("--root", default="retrain12")
     q = sub.add_parser("terminate"); q.set_defaults(fn=cmd_terminate)

@@ -107,7 +107,18 @@ def seed_surfaces(n: int, *, rng: random.Random) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="Qwen/Qwen2.5-7B-Instruct")
-    ap.add_argument("--adapter", required=True)
+    # ⛔⛔ WAS `required=True`, WHICH MADE THE §3 INSTRUMENT UNABLE TO READ THE
+    # OBJECT §5 PRODUCES. A full-weight `_w` model has no adapter; `LocalBackend`
+    # has always accepted `adapter=None`, so only this line stood in the way.
+    # ⛔ Optional is not the same as absent: with no adapter AND no local model
+    # path, this reads the BARE BASE MODEL and would write a result file
+    # indistinguishable from a treatment read. That is refused below.
+    ap.add_argument("--adapter", default=None)
+    ap.add_argument("--object-kind", default=None,
+                    choices=["adapter", "full_weight"],
+                    help="what --model/--adapter names. Required when no "
+                         "--adapter is given, so a `_w` read is never mistaken "
+                         "for a base-model read.")
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--4bit", dest="four_bit", action="store_true")
     ap.add_argument("--temperature", type=float, default=0.7)
@@ -119,6 +130,23 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=20620)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
+
+    if not a.adapter:
+        if a.object_kind != "full_weight":
+            raise SystemExit(
+                "⛔⛔ no --adapter and --object-kind is %r. With neither, this "
+                "reads the BARE BASE MODEL and writes a lag profile that looks "
+                "exactly like a treatment result. Pass --object-kind "
+                "full_weight with a local --model path for a `_w` object."
+                % (a.object_kind,))
+        if not pathlib.Path(a.model).exists():
+            raise SystemExit(
+                "⛔⛔ --object-kind full_weight but --model %r is not a local "
+                "path. A `_w` read must name the trained weights on disk; a hub "
+                "id here is the base model wearing the treatment's label."
+                % (a.model,))
+    obj = a.adapter or a.model
+    kind = a.object_kind or "adapter"
 
     from act2_backends import LocalBackend
     print("  loading %s + %s ..." % (a.model, a.adapter))
@@ -171,7 +199,12 @@ def main() -> int:
 
     n_turns = sum(len(c) for c in chains)
     report = {
-        "adapter": a.adapter, "four_bit": a.four_bit,
+        "adapter": a.adapter,
+        # ⭐ THE CAVEAT IN THE FIELD. `adapter: null` alone cannot say whether
+        # this was a `_w` object or the bare base model; these two can.
+        "object": obj, "object_kind": kind,
+        "measurement_category": "_w" if kind == "full_weight" else "_ctx",
+        "four_bit": a.four_bit,
         "temperature": a.temperature, "max_new_tokens": a.max_new_tokens,
         "chains_requested": a.chains, "chains_used": len(chains),
         "chains_dropped_too_short": dropped, "turns_total": n_turns,
@@ -186,7 +219,7 @@ def main() -> int:
     outp.parent.mkdir(parents=True, exist_ok=True)
     outp.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
-    print("\n  MODEL LAG PROFILE — %s" % a.adapter)
+    print("\n  MODEL LAG PROFILE — %s [%s]" % (obj, kind))
     print("    " + "  ".join("lag%d %.4f" % (k, prof[k])
                              for k in sorted(prof)))
     print("    " + "  ".join("lag%d z=%+.2f" % (k, zs[k]) for k in sorted(zs)))

@@ -27,35 +27,13 @@
 # whole persist-before-DONE change exists to make real. Their md5s are pinned
 # against the salvage record before a single token is generated.
 set -uo pipefail
-# ⛔ ARMED BEFORE $STAGE/$LOG EXIST, so it must not depend on them. Under `set -u`
-# a bare $STAGE makes the handler itself fail on an early exit, erasing the
-# diagnosis exactly when there is one.
-trap 'rc=$?; if [ $rc -ne 0 ]; then
-        echo "⛔ FAILED at stage: ${STAGE:-<before init>} (rc=$rc)" | tee -a "${LOG:-/dev/null}"
-        echo "${STAGE:-<before init>} rc=$rc" > ~/FAILED
-      fi' EXIT
+# ⛔⛔ THE SAFETY SCAFFOLDING IS SOURCED, NEVER COPIED — see pipeline_lib.sh.
+source "$(dirname "$0")/pipeline_lib.sh"
+tlon_trap_init
 set -e
 
 ROOT=${ROOT:-runs/act2/solo_regen}
-mkdir -p $ROOT/logs
-LOG=$ROOT/pipeline_solo_regen.log
-
-# ⛔⛔ NEVER APPEND TO ANOTHER RUN'S LOG. Some run logs are committed, so a fresh
-# clone arrives holding a previous run's file and every `tee -a` below writes
-# into it. The gate box did exactly that on 2026-09-04: its log opened with a
-# stage line from the run that DIED, an hour before this box existed. Nothing is
-# lost that way, but two runs share one record and a reader can attribute one
-# run's numbers to the other -- the caveat-decay failure, with the caveat simply
-# absent. ⭐ Rotate rather than delete: the old record is still somebody's
-# evidence.
-if [ -s "$LOG" ]; then
-  PREV="$LOG.$(date -u +%Y%m%dT%H%M%SZ).prev"
-  mv "$LOG" "$PREV"
-  echo "⚠ an earlier log was already here; moved it to $PREV"
-fi
-STAGE=init
-T_START=$(date +%s)
-step() { STAGE="$1"; echo "=== [$1] $(date -u +%H:%M:%S) ===" | tee -a $LOG; }
+tlon_log_init "$ROOT" pipeline_solo_regen.log
 
 PY=${PY:-$HOME/venv/bin/python}
 MODEL=Qwen/Qwen2.5-7B-Instruct
@@ -135,17 +113,7 @@ PYEOF
 
 # ── 3 · WATCHDOG BEFORE ANY GPU TIME ────────────────────────────────────────
 step watchdog
-rm -f ~/DONE ~/FAILED
-nohup $PY tools/act2_watchdog.py \
-      --pid $$ --marker pipeline_solo_regen.sh \
-      --log $LOG --done $HOME/DONE \
-      --deadline-h 12 --stall-min 60 --poll-s 300 \
-      --flush-cmd "$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO flush" \
-      > $ROOT/watchdog.log 2>&1 &
-WD=$!
-sleep 5
-kill -0 $WD 2>/dev/null || { echo "⛔⛔ WATCHDOG DIED ON ARMING — refusing to run unguarded" | tee -a $LOG; cat $ROOT/watchdog.log | tee -a $LOG; exit 1; }
-echo "  ✅ watchdog armed, pid $WD, watching $$" | tee -a $LOG
+tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_solo_regen.sh 12 60 $$
 
 SETUP_END=$(date +%s)
 echo "  ⏱ setup wall (one-time, NOT divisible into per-build): $((SETUP_END-T_START)) s" | tee -a $LOG
@@ -205,10 +173,10 @@ assert not missing, "⛔⛔ NOT PERSISTED: %s" % ", ".join(missing)
 print("  ✅ all %d builds' transcripts verified in durable storage" % len(want))
 PY
 
-step done
-echo "⭐ ALL STAGES PASSED — $N builds x $N_PER_BUILD transcripts, PERSISTED" | tee -a $LOG
-echo "  hf://$HF_REPO/$(basename $ROOT)/ — hub-verified. Restore with:" | tee -a $LOG
-echo "    python tools/act2_box_persist.py --root . --repo $HF_REPO \\" | tee -a $LOG
-echo "        restore --into runs/act2/solo_regen --pattern '$(basename $ROOT)/*'" | tee -a $LOG
-echo "  total wall: $(( $(date +%s) - T_START )) s" | tee -a $LOG
-touch ~/DONE
+echo "  restore with: python tools/act2_box_persist.py --root . --repo $HF_REPO \\" | tee -a $LOG
+echo "      restore --into runs/act2/solo_regen --pattern '$(basename $ROOT)/*'" | tee -a $LOG
+# ⛔ The marker is written by the shared helper, not here — its meaning is the
+# one thing that must be identical in every pipeline. This run's verification
+# (the tarball count above) differs from the other two; the marker does not.
+TLON_SUMMARY="⭐ ALL STAGES PASSED — $N builds x $N_PER_BUILD transcripts, PERSISTED"
+tlon_mark_done "$HF_REPO" "$N builds x $N_PER_BUILD transcripts"

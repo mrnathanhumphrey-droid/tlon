@@ -307,7 +307,15 @@ def test_the_retrain_pipeline_persists_INSIDE_the_loop():
     """
     src = (ROOT / "tools/pipeline_retrain.sh").read_text(encoding="utf-8")
     assert src.index("step persist_$CELL") < src.index("step manifest")
-    assert src.index("step verify_persisted") < src.index("touch ~/DONE")
+    # ⛔⛔ RE-ANCHORED, NOT RELAXED. The verify-before-marker ordering moved into
+    # `pipeline_lib.sh` when the safety scaffolding was extracted so it could
+    # not drift between three pipelines. The property is unchanged and still
+    # asserted — it is now asserted where it lives, plus the pipeline's own
+    # obligation to reach it only after the manifest.
+    assert src.index("step manifest") < src.index("tlon_gate_done")
+    lib = (ROOT / "tools/pipeline_lib.sh").read_text(encoding="utf-8")
+    assert lib.index("step verify_persisted") < lib.index("touch ~/DONE")
+    assert lib.index("tlon_verify_cells \"$py\"") < lib.index("tlon_mark_done \"$repo\"")
 
 
 def test_the_pipelines_manifest_count_is_DERIVED_not_a_batch_size():

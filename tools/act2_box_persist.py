@@ -68,6 +68,80 @@ CORPUS_MANIFEST = "corpus_manifest.json"
 #: measurement behind it.
 REQUIRED_PERSISTED = CELL_FILES + (CORPUS_MANIFEST,)
 
+#: ⛔⛔ A `_w` OBJECT IS NOT AN ADAPTER AND ITS FILE SET IS NOT A CONSTANT.
+#: PREREG a0450b36 produces a full-weight model: ~13 GiB of SHARDED safetensors
+#: whose count depends on the shard size, plus an index that maps every tensor
+#: to its shard. The adapter path's fixed 3-tuple cannot describe it, and a glob
+#: over `*.safetensors` cannot either — a glob that misses one shard persists a
+#: model that will not load, and the ledger records it as saved.
+#:
+#: ⭐ `weight_delta.json` IS REQUIRED. §4.1 makes the delta a precondition on the
+#: whole verdict table, so a `_w` object that arrives without it is a model that
+#: cannot be read for anything. Same reasoning that put the corpus manifest in
+#: the adapter's required set, one category up.
+FULL_WEIGHT_REQUIRED = ("config.json", "factorial.json", "weight_delta.json")
+SHARD_INDEX = "model.safetensors.index.json"
+SINGLE_SHARD = "model.safetensors"
+
+#: ⭐ Tokenizer/generation files ride along when present. Absent ones are not an
+#: error: `save_model` writes them only when a tokenizer was attached, and
+#: demanding one that was never written would fail a complete run.
+FULL_WEIGHT_OPTIONAL = ("generation_config.json", "tokenizer.json",
+                        "tokenizer_config.json", "special_tokens_map.json",
+                        "chat_template.jinja", "vocab.json", "merges.txt",
+                        "added_tokens.json")
+
+KIND_ADAPTER = "adapter"
+KIND_FULL_WEIGHT = "full_weight"
+
+
+def shard_files(d) -> list:
+    """The safetensors shards of a full-weight model, FROM THE INDEX.
+
+    ⛔⛔ THE INDEX IS THE AUTHORITY, NOT THE DIRECTORY. `model.safetensors.index.json`
+    maps every tensor name to the shard holding it, so the set of shards the
+    model actually needs is exactly the set of values in that map. A directory
+    listing answers a different question — "what is here" instead of "what is
+    required" — and the two differ precisely when a shard failed to write.
+
+    ⛔ Checked in BOTH directions. A missing shard makes the model unloadable; an
+    extra `.safetensors` that the index does not reference means the directory
+    holds a file from some other save, and persisting it would put two models'
+    weights under one cell.
+    """
+    d = pathlib.Path(d)
+    idx = d / SHARD_INDEX
+    if not idx.exists():
+        # ⭐ A model small enough not to shard has no index at all. Requiring one
+        # would refuse a complete save; requiring nothing would accept an empty
+        # directory. So: exactly the single file, or a refusal.
+        single = d / SINGLE_SHARD
+        if single.exists():
+            return [SINGLE_SHARD]
+        raise TransferError(
+            "%s holds neither %s nor %s — there is no model here to persist."
+            % (d, SHARD_INDEX, SINGLE_SHARD))
+    weight_map = json.loads(idx.read_text(encoding="utf-8")).get("weight_map")
+    if not weight_map:
+        raise TransferError(
+            "%s has no `weight_map`; it cannot say which shards the model "
+            "needs, so no shard set can be verified against it." % idx)
+    needed = sorted(set(weight_map.values()))
+    absent = [s for s in needed if not (d / s).exists()]
+    if absent:
+        raise TransferError(
+            "%s: the index requires %d shard(s) that are not on disk (first: "
+            "%s). Persisting the rest would save a model that cannot load."
+            % (d, len(absent), absent[0]))
+    on_disk = {p.name for p in d.glob("*.safetensors")}
+    extra = sorted(on_disk - set(needed))
+    if extra:
+        raise TransferError(
+            "%s: %d safetensors file(s) on disk are not referenced by the index "
+            "(first: %s). Two models' weights under one cell is worse than a "
+            "missing one, because it loads." % (d, len(extra), extra[0]))
+    return needed
+
 
 def ledger_path(root) -> pathlib.Path:
     return pathlib.Path(root) / LEDGER
@@ -207,7 +281,8 @@ def persist_cell(root, cell, repo, *, solo_n, corpus_manifest,
             "saves the model and loses the measurement it is compared against."
             % (cell, cm))
 
-    entry = {"cell": cell, "files": {}, "solo_n": len(logs),
+    entry = {"cell": cell, "kind": KIND_ADAPTER, "files": {},
+             "solo_n": len(logs),
              "persisted_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                             time.gmtime())}
     # ⛔ Copied to a DISTINCT name first. `push_durable` derives the destination
@@ -245,6 +320,116 @@ def persist_cell(root, cell, repo, *, solo_n, corpus_manifest,
     return entry
 
 
+def persist_full_weight(root, cell, repo, *, corpus_manifest,
+                        push=push_durable) -> dict:
+    """Push one `_w` object — a full-weight model — verifying each arrival.
+
+    ⛔⛔ NOT `persist_cell` WITH A DIFFERENT FILE LIST. Three things differ and
+    each is load-bearing: the shard set is dynamic and comes from the index
+    (`shard_files`); `weight_delta.json` is required because §4.1 makes it a
+    precondition on every verdict; and there are no solo transcripts at this
+    point, because a `_w` object's transcripts are produced by a later stage
+    against the saved model rather than beside it.
+
+    ⛔ The ledger entry records `kind`, so `unpersisted` checks this object
+    against the `_w` required set and not the adapter's. A ledger whose entries
+    do not say what they are is a ledger that must be checked by whoever
+    remembers — and this is the module written because nobody did.
+    """
+    root = pathlib.Path(root)
+    d = root / ("model_%s" % cell)
+    if not d.is_dir():
+        raise TransferError(
+            "%s: no full-weight model directory at %s. A `_w` run that saved "
+            "nowhere would otherwise persist an empty file set and record it "
+            "as complete." % (cell, d))
+
+    shards = shard_files(d)
+    miss = [n for n in FULL_WEIGHT_REQUIRED if not (d / n).exists()]
+    if miss:
+        raise TransferError(
+            "%s: refusing to persist an incomplete `_w` object — missing %s. "
+            "%s"
+            % (cell, ", ".join(miss),
+               "weight_delta.json is required: PREREG a0450b36 §4.1 makes the "
+               "delta a precondition on the whole verdict table, so a model "
+               "saved without it cannot be read for anything."
+               if "weight_delta.json" in miss else
+               "A partial model in durable storage reads as saved."))
+
+    # ⛔⛔ THE DELTA IS READ, NOT JUST COUNTED. A `weight_delta.json` that exists
+    # but records INSTRUMENT_FAULT describes a run whose optimizer wrote nothing.
+    # Persisting it is correct — the fault itself is the finding, and throwing it
+    # away would lose the evidence — but it must be visible in the ledger rather
+    # than discovered later by someone opening the file.
+    delta = json.loads((d / "weight_delta.json").read_text(encoding="utf-8"))
+
+    cm = pathlib.Path(corpus_manifest)
+    if not cm.exists():
+        raise TransferError(
+            "%s: corpus manifest %s does not exist. It records what this model "
+            "was actually trained on." % (cell, cm))
+
+    entry = {"cell": cell, "kind": KIND_FULL_WEIGHT, "files": {},
+             "n_shards": len(shards),
+             "weight_delta_verdict": delta.get("verdict"),
+             "fraction_changed": delta.get("fraction_changed"),
+             "persisted_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                            time.gmtime())}
+
+    named = root / ("%s_corpus_manifest.json" % cell)
+    named.write_bytes(cm.read_bytes())
+    entry["files"][CORPUS_MANIFEST] = {
+        "sha256": sha256_local(named), "bytes": named.stat().st_size,
+        "uri": push(cell, named, repo, private=True, subdir=cell)}
+
+    # ⭐ Built explicitly. The index goes in whenever it EXISTS, not whenever the
+    # shard count is above one: a single-shard save that still wrote an index is
+    # a model whose loader will look for that index, and deciding from the count
+    # instead of the file would drop it.
+    to_push = list(FULL_WEIGHT_REQUIRED)
+    if (d / SHARD_INDEX).exists():
+        to_push.append(SHARD_INDEX)
+    to_push += shards
+    to_push += [n for n in FULL_WEIGHT_OPTIONAL if (d / n).exists()]
+    for fn in to_push:
+        f = d / fn
+        entry["files"][fn] = {"sha256": sha256_local(f),
+                              "bytes": f.stat().st_size,
+                              "uri": push(cell, f, repo, private=True,
+                                          subdir=cell)}
+
+    for fn, meta in entry["files"].items():
+        if not meta.get("uri"):
+            raise TransferError("%s: %s reported no durable URI after upload"
+                                % (cell, fn))
+    # ⛔ The shard count in the ledger must match what was actually uploaded, or
+    # a later restore sizes itself off a number nothing checked.
+    uploaded_shards = [n for n in entry["files"] if n.endswith(".safetensors")]
+    if len(uploaded_shards) != len(shards):
+        raise TransferError(
+            "%s: index required %d shard(s), ledger recorded %d"
+            % (cell, len(shards), len(uploaded_shards)))
+
+    led = read_ledger(root)
+    led[cell] = entry
+    write_ledger(root, led)
+    return entry
+
+
+def required_for(entry) -> tuple:
+    """What THIS entry must hold to count as persisted.
+
+    ⛔ An entry with no `kind` predates the `_w` arm and is an adapter — the same
+    absent-means-legacy rule the factorial uses, for the same reason: defaulting
+    an unlabelled entry to the set with fewer requirements would let the older
+    entries certify themselves against a bar they were never checked against.
+    """
+    if (entry or {}).get("kind") == KIND_FULL_WEIGHT:
+        return FULL_WEIGHT_REQUIRED + (CORPUS_MANIFEST,)
+    return REQUIRED_PERSISTED
+
+
 def persist_file(root, path, repo, *, subdir, push=push_durable) -> str:
     """Push one run-level file (the pipeline log, the manifest)."""
     p = pathlib.Path(path)
@@ -275,7 +460,7 @@ def unpersisted(root, cells) -> list:
             out.append(c)
             continue
         files = e.get("files", {})
-        if any(not files.get(fn, {}).get("uri") for fn in REQUIRED_PERSISTED):
+        if any(not files.get(fn, {}).get("uri") for fn in required_for(e)):
             out.append(c)
     return out
 
@@ -287,6 +472,23 @@ def cmd_cell(a):
           % (a.cell, len(e["files"]) - 1, e["solo_n"]))
     for fn, m in sorted(e["files"].items()):
         print("     %-32s %s" % (fn, m["uri"]))
+    return 0
+
+
+def cmd_full_weight(a):
+    e = persist_full_weight(a.root, a.cell, a.repo,
+                            corpus_manifest=a.corpus_manifest)
+    print("  ✅ %s persisted: %d files (%d shards)"
+          % (a.cell, len(e["files"]), e["n_shards"]))
+    # ⛔ THE DELTA VERDICT IS PRINTED HERE, LOUDLY. A faulted object is still
+    # persisted — the fault is the finding — but it must not slide past in a
+    # success message.
+    v = e.get("weight_delta_verdict")
+    print("     §4.1 weight delta: %s%s"
+          % (v, "" if v == "OK" else
+             "   ⛔⛔ NO ROW OF THE VERDICT TABLE MAY BE READ"))
+    for fn, m in sorted(e["files"].items()):
+        print("     %-40s %s" % (fn, m["uri"]))
     return 0
 
 
@@ -470,6 +672,14 @@ def main() -> int:
     # without its corpus provenance is a model with no measurement behind it.
     q.add_argument("--corpus-manifest", required=True,
                    help="path to the corpus manifest this adapter trained on")
+    # ⭐ A SEPARATE SUBCOMMAND, NOT A FLAG ON `cell`. A `_w` object has a
+    # dynamic shard set, a required weight_delta.json and no solo transcripts;
+    # sharing an entry point would mean `--solo-n` being meaningless-but-present
+    # for one caller and required for the other.
+    q = sub.add_parser("full-weight"); q.set_defaults(fn=cmd_full_weight)
+    q.add_argument("--cell", required=True)
+    q.add_argument("--corpus-manifest", required=True,
+                   help="path to the corpus manifest this model trained on")
     q = sub.add_parser("file"); q.set_defaults(fn=cmd_file)
     q.add_argument("--path", required=True)
     q.add_argument("--subdir", required=True)
