@@ -351,6 +351,17 @@ def main() -> int:
     # run that worked. The snapshot is carried instead.
     ap.add_argument("--delta-snapshot-out", default=None,
                     help="write the §4.1 init snapshot here (leg 1)")
+    # ⛔⛔ THE DIAGNOSTIC PAIR. `--max-steps` buys the TRACE, not the model:
+    # the collapse hit by ~50 last time, so a few hundred steps captures it for a
+    # fraction of a full epoch. `--trace-out` records loss + per-module
+    # finiteness on grad/weight/moment every step, which is the only thing that
+    # separates the three causes that all look like loss->0 from outside.
+    ap.add_argument("--max-steps", type=int, default=0,
+                    help="stop after N optimizer steps (0 = full epochs). "
+                         "Diagnostic runs buy the trace, not the model.")
+    ap.add_argument("--trace-out", default=None,
+                    help="JSONL per-step trace: loss, per-module finiteness on "
+                         "gradient AND weight AND optimizer moment, in order.")
     ap.add_argument("--delta-snapshot-in", default=None,
                     help="measure against THIS snapshot instead of the weights "
                          "at the start of this leg (leg 2+)")
@@ -544,8 +555,28 @@ def main() -> int:
             save_steps=(a.save_steps or 500),
             save_total_limit=(None if a.save_steps else 2),
             report_to=[], seed=a.seed,
+            # ⭐ EVERY STEP WHEN TRACING. The original logged every 25, so its
+            # first sample was 7.548 and its second was ~0 -- the collapse is
+            # bracketed between step 1 and 25 and nothing narrows it.
+            **({"logging_steps": 1} if a.trace_out else {}),
+            **({"max_steps": a.max_steps} if a.max_steps else {}),
             **({"optim": a.optim} if a.full else {})))
+    trace = None
+    if a.trace_out:
+        from tlon.act2.step_trace import StepTrace, make_callback
+        trace = StepTrace(a.trace_out)
+        trainer.add_callback(make_callback(trace))
+        print("⭐ per-step trace -> %s" % a.trace_out)
+
     trainer.train()
+    if trace is not None:
+        trace.close({"first_nonfinite": trace.first_nonfinite,
+                     "steps_recorded": trace.step})
+        print("⭐ trace closed: %d steps, first non-finite = %s"
+              % (trace.step, trace.first_nonfinite))
+    # ⛔ A capped diagnostic run still saves, because the weight_delta needs
+    # real weights to compare -- but it is NOT a usable model and nothing
+    # downstream should read it as one.
     trainer.save_model(a.out)
 
     if a.full:

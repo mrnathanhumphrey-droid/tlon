@@ -22,7 +22,8 @@ LIB = TOOLS / "pipeline_lib.sh"
 #: The pipelines that source the helper. ⭐ These are the ones that can still be
 #: launched; each is either running today or is the entry point for a locked
 #: prereg.
-LIVE = ("pipeline_retrain.sh", "pipeline_solo_regen.sh", "pipeline_fullft.sh")
+LIVE = ("pipeline_retrain.sh", "pipeline_solo_regen.sh", "pipeline_fullft.sh",
+        "pipeline_fullft_trace.sh")
 
 #: ⚠️ THE DEBT, PINNED. Historical one-shots that already ran and still write the
 #: marker themselves. Converting them is a re-verification nobody has paid for,
