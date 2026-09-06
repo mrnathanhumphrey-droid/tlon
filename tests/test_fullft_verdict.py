@@ -49,7 +49,8 @@ def test_go_requires_all_three_axes():
     assert out["verdict"] == v.GO
 
 
-@pytest.mark.parametrize("bad_delta", ["INSTRUMENT_FAULT", "UNDISCRIMINATING"])
+@pytest.mark.parametrize("bad_delta", ["INSTRUMENT_FAULT", "UNDISCRIMINATING",
+                                      "DIVERGED"])
 def test_a_delta_that_did_not_pass_voids_the_whole_table(bad_delta):
     """⛔⛔ THE CENTRAL GUARD. Not just INSTRUMENT_FAULT — UNDISCRIMINATING too.
     A test that could not distinguish the hypotheses has not certified anything,

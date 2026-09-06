@@ -284,13 +284,47 @@ def test_poll_does_not_hardcode_ONE_pipelines_log_name():
     exactly one run and silently empty for the next. An empty tail reads as
     'nothing has happened yet', the most reassuring possible way to be wrong
     about a box on a meter."""
+    import ast as _ast
     import pathlib as _p
-    src = (_p.Path(__file__).resolve().parents[1]
-           / "tools/act2_retrain_orchestrate.py").read_text(encoding="utf-8")
-    code = "\n".join(l for l in src.splitlines()
-                     if not l.lstrip().startswith("#"))
-    assert "pipeline_retrain.log" not in code
-    assert "pipeline_*.log" in code
+    tools = _p.Path(__file__).resolve().parents[1] / "tools"
+    # ⛔⛔ SWEEP THE DIRECTORY, NOT THE ONE FILE THAT BIT LAST TIME. This guard
+    # read only `act2_retrain_orchestrate.py`, so it could not see the FOURTH
+    # instance of the class, sitting in `act2_box_persist.py::cmd_flush` — the
+    # function written because a run log was lost, which then lost a run log.
+    # A guard scoped to the file where the bug was found only ever catches that
+    # file; the class lives in the repository.
+    #
+    # ⭐ AST, NOT LINE-STRIPPING. The name legitimately appears in prose
+    # explaining the defect, and a guard that cannot tell an explanation from
+    # the thing it explains fires on its own docstring — already fixed once in
+    # this suite for exactly that reason.
+    offenders = []
+    for f in sorted(tools.glob("*.py")):
+        # ⛔ `utf-8-sig`: two files in tools/ carry a UTF-8 BOM, and `ast.parse`
+        # refuses U+FEFF. Read as plain utf-8 this guard raises SyntaxError on
+        # them — a guard that dies partway through its sweep has checked the
+        # files before the crash and nothing after, while reporting a failure
+        # that looks like the defect it hunts.
+        tree = _ast.parse(f.read_text(encoding="utf-8-sig"))
+        docstrings = set()
+        for node in _ast.walk(tree):
+            if isinstance(node, (_ast.Module, _ast.FunctionDef,
+                                 _ast.AsyncFunctionDef, _ast.ClassDef)):
+                d = _ast.get_docstring(node, clean=False)
+                if d is not None:
+                    docstrings.add(d)
+        for node in _ast.walk(tree):
+            if (isinstance(node, _ast.Constant)
+                    and isinstance(node.value, str)
+                    and "pipeline_retrain.log" in node.value
+                    and node.value not in docstrings):
+                offenders.append("%s:%d" % (f.name, node.lineno))
+    assert not offenders, (
+        "hardcoded pipeline log name (use a pipeline_*.log glob): %s"
+        % ", ".join(offenders))
+    orch = (tools / "act2_retrain_orchestrate.py").read_text(encoding="utf-8")
+    flush = (tools / "act2_box_persist.py").read_text(encoding="utf-8")
+    assert "pipeline_*.log" in orch and "pipeline_*.log" in flush
 
 
 def test_bitsandbytes_is_runbook_pinned_in_the_venv():

@@ -535,8 +535,17 @@ def cmd_flush(a):
     exit code stays 0 so the terminate proceeds.
     """
     root = pathlib.Path(a.root)
-    for p in (root / "pipeline_retrain.log", root / "manifest.json",
-              root / "watchdog.log"):
+    # ⛔⛔ GLOB, NEVER ONE NAME — AND THIS FUNCTION IS WHERE THE CLASS BIT AGAIN.
+    # This list read `root / "pipeline_retrain.log"`, so when the full-weight box
+    # died at F-LOCAL the flush pushed `watchdog.log` and silently skipped
+    # `pipeline_fullft.log` — the record of WHY, lost by the function whose
+    # docstring says it exists because that log was lost before. Fourth instance
+    # of the hardcoded-log-name class; the guard written for the second and third
+    # only ever swept `act2_retrain_orchestrate.py`, so it could not see this
+    # file. ⭐ The guard now sweeps all of `tools/`.
+    candidates = sorted(root.glob("pipeline_*.log"))
+    candidates += [root / "manifest.json", root / "watchdog.log"]
+    for p in candidates:
         if not p.exists():
             continue
         try:

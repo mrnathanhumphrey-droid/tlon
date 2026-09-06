@@ -273,3 +273,80 @@ def test_the_delta_norm_is_scaled_to_the_full_tensor_not_a_partial_sum():
     rep = measure(p, snap, lr=1e-5)
     assert rep["delta_norm_estimated"] == pytest.approx(d * math.sqrt(n),
                                                         rel=1e-6)
+
+
+# ── the NaN hole, found in production ────────────────────────────────────────
+
+def test_nan_weights_are_DIVERGED_not_OK():
+    """⛔⛔ THE HOLE `fw-s20624` FOUND. That run finished an epoch with NaN in all
+    70 of its 1-D trainable tensors and this module returned OK with
+    fraction_changed 0.9999982 — because `NaN != NaN` is True, so every destroyed
+    value counted as movement. The guard written to tell "did not move" from
+    "moved" could not tell either from "became NaN"."""
+    w = _init()
+    p = _params({"model.layers.0.mlp.up_proj.weight": w})
+    snap = snapshot(p)
+    with torch.no_grad():
+        p[0][1].fill_(float("nan"))
+    rep = measure(p, snap, lr=1e-5)
+    assert rep["verdict"] == "DIVERGED"
+    assert rep["fraction_nonfinite"] == 1.0
+    # ⭐ AND THE FRACTION NO LONGER LIES. Non-finite values are excluded from
+    # `changed`, so it reports weights that moved TO A NUMBER.
+    assert rep["fraction_changed"] == 0.0
+
+
+def test_a_partially_diverged_model_is_DIVERGED_even_though_most_moved():
+    """⛔⛔ THE PRODUCTION SHAPE EXACTLY: 98 weight matrices trained fine, 70
+    biases and layernorms went NaN. A majority-healthy model is still unreadable
+    — release, perceive and fluency cannot be scored through a NaN."""
+    good = _params({"model.layers.0.mlp.up_proj.weight": _init()})
+    bad = _params({"model.layers.0.input_layernorm.weight": _init(n=3584)})
+    both = good + bad
+    snap = snapshot(both)
+    with torch.no_grad():
+        good[0][1].add_(1e-4)
+        bad[0][1].fill_(float("nan"))
+    rep = measure(both, snap, lr=1e-5)
+    assert rep["verdict"] == "DIVERGED"
+    assert 0.0 < rep["fraction_nonfinite"] < 1.0
+    per = rep["per_module"]
+    assert per["model.layers.0.mlp.up_proj.weight"]["fraction_nonfinite"] == 0.0
+    assert per["model.layers.0.input_layernorm.weight"]["fraction_nonfinite"] == 1.0
+
+
+def test_inf_counts_as_divergence_too():
+    """⛔ Not only NaN. An Inf weight is equally unreadable and equally != init."""
+    p = _params({"model.layers.0.w": _init()})
+    snap = snapshot(p)
+    with torch.no_grad():
+        p[0][1].fill_(float("inf"))
+    assert measure(p, snap, lr=1e-5)["verdict"] == "DIVERGED"
+
+
+def test_the_delta_norm_stays_readable_on_a_diverged_tensor():
+    """⭐ Computed over the finite values only. A NaN norm would just be a second
+    unreadable field instead of a diagnosis — and the NaN norm this module DID
+    produce was written to the artifact and never read by the verdict."""
+    good = _params({"a.layers.0.w": torch.zeros(20000)})
+    bad = _params({"b.layers.0.w": _init(seed=3)})
+    both = good + bad
+    snap = snapshot(both)
+    with torch.no_grad():
+        good[0][1].add_(1e-3)
+        bad[0][1].fill_(float("nan"))
+    rep = measure(both, snap, lr=1e-5)
+    assert math.isfinite(rep["delta_norm_estimated"])
+    assert math.isfinite(rep["per_module"]["a.layers.0.w"]["delta_norm_estimated"])
+
+
+def test_a_healthy_run_is_unaffected_by_the_new_branch():
+    """⛔ The fix must not move the verdict on a run that worked."""
+    w = _init()
+    p = _params({"model.layers.0.mlp.up_proj.weight": w})
+    snap = snapshot(p)
+    with torch.no_grad():
+        p[0][1].add_(1e-4)
+    rep = measure(p, snap, lr=1e-5)
+    assert rep["verdict"] == OK
+    assert rep["fraction_nonfinite"] == 0.0

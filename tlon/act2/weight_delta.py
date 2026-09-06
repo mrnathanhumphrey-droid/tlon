@@ -54,6 +54,21 @@ SAMPLE_K = 4096
 OK = "OK"
 INSTRUMENT_FAULT = "INSTRUMENT_FAULT"
 UNDISCRIMINATING = "UNDISCRIMINATING"
+#: ⛔⛔ THE VERDICT THIS MODULE DID NOT HAVE, AND THE RUN THAT PROVED IT NEEDED IT.
+#: `fw-s20624` (2026-09-06) finished one epoch with **NaN in all 70 of its 1-D
+#: trainable tensors** — every bias and every layernorm in the trained layers —
+#: and this module returned `OK` with `fraction_changed = 0.9999982`.
+#:
+#: The hole is one line of IEEE semantics: **`NaN != NaN` is True**, so a
+#: destroyed value counts as "the stored value changed". A guard written to tell
+#: *the weights did not move* from *the weights moved* could not tell either
+#: from *the weights became NaN* — the same vacuous pass it exists to prevent,
+#: inside the thing preventing it.
+#:
+#: ⭐ And the evidence was already in the artifact: `delta_norm_estimated` came
+#: out `NaN`, was written to `weight_delta.json`, printed, and never read by the
+#: verdict. A summary field not checked against its own run.
+DIVERGED = "DIVERGED"
 
 
 class WeightDeltaError(RuntimeError):
@@ -140,7 +155,7 @@ def measure(named_params, snap: dict, *, lr: float) -> dict:
     ceiling = absorbable_ceiling(lr)
     per_module = {}
     n_sampled = n_changed = 0
-    n_under_ceiling = 0
+    n_under_ceiling = n_nonfinite_total = 0
     sq_total = 0.0
     n_params_total = 0
 
@@ -154,13 +169,22 @@ def measure(named_params, snap: dict, *, lr: float) -> dict:
         now = flat[rec["idx"]]
         init = rec["init"]
         diff = now - init
-        changed = int((now != init).sum().item())
         take = int(now.numel())
+        # ⛔⛔ NON-FINITE IS COUNTED SEPARATELY AND NEVER AS "CHANGED". Without
+        # this, `NaN != init` is True and a destroyed tensor reports perfect
+        # movement. Excluding non-finite values from `changed` means the fraction
+        # describes weights that actually moved TO A NUMBER.
+        finite = torch.isfinite(now)
+        n_nonfinite = int((~finite).sum().item())
+        changed = int(((now != init) & finite).sum().item())
         # ⭐ SCALED ESTIMATOR, NOT A PARTIAL SUM. sum(diff^2) over a sample of
         # `take` from `n` estimates the full sum as n/take * sum. Reporting the
         # raw partial sum as "the norm" would understate it by sqrt(n/take) --
         # here about 240x -- which is the direction that fakes a fault.
-        sq_sample = float((diff.double() ** 2).sum().item())
+        # ⭐ The norm is computed over the FINITE values only, so it stays a
+        # readable number even on a diverged tensor -- a NaN norm would just be
+        # a second unreadable field rather than a diagnosis.
+        sq_sample = float((diff.double()[finite] ** 2).sum().item())
         sq_est = sq_sample * (rec["n"] / take)
         under = int((init.abs() <= ceiling).sum().item())
 
@@ -175,16 +199,23 @@ def measure(named_params, snap: dict, *, lr: float) -> dict:
                 math.sqrt(sq_est) / rec["norm_init_exact"]
                 if rec["norm_init_exact"] > 0 else None),
             "fraction_under_bf16_ceiling": under / take,
+            # ⛔ RECORDED PER MODULE, so a diverged run says WHICH tensors went
+            # and the shape of the failure is legible. On `fw-s20624` this would
+            # have read 1.0 for every bias and layernorm and 0.0 for every weight
+            # matrix -- a systematic 1-D pathology, visible at a glance.
+            "fraction_nonfinite": n_nonfinite / take,
         }
         n_sampled += take
         n_changed += changed
+        n_nonfinite_total += n_nonfinite
         n_under_ceiling += under
         sq_total += sq_est
         n_params_total += rec["n"]
 
     observed = n_changed / n_sampled
     dead_zone = n_under_ceiling / n_sampled
-    verdict, why = _verdict(observed, dead_zone)
+    nonfinite = n_nonfinite_total / n_sampled
+    verdict, why = _verdict(observed, dead_zone, nonfinite)
 
     return {
         "PRECONDITION": "PREREG a0450b36 §4.1",
@@ -193,6 +224,7 @@ def measure(named_params, snap: dict, *, lr: float) -> dict:
         "n_trainable_params": n_params_total,
         "n_sampled": n_sampled,
         "fraction_changed": observed,
+        "fraction_nonfinite": nonfinite,
         "prediction_working_fp32_master": 1.0,
         "prediction_bf16_dead_zone": dead_zone,
         "delta_norm_estimated": math.sqrt(sq_total),
@@ -202,9 +234,23 @@ def measure(named_params, snap: dict, *, lr: float) -> dict:
     }
 
 
-def _verdict(observed: float, dead_zone: float) -> tuple:
+def _verdict(observed: float, dead_zone: float,
+             nonfinite: float = 0.0) -> tuple:
     """Which of the two predictions the observation sits closer to, in log
     distance. ⛔ No free constant: both predictions are computed, not chosen."""
+    # ⛔⛔ DIVERGENCE IS CHECKED BEFORE EITHER PREDICTION, because a diverged
+    # run is not a point on the axis those predictions describe. Any non-finite
+    # trainable weight means the training produced a model that cannot be read
+    # for anything -- and it must never reach the `observed` comparison, where a
+    # tensor full of NaN would have looked like perfect movement.
+    if nonfinite > 0:
+        return (DIVERGED,
+                "%.4f of sampled trainable weights are NOT FINITE. The training "
+                "produced NaN/Inf, so the model cannot be read for release, "
+                "perceive or fluency, and this is a TRAINING FAULT -- never a "
+                "substrate finding. ⛔ `NaN != NaN` is True, so without this "
+                "branch every destroyed value would have counted as movement "
+                "and the verdict would have been OK." % nonfinite)
     # ⛔⛔ THE UNDISCRIMINATING BRANCH COMES FIRST. If the dead-zone prediction
     # is itself close to 1.0 -- weights small enough that even bf16 would absorb
     # most steps -- then a working run and a dead one predict the SAME
