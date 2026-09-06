@@ -28,9 +28,6 @@ set -e
 
 SEED=${SEED:-20624}
 CELL=fwtrace-s$SEED
-ROOT=${ROOT:-runs/act2/fullft_trace_$CELL}
-tlon_log_init "$ROOT" pipeline_fullft_trace.log
-
 PY=${PY:-$HOME/venv/bin/python}
 MODEL=Qwen/Qwen2.5-7B-Instruct
 HF_REPO=${HF_REPO:-keyzersoze04/tlon-act2-adapters}
@@ -43,6 +40,22 @@ SEQ=384
 BATCH=4; ACCUM=4
 CORPUS_SHA=dd40e22f85b0b6e4
 MAX_STEPS=${MAX_STEPS:-300}
+# ⭐ THE ABLATION SWITCH. GRAD_CKPT=0 removes gradient checkpointing AND the
+# enable_input_require_grads() it necessitates -- the two prime suspects, which
+# come off together. The memory case for keeping them is 0.5 GiB at this shape.
+GRAD_CKPT=${GRAD_CKPT:-1}
+CKPT_FLAG=""
+if [ "$GRAD_CKPT" = "0" ]; then
+  CKPT_FLAG="--no-grad-checkpointing"
+  CELL=fwnockpt-s$SEED
+fi
+
+# ⛔ ROOT AND THE LOG ARE INITIALISED AFTER THE ABLATION SWITCH, so a
+# checkpointing-off run cannot write into the checkpointing-on run's tree and be
+# read afterwards as the same experiment.
+ROOT=${ROOT:-runs/act2/fullft_trace_$CELL}
+tlon_log_init "$ROOT" pipeline_fullft_trace.log
+echo "  arm: CELL=$CELL  grad_checkpointing=$GRAD_CKPT" | tee -a $LOG
 
 # ── 1 · WATCHDOG FIRST ──────────────────────────────────────────────────────
 step watchdog
@@ -86,7 +99,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
     --full --unfreeze-top $UNFREEZE_TOP --optim $OPTIM \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
-    --max-steps $MAX_STEPS --trace-out $TRACE \
+    --max-steps $MAX_STEPS --trace-out $TRACE $CKPT_FLAG \
     --seed $SEED 2>&1 | tee -a $LOG
 
 # ⛔⛔ THE TRACE IS THE DELIVERABLE, SO IT PERSISTS BEFORE ANYTHING ELSE CAN GO

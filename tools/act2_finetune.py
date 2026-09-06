@@ -359,6 +359,17 @@ def main() -> int:
     ap.add_argument("--max-steps", type=int, default=0,
                     help="stop after N optimizer steps (0 = full epochs). "
                          "Diagnostic runs buy the trace, not the model.")
+    # ⛔⛔ THE PRIME-SUSPECT ABLATION. Gradient checkpointing on a
+    # partially-frozen stack is what forced `enable_input_require_grads()`, and
+    # the two come off together: without checkpointing there is no reentrant
+    # segment whose input must be made to require grad. The memory case for
+    # keeping them is 0.5 GiB (51.4 -> 51.8 planner at seq 384 batch 4), because
+    # the activation term is tiny at these sequence lengths -- the footprint is
+    # optimizer state and 152k-vocab logits. Half a gigabyte was not worth the
+    # hazard.
+    ap.add_argument("--no-grad-checkpointing", action="store_true",
+                    help="disable gradient checkpointing AND the "
+                         "enable_input_require_grads() it necessitates")
     ap.add_argument("--trace-out", default=None,
                     help="JSONL per-step trace: loss, per-module finiteness on "
                          "gradient AND weight AND optimizer moment, in order.")
@@ -517,7 +528,16 @@ def main() -> int:
         # NO gradient, training "succeeds", and the weights do not move. That is
         # the §4.1 failure arriving through a completely different door, which
         # is why the precondition is on the table rather than on the optimizer.
-        model.enable_input_require_grads()
+        if a.no_grad_checkpointing:
+            # ⭐ NOT CALLED, and that is the point of the ablation. This exists
+            # solely so a reentrant checkpoint segment has an input requiring
+            # grad; with checkpointing off it would instead force autograd to
+            # build a graph through the FROZEN bottom 14 layers, storing
+            # activations nothing will ever use.
+            print("⭐ ABLATION: gradient checkpointing OFF, and "
+                  "enable_input_require_grads() NOT called")
+        else:
+            model.enable_input_require_grads()
         if a.delta_snapshot_in:
             # ⭐ CARRIED FROM LEG 1, so the delta stays "movement from the BASE
             # model" no matter how many legs §5's early-stop rule produces.
@@ -549,7 +569,8 @@ def main() -> int:
         args=TrainingArguments(
             output_dir=a.out, per_device_train_batch_size=a.batch,
             gradient_accumulation_steps=a.accum, num_train_epochs=a.epochs,
-            learning_rate=a.lr, bf16=True, gradient_checkpointing=True,
+            learning_rate=a.lr, bf16=True,
+            gradient_checkpointing=not a.no_grad_checkpointing,
             # ⛔ ONE SOURCE FOR THIS VALUE. It was `logging_steps=25` here PLUS a
             # conditional `**{"logging_steps": 1}` below, which is a duplicate
             # keyword and a TypeError — caught only on the box, after the model
