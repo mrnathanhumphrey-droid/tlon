@@ -1,0 +1,19 @@
+{
+  "instance_id": "9cefd0271f884217a4c62326ec27761d",
+  "name": "tlon-fullft_raw",
+  "instance_type": "gpu_1x_h100_pcie",
+  "region": "us-west-3",
+  "price_usd_per_hour": 3.29,
+  "launched_utc": "2026-09-06T17:09:30Z",
+  "code_sha": "a2484b0",
+  "purpose": "RAW LOSS + DENSE ACTIVATION MAGNITUDES. logging_nan_inf_filter OFF and the loss captured from the model output, because the founding symptom (loss 7.548 -> 0) was the framework's NaN filter substituting a running average. Activation absmax recorded per module for steps 10-14, around a break that is deterministic at step 13 across two assemblies.",
+  "answers": {
+    "raw loss NaN at 13": "forward produces it \u2014 instrument activations next",
+    "raw loss finite, grads NaN": "backward-only \u2014 instrument the backward next"
+  },
+  "cost_estimate_usd": {
+    "expected": 4,
+    "watchdog_hard_cap_4h": 13.16
+  },
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance 9cefd0271f884217a4c62326ec27761d --root fullft_raw"
+}
