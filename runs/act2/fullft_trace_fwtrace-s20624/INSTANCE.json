@@ -1,0 +1,16 @@
+{
+  "instance_id": "0978c1cbe062499d8f32bbae70a86b96",
+  "name": "tlon-fullft_trace2",
+  "instance_type": "gpu_1x_h100_pcie",
+  "region": "us-west-3",
+  "price_usd_per_hour": 3.29,
+  "launched_utc": "2026-09-06T15:53:24Z",
+  "code_sha": "1eb466e",
+  "purpose": "ROOT-CAUSE TRACE, attempt 2. The config that broke (LOCK a0450b36) UNCHANGED, bounded to 300 steps, per-step per-module finiteness on gradient AND weight AND optimizer moment. Buys the trace, not the model.",
+  "supersedes": "d671bfe4f9e748f3b10b6ac4d4cf022e \u2014 died at train_traced on a duplicate logging_steps keyword, then was stranded when its watchdog was killed before continued SSH access had been confirmed. Terminated by hand.",
+  "cost_estimate_usd": {
+    "expected": 4,
+    "watchdog_hard_cap_4h": 13.16
+  },
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance 0978c1cbe062499d8f32bbae70a86b96 --root fullft_trace2"
+}
