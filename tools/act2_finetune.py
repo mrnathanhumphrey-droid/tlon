@@ -382,6 +382,18 @@ def main() -> int:
                          "transformers default (sdpa), which is what every run "
                          "of this arm has silently used. `eager` is the "
                          "unfused reference path.")
+    # ⛔⛔ THE COMPARISON NO RUN-VS-RUN CAN MAKE. Every kernel comparison so far
+    # differed in trajectory as well as in kernel. At `on_pre_optimizer_step`
+    # the optimizer has not stepped yet, so the same weights and the same
+    # micro-batches can be pushed through twice with nothing changed but the
+    # attention implementation.
+    ap.add_argument("--kernel-duel-at", type=int, default=0,
+                    help="at this optimizer step, re-run the step's own "
+                         "micro-batches under BOTH attention implementations "
+                         "from identical weights, then stop. 0 = off.")
+    ap.add_argument("--duel-against", default="eager",
+                    choices=("eager", "sdpa", "flash_attention_2"),
+                    help="the implementation to duel the running one against")
     ap.add_argument("--no-grad-checkpointing", action="store_true",
                     help="disable gradient checkpointing AND the "
                          "enable_input_require_grads() it necessitates")
@@ -658,6 +670,77 @@ def main() -> int:
               % (a.trace_out, sorted(window)))
         print("⭐ PRE-CLIP gradient hook armed on %d trainable tensors"
               % len(preclip.names))
+
+    if a.kernel_duel_at:
+        from transformers import TrainerCallback
+
+        from tlon.act2.kernel_duel import (compare, flip_attn_implementation,
+                                           run_leg)
+        # ⛔ CAPTURE THE STEP'S OWN MICRO-BATCHES. The duel is worthless on a
+        # freshly drawn batch: the whole point is that THIS batch, at THIS step,
+        # is the one the fused kernel fails on.
+        duel = {"batches": [], "step": 0, "done": False}
+        _orig_training_step = trainer.training_step
+
+        def _capture_step(model, inputs, *args, **kw):
+            if duel["step"] == a.kernel_duel_at and not duel["done"]:
+                duel["batches"].append({k: v for k, v in inputs.items()})
+            return _orig_training_step(model, inputs, *args, **kw)
+
+        trainer.training_step = _capture_step
+
+        class _Duel(TrainerCallback):
+            def on_step_end(self, args_, state, control, **kw):
+                duel["step"] += 1
+                return control
+
+            def on_pre_optimizer_step(self, args_, state, control, **kw):
+                if duel["step"] != a.kernel_duel_at or duel["done"]:
+                    return control
+                duel["done"] = True
+                m = kw.get("model")
+                # ⛔ THE TRAINER'S OWN READING IS PRE-CLIP AND COMES FROM THE
+                # PROBE. `p.grad` here is POST-clip -- the clip ran three lines
+                # earlier in the trainer and its norm is global.
+                tr = (preclip.snapshot()[0] if a.trace_out else None)
+                tr = (None if tr is None
+                      else {n: (r, f, None) for n, (r, f, _) in tr.items()})
+                running = m.config._attn_implementation
+                print("\n⭐⭐ KERNEL DUEL at step %d — %d micro-batches, "
+                      "identical weights (the optimizer has NOT stepped)"
+                      % (a.kernel_duel_at, len(duel["batches"])))
+                l_sd, g_sd = run_leg(m, duel["batches"], accum=a.accum)
+                flip_attn_implementation(m, a.duel_against)
+                l_eg, g_eg = run_leg(m, duel["batches"], accum=a.accum)
+                flip_attn_implementation(m, running)
+                m.zero_grad(set_to_none=True)
+                rep = compare(tr, g_sd, g_eg)
+                rep.update({"step": a.kernel_duel_at, "running_impl": running,
+                            "duel_impl": a.duel_against,
+                            "loss_%s" % running: l_sd,
+                            "loss_%s" % a.duel_against: l_eg})
+                print("   losses %-6s: %s" % (running, [round(x, 4) for x in l_sd]))
+                print("   losses %-6s: %s" % (a.duel_against, [round(x, 4) for x in l_eg]))
+                print("   %-6s non-finite grads: %d %s"
+                      % (running, rep["our_sdpa_nonfinite_n"], rep["our_sdpa_first"]))
+                print("   %-6s non-finite grads: %d %s"
+                      % (a.duel_against, rep["our_eager_nonfinite_n"], rep["our_eager_first"]))
+                print("   trainer's own pre-clip non-finite: %s"
+                      % rep["trainer_sdpa_nonfinite_n"])
+                print("\n   ⭐ VERDICT: %s" % rep["verdict"])
+                print("      %s" % rep["why"])
+                if a.trace_out:
+                    import json as _json
+                    import pathlib as _pl
+                    p = _pl.Path(a.trace_out).with_name("kernel_duel.json")
+                    p.write_text(_json.dumps(rep, indent=2), encoding="utf-8")
+                    print("   ⭐ duel -> %s" % p)
+                control.should_training_stop = True
+                return control
+
+        trainer.add_callback(_Duel())
+        print("⭐ kernel duel armed at step %d: %s vs %s"
+              % (a.kernel_duel_at, "running impl", a.duel_against))
 
     trainer.train()
     if trace is not None:

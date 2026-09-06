@@ -97,6 +97,20 @@ if [ "$TRAIN_SEED" != "$SEED" ]; then
   CELL=fwctl-t$TRAIN_SEED-s$SEED
 fi
 
+# ⭐⭐ THE DUEL. The three runs above each differed in TRAJECTORY as well as in
+# the thing under test, so none of them can separate "the fused backward is
+# wrong on this batch" from "any small perturbation dodges a knife edge on this
+# batch". At on_pre_optimizer_step the optimizer has not stepped, so the step's
+# own micro-batches can go through the SAME WEIGHTS twice with nothing changed
+# but the attention implementation. Nothing is left to explain a difference
+# away.
+DUEL_AT=${DUEL_AT:-0}
+DUEL_FLAG=""
+if [ "$DUEL_AT" != "0" ]; then
+  DUEL_FLAG="--kernel-duel-at $DUEL_AT --duel-against ${DUEL_AGAINST:-eager}"
+  CELL=fwduel-at$DUEL_AT-s$SEED
+fi
+
 # ⛔⛔ AND AN EXPLICIT OVERRIDE, because two runs of the SAME arm are still two
 # different experiments. The un-filtered-loss run uses the same config as the
 # first trace, so without a distinct cell it would overwrite that trace's hub
@@ -108,7 +122,7 @@ CELL=${CELL_OVERRIDE:-$CELL}
 # read afterwards as the same experiment.
 ROOT=${ROOT:-runs/act2/fullft_trace_$CELL}
 tlon_log_init "$ROOT" pipeline_fullft_trace.log
-echo "  arm: CELL=$CELL  grad_checkpointing=$GRAD_CKPT  attn_impl=${ATTN_IMPL:-DEFAULT(sdpa)}  corpus_seed=$SEED  train_seed=$TRAIN_SEED  max_steps=$MAX_STEPS" | tee -a $LOG
+echo "  arm: CELL=$CELL  grad_checkpointing=$GRAD_CKPT  attn_impl=${ATTN_IMPL:-DEFAULT(sdpa)}  corpus_seed=$SEED  train_seed=$TRAIN_SEED  duel_at=$DUEL_AT  max_steps=$MAX_STEPS" | tee -a $LOG
 
 # ── 1 · WATCHDOG FIRST ──────────────────────────────────────────────────────
 step watchdog
@@ -152,7 +166,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
     --full --unfreeze-top $UNFREEZE_TOP --optim $OPTIM \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
-    --max-steps $MAX_STEPS --trace-out $TRACE $CKPT_FLAG $ATTN_FLAG \
+    --max-steps $MAX_STEPS --trace-out $TRACE $CKPT_FLAG $ATTN_FLAG $DUEL_FLAG \
     --trace-window-from $WIN_FROM --trace-window-to $WIN_TO \
     --seed $TRAIN_SEED 2>&1 | tee -a $LOG
 
@@ -162,6 +176,11 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
 step persist_trace
 $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
     file --path $TRACE --subdir $CELL 2>&1 | tee -a $LOG
+if [ -f "$ROOT/kernel_duel.json" ]; then
+  # ⛔ THE DUEL VERDICT IS THE DELIVERABLE OF A DUEL RUN, so it persists in the
+  # same breath as the trace rather than waiting for the end-of-run flush.
+  $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO       file --path $ROOT/kernel_duel.json --subdir $CELL 2>&1 | tee -a $LOG
+fi
 if [ -f "$OUT/weight_delta.json" ]; then
   $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
       file --path $OUT/weight_delta.json --subdir $CELL 2>&1 | tee -a $LOG

@@ -392,3 +392,90 @@ instead of step 13 and burn the whole budget to learn what ~$0.85 answers now.
 ⛔ The pipeline currently drives the corpus build and the trainer from one
 `SEED`, so the trainer seed has to be decoupled first — otherwise the control
 changes the corpus too and tests two things at once.
+
+---
+
+## 9 · The control ran clean — and my pre-declared reading of it was UNDER-SPECIFIED
+
+Run `fwctl-t20625-s20624`, box `41b9721ea92f40dbbd772f5dc7f0783b`, same card,
+pinned at `5974c38`. `attn_impl` `RESOLVED TO: 'sdpa' (requested: None)` —
+which also confirms retroactively what the default all four earlier runs used.
+`corpus_seed=20624 train_seed=20625`, corpus sha-verified identical. **60 steps,
+no non-finite value anywhere.**
+
+### ⛔⛔ THE SCRIPT SAID THAT VOIDS THE EAGER READING. IT DOES NOT, AND I HAVE TO SAY SO PLAINLY
+
+The pre-declared branch read: *"SDPA runs 60 clean → the break is
+TRAJECTORY-SPECIFIC and the eager reading is VOID."* That fired. But the
+inference behind it had a gap I did not see when writing it, and **noticing the
+gap only after the result is exactly the position a pre-declaration exists to
+prevent** — so it is recorded as a defect in the pre-declaration, not as a
+re-reading of the result.
+
+The gap: the control changed the **batch order**, so *"the break is fragile"*
+and *"the batch that triggers it did not come up"* both predict a clean run. 60
+steps at batch 4 x accum 4 samples **960 of 60,148 rows — 1.6% of the corpus**.
+A trigger that is rare would very likely miss.
+
+### ⭐⭐ A FREE DISCRIMINATOR SETTLES WHICH RUNS SAW WHICH DATA
+
+If two runs share a trainer seed they share a sampler order and therefore
+batches; different seeds give different batches. That is visible in how far each
+run's loss sits from the baseline:
+
+| run | kernel | train seed | mean abs delta vs baseline, steps 0–13 |
+|---|---|---|---|
+| `fwattn-eager` | eager | **20624 (same)** | **0.0090** |
+| `fwctl-t20625` | sdpa | 20625 (different) | **0.0652** |
+
+**The control's divergence is 7.2x the eager run's.** Eager's small, structureless
+offset is the signature of the *same data* through slightly different arithmetic;
+the control's is the signature of *different data*.
+
+⇒ **The eager run saw the SAME batches as the SDPA baseline, including step
+13's.** The eager comparison was data-controlled all along.
+
+### What the three runs actually establish, together
+
+| run | kernel | batch order | outcome |
+|---|---|---|---|
+| `fwtrace` / `fwnockpt` / `fwpreclip` | **sdpa** | **A** | **breaks at step 13** |
+| `fwattn-eager` | eager | **A (same data)** | clean 60 |
+| `fwctl-t20625` | **sdpa** | B | clean 60 |
+
+- Row 1 vs row 2 — same data, different kernel → **the kernel is implicated,
+  controlled for data order.**
+- Row 1 vs row 3 — same kernel, different data → **the trigger is
+  data-dependent**, and under a different order it did not surface in 1.6% of
+  the corpus.
+
+Together: **a specific batch — step 13 of order A — provokes a NaN in the fused
+SDPA backward that the unfused backward does not produce on the same batch.**
+
+⚠️ **The remaining gap, stated rather than argued away.** Eager is itself a ~1%
+numerical perturbation, so "the fused kernel is wrong on this batch" and "any
+small perturbation dodges a knife edge on this batch" are still not separated.
+The control did not close this, because it perturbed the data instead of the
+numerics.
+
+### ⛔ And one earlier claim needs narrowing
+
+`RESUME`'s *"the determinism is the asset — two runs, different assemblies,
+identical to the step"* is true only **given the same batch order**. All three
+breaking runs used trainer seed 20624. Determinism across assemblies was never
+determinism across data.
+
+### ⏭ The test that closes it, and it is cheap
+
+**Same weights, same batch, only the kernel differs.** In one process: train 12
+steps under SDPA, then at step 13 run forward+backward on that batch under
+`sdpa`, zero the grads, flip `config._attn_implementation` to `eager`, and run
+forward+backward on **the identical batch from the identical weights**.
+
+- SDPA NaN, eager finite → the fused kernel is **proven** on this input, with no
+  trajectory difference left to explain it away.
+- Both NaN, or both finite → the kernel is exonerated and the ~1% perturbation
+  was doing the work.
+
+⭐ No trajectory, no data, and no weight difference survives this comparison —
+which is the one thing none of the three runs so far could say.
