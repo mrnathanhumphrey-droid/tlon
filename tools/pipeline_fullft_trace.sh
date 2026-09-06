@@ -52,6 +52,26 @@ if [ "$GRAD_CKPT" = "0" ]; then
   CKPT_FLAG="--no-grad-checkpointing"
   CELL=fwnockpt-s$SEED
 fi
+# ⭐⭐ THE ATTENTION-KERNEL ABLATION. Every run of this arm has used the
+# transformers default (fused SDPA) without ever saying so, making it the one
+# major component that has been a CONSTANT rather than a variable — and the
+# measurement contradicts the textbook backward (grad_K finite implies dS
+# finite; dS and K finite should leave dQ finite; dQ is NaN anyway), which puts
+# the answer inside the kernel rather than inside the math.
+# ⛔ A ONE-BIT TEST WITH A PRE-DECLARED FORK, so neither branch can be chosen
+# after the fact:
+#   breaks at 13 under eager -> the fused kernel is EXONERATED and the fault is
+#     in the model math; the finer per-tensor hooks then belong under eager,
+#     where the intermediates SDPA fuses away are visible.
+#   clean under eager        -> the fused kernel is IMPLICATED and the fix is a
+#     config one; it must then be shown clean for a real stretch past 13, not
+#     merely to 13.
+ATTN_IMPL=${ATTN_IMPL:-}
+ATTN_FLAG=""
+if [ -n "$ATTN_IMPL" ]; then
+  ATTN_FLAG="--attn-impl $ATTN_IMPL"
+  CELL=fwattn-$ATTN_IMPL-s$SEED
+fi
 
 # ⛔⛔ AND AN EXPLICIT OVERRIDE, because two runs of the SAME arm are still two
 # different experiments. The un-filtered-loss run uses the same config as the
@@ -64,7 +84,7 @@ CELL=${CELL_OVERRIDE:-$CELL}
 # read afterwards as the same experiment.
 ROOT=${ROOT:-runs/act2/fullft_trace_$CELL}
 tlon_log_init "$ROOT" pipeline_fullft_trace.log
-echo "  arm: CELL=$CELL  grad_checkpointing=$GRAD_CKPT" | tee -a $LOG
+echo "  arm: CELL=$CELL  grad_checkpointing=$GRAD_CKPT  attn_impl=${ATTN_IMPL:-DEFAULT(sdpa)}  max_steps=$MAX_STEPS" | tee -a $LOG
 
 # ── 1 · WATCHDOG FIRST ──────────────────────────────────────────────────────
 step watchdog
@@ -108,7 +128,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
     --full --unfreeze-top $UNFREEZE_TOP --optim $OPTIM \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
-    --max-steps $MAX_STEPS --trace-out $TRACE $CKPT_FLAG \
+    --max-steps $MAX_STEPS --trace-out $TRACE $CKPT_FLAG $ATTN_FLAG \
     --trace-window-from $WIN_FROM --trace-window-to $WIN_TO \
     --seed $SEED 2>&1 | tee -a $LOG
 
@@ -219,8 +239,14 @@ if fn is None:
         print("           value anywhere. The NaN in the full run is downstream;")
         print("           the objective itself produces no signal at real scale.")
     else:
-        print("  READING: TRAINED CLEANLY within %s steps — the fast-collapse" % len(steps))
-        print("           regime is ruled out; a longer run is the next question.")
+        print("  READING: NO NON-FINITE VALUE ANYWHERE in %s steps." % len(steps))
+        print("           The break has been at step 13 in THREE runs with three")
+        print("           different assemblies, so passing 13 is a real signal.")
+        print("  ⛔⛔ BUT 'DID NOT BREAK' IS NOT 'FIXED'. This run changed a")
+        print("           component; what it licenses is 'the changed component is")
+        print("           IMPLICATED', and nothing about whether the config trains")
+        print("           to a usable model. A clean stretch far past 13 is the")
+        print("           next question, not a conclusion available here.")
 elif fn["quantity"] == "grad_PRECLIP":
     print("  READING: BACKWARD NUMERICAL, NAMED. %s tensor(s) went non-finite" % fn["n"])
     print("           INSIDE the backward, before any clipping: %s" % fn["tensors"][:4])

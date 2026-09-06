@@ -367,6 +367,21 @@ def main() -> int:
     # the activation term is tiny at these sequence lengths -- the footprint is
     # optimizer state and 152k-vocab logits. Half a gigabyte was not worth the
     # hazard.
+    # ⛔⛔ THE ONE MAJOR COMPONENT THAT HAS NEVER BEEN A VARIABLE. Every run of
+    # this arm loaded the model without `attn_implementation`, so every run used
+    # the transformers default — the fused SDPA kernel — and it has been a
+    # CONSTANT across all four failures rather than a thing under test.
+    # ⭐ It is where the contradiction points. The textbook attention backward
+    # says dQ = dS @ K, so `grad_K` finite implies dS finite, and dS and K both
+    # finite should leave dQ finite. The measurement says dQ is NaN anyway. When
+    # the math and the observation disagree the answer is in what the kernel
+    # actually does, so the kernel has to be ablatable.
+    ap.add_argument("--attn-impl", default=None,
+                    choices=("eager", "sdpa", "flash_attention_2"),
+                    help="attention implementation. Omit to take the "
+                         "transformers default (sdpa), which is what every run "
+                         "of this arm has silently used. `eager` is the "
+                         "unfused reference path.")
     ap.add_argument("--no-grad-checkpointing", action="store_true",
                     help="disable gradient checkpointing AND the "
                          "enable_input_require_grads() it necessitates")
@@ -505,6 +520,8 @@ def main() -> int:
     ds = ds.map(fmt, remove_columns=ds["train"].column_names)
 
     kw: dict = {"dtype": torch.bfloat16, "device_map": "cuda"}
+    if a.attn_impl:
+        kw["attn_implementation"] = a.attn_impl
     if a.dtype == "4bit":
         from transformers import BitsAndBytesConfig
         kw["quantization_config"] = BitsAndBytesConfig(
@@ -512,6 +529,13 @@ def main() -> int:
             bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
         kw.pop("dtype")
     model = AutoModelForCausalLM.from_pretrained(a.model, **kw)
+    # ⛔⛔ RECORD THE RESOLVED KERNEL, ALWAYS, ASKED FOR OR NOT. Four runs used
+    # the fused SDPA path and not one of them said so anywhere, which is how a
+    # load-bearing component stays a constant nobody notices. A default that is
+    # never printed is a decision nobody made.
+    print("⭐ attention implementation RESOLVED TO: %r (requested: %r)"
+          % (getattr(model.config, "_attn_implementation", "unknown"),
+             a.attn_impl))
     snap = scope = None
     if a.full:
         if a.dtype == "4bit":
