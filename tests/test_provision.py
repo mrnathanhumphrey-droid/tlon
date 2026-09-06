@@ -291,3 +291,32 @@ def test_poll_does_not_hardcode_ONE_pipelines_log_name():
                      if not l.lstrip().startswith("#"))
     assert "pipeline_retrain.log" not in code
     assert "pipeline_*.log" in code
+
+
+def test_bitsandbytes_is_runbook_pinned_in_the_venv():
+    """⛔⛔ PREREG a0450b36 §5 DECLARES `adamw_bnb_8bit`, AND fp32 MOMENTS DO NOT
+    FIT ON 80 GiB. Without this wheel the full-weight arm has no declared config
+    to run — the optimizer cannot be constructed at all.
+
+    It was ABSENT on the first `_w` box (DEVIATIONS D-6), caught by the
+    provision-time write probe and installed by hand, which is environment state
+    the pinned sha does not describe. ⭐ Pinned to a version, not floated: an
+    unpinned optimizer package is environment drift in the one component whose
+    numerical behaviour §4.1 is entirely about.
+    """
+    src = (pathlib.Path(__file__).resolve().parents[1]
+           / "tools/act2_retrain_orchestrate.py").read_text(encoding="utf-8")
+    assert "bitsandbytes==0.50.1" in src, (
+        "the provisioned venv does not pin bitsandbytes; the next `_w` box "
+        "would arrive unable to build its declared optimizer")
+
+
+def test_the_optimizer_write_probe_is_run_at_provision_time():
+    """⛔ THREE OBLIGATIONS, NOT TWO. A box that cannot terminate costs money, a
+    box that cannot persist costs the work, and a box whose optimizer cannot
+    write costs the ANSWER — it trains, moves nothing, and produces a zero delta
+    that looks exactly like the substrate finding."""
+    src = (pathlib.Path(__file__).resolve().parents[1]
+           / "tools/act2_retrain_orchestrate.py").read_text(encoding="utf-8")
+    assert "--probe-optim" in src
+    assert "CANNOT WRITE AN UPDATE" in src

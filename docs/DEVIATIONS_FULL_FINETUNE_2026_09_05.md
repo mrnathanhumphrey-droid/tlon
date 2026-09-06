@@ -118,3 +118,38 @@ a local `--model` path — otherwise it would read the bare base model and write
 lag profile indistinguishable from a treatment result. The output now carries
 `object`, `object_kind` and `measurement_category`, so a `_w` profile can never
 be mistaken for a `_ctx` one (C8, §6).
+
+---
+
+## D-6 · `bitsandbytes` was not in the runbook-pinned venv — installed by hand
+
+**Found by the provision-time optimizer probe**, on its first real use:
+`ModuleNotFoundError: No module named 'bitsandbytes'` on the freshly provisioned
+H100. §5 declares `adamw_bnb_8bit`, and fp32 moments do not fit on 80 GiB — so
+without that wheel there was no declared config to run at all.
+
+**What was done.** `bitsandbytes==0.50.1` installed into the box's venv by hand,
+pinned to the version the local box runs, and the probe re-run to confirm.
+
+**Why it is a deviation.** `cmd_provision` pins the box to a git sha precisely so
+the run happens against the code it was designed against. A package installed
+outside that pin is environment state the sha does not describe. Recorded here
+rather than smoothed over, because "the box had one more package than the commit
+says" is exactly the kind of thing that is invisible six weeks later.
+
+⭐ **The probe is the finding, not the failure.** Discovered at provision time
+for ~$0.20 of idle box; without it, the first optimizer step of a paid training
+run would have raised, hours in — or, on a code path that fell back silently,
+trained with the wrong optimizer and produced a delta nobody could interpret.
+
+**Follow-up: DONE.** `cmd_provision` now installs `bitsandbytes==0.50.1` as
+part of the runbook-pinned venv, for every box rather than gated on the arm — it
+is small, a LoRA box ignoring a package it never imports costs nothing, and a
+conditional is one more way for the next `_w` box to arrive without it. Pinned
+by `tests/test_provision.py::test_bitsandbytes_is_runbook_pinned_in_the_venv`,
+alongside a guard that the write probe itself still runs at provision time.
+
+⛔ THIS DOES NOT UN-DEVIATE THE RUNNING BOX. `cd5a786b53314777bf59a5cabfd6b690`
+is pinned at `2d80803`, which does not contain the line above; its bitsandbytes
+was installed by hand and that remains true of the run now in flight. The fix
+applies to the next `_w` box, not this one.

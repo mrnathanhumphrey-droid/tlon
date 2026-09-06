@@ -1,0 +1,17 @@
+{
+  "instance_id": "cd5a786b53314777bf59a5cabfd6b690",
+  "name": "tlon-fullft_fw-s20624",
+  "instance_type": "gpu_1x_h100_pcie",
+  "region": "us-west-3",
+  "price_usd_per_hour": 3.29,
+  "launched_utc": "2026-09-06T00:33:21Z",
+  "code_sha": "2d80803",
+  "prereg": "a0450b36",
+  "purpose": "THE FULL-WEIGHT ARM. One _w object: full-weight fine-tune of Qwen2.5-7B-Instruct on the content-transient corpus at dose 0 (dd40e22f85b0b6e4), top 14 of 28 layers, fp32 master + 8-bit AdamW moments, embeddings and lm_head frozen. Reads release + perceive + F-LOCAL, all three required for GO.",
+  "cost_estimate_usd": {
+    "early_stop_epoch1": 15,
+    "both_legs": 26,
+    "watchdog_hard_cap_20h": 65.8
+  },
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance cd5a786b53314777bf59a5cabfd6b690 --root fullft_fw-s20624"
+}

@@ -143,8 +143,18 @@ def cmd_provision(a):
         "torch==2.11.0 && "
         "~/venv/bin/pip -q install transformers==5.8.1 peft==0.19.1 "
         "datasets==4.8.5 numpy==2.2.6 jinja2==3.1.6 accelerate "
+        # ⛔⛔ bitsandbytes IS RUNBOOK-PINNED NOW, NOT AN EXTRA. PREREG a0450b36
+        # §5 declares `adamw_bnb_8bit`, and fp32 moments do not fit on 80 GiB —
+        # so without this wheel the full-weight arm has no declared config to
+        # run at all. It was absent on the first `_w` box (DEVIATIONS D-6) and
+        # had to be installed by hand, which is environment state the pinned sha
+        # does not describe. ⭐ Installed for EVERY box rather than gated on the
+        # arm: it is small, the LoRA arm ignoring a package it does not import
+        # costs nothing, and a conditional here is one more way for the next
+        # `_w` box to arrive without it.
+        "bitsandbytes==0.50.1 "
         "huggingface_hub scipy pytest")
-    print("  ✅ venv built (runbook-pinned, cu128)")
+    print("  ✅ venv built (runbook-pinned, cu128, bitsandbytes 0.50.1)")
 
     # ⛔⛔ REFUSE, DO NOT PRINT. A box whose torch cannot see the GPU will train
     # on CPU without erroring — slowly, expensively, and to completion.
