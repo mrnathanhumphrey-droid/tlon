@@ -1,0 +1,29 @@
+{
+  "our_sdpa_nonfinite_n": 159,
+  "our_sdpa_first": [
+    "model.layers.14.input_layernorm.weight",
+    "model.layers.14.mlp.down_proj.weight",
+    "model.layers.14.mlp.gate_proj.weight",
+    "model.layers.14.mlp.up_proj.weight"
+  ],
+  "our_eager_nonfinite_n": 0,
+  "our_eager_first": [],
+  "trainer_sdpa_nonfinite_n": 159,
+  "verdict": "KERNEL_IMPLICATED",
+  "why": "SDPA produced 159 non-finite gradients and eager produced NONE, from identical weights on identical inputs. No trajectory, data or weight difference remains to explain it away.",
+  "step": 13,
+  "running_impl": "sdpa",
+  "duel_impl": "eager",
+  "loss_sdpa": [
+    0.7002530694007874,
+    0.7044569253921509,
+    0.821746826171875,
+    0.5265283584594727
+  ],
+  "loss_eager": [
+    0.7552139759063721,
+    0.791572093963623,
+    0.904045581817627,
+    0.5967251062393188
+  ]
+}

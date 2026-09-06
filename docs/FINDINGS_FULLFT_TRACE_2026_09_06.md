@@ -479,3 +479,83 @@ forward+backward on **the identical batch from the identical weights**.
 
 ⭐ No trajectory, no data, and no weight difference survives this comparison —
 which is the one thing none of the three runs so far could say.
+
+---
+
+## 10 · VERDICT: the fused SDPA backward. Same weights, same batch, only the kernel.
+
+Run `fwduel-at13-s20624`, box `9fbde9728a8e41409127aed4e42d46a6`, same card,
+pinned at `24310fd`, `train_seed=20624` so it walks the identical trajectory to
+step 13. At `on_pre_optimizer_step` — before the optimizer moves anything — the
+step's own four micro-batches went through the same weights twice.
+
+```
+  trainer's own backward, SDPA (pre-clip)  : 159 non-finite
+  our re-run,             SDPA            : 159 non-finite   <- HARNESS OK
+  our re-run,             eager           :   0 non-finite
+  VERDICT: KERNEL_IMPLICATED
+```
+
+⭐ **The harness check is what makes this a measurement.** Our SDPA leg
+reproduced the trainer's count exactly *and* its leading tensor names
+(`model.layers.14.input_layernorm.weight`, `...mlp.down_proj`, `...mlp.gate_proj`,
+`...mlp.up_proj`), so the re-run is doing what the trainer does. It also proves
+the right batch was captured: only this batch triggers the fault, so a
+mis-captured one would have produced 0.
+
+⛔ **No trajectory, no data, no weight difference remains.** `attention_dropout`
+is **0.0** on this model, so there is no stochastic path either — the two legs
+differ in exactly one thing.
+
+⇒ **The fused SDPA backward produces 159 non-finite gradients on an input where
+the unfused backward produces none, from identical weights.**
+
+### ⭐⭐ A SECOND FINDING, AND IT IS NOT SMALL
+
+The two kernels' **forwards** disagree on those same inputs and weights:
+
+| micro-batch | sdpa | eager | delta |
+|---|---|---|---|
+| 0 | 0.7003 | 0.7552 | **+7.8 %** |
+| 1 | 0.7045 | 0.7916 | **+12.4 %** |
+| 2 | 0.8217 | 0.9040 | **+10.0 %** |
+| 3 | 0.5265 | 0.5967 | **+13.3 %** |
+
+**Mean +10.9 %, and eager is higher in all four** — one-directional, so this is
+systematic, not rounding. For comparison, at step 0, on the identical
+*pretrained* weights, the same two kernels differed by only **1.2 %**.
+
+⇒ The gap **grew from 1.2 % to 10.9 % over twelve steps of training against
+SDPA's gradients.** The weights adapt to the kernel they were trained under, and
+these two implementations of the same mathematics have drifted an order of
+magnitude apart on this config — bf16 with activation absmax 8128 (bf16 ulp at
+that magnitude is 32) and GQA at 28 query heads to 4 KV heads.
+
+⛔⛔ **SO EAGER IS NOT A DROP-IN SWAP.** A run switched to eager mid-flight
+inherits weights fitted to a different numerical function and is measurably
+worse under the new one. The fix is a **full run under eager from step 0**, not
+a rescue of an existing one.
+
+⚠️ **Scale caveat, in the name and not only here.** The duel's losses are ~4.75x
+the trace's `loss_raw` for the same step, because the trainer normalises by
+`num_items_in_batch` across the whole accumulation group while a bare
+`model(**batch)` normalises within one micro-batch. **The two duel legs share
+that normalisation and are comparable to each other; neither is comparable to a
+trace row.**
+
+### Where the diagnosis stands
+
+| # | claim | status |
+|---|---|---|
+| 1 | the NaN enters at grad-w.r.t.-Q in layer 27's attention backward | measured (§7) |
+| 2 | it is triggered, not compounded — gradients small and declining | measured (§7) |
+| 3 | the trigger is a specific batch, not every batch | measured (§9) |
+| 4 | the fused SDPA backward is the cause on that batch | **measured (§10)** |
+| 5 | *why* the fused kernel fails there | **still open** |
+
+⭐ Claim 5 is now optional rather than blocking: the arm has a working
+configuration. It would be worth answering only if eager's cost is unacceptable.
+
+⛔⛔ **NONE OF THIS IS ABOUT TLÖN.** Every finding here is about machinery
+written on 2026-09-05/06. D6's architectural floor is untouched, and the
+full-weight arm still has not produced a single readable result.
