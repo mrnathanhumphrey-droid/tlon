@@ -313,3 +313,82 @@ free version before renting anything.
 - **A backtick pair inside the reader's Python comment was expanded by the
   unquoted heredoc**, producing `line 129: loss_raw: command not found` in the
   log. Harmless here, and exactly the banked shell-payload hazard.
+
+---
+
+## 8 · The eager ablation: clean for 60 steps — and a confound that must be closed before it is believed
+
+Run `fwattn-eager-s20624`, box `3fee311a48ce405eaa42b6f635b1d343`, same card as
+the baseline (`gpu_1x_h100_sxm5`, us-south-3), pinned at `c0d2847`, 60 steps,
+310 s wall, ~$0.55. Corpus sha-verified identical. `attention implementation
+RESOLVED TO: 'eager' (requested: 'eager')` — the flag is confirmed applied, not
+assumed.
+
+### The result
+
+| | SDPA (`fwpreclip`) | eager (`fwattn-eager`) |
+|---|---|---|
+| steps run | 20 | **60** |
+| first non-finite gradient | **step 13** | **never** |
+| total non-finite gradient observations | 159 pre-clip + 168 post-clip at 13 | **0, across all 60 steps** |
+| loss_raw, mean of steps 0–9 | — | 0.4904 |
+| loss_raw, mean of steps 50–59 | — | **0.0984** |
+| pre-clip grad norm at step 59 | — | 2.08 (healthy, not collapsing) |
+
+Eager passes step 13 — where three separate SDPA assemblies broke — and keeps
+descending for another 46 steps.
+
+### ⛔⛔ BUT THE FORWARD IS NOT THE SAME, AND THAT IS A CONFOUND OF THE BANKED SHAPE
+
+The two runs' losses **diverge from step 0**:
+
+```
+ step |   SDPA    |   EAGER   |   delta
+   0  | 1.2196    | 1.2341    | +0.014571
+   4  | 0.2600    | 0.2536    | -0.006417
+   8  | 0.2161    | 0.1971    | -0.018977
+  12  | 0.1806    | 0.1729    | -0.007741
+  13  | 0.1109    | 0.1114    | +0.000491
+```
+
+So eager did not merely swap the backward on a fixed trajectory — it put the run
+on a **different numerical trajectory**, ~1 % off, from the first step. Two
+explanations now predict the identical observation:
+
+- **(a) the kernel** — the fused SDPA backward manufactures a NaN the unfused
+  path does not, and
+- **(b) the trajectory** — a ~1 % perturbation moved the run off whatever
+  condition fired at step 13, and the kernel is incidental.
+
+⛔ **This is [[same_prediction]]: when the confound and the hypothesis predict
+the same association, the measurement does not discriminate them at any effect
+size.** The three prior SDPA runs do not settle it either — checkpointing on vs
+off leaves the forward numerics essentially unchanged, so none of them ever
+tested perturbation-sensitivity.
+
+⚠️ Two things lean toward (a) without settling it, and are recorded as
+arguments, not evidence: the failure signature is **asymmetric** (`grad_Q` NaN
+while `grad_K`/`grad_V` from the same op are finite), which is structural rather
+than trajectory-like; and there is **no knife-edge visible** in the approach —
+gradients were small and declining in both runs, with no quantity climbing
+toward a threshold.
+
+### ⏭ THE CONTROL, AND WHY IT IS BOUGHT BEFORE THE BIG RUN
+
+**SDPA again, with a different TRAINER seed and the corpus pinned** — perturbing
+the trajectory *without* touching the kernel. It is the same-condition control
+arm: the cheapest arm, and the only one that can say the eager reading is void.
+
+- SDPA breaks again under a perturbed trajectory → perturbation does not save
+  it → eager's cleanliness is attributable to the kernel.
+- SDPA runs clean → the break is trajectory-specific and **the eager result
+  proves nothing about the kernel**.
+
+⭐ **It is insurance on a much larger spend.** The pre-declared next step after
+"eager is clean" is the real 2-epoch full-weight run. If the break is
+trajectory-specific rather than kernel-specific, that run can fail at step 400
+instead of step 13 and burn the whole budget to learn what ~$0.85 answers now.
+
+⛔ The pipeline currently drives the corpus build and the trainer from one
+`SEED`, so the trainer seed has to be decoupled first — otherwise the control
+changes the corpus too and tests two things at once.

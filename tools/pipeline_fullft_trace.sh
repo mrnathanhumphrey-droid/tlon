@@ -73,6 +73,30 @@ if [ -n "$ATTN_IMPL" ]; then
   CELL=fwattn-$ATTN_IMPL-s$SEED
 fi
 
+# ⛔⛔ THE SAME-CONDITION CONTROL, AND THE REASON IT NEEDS ITS OWN SEED KNOB.
+# The eager ablation ran clean for 60 steps — but its losses diverge from the
+# SDPA baseline FROM STEP 0 (1.2341 vs 1.2196), so eager did not swap the
+# backward on a fixed trajectory, it moved the run onto a different one. Two
+# explanations then predict the identical observation: the fused kernel
+# manufactures the NaN, or a ~1% perturbation moved the run off whatever fired
+# at step 13. That is [[same_prediction]] — the measurement does not
+# discriminate them at any effect size.
+#
+# ⭐ So: perturb the TRAJECTORY while holding the KERNEL fixed. TRAIN_SEED
+# changes the trainer's seed (and so the batch order) and NOTHING else; the
+# corpus is still built from SEED and still sha-checked, because a control that
+# also changes the corpus is testing two things at once.
+#
+# ⛔ THE FORK, PRE-DECLARED:
+#   SDPA breaks anyway (at 13 or ANY step) -> a perturbed trajectory does not
+#     save it, so eager's cleanliness is attributable to the KERNEL.
+#   SDPA runs 60 clean                     -> the break is TRAJECTORY-SPECIFIC
+#     and the eager reading is VOID. It would say nothing about the kernel.
+TRAIN_SEED=${TRAIN_SEED:-$SEED}
+if [ "$TRAIN_SEED" != "$SEED" ]; then
+  CELL=fwctl-t$TRAIN_SEED-s$SEED
+fi
+
 # ⛔⛔ AND AN EXPLICIT OVERRIDE, because two runs of the SAME arm are still two
 # different experiments. The un-filtered-loss run uses the same config as the
 # first trace, so without a distinct cell it would overwrite that trace's hub
@@ -84,7 +108,7 @@ CELL=${CELL_OVERRIDE:-$CELL}
 # read afterwards as the same experiment.
 ROOT=${ROOT:-runs/act2/fullft_trace_$CELL}
 tlon_log_init "$ROOT" pipeline_fullft_trace.log
-echo "  arm: CELL=$CELL  grad_checkpointing=$GRAD_CKPT  attn_impl=${ATTN_IMPL:-DEFAULT(sdpa)}  max_steps=$MAX_STEPS" | tee -a $LOG
+echo "  arm: CELL=$CELL  grad_checkpointing=$GRAD_CKPT  attn_impl=${ATTN_IMPL:-DEFAULT(sdpa)}  corpus_seed=$SEED  train_seed=$TRAIN_SEED  max_steps=$MAX_STEPS" | tee -a $LOG
 
 # ── 1 · WATCHDOG FIRST ──────────────────────────────────────────────────────
 step watchdog
@@ -130,7 +154,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
     --max-steps $MAX_STEPS --trace-out $TRACE $CKPT_FLAG $ATTN_FLAG \
     --trace-window-from $WIN_FROM --trace-window-to $WIN_TO \
-    --seed $SEED 2>&1 | tee -a $LOG
+    --seed $TRAIN_SEED 2>&1 | tee -a $LOG
 
 # ⛔⛔ THE TRACE IS THE DELIVERABLE, SO IT PERSISTS BEFORE ANYTHING ELSE CAN GO
 # WRONG. The last run's pipeline log was lost to a flush that named one file;
@@ -152,7 +176,9 @@ rows = [json.loads(l) for l in
         pathlib.Path("$TRACE").read_text(encoding="utf-8").splitlines() if l.strip()]
 steps = [r for r in rows if "step" in r]
 summary = next((r["SUMMARY"] for r in rows if "SUMMARY" in r), None)
-# ⛔ READS `loss_raw`, THE MODEL'S OWN VALUE. The filtered field prints beside
+# ⛔ READS loss_raw, THE MODEL'S OWN VALUE -- the backticks that used to
+# quote it here were EXPANDED by this unquoted heredoc and ran as a command
+# (line 129: loss_raw: command not found). The filtered field prints beside
 # it so the divergence is visible rather than inferred.
 losses = [(r["step"], r.get("loss_raw")) for r in steps]
 filt = [(r["step"], r.get("loss_LOGGED_FILTERED")) for r in steps]
@@ -238,6 +264,15 @@ if fn is None:
         print("  READING: DEGENERATE OBJECTIVE — loss collapsed with NO non-finite")
         print("           value anywhere. The NaN in the full run is downstream;")
         print("           the objective itself produces no signal at real scale.")
+    elif "$TRAIN_SEED" != "$SEED":
+        # ⛔⛔ THE CONTROL ARM READS THE OPPOSITE WAY FROM AN ABLATION, and the
+        # branch is written before the result so it cannot be chosen after.
+        print("  ⛔⛔ CONTROL READING: SDPA ran %s steps CLEAN under a perturbed" % len(steps))
+        print("       trajectory (train_seed $TRAIN_SEED vs corpus_seed $SEED).")
+        print("       The step-13 break is therefore TRAJECTORY-SPECIFIC, not robust.")
+        print("       ⇒ THE EAGER RESULT IS VOID as evidence about the kernel: a")
+        print("       ~1%% numerical perturbation is enough to avoid the break, so")
+        print("       eager running clean says nothing about SDPA's backward.")
     else:
         print("  READING: NO NON-FINITE VALUE ANYWHERE in %s steps." % len(steps))
         print("           The break has been at step 13 in THREE runs with three")
@@ -248,6 +283,12 @@ if fn is None:
         print("           to a usable model. A clean stretch far past 13 is the")
         print("           next question, not a conclusion available here.")
 elif fn["quantity"] == "grad_PRECLIP":
+    if "$TRAIN_SEED" != "$SEED":
+        print("  ⭐⭐ CONTROL READING: SDPA BROKE ANYWAY under a perturbed trajectory")
+        print("       (train_seed $TRAIN_SEED vs corpus_seed $SEED), at step %s." % fn["step"])
+        print("       A changed batch order does NOT save it, so the break is robust")
+        print("       to perturbation ⇒ eager running 60 clean is attributable to")
+        print("       THE KERNEL, not to having been knocked off a knife edge.")
     print("  READING: BACKWARD NUMERICAL, NAMED. %s tensor(s) went non-finite" % fn["n"])
     print("           INSIDE the backward, before any clipping: %s" % fn["tensors"][:4])
     print("           n=%s at step %s (rank %s)." % (fn["n"], fn["step"], fn["rank"]))
