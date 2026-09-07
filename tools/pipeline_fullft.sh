@@ -22,7 +22,11 @@ tlon_trap_init
 set -e
 
 SEED=${SEED:-20624}
-CELL=fw-s$SEED
+# ⛔⛔ THE CELL CARRIES THE RUNG. `fw-s$SEED` is rung 1a's, already on the hub
+# with its model, both verdicts and its lag profiles. Reusing it would overwrite
+# the artifact this run is COMPARED AGAINST -- destroying the 17.81 dose figure
+# and the lag2 z=+5.79 baseline that PREREG 9ccf98d6 §2.1 and §5 read against.
+CELL=fw19-s$SEED                # rung 1b: 19 layers (PREREG 9ccf98d6)
 ROOT=${ROOT:-runs/act2/fullft_$CELL}
 tlon_log_init "$ROOT" pipeline_fullft.log
 
@@ -33,13 +37,21 @@ HF_REPO=${HF_REPO:-keyzersoze04/tlon-act2-adapters}
 # ⛔⛔ EVERY VALUE HERE IS QUOTED FROM THE LOCKED §5, NOT CHOSEN. Changing one
 # without a new prereg makes the run un-readable against the document that says
 # what it means.
-UNFREEZE_TOP=14                 # top 14 of 28 layers, 3.263 B trainable
+UNFREEZE_TOP=19                 # PREREG 9ccf98d6 §5: top 19 of 28, 4.428 B
+                                # trainable. Largest count that fits fp32-master
+                                # on 80 GiB: planner 60.7, x1.28 = 77.7, +2.3
+                                # margin. L=20 is 80.1 -- over. ALL 28 is 99.2,
+                                # 19 GiB over, and needs FSDP (rung 1-full).
 OPTIM=adamw_bnb_8bit            # fp32 master params, 8-bit moments (FORCED)
-LR=1e-5                         # 5e-6 is the (c) dial-back, a NEW prereg
+LR=5e-6                         # PREREG 9ccf98d6 §5: PRIMARY, not a dial-back.
+                                # Half of rung 1a's, chosen to keep the DOSE
+                                # comparable (delta_norm ~17.81), not gentler
+                                # for its own sake. 2.5e-6 is this rung's (c)
+                                # dial-back and is a NEW prereg.
 SEQ=384                         # the gate's actual seq, not 256
 BATCH=4; ACCUM=4                # effective 16, the gate's shape
 VRAM_WALL=80                    # D-7: gpu_1x_h100_sxm5, also 80 GiB (see DEVIATIONS)
-TRAINABLE_B=3.263
+TRAINABLE_B=4.428
 CORPUS_SHA=dd40e22f85b0b6e4     # §5: sha-verified BEFORE training
 # ⛔⛔ D-8, DECLARED AGAINST LOCK a0450b36 BEFORE FIRING. §5 named no attention
 # implementation, so every run of this arm silently took the transformers
@@ -185,6 +197,36 @@ $PY tools/act2_model_lag.py --model $OUT --object-kind full_weight \
     --chains 12 --turns 10 --temperature 0.70 --max-new-tokens 256 \
     --seed $SEED --out $ROOT/model_lag_${CELL}_e1.json 2>&1 | tee -a $LOG
 
+# ⭐⭐ THE DOSE-COMPARABILITY READ — PREREG 9ccf98d6 §2.1, decided HERE so
+# "we under-dosed it" is answerable rather than arguable after the fact.
+# Two things changed from rung 1a: MORE LAYERS and a LOWER LR. Without a dose
+# readout a floor could not separate "capacity did not help" from "we did not
+# train it enough".
+# ⛔ fraction_changed CANNOT do this job -- it saturated to the same 16 digits at
+# both of rung 1a's epochs. delta_norm_estimated is the dose measure.
+step dose_check
+$PY - <<PYDOSE 2>&1 | tee -a $LOG
+import json, pathlib
+RUNG_1A = 17.81          # rung 1a, end of epoch 1, LOCK a0450b36
+LO, HI = 12.5, 23.2      # +/-30%, pre-declared in PREREG 9ccf98d6 2.1
+d = json.loads(pathlib.Path("$OUT/weight_delta.json").read_text(encoding="utf-8"))
+got = d.get("delta_norm_estimated")
+print("  delta_norm_estimated = %.3f   (rung 1a epoch 1 = %.2f, band %.1f-%.1f)"
+      % (got, RUNG_1A, LO, HI))
+print("  fraction_changed     = %r  <- PRECONDITION ONLY, saturates, not a dose"
+      % d.get("fraction_changed"))
+if got is None:
+    print("  DOSE: UNREADABLE -- no delta_norm recorded.")
+elif got < LO:
+    print("  DOSE: UNDER-DOSED. A floor is NOT readable as a capacity result.")
+    print("        Pre-declared response: re-run 19 layers at 1e-5, a NEW prereg.")
+elif got > HI:
+    print("  DOSE: OVER-DOSED relative to rung 1a. A (c) crater reads as dose, not capacity.")
+else:
+    print("  DOSE: COMPARABLE -- same weight movement, more layers.")
+    print("        A floor therefore means CAPACITY DID NOT HELP, not under-dosing.")
+PYDOSE
+
 step verdict_epoch1
 # ⛔ `set -e` would abort on the STOP exit code, and a STOP at epoch 1 is not a
 # pipeline failure — it is the branch §5 declares. Captured, not trapped.
@@ -202,16 +244,36 @@ if [ $E1 -eq 3 ]; then
   exit 1
 fi
 
-if [ $E1 -eq 0 ]; then
-  # ⭐ THE PRE-DECLARED EARLY-STOP. Stopping on a success condition written into
-  # the hashed body is not threshold-fudging; it protects against an epoch-2
-  # over-fit cratering the fluency that just passed.
-  echo "⭐ EPOCH 1 IS GO ON ALL THREE AXES — stopping here per §5" | tee -a $LOG
+if [ $E1 -eq 0 ] || [ $E1 -eq 4 ]; then
+  # ⭐⭐ THE FIXED STOP — PREREG 9ccf98d6 §3, and it is rung 1a's procedural bug
+  # closed. The old condition was `[ $E1 -eq 0 ]`, i.e. GO ALONE. Rung 1a's
+  # epoch 1 was a clean floored-but-fluent (b) — release FAIL, perceive PASS,
+  # f_local PASS, precondition OK — which is a complete readable measurement and
+  # could not halt the run. Epoch 2 then over-fit past it (every lag rose,
+  # f_local cratered) and the verdict of record became uninterpretable.
+  #
+  # ⭐ Exit 4 is that readable-but-not-GO state. HALT ON EITHER: a run must not
+  # be able to train past a result it already has.
+  #
+  # ⛔ This changes WHEN the run halts, never a threshold. Z_LAG1_MIN and
+  # Z_LAGN_MAX are untouched and still imported from tlon.discourse.transient.
+  # It is strictly conservative: it protects a readable state SOONER.
+  # ⛔ A `case`, NOT a second `if [ $E1 -eq 0 ]`. The GO-only condition is the
+  # exact bug this section fixes, so the string must not survive anywhere in
+  # this file -- `tests/test_readable_stop.py` asserts its ABSENCE, and a
+  # message-selecting copy of it would make that guard unreadable.
+  case $E1 in
+    0) echo "⭐ EPOCH 1 IS GO ON ALL THREE AXES — stopping here per §5" | tee -a $LOG ;;
+    4) echo "⭐⭐ EPOCH 1 IS READABLE (floored-but-fluent) — stopping here per PREREG 9ccf98d6 §3." | tee -a $LOG
+       echo "   Rung 1a trained past exactly this state and destroyed it. Not repeated." | tee -a $LOG ;;
+  esac
   EPOCHS_RUN=1
   FINAL_LAG=$ROOT/model_lag_${CELL}_e1.json
   FINAL_VERDICT=$ROOT/verdict_${CELL}_e1.json
 else
-  echo "  epoch 1 is not GO-on-all-three; epoch 2 runs and epoch 2 is the verdict (§5)" | tee -a $LOG
+  # ⛔ PREREG 9ccf98d6 §3: epoch 2 runs ONLY when epoch 1 gave no readable
+  # state to protect -- perceive failed, or f_local already failed at epoch 1.
+  echo "  epoch 1 is NOT READABLE (not GO, not floored-but-fluent); epoch 2 runs and IS the verdict" | tee -a $LOG
 
   # ── 5 · LEG 2 — THE SECOND EPOCH ──────────────────────────────────────────
   step train_leg2

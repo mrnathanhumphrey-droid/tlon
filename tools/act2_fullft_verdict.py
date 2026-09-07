@@ -61,6 +61,27 @@ def last_f_local(ledger_path) -> dict:
     return row
 
 
+def readable_stop(out: dict) -> bool:
+    """Is this a STOP that is nonetheless worth PROTECTING from a later epoch?
+
+    ⭐ PREREG `9ccf98d6` §3. A floored-but-fluent verdict — release fails while
+    perceive and F-LOCAL both hold, with the §4.1 precondition passed — is a
+    complete, coherent, interpretable measurement. Rung 1a produced exactly one
+    of those at epoch 1 and then trained past it.
+
+    ⛔ Deliberately narrow. A cratered, perceive-killed or incoherent row is NOT
+    readable-and-worth-protecting: there is nothing there an epoch 2 could
+    destroy that has not already been lost. Widening this would convert the stop
+    from "protect a result" into "halt on anything", which is a different
+    procedure than the one hashed into the body.
+    """
+    if out.get("verdict") != STOP_FLOORED:
+        return False
+    axes = out.get("axes") or {}
+    return bool(axes.get("perceive", {}).get("ok")
+                and axes.get("f_local", {}).get("ok"))
+
+
 def decide(delta: dict, lag: dict, flocal: dict) -> dict:
     """§4.2, in the order the table is written."""
     # ── the precondition, before anything else ──────────────────────────────
@@ -168,7 +189,26 @@ def main() -> int:
 
     if out["verdict"] == FAULT:
         return 3
-    return 0 if out["verdict"] == GO else 1
+    if out["verdict"] == GO:
+        return 0
+    # ⭐⭐ EXIT 4 = A READABLE STOP. PREREG `9ccf98d6` §3, and it is the
+    # procedural fix rung 1a needed and did not have.
+    #
+    # ⛔⛔ Rung 1a's early stop fired only on GO, so its clean epoch-1
+    # floored-but-fluent state — release FAIL, perceive PASS, f_local PASS, the
+    # §4.1 precondition satisfied — could not halt the run. Epoch 2 then
+    # over-fit past it and destroyed the readable state (every lag rose, f_local
+    # cratered), and the verdict of record became uninterpretable.
+    #
+    # ⭐ A floored-but-fluent epoch 1 is EXACTLY the state an epoch-2 over-fit
+    # destroys, so the caller has to be able to see it. GO and floored-but-fluent
+    # are both READABLE; every other STOP is not, and only those run epoch 2.
+    #
+    # ⛔ This changes WHEN a run halts, never a threshold. Z_LAG1_MIN and
+    # Z_LAGN_MAX are untouched and still imported.
+    if readable_stop(out):
+        return 4
+    return 1
 
 
 if __name__ == "__main__":
