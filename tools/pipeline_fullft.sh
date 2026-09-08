@@ -51,6 +51,9 @@ SEQ=384                         # the gate's actual seq, not 256
 BATCH=4; ACCUM=4                # effective 16, the gate's shape
 VRAM_WALL=80                    # D-7: gpu_1x_h100_sxm5, also 80 GiB (see DEVIATIONS)
 TRAINABLE_B=4.428
+TOTAL_B=7.616                   # Qwen2.5-7B-Instruct, all parameters. Frozen is
+                                # the difference, and BOTH are persisted -- the
+                                # `_w` object is a whole model, not a delta.
 CORPUS_SHA=dd40e22f85b0b6e4     # §5: sha-verified BEFORE training
 # ⛔⛔ THE VERDICT NAMES ITS OWN PREREG, READ FROM THE LOCKED FILE AND
 # RE-VERIFIED AT EMIT TIME. It was hardcoded to a0450b36, so rung 1b's
@@ -112,6 +115,20 @@ step optim_probe
 # failure available here: training for hours, moving nothing, and producing a
 # zero delta that looks exactly like the substrate finding.
 $PY tools/act2_finetune.py --probe-optim --lr $LR 2>&1 | tee -a $LOG
+
+step hub_capacity
+# ⛔⛔ IS THERE ROOM FOR THE RESULT — asked BEFORE the GPU hours, not after.
+# Rung 1b' trained 3,760 clean steps and then died at persist_leg1 on "Private
+# repository storage limit reached". The reads never ran; ~2 H100-hours bought
+# nothing the run was for. THE s20620 FAILURE MODE, reached by a new road.
+# ⛔ A CHECK HAD ALREADY PASSED. `cmd_env` writes a tiny probe file and reports
+# "persist path verified writable" -- true, and about the PATH, while the run
+# depended on the CAPACITY. A 2 KB commit succeeds in a repo with no room for a
+# 24 GB one. This asks the question the run actually depends on.
+# ⛔ Sized on the SAME scope the VRAM floor uses, and on the fp32 master §5
+# declares: a `params * 2` projection under-counts a full-weight run by 40%.
+$PY tools/act2_hub_capacity.py --repo $HF_REPO \
+    --trainable-b $TRAINABLE_B --total-b $TOTAL_B 2>&1 | tee -a $LOG
 
 step prereg_id
 # ⛔⛔ THE SAME DEFECT, ONE FILE OVER — CAUGHT BEFORE THIS RUN SHIPPED IT.
