@@ -19,6 +19,9 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+from textguard import code_only  # noqa: E402
 
 from act2_fullft_verdict import (GO, STOP_CRATERED,  # noqa: E402
                                  STOP_FLOORED, STOP_INCOHERENT,
@@ -89,25 +92,60 @@ def test_the_verdict_tool_returns_4_for_a_readable_stop_and_1_otherwise():
     assert "return 0" in src          # GO, unchanged
 
 
-def test_rung_1b_prime_config_is_what_the_prereg_declares():
-    """⭐ 19 layers is held from rung 1b; the LR moves to 1e-5 so the
-    PER-PARAMETER dose lands on rung 1a's 3.118e-4 (PREREG bd435b37 §2)."""
+def test_rung_2_config_is_what_the_prereg_declares():
+    """⭐ PREREG c2a4f0ca §1/§2: the MAPPING scope — embed_tokens + lm_head,
+    1,089,994,752 params, all 28 layers frozen — at the same 1e-5.
+
+    ⛔ `--unfreeze-top` must NOT be passed in this mode: it names a layer scope
+    the run does not have, and on a floor-hunting rung a mislabelled scope is a
+    mislabelled finding."""
     s = PIPE.read_text(encoding="utf-8")
-    assert re.search(r"^UNFREEZE_TOP=19\b", s, re.M), "bd435b37 §2: 19 layers"
-    assert re.search(r"^LR=1e-5\b", s, re.M), "bd435b37 §2: 1e-5, dose-matched"
-    assert re.search(r"^TRAINABLE_B=4\.428\b", s, re.M)
+    assert re.search(r"^SCOPE_MODE=mapping\b", s, re.M), "c2a4f0ca §1: Option A"
+    assert re.search(r"^LR=1e-5\b", s, re.M), "c2a4f0ca §2"
+    assert re.search(r"^TRAINABLE_B=1\.090\b", s, re.M), "1.090 B, verified"
     assert re.search(r"^ATTN_IMPL=eager\b", s, re.M), "D-8"
+    # ⚠️ EXECUTABLE LINES ONLY, via the shared helper. The first form asserted
+    # the flag was absent from the whole file and matched the pipeline's own
+    # comment explaining that the flag is refused — one of five instances in a
+    # single session of a whole-file guard tripping on its own documentation.
+    # `textguard.code_only` is that fix made once instead of five times.
+    assert "--unfreeze-top" not in code_only(s), (
+        "a mapping-scope run must not pass --unfreeze-top")
 
 
-def test_the_cell_does_not_collide_with_rung_1a():
+def test_the_per_leaf_mapping_gate_runs_before_the_verdict():
+    """⛔⛔ PREREG c2a4f0ca §5. `lm_head` sits one step from the loss;
+    `embed_tokens` is reached only through 28 FROZEN layers. The asymmetric
+    failure — lm_head trains, embed_tokens gets nothing — PASSES the global §4.1
+    precondition on the strength of the half that worked, and reads as exactly
+    the mapping floor this rung is hunting. So the per-leaf gate must be in the
+    log BEFORE the verdict, and must be able to halt the run."""
+    s = PIPE.read_text(encoding="utf-8")
+    assert re.search(r"^step mapping_moved", s, re.M)
+    assert s.index("step mapping_moved") < s.index("step verdict_epoch1")
+    assert "mapping_moved" in s and "MAPPING_MOVED" in s
+    assert "raise SystemExit(1)" in s, (
+        "a still mapping leaf must HALT, not print a line the run scrolls past")
+
+
+def test_the_cell_does_not_collide_with_any_fired_rung():
     """⛔⛔ `fw-s$SEED` is rung 1a's cell and its model, verdicts and lag
     profiles are already on the hub. Reusing it would overwrite the artifact
     this run is COMPARED AGAINST — the 17.81 dose figure and the lag2 z=+5.79
-    baseline the prereg reads against."""
+    baseline the prereg reads against.
+
+    ⭐ STRENGTHENED as rungs accumulate: the cell must collide with NONE of the
+    fired rungs, not merely with rung 1a. Each fired rung's model, verdicts and
+    lag profiles are on the hub and are what later runs are compared against."""
     s = PIPE.read_text(encoding="utf-8")
     m = re.search(r"^CELL=(\S+)", s, re.M)
-    assert m and m.group(1) != "fw-s$SEED", "rung 1b must not write into rung 1a's cell"
-    assert m.group(1) == "fw19b-s$SEED"
+    assert m, "no CELL is set"
+    fired = {"fw-s$SEED": "rung 1a", "fw19-s$SEED": "rung 1b",
+             "fw19b-s$SEED": "rung 1b-prime"}
+    assert m.group(1) not in fired, (
+        "CELL=%s would overwrite %s's artifacts on the hub"
+        % (m.group(1), fired[m.group(1)]))
+    assert m.group(1) == "fwmap-s$SEED"
 
 
 def test_the_dose_check_runs_before_the_verdict():

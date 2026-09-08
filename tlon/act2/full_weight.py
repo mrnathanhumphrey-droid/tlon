@@ -142,3 +142,194 @@ def apply_scope(model, *, unfreeze_top: int) -> dict:
     scope["n_trainable_params"] = n_train
     scope["n_frozen_params"] = n_frozen
     return scope
+
+
+# ═══ RUNG 2 — THE MAPPING SCOPE ════════════════════════════════════════════
+#
+# ⛔⛔ THIS IS THE MOST DANGEROUS SCOPE IN THE FILE TO GET WRONG, AND THE REASON
+# IS THE RUNG'S OWN HYPOTHESIS. Rung 2 unfreezes `embed_tokens` + `lm_head` to
+# ask whether release lives in the token mapping, and the outcome it is most
+# likely to find is a FLOOR. A selector that silently matches nothing trains a
+# frozen model, moves no weight, and produces exactly the reading the run is
+# hunting -- "the mapping did not install release" -- with no symptom anywhere.
+# The false floor and the finding are the same observation.
+#
+# ⭐ So every check here is POSITIVE and NAMED. Not "everything except layers",
+# which is satisfied by matching nothing; but "these two tensors, by name, are
+# trainable, and no layer tensor is."
+
+#: ⭐ The token<->vector mapping, selected POSITIVELY. Deliberately the same two
+#: leaves `FROZEN_LEAVES` names: rung 2 is exactly the inversion of §5's freeze,
+#: and writing the pair twice would let the two definitions drift apart.
+MAPPING_LEAVES = FROZEN_LEAVES
+
+
+def mapping_scope(names, *, mapping_leaves=MAPPING_LEAVES) -> dict:
+    """Trainable = the token mapping ONLY. Every transformer layer frozen.
+
+    ⛔ Refuses unless BOTH leaves are present. `tie_word_embeddings` is false on
+    this model, so `embed_tokens` and `lm_head` are separate matrices and the
+    scope is 1.090 B. On a TIED model `lm_head` would not appear as its own
+    parameter, the selection would silently be half the declared scope, and the
+    run would answer a smaller question than the prereg locked.
+    """
+    names = list(names)
+    if not names:
+        raise ScopeError("no parameter names given")
+
+    idx = layer_indices(names)
+    if not idx:
+        raise ScopeError(
+            "no parameter name matched the transformer-layer pattern %r, so "
+            "'the layers are frozen' cannot be verified -- and an unverifiable "
+            "freeze is what makes a false floor look like a finding."
+            % _LAYER_RE.pattern)
+
+    trainable, frozen = [], []
+    for n in names:
+        parts = n.split(".")
+        if any(f in parts for f in mapping_leaves) and not _LAYER_RE.search(n):
+            trainable.append(n)
+        else:
+            frozen.append(n)
+
+    # ⛔⛔ POSITIVE, PER-LEAF. An empty selection is refused by the generic
+    # check below, but a HALF selection is not empty -- it is a quietly smaller
+    # experiment. Each declared leaf must have matched something.
+    for leaf in mapping_leaves:
+        if not any(leaf in n.split(".") for n in trainable):
+            raise ScopeError(
+                "mapping scope selected nothing for %r. The declared scope is "
+                "%s; a scope missing one of them trains a different experiment "
+                "than the one pre-registered." % (leaf, list(mapping_leaves)))
+    if not trainable:
+        raise ScopeError(
+            "mapping scope selected 0 trainable tensors out of %d" % len(names))
+
+    # ⛔ AND NO LAYER MAY LEAK IN. A single layer tensor in the trainable set
+    # turns this into "mapping + some layers" -- Option B by accident -- and
+    # re-confounds the run with the layer capacity that already tested flat.
+    leaked = [n for n in trainable if _LAYER_RE.search(n)]
+    if leaked:
+        raise ScopeError(
+            "%d transformer-layer tensor(s) leaked into the mapping scope "
+            "(first: %s). That is mapping+layers, not the isolated mapping "
+            "test." % (len(leaked), leaked[0]))
+
+    return {
+        "scope_mode": "mapping",
+        "n_layers": max(idx) + 1,
+        "unfreeze_top": 0,          # ⭐ layers frozen, stated not implied
+        "cutoff_layer": None,
+        "trainable": trainable,
+        "frozen": frozen,
+    }
+
+
+def apply_mapping_scope(model) -> dict:
+    """`requires_grad` for rung 2, with the layer freeze ASSERTED on the model.
+
+    ⛔ The name-level checks in `mapping_scope` prove the SELECTION; this proves
+    the MODEL agrees. `requires_grad_` on a re-created or non-leaf parameter
+    silently does nothing, and the next observation would be a zero delta read
+    as a substrate floor.
+    """
+    import torch
+
+    names = [n for n, _ in model.named_parameters()]
+    scope = mapping_scope(names)
+    train = set(scope["trainable"])
+    n_train = n_frozen = 0
+    for name, p in model.named_parameters():
+        if name in train:
+            p.requires_grad_(True)
+            if p.dtype != torch.float32:
+                p.data = p.data.to(torch.float32)
+            n_train += p.numel()
+        else:
+            p.requires_grad_(False)
+            n_frozen += p.numel()
+
+    live = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    if live != n_train:
+        raise ScopeError(
+            "requires_grad did not take: set %d trainable, model reports %d"
+            % (n_train, live))
+    if n_train == 0:
+        raise ScopeError(
+            "0 trainable parameters after applying the mapping scope. This "
+            "would train nothing, report a perfect zero delta, and read as a "
+            "substrate floor -- which is the very verdict rung 2 is testing "
+            "for.")
+
+    # ⛔⛔ THE LAYER FREEZE, ASSERTED ON THE MODEL ITSELF.
+    hot = [n for n, p in model.named_parameters()
+           if p.requires_grad and _LAYER_RE.search(n)]
+    if hot:
+        raise ScopeError(
+            "%d transformer-layer tensor(s) are trainable (first: %s). Option A "
+            "is layers-FROZEN; this run would silently be Option B."
+            % (len(hot), hot[0]))
+
+    non_fp32 = [n for n, p in model.named_parameters()
+                if p.requires_grad and p.dtype != torch.float32]
+    if non_fp32:
+        raise ScopeError(
+            "%d trainable tensor(s) are not fp32 (first: %s). A bf16 master "
+            "rounds the update to zero -- see PREREG a0450b36 §4.1."
+            % (len(non_fp32), non_fp32[0]))
+
+    scope["n_trainable_params"] = n_train
+    scope["n_frozen_params"] = n_frozen
+    return scope
+
+
+#: Returned by `mapping_moved` -- a floor may only be read on MOVED.
+MAPPING_MOVED = "MAPPING_MOVED"
+MAPPING_FROZEN = "MAPPING_FROZEN"
+
+
+def mapping_moved(delta: dict, *, mapping_leaves=MAPPING_LEAVES):
+    """Did the MAPPING TENSORS THEMSELVES move? -> (verdict, why)
+
+    ⛔⛔ THIS IS WHAT SEPARATES THE FINDING FROM THE BUG. Rung 2's expected
+    outcome is a floor, and two very different states produce one:
+
+        the mapping trained and release still did not install   <- THE FINDING
+        the mapping never trained and the delta was zero        <- A BUG
+
+    The global §4.1 precondition cannot tell them apart, because on this scope
+    the mapping IS almost the whole trainable set -- a frozen mapping makes the
+    global delta zero, which §4.1 already catches, but a mapping that moved only
+    in `lm_head` while `embed_tokens` sat still would pass §4.1 on the strength
+    of the half that worked. So the movement is asserted PER DECLARED LEAF.
+
+    ⛔ A floor verdict must not be read unless this returns MAPPING_MOVED.
+    """
+    per = (delta or {}).get("per_module") or {}
+    if not per:
+        return MAPPING_FROZEN, (
+            "weight_delta carries no per_module record, so per-tensor movement "
+            "cannot be checked. REFUSING to certify: an unmeasured mapping is "
+            "not a moved one.")
+    found, still = {}, []
+    for leaf in mapping_leaves:
+        rows = {n: r for n, r in per.items() if leaf in n.split(".")}
+        if not rows:
+            return MAPPING_FROZEN, (
+                "no per_module row for %r -- the delta never sampled the "
+                "tensor this run exists to move." % leaf)
+        moved = {n: r for n, r in rows.items()
+                 if (r.get("changed") or 0) > 0
+                 and (r.get("delta_norm_estimated") or 0) > 0}
+        found[leaf] = (len(moved), len(rows))
+        if not moved:
+            still.append(leaf)
+    if still:
+        return MAPPING_FROZEN, (
+            "%s did not move (changed=0 / delta_norm=0). A floor read here "
+            "would be a FROZEN-MAPPING NO-OP wearing the shape of the finding."
+            % ", ".join(sorted(still)))
+    return MAPPING_MOVED, ("every declared mapping leaf moved: "
+                           + ", ".join("%s %d/%d tensor(s)" % (k, v[0], v[1])
+                                       for k, v in sorted(found.items())))

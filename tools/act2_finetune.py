@@ -37,6 +37,7 @@ CORPUS = _DEFAULT_CORPUS
 #: would force the model to GUESS which one it is on from the input alone, and
 #: the two inputs are the two languages — exactly the discrimination that failed.
 from tlon.act2.full_weight import apply_scope as _apply_scope
+from tlon.act2.full_weight import apply_mapping_scope as _apply_mapping_scope
 from tlon.act2.weight_delta import INSTRUMENT_FAULT as _FAULT
 from tlon.act2.weight_delta import OK as _DELTA_OK
 from tlon.act2.weight_delta import measure as _delta_measure
@@ -327,6 +328,13 @@ def main() -> int:
     ap.add_argument("--full", action="store_true",
                     help="FULL-WEIGHT fine-tune (no LoRA), per PREREG a0450b36 "
                          "§5. Requires --unfreeze-top and --optim.")
+    ap.add_argument("--scope-mode", choices=("layers", "mapping"),
+                    default="layers",
+                    help="WHICH weights may move. 'layers' = the top "
+                         "--unfreeze-top transformer layers (rungs 1a/1b/1b', "
+                         "mapping frozen). 'mapping' = embed_tokens + lm_head "
+                         "ONLY with every layer frozen (rung 2: does release "
+                         "live in the token mapping?).")
     ap.add_argument("--unfreeze-top", type=int, default=None,
                     help="train the top N transformer layers; everything below, "
                          "plus embed_tokens and lm_head, is frozen. §5 = 14.")
@@ -496,13 +504,30 @@ def main() -> int:
             "⛔ --model is required and has no default. The backbone is Nate's "
             "call every time; run --plan first to size the options.")
 
-    if a.full and (a.unfreeze_top is None or not a.optim):
+    # ⛔⛔ THE TWO SCOPES TAKE DIFFERENT ARGUMENTS, AND MIXING THEM MUST NOT BE
+    # SILENT. `--unfreeze-top` on a mapping run would name a layer count that
+    # nothing applies, so the log would describe a scope the run did not have --
+    # and on a floor-hunting rung that is a mislabelled finding, not a typo.
+    if a.full and a.scope_mode == "mapping":
+        if a.unfreeze_top is not None:
+            raise SystemExit(
+                "⛔ --scope-mode mapping trains embed_tokens + lm_head with "
+                "ALL layers frozen, so --unfreeze-top names nothing. Passing "
+                "both would log a layer scope this run does not have.")
+        if not a.optim:
+            raise SystemExit("⛔ --full requires --optim (§4.1).")
+    elif a.full and (a.unfreeze_top is None or not a.optim):
         raise SystemExit(
             "⛔ --full requires BOTH --unfreeze-top and --optim, neither of "
             "which has a default. The layer scope is what a STOP-floored "
             "verdict would be about (PREREG a0450b36 §7.1) and the optimizer "
             "decides whether the update can be written at all (§4.1). §5 "
             "declares --unfreeze-top 14 --optim adamw_bnb_8bit.")
+    if not a.full and a.scope_mode != "layers":
+        raise SystemExit(
+            "⛔ --scope-mode is a full-weight flag and does nothing on the "
+            "LoRA path. Silently ignoring it would let a caller believe they "
+            "had set a scope that was never applied.")
     if not a.full and (a.unfreeze_top is not None or a.optim):
         raise SystemExit(
             "⛔ --unfreeze-top / --optim are full-weight flags and do nothing "
@@ -555,12 +580,26 @@ def main() -> int:
                 "⛔ --full with 4-bit weights is not the declared arm. §5 is an "
                 "fp32 master over bf16-resident frozen weights; quantised base "
                 "weights cannot hold an fp32 update.")
-        scope = _apply_scope(model, unfreeze_top=a.unfreeze_top)
-        print("⭐ FULL-WEIGHT scope — top %d of %d layers trainable: "
-              "%s trainable / %s frozen params"
-              % (scope["unfreeze_top"], scope["n_layers"],
-                 f"{scope['n_trainable_params']:,}",
-                 f"{scope['n_frozen_params']:,}"))
+        if a.scope_mode == "mapping":
+            # ⛔⛔ RUNG 2. Trainable = `embed_tokens` + `lm_head` ONLY, every
+            # transformer layer frozen. The selection is POSITIVE and per-leaf
+            # because this rung's expected outcome is a FLOOR: a selector that
+            # matched nothing would train a frozen model, report a zero delta,
+            # and read as exactly the finding being tested for.
+            scope = _apply_mapping_scope(model)
+            print("⭐ FULL-WEIGHT scope — MAPPING ONLY (embed_tokens + lm_head), "
+                  "all %d transformer layers FROZEN: %s trainable / %s frozen"
+                  % (scope["n_layers"],
+                     f"{scope['n_trainable_params']:,}",
+                     f"{scope['n_frozen_params']:,}"))
+            print("   trainable tensors: %s" % sorted(scope["trainable"]))
+        else:
+            scope = _apply_scope(model, unfreeze_top=a.unfreeze_top)
+            print("⭐ FULL-WEIGHT scope — top %d of %d layers trainable: "
+                  "%s trainable / %s frozen params"
+                  % (scope["unfreeze_top"], scope["n_layers"],
+                     f"{scope['n_trainable_params']:,}",
+                     f"{scope['n_frozen_params']:,}"))
         # ⛔⛔ FROZEN EMBEDDINGS + GRADIENT CHECKPOINTING = SILENTLY NO GRADIENTS.
         # With embed_tokens frozen, the input to the first checkpointed block
         # does not require grad, and reentrant checkpointing then skips the

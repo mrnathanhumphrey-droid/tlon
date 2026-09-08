@@ -156,10 +156,8 @@ def _floor_call() -> str:
     the greedy class consumes the backslash -- so every assertion downstream
     runs against the first line only and passes on a fragment.
     """
-    flat = PIPE.replace("\\\n", " ")
-    m = re.search(r"[^\n]*act2_hub_capacity\.py[^\n]*", flat)
-    assert m, "the capacity tool is never invoked"
-    return m.group(0)
+    from textguard import one_call
+    return one_call(PIPE, "act2_hub_capacity.py")
 
 def test_the_floor_runs_BEFORE_training_and_after_the_watchdog():
     """⛔ Before `train_leg1`, or it is not a floor -- it is a postmortem. After

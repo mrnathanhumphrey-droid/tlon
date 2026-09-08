@@ -42,7 +42,12 @@ def test_the_pinned_kernel_is_eager():
 def test_every_locked_constant_appears_on_both_legs():
     """⛔ The same class of bug for the rest of §5, not only the new flag."""
     s = _src()
-    for flag in ("--unfreeze-top $UNFREEZE_TOP", "--optim $OPTIM", "--lr $LR",
+    # ⭐ The SCOPE flag, whichever scope the pipeline currently serves. Rung 2
+    # trains the mapping (`--scope-mode`); the layer rungs trained
+    # `--unfreeze-top`. The invariant is unchanged and is about BOTH LEGS: a leg
+    # missing the scope flag trains a different set of weights than the leg
+    # before it, silently.
+    for flag in ("--scope-mode $SCOPE_MODE", "--optim $OPTIM", "--lr $LR",
                  "--seq $SEQ", "--batch $BATCH", "--accum $ACCUM", "--full"):
         assert s.count(flag) >= 2, "%s does not appear on both legs" % flag
 

@@ -26,7 +26,7 @@ SEED=${SEED:-20624}
 # with its model, both verdicts and its lag profiles. Reusing it would overwrite
 # the artifact this run is COMPARED AGAINST -- destroying the 17.81 dose figure
 # and the lag2 z=+5.79 baseline that PREREG 9ccf98d6 §2.1 and §5 read against.
-CELL=fw19b-s$SEED               # rung 1b-prime: 19 layers @ 1e-5, dose-matched
+CELL=fwmap-s$SEED               # rung 2: embed_tokens + lm_head, layers FROZEN
 ROOT=${ROOT:-runs/act2/fullft_$CELL}
 tlon_log_init "$ROOT" pipeline_fullft.log
 
@@ -37,20 +37,27 @@ HF_REPO=${HF_REPO:-keyzersoze04/tlon-act2-adapters}
 # ⛔⛔ EVERY VALUE HERE IS QUOTED FROM THE LOCKED §5, NOT CHOSEN. Changing one
 # without a new prereg makes the run un-readable against the document that says
 # what it means.
-UNFREEZE_TOP=19                 # PREREG 9ccf98d6 §5: top 19 of 28, 4.428 B
-                                # trainable. Largest count that fits fp32-master
-                                # on 80 GiB: planner 60.7, x1.28 = 77.7, +2.3
-                                # margin. L=20 is 80.1 -- over. ALL 28 is 99.2,
-                                # 19 GiB over, and needs FSDP (rung 1-full).
+# ⛔⛔ RUNG 2 IS A DIFFERENT LOCUS, NOT A BIGGER ONE. `mapping` trains
+# embed_tokens + lm_head (1,089,994,752 params, verified against the model's real
+# 339 tensors) with ALL 28 transformer layers FROZEN. It is the inversion of §5's
+# freeze, and `--unfreeze-top` is REFUSED in this mode -- passing it would log a
+# layer scope this run does not have, which on a floor-hunting rung is a
+# mislabelled finding rather than a typo.
+SCOPE_MODE=mapping              # PREREG c2a4f0ca §1: Option A, layers frozen
 OPTIM=adamw_bnb_8bit            # fp32 master params, 8-bit moments (FORCED)
-LR=1e-5                         # PREREG rung-1b-prime §5: chosen to land the
-                                # PER-PARAMETER dose on rung 1a's 3.118e-4, i.e.
-                                # delta_norm ~20.75 at this larger scope. 5e-6 is
-                                # the (c) dial-back and is a NEW prereg.
+LR=1e-5                         # PREREG c2a4f0ca §2: as rung 1a/1b'. ⛔ NOT a
+                                # dose-matched choice -- §3 declares the rms
+                                # comparison to rung 1a is CROSS-POPULATION
+                                # (embedding rows vs layer matrices) and is
+                                # DESCRIPTIVE CONTEXT, never the gate.
 SEQ=384                         # the gate's actual seq, not 256
 BATCH=4; ACCUM=4                # effective 16, the gate's shape
 VRAM_WALL=80                    # D-7: gpu_1x_h100_sxm5, also 80 GiB (see DEVIATIONS)
-TRAINABLE_B=4.428
+TRAINABLE_B=1.090               # rung 2: embed_tokens + lm_head only
+# ⭐ RECORDED AS 0 BECAUSE THAT IS WHAT IT IS. `mapping_scope` itself returns
+# `unfreeze_top: 0` -- layers frozen, stated not implied -- so factorial.json
+# says the same thing the scope function says.
+UNFREEZE_TOP=0
 TOTAL_B=7.616                   # Qwen2.5-7B-Instruct, all parameters. Frozen is
                                 # the difference, and BOTH are persisted -- the
                                 # `_w` object is a whole model, not a delta.
@@ -61,7 +68,7 @@ CORPUS_SHA=dd40e22f85b0b6e4     # §5: sha-verified BEFORE training
 # rule — shipped an artifact claiming the wrong pre-registration. Nothing
 # failed; the file simply described itself falsely, and would outlive anyone's
 # memory of which prereg was which.
-PREREG_PATH=${PREREG_PATH:-docs/PREREG_FULL_FINETUNE_RUNG_1B_PRIME_2026_09_07.md}
+PREREG_PATH=${PREREG_PATH:-docs/PREREG_FULL_FINETUNE_RUNG_2_2026_09_08.md}
 # ⛔⛔ D-8, DECLARED AGAINST LOCK a0450b36 BEFORE FIRING. §5 named no attention
 # implementation, so every run of this arm silently took the transformers
 # default (fused SDPA) -- which is precisely how it stayed a constant nobody
@@ -198,7 +205,7 @@ SNAP=$ROOT/delta_snapshot.pt
 step train_leg1
 $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
-    --full --unfreeze-top $UNFREEZE_TOP --optim $OPTIM \
+    --full --scope-mode $SCOPE_MODE --optim $OPTIM \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
     --attn-impl $ATTN_IMPL \
     --seed $SEED --delta-snapshot-out $SNAP 2>&1 | tee -a $LOG
@@ -280,6 +287,31 @@ else:
     print("        the trap rung 1b fell into.")
 PYDOSE
 
+step mapping_moved
+# ⛔⛔ PREREG c2a4f0ca §5 — THE GATE THAT KEEPS THIS RUN'S FLOOR HONEST.
+# This rung inverts the gradient geometry: `lm_head` sits one step from the
+# loss, `embed_tokens` is reached only after the gradient traverses all 28
+# FROZEN layers. So the plausible failure is ASYMMETRIC -- lm_head trains,
+# embed_tokens receives nothing -- and that state PASSES the global §4.1
+# precondition, because the global delta is non-zero, carried entirely by the
+# half that worked. A floor read off it would say "the mapping did not install
+# release" when the truth is "half the mapping never trained".
+# ⭐ So movement is asserted PER DECLARED LEAF, and a still leaf makes this an
+# INSTRUMENT FAULT rather than a floor. `set -e` halts on the non-zero exit.
+$PY - <<PYMAP 2>&1 | tee -a $LOG
+import json, pathlib, sys
+sys.path.insert(0, ".")
+from tlon.act2.full_weight import MAPPING_MOVED, mapping_moved
+d = json.loads(pathlib.Path("$OUT/weight_delta.json").read_text(encoding="utf-8"))
+verdict, why = mapping_moved(d)
+print("  %s" % verdict)
+print("  %s" % why)
+if verdict != MAPPING_MOVED:
+    print("  the capacity/floor table may NOT be read (PREREG c2a4f0ca §5/§7).")
+    raise SystemExit(1)
+print("  the floor verdict below is READABLE: both mapping halves trained.")
+PYMAP
+
 step verdict_epoch1
 # ⛔ `set -e` would abort on the STOP exit code, and a STOP at epoch 1 is not a
 # pipeline failure — it is the branch §5 declares. Captured, not trapped.
@@ -341,7 +373,7 @@ else
   # byte-identical to one continuous 2-epoch run. See DEVIATIONS.
   $PY tools/act2_finetune.py --model $OUT --out $OUT \
       --corpus $ROOT/corpus_ct-s$SEED \
-      --full --unfreeze-top $UNFREEZE_TOP --optim $OPTIM \
+      --full --scope-mode $SCOPE_MODE --optim $OPTIM \
       --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
       --attn-impl $ATTN_IMPL \
       --seed $SEED --delta-snapshot-in $SNAP 2>&1 | tee -a $LOG

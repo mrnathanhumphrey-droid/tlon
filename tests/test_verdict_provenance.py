@@ -19,6 +19,9 @@ import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "tests"))
+
+from textguard import code_only  # noqa: E402
 
 from act2_fullft_verdict import (GO, STOP_FLOORED,  # noqa: E402
                                  decide, verified_prereg_id)
@@ -115,13 +118,14 @@ def test_both_pipeline_verdict_calls_pass_the_prereg():
 
 
 def test_the_pipeline_points_at_the_prereg_its_config_implements():
-    """⛔ The run is 19 layers at 5e-6, which is 9ccf98d6's config, so the
-    verdict must be attributed to 9ccf98d6 and not to its predecessor."""
+    """⛔ The pipeline's config and the prereg it names must be the SAME RUNG.
+    Rung 2 is the mapping scope, so the verdict must be attributed to c2a4f0ca
+    and not to any predecessor -- the exact defect rung 1b's artifact shipped."""
     m = re.search(r"^PREREG_PATH=\$\{PREREG_PATH:-(\S+)\}", PIPE, re.M)
     assert m, "PREREG_PATH is not set with a default"
     named = ROOT / m.group(1)
     assert named.exists(), named
-    assert verified_prereg_id(named) == "bd435b37"
+    assert verified_prereg_id(named) == "c2a4f0ca"
 
 
 def test_the_factorial_entry_is_not_a_SECOND_hardcoded_prereg():
@@ -144,9 +148,7 @@ def test_the_factorial_entry_is_not_a_SECOND_hardcoded_prereg():
     while the live call sat untouched two lines down. Narrowed to the real
     invariant rather than weakened: EVERY `prereg=` argument the shell actually
     runs, not merely the first one found."""
-    live = "\n".join(ln for ln in PIPE.splitlines()
-                     if not ln.lstrip().startswith("#"))
-    found = re.findall(r"prereg=([^,\s]+)", live)
+    found = re.findall(r"prereg=([^,\s]+)", code_only(PIPE))
     assert found, "the factorial entry names no prereg at all"
     for got in found:
         assert not re.fullmatch(r'"[0-9a-f]{8}"', got), (
