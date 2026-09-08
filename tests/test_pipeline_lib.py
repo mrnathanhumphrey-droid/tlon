@@ -122,3 +122,30 @@ def test_the_full_weight_pipeline_never_calls_the_factorial_entry_constructor():
     t = _text("pipeline_fullft.sh")
     assert "weight_arm_entry" in t
     assert "factorial import entry" not in t
+
+
+def test_every_live_pipeline_is_launchable_through_the_orchestrator():
+    """⛔⛔ A LAUNCHER NOBODY CAN USE IS A LAUNCHER THAT GETS BYPASSED.
+
+    `pipeline_fullft.sh` was live, tested and shipped for two rungs while
+    `act2_retrain_orchestrate.PIPELINES` — the closed set of things `train` will
+    start — did not contain it. So both runs were launched by a hand-rolled
+    ssh, and the step that path skips is `. ~/.tlon_env`: the credential source
+    the spawned watchdog needs to persist before it self-terminates.
+
+    ⭐ The closed set exists because `--pipeline` is interpolated into a remote
+    shell, so it must stay closed. This pins the OTHER direction — that it is
+    also COMPLETE — so the guard cannot quietly force the bypass it exists to
+    prevent."""
+    import sys as _sys
+    _sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
+    from act2_retrain_orchestrate import PIPELINES
+    for name in LIVE:
+        if name == "pipeline_fullft_trace.sh":
+            # ⚠️ Diagnostic-only and deliberately NOT launchable here: it takes
+            # ablation switches (ATTN_IMPL, TRAIN_SEED, DUEL_AT) that `train`
+            # has no flags for, so listing it would advertise a launch that
+            # cannot carry the arguments that make the run mean anything.
+            continue
+        assert name in PIPELINES, (
+            "%s is a live pipeline the orchestrator refuses to launch" % name)

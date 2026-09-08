@@ -113,6 +113,22 @@ step optim_probe
 # zero delta that looks exactly like the substrate finding.
 $PY tools/act2_finetune.py --probe-optim --lr $LR 2>&1 | tee -a $LOG
 
+step prereg_id
+# ⛔⛔ THE SAME DEFECT, ONE FILE OVER — CAUGHT BEFORE THIS RUN SHIPPED IT.
+# The verdict tool was fixed to read its prereg id from the locked file, but
+# `factorial.json` -- a DIFFERENT artifact, persisted to the hub beside the
+# weights -- still had `prereg="a0450b36"` typed into it below. Closing one
+# hardcode does not close the others; the guard was written on the tool that
+# had been caught, and this file was never asked. So the id is resolved ONCE
+# here, from the locked body, and both artifacts carry the same verified value.
+#
+# ⭐ It is a FLOOR: a tampered or unlocked prereg fails here, after the
+# watchdog is armed and before an H100-hour is spent.
+PREREG_ID=$($PY -c "import sys; sys.path.insert(0, 'tools'); \
+from act2_fullft_verdict import verified_prereg_id; \
+print(verified_prereg_id('$PREREG_PATH'))")
+echo "  ✅ prereg $PREREG_PATH verifies as $PREREG_ID" | tee -a $LOG
+
 step vram
 # ⛔ Sized on the FULL-WEIGHT arithmetic. The planner's LoRA rows would report
 # ~26 GiB for a job that needs 51 — the wrong number in the confident shape of
@@ -181,7 +197,7 @@ sys.path.insert(0, ".")
 from tlon.act2.factorial import weight_arm_entry
 from tlon.discourse.transient import CONTENT_TRANSIENT
 e = weight_arm_entry("$CELL", recipe=CONTENT_TRANSIENT, seed=$SEED,
-                     unfreeze_top=$UNFREEZE_TOP, prereg="a0450b36",
+                     unfreeze_top=$UNFREEZE_TOP, prereg="$PREREG_ID",
                      manifest=json.loads(pathlib.Path("$CM").read_text()))
 pathlib.Path("$OUT/factorial.json").write_text(json.dumps(e, indent=2))
 print("  ✅ %s: cell=%r pair_key=%r category=%s"

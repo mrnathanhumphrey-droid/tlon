@@ -124,6 +124,50 @@ def test_the_pipeline_points_at_the_prereg_its_config_implements():
     assert verified_prereg_id(named) == "bd435b37"
 
 
+def test_the_factorial_entry_is_not_a_SECOND_hardcoded_prereg():
+    """⛔⛔ THE SAME DEFECT, ONE FILE OVER, AND THE FIRST FIX DID NOT REACH IT.
+
+    `act2_fullft_verdict.py` was corrected to read its prereg id from the locked
+    body. `factorial.json` — a DIFFERENT artifact, persisted to the hub beside
+    the weights — still carried `prereg="a0450b36"` typed into the pipeline. So
+    rung 1b′ would have shipped a manifest claiming rung 1a's pre-registration
+    while its verdict correctly claimed `bd435b37`: two artifacts of one run,
+    disagreeing about which document the run answers.
+
+    ⭐ The lesson is the guard's SCOPE, not the literal: a fix written on the
+    file that got caught does not close the failure mode, and nothing asked the
+    other call sites. ⛔ Prose references to an id in comments stay legal — this
+    pins the ARGUMENT, the same shape as the verdict-field test above.
+
+    ⚠️ Scoped to EXECUTABLE lines. The first form of this test read the whole
+    file and matched its own explanatory comment — a guard reporting on prose
+    while the live call sat untouched two lines down. Narrowed to the real
+    invariant rather than weakened: EVERY `prereg=` argument the shell actually
+    runs, not merely the first one found."""
+    live = "\n".join(ln for ln in PIPE.splitlines()
+                     if not ln.lstrip().startswith("#"))
+    found = re.findall(r"prereg=([^,\s]+)", live)
+    assert found, "the factorial entry names no prereg at all"
+    for got in found:
+        assert not re.fullmatch(r'"[0-9a-f]{8}"', got), (
+            "a prereg id is hardcoded in the pipeline: %s" % got)
+        assert got == '"$PREREG_ID"', got
+
+
+def test_the_pipeline_resolves_that_id_through_the_verified_reader():
+    """⛔ `PREREG_ID` must come from the LOCKED BODY, not be typed as a second
+    literal one line up — that would move the defect, not close it."""
+    assert "PREREG_ID=$(" in PIPE
+    assert "verified_prereg_id('$PREREG_PATH')" in PIPE
+    assert re.search(r"^step prereg_id", PIPE, re.M), (
+        "the resolution must be its own logged step — an unlogged floor is a "
+        "check nobody can confirm ran")
+    # ⭐ A FLOOR, not an afterthought: it has to fail before the training spend,
+    # and after the watchdog is armed so a failure cannot strand a live box.
+    assert PIPE.index("tlon_arm_watchdog") < PIPE.index("step prereg_id")
+    assert PIPE.index("step prereg_id") < PIPE.index("step train_leg1")
+
+
 def test_readable_stop_still_gates_on_the_floored_row_only():
     """⭐ Guard against this edit having disturbed the stopping rule."""
     out = decide(_ok_delta(), _lag(lag2=9.0), {"fired": False}, prereg="x" * 8)

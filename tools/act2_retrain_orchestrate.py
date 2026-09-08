@@ -288,8 +288,13 @@ def cmd_env(a):
 
 #: Pipelines this orchestrator may start. ⛔ A CLOSED SET, not a free string —
 #: `--pipeline` is interpolated into a remote shell command.
+#: ⛔ `pipeline_fullft.sh` WAS MISSING, so both earlier rungs of the full-weight
+#: arm were launched by a hand-rolled ssh instead of through this path — and
+#: what this path does that a hand-rolled command forgets is `. ~/.tlon_env`,
+#: which is how the watchdog it spawns inherits the credential it needs to
+#: persist. A launcher nobody can use is a launcher that gets bypassed.
 PIPELINES = ("pipeline_retrain.sh", "pipeline_solo_regen.sh",
-             "pipeline_positive_control.sh")
+             "pipeline_positive_control.sh", "pipeline_fullft.sh")
 #: ⛔ The recipe is the FACTORIAL'S CORPUS AXIS, so it belongs to the pipeline
 #: that builds corpora and to no other. Requiring it everywhere would file a
 #: transcript re-run into an arm it is not in.
