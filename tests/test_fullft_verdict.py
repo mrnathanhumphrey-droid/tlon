@@ -23,6 +23,11 @@ def _v():
     return mod
 
 
+#: ⭐ Any 8-hex id; these tests exercise the TABLE, not provenance —
+#: `tests/test_verdict_provenance.py` owns the id's correctness.
+PREREG_ID = "0" * 8
+
+
 def _delta(verdict="OK"):
     return {"verdict": verdict, "fraction_changed": 0.99, "why": "..."}
 
@@ -45,7 +50,7 @@ def test_thresholds_are_the_corpus_own_constants_not_retyped():
 
 def test_go_requires_all_three_axes():
     v = _v()
-    out = v.decide(_delta(), _lag(), _fl())
+    out = v.decide(_delta(), _lag(), _fl(), prereg=PREREG_ID)
     assert out["verdict"] == v.GO
 
 
@@ -57,7 +62,7 @@ def test_a_delta_that_did_not_pass_voids_the_whole_table(bad_delta):
     and reading a GO off it would be a pass the measurement could not confer.
     Note the axes would otherwise all PASS here: the void is the point."""
     v = _v()
-    out = v.decide(_delta(bad_delta), _lag(), _fl())
+    out = v.decide(_delta(bad_delta), _lag(), _fl(), prereg=PREREG_ID)
     assert out["verdict"] == v.FAULT
     assert out["axes_not_computed"] is True
     assert "axes" not in out
@@ -68,7 +73,7 @@ def test_release_failing_is_floored_and_is_not_yet_a_substrate_finding():
     'the substrate is the wall'. The verdict text must say so, because the
     sentence is what someone reads six weeks later."""
     v = _v()
-    out = v.decide(_delta(), _lag(z2=Z_LAGN_MAX + 1.0), _fl())
+    out = v.decide(_delta(), _lag(z2=Z_LAGN_MAX + 1.0), _fl(), prereg=PREREG_ID)
     assert out["verdict"] == v.STOP_FLOORED
     assert "NOT YET A SUBSTRATE FINDING" in out["why"]
 
@@ -77,13 +82,13 @@ def test_a_longer_lag_over_the_ceiling_also_floors_it():
     """⛔ §4: 'lag-2 z <= 3.0 AND every longer lag <= 3.0'. Checking lag-2 alone
     would pass a model that holds its turn from three back."""
     v = _v()
-    out = v.decide(_delta(), _lag(z2=1.0, z3=Z_LAGN_MAX + 2.0), _fl())
+    out = v.decide(_delta(), _lag(z2=1.0, z3=Z_LAGN_MAX + 2.0), _fl(), prereg=PREREG_ID)
     assert out["verdict"] == v.STOP_FLOORED
 
 
 def test_f_local_failing_is_the_cratered_row_with_the_declared_dial_back():
     v = _v()
-    out = v.decide(_delta(), _lag(), _fl(fired=True))
+    out = v.decide(_delta(), _lag(), _fl(fired=True), prereg=PREREG_ID)
     assert out["verdict"] == v.STOP_CRATERED
     assert "5e-6" in out["why"]
 
@@ -93,14 +98,14 @@ def test_an_unscoreable_f_local_is_not_a_pass():
     be scored. Treating an unmeasured axis as clear is the vacuous pass this
     project keeps finding."""
     v = _v()
-    out = v.decide(_delta(), _lag(), _fl(fired=None))
+    out = v.decide(_delta(), _lag(), _fl(fired=None), prereg=PREREG_ID)
     assert out["verdict"] != v.GO
     assert out["axes"]["f_local"]["unscoreable"] is True
 
 
 def test_perceive_below_the_floor_reopens_the_entangled_fork():
     v = _v()
-    out = v.decide(_delta(), _lag(z1=Z_LAG1_MIN - 1.0), _fl())
+    out = v.decide(_delta(), _lag(z1=Z_LAG1_MIN - 1.0), _fl(), prereg=PREREG_ID)
     assert out["verdict"] == v.STOP_PERCEIVE
     assert "ENTANGLED" in out["why"]
 
@@ -108,7 +113,7 @@ def test_perceive_below_the_floor_reopens_the_entangled_fork():
 def test_a_lag_profile_missing_lag2_is_incoherent_not_a_pass():
     v = _v()
     out = v.decide(_delta(), {"z": {"1": 20.0}, "object_kind": "full_weight"},
-                   _fl())
+                   _fl(), prereg=PREREG_ID)
     assert out["verdict"] == v.STOP_INCOHERENT
 
 
@@ -117,7 +122,7 @@ def test_the_boundary_values_are_inclusive_as_written():
     model landing exactly on the pre-registered threshold."""
     v = _v()
     out = v.decide(_delta(), _lag(z1=Z_LAG1_MIN, z2=Z_LAGN_MAX,
-                                  z3=Z_LAGN_MAX), _fl())
+                                  z3=Z_LAGN_MAX), _fl(), prereg=PREREG_ID)
     assert out["verdict"] == v.GO
 
 

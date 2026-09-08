@@ -89,10 +89,12 @@ def test_the_verdict_tool_returns_4_for_a_readable_stop_and_1_otherwise():
     assert "return 0" in src          # GO, unchanged
 
 
-def test_rung_1b_config_is_what_the_prereg_declares():
+def test_rung_1b_prime_config_is_what_the_prereg_declares():
+    """⭐ 19 layers is held from rung 1b; the LR moves to 1e-5 so the
+    PER-PARAMETER dose lands on rung 1a's 3.118e-4 (PREREG bd435b37 §2)."""
     s = PIPE.read_text(encoding="utf-8")
-    assert re.search(r"^UNFREEZE_TOP=19\b", s, re.M), "PREREG 9ccf98d6 §5: 19 layers"
-    assert re.search(r"^LR=5e-6\b", s, re.M), "PREREG 9ccf98d6 §5: 5e-6 primary"
+    assert re.search(r"^UNFREEZE_TOP=19\b", s, re.M), "bd435b37 §2: 19 layers"
+    assert re.search(r"^LR=1e-5\b", s, re.M), "bd435b37 §2: 1e-5, dose-matched"
     assert re.search(r"^TRAINABLE_B=4\.428\b", s, re.M)
     assert re.search(r"^ATTN_IMPL=eager\b", s, re.M), "D-8"
 
@@ -105,7 +107,7 @@ def test_the_cell_does_not_collide_with_rung_1a():
     s = PIPE.read_text(encoding="utf-8")
     m = re.search(r"^CELL=(\S+)", s, re.M)
     assert m and m.group(1) != "fw-s$SEED", "rung 1b must not write into rung 1a's cell"
-    assert m.group(1) == "fw19-s$SEED"
+    assert m.group(1) == "fw19b-s$SEED"
 
 
 def test_the_dose_check_runs_before_the_verdict():
@@ -114,7 +116,10 @@ def test_the_dose_check_runs_before_the_verdict():
     s = PIPE.read_text(encoding="utf-8")
     assert "step dose_check" in s
     assert s.index("step dose_check") < s.index("step verdict_epoch1")
-    assert "17.81" in s and "12.5" in s and "23.2" in s
+    # ⭐ the gate keys on per-parameter rms, not on delta_norm
+    assert "3.118e-4" in s and "2.18e-4" in s and "4.05e-4" in s
+    assert "sqrt(n)" in s or "math.sqrt(n)" in s
+    assert "NOT the gate" in s, "delta_norm must be labelled a companion"
 
 
 def test_fraction_changed_is_labelled_precondition_only_in_the_dose_check():

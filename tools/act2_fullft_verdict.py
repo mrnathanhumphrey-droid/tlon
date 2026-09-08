@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -61,6 +62,48 @@ def last_f_local(ledger_path) -> dict:
     return row
 
 
+#: ⛔ The stamp line the lock tool writes, and the only place the id is read
+#: from. Kept next to the reader so a change to the stamp format breaks here
+#: rather than silently matching nothing.
+_LOCK_LINE = re.compile(r"^- \*\*LOCK:\*\* `([0-9a-f]{8})`", re.M)
+
+
+def verified_prereg_id(path) -> str:
+    """The LOCK id of the prereg this run answers — READ FROM THE LOCKED FILE
+    AND RE-VERIFIED. Never hardcoded, never passed in as a bare string.
+
+    ⛔⛔ IT WAS HARDCODED `"a0450b36"`. So rung 1b's verdict — a run under
+    `9ccf98d6`, with a different scope, a different LR and a different stopping
+    rule — shipped an artifact claiming it answered a different
+    pre-registration. Nothing failed and nothing warned. The file is
+    self-describing and its description was false, and it will outlive anyone's
+    memory of which prereg was which.
+
+    ⛔ AND IT REFUSES ON A TAMPERED BODY. An id copied out of a stamp line
+    proves only that someone typed it. Re-hashing proves the body that
+    pre-registered this reading is the body still on disk — emitting a verdict
+    under a prereg whose text moved after the lock is the same defect one step
+    later.
+    """
+    import lock_prereg
+    p = pathlib.Path(path)
+    if not p.exists():
+        raise SystemExit("⛔ no prereg at %s — a verdict must name the "
+                         "pre-registration it answers." % p)
+    text = p.read_text(encoding="utf-8")
+    m = _LOCK_LINE.search(text)
+    if not m:
+        raise SystemExit("⛔ %s carries no LOCK id — it is a draft, and a draft "
+                         "cannot pre-register a reading." % p.name)
+    stamped, digest = m.group(1), lock_prereg.body_hash(text)
+    if stamped != digest:
+        raise SystemExit(
+            "⛔⛔ %s is TAMPERED — stamped %s, body now hashes %s. REFUSING to "
+            "emit a verdict under a prereg whose text changed after the lock."
+            % (p.name, stamped, digest))
+    return stamped
+
+
 def readable_stop(out: dict) -> bool:
     """Is this a STOP that is nonetheless worth PROTECTING from a later epoch?
 
@@ -82,7 +125,7 @@ def readable_stop(out: dict) -> bool:
                 and axes.get("f_local", {}).get("ok"))
 
 
-def decide(delta: dict, lag: dict, flocal: dict) -> dict:
+def decide(delta: dict, lag: dict, flocal: dict, *, prereg: str) -> dict:
     """§4.2, in the order the table is written."""
     # ── the precondition, before anything else ──────────────────────────────
     if delta.get("verdict") != DELTA_OK:
@@ -145,7 +188,7 @@ def decide(delta: dict, lag: dict, flocal: dict) -> dict:
             "delta_verdict": delta.get("verdict"),
             "fraction_changed": delta.get("fraction_changed"),
             "measurement_category": "_w",
-            "PREREG": "a0450b36",
+            "PREREG": prereg,
             "thresholds": {"z_lag1_min": Z_LAG1_MIN, "z_lagn_max": Z_LAGN_MAX},
             "THRESHOLDS_IMPORTED_FROM": "tlon.discourse.transient"}
 
@@ -156,6 +199,9 @@ def main() -> int:
     ap.add_argument("--lag", required=True)
     ap.add_argument("--ledger", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--prereg", required=True,
+                    help="path to the LOCKED prereg this run answers; its "
+                         "LOCK id is re-verified and recorded in the verdict")
     a = ap.parse_args()
 
     # ⛔ §3's identity assertion, at the point of use.
@@ -175,7 +221,10 @@ def main() -> int:
             % (a.lag, lag.get("object_kind")))
     flocal = last_f_local(a.ledger)
 
-    out = decide(delta, lag, flocal)
+    # ⛔ Verified BEFORE the axes are computed: a run whose prereg cannot be
+    # named or has moved must not produce a verdict at all.
+    prereg = verified_prereg_id(a.prereg)
+    out = decide(delta, lag, flocal, prereg=prereg)
     outp = pathlib.Path(a.out)
     outp.parent.mkdir(parents=True, exist_ok=True)
     outp.write_text(json.dumps(out, indent=2), encoding="utf-8")

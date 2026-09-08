@@ -26,7 +26,7 @@ SEED=${SEED:-20624}
 # with its model, both verdicts and its lag profiles. Reusing it would overwrite
 # the artifact this run is COMPARED AGAINST -- destroying the 17.81 dose figure
 # and the lag2 z=+5.79 baseline that PREREG 9ccf98d6 §2.1 and §5 read against.
-CELL=fw19-s$SEED                # rung 1b: 19 layers (PREREG 9ccf98d6)
+CELL=fw19b-s$SEED               # rung 1b-prime: 19 layers @ 1e-5, dose-matched
 ROOT=${ROOT:-runs/act2/fullft_$CELL}
 tlon_log_init "$ROOT" pipeline_fullft.log
 
@@ -43,16 +43,22 @@ UNFREEZE_TOP=19                 # PREREG 9ccf98d6 §5: top 19 of 28, 4.428 B
                                 # margin. L=20 is 80.1 -- over. ALL 28 is 99.2,
                                 # 19 GiB over, and needs FSDP (rung 1-full).
 OPTIM=adamw_bnb_8bit            # fp32 master params, 8-bit moments (FORCED)
-LR=5e-6                         # PREREG 9ccf98d6 §5: PRIMARY, not a dial-back.
-                                # Half of rung 1a's, chosen to keep the DOSE
-                                # comparable (delta_norm ~17.81), not gentler
-                                # for its own sake. 2.5e-6 is this rung's (c)
-                                # dial-back and is a NEW prereg.
+LR=1e-5                         # PREREG rung-1b-prime §5: chosen to land the
+                                # PER-PARAMETER dose on rung 1a's 3.118e-4, i.e.
+                                # delta_norm ~20.75 at this larger scope. 5e-6 is
+                                # the (c) dial-back and is a NEW prereg.
 SEQ=384                         # the gate's actual seq, not 256
 BATCH=4; ACCUM=4                # effective 16, the gate's shape
 VRAM_WALL=80                    # D-7: gpu_1x_h100_sxm5, also 80 GiB (see DEVIATIONS)
 TRAINABLE_B=4.428
 CORPUS_SHA=dd40e22f85b0b6e4     # §5: sha-verified BEFORE training
+# ⛔⛔ THE VERDICT NAMES ITS OWN PREREG, READ FROM THE LOCKED FILE AND
+# RE-VERIFIED AT EMIT TIME. It was hardcoded to a0450b36, so rung 1b's
+# verdict — a run under 9ccf98d6 with a different scope, LR and stopping
+# rule — shipped an artifact claiming the wrong pre-registration. Nothing
+# failed; the file simply described itself falsely, and would outlive anyone's
+# memory of which prereg was which.
+PREREG_PATH=${PREREG_PATH:-docs/PREREG_FULL_FINETUNE_RUNG_1B_PRIME_2026_09_07.md}
 # ⛔⛔ D-8, DECLARED AGAINST LOCK a0450b36 BEFORE FIRING. §5 named no attention
 # implementation, so every run of this arm silently took the transformers
 # default (fused SDPA) -- which is precisely how it stayed a constant nobody
@@ -206,25 +212,39 @@ $PY tools/act2_model_lag.py --model $OUT --object-kind full_weight \
 # both of rung 1a's epochs. delta_norm_estimated is the dose measure.
 step dose_check
 $PY - <<PYDOSE 2>&1 | tee -a $LOG
-import json, pathlib
-RUNG_1A = 17.81          # rung 1a, end of epoch 1, LOCK a0450b36
-LO, HI = 12.5, 23.2      # +/-30%, pre-declared in PREREG 9ccf98d6 2.1
+import json, math, pathlib
+# ⭐⭐ THE GATE KEYS ON PER-PARAMETER RMS, NOT ON delta_norm.
+# delta_norm is the norm over ALL trainable params, so it GROWS with parameter
+# count: the same per-parameter movement gives a bigger number at 19 layers
+# than at 14. Matching raw delta_norm across a layer-count change would
+# UNDER-DOSE the larger run per parameter -- reintroducing the exact confound
+# this run exists to remove. rms = delta_norm / sqrt(n_trainable) is the
+# invariant that is comparable across the change being made.
+RUNG_1A_RMS = 3.118e-4        # 17.81 / sqrt(3,262,809,088), rung 1a epoch 1
+LO, HI = 2.18e-4, 4.05e-4     # +/-30%, pre-declared
 d = json.loads(pathlib.Path("$OUT/weight_delta.json").read_text(encoding="utf-8"))
-got = d.get("delta_norm_estimated")
-print("  delta_norm_estimated = %.3f   (rung 1a epoch 1 = %.2f, band %.1f-%.1f)"
-      % (got, RUNG_1A, LO, HI))
+dn, n = d.get("delta_norm_estimated"), d.get("n_trainable_params")
+rms = None if (dn is None or not n) else dn / math.sqrt(n)
+print("  delta_norm_estimated = %s   <- companion only, NOT the gate" % dn)
+print("     (dose-matched target at this scope is about 20.75)")
+print("  n_trainable          = %s" % n)
+print("  rms per parameter    = %s   (rung 1a = %.4e, band %.2e-%.2e)"
+      % (("%.4e" % rms) if rms else None, RUNG_1A_RMS, LO, HI))
 print("  fraction_changed     = %r  <- PRECONDITION ONLY, saturates, not a dose"
       % d.get("fraction_changed"))
-if got is None:
-    print("  DOSE: UNREADABLE -- no delta_norm recorded.")
-elif got < LO:
-    print("  DOSE: UNDER-DOSED. A floor is NOT readable as a capacity result.")
-    print("        Pre-declared response: re-run 19 layers at 1e-5, a NEW prereg.")
-elif got > HI:
-    print("  DOSE: OVER-DOSED relative to rung 1a. A (c) crater reads as dose, not capacity.")
+if rms is None:
+    print("  DOSE: UNREADABLE -- no delta_norm or no trainable count recorded.")
+    print("        The capacity read is DEFERRED.")
+elif LO <= rms <= HI:
+    print("  DOSE: MATCHED (%.1f%% of rung 1a per parameter)." % (100 * rms / RUNG_1A_RMS))
+    print("        Same per-parameter movement, more layers -> the capacity")
+    print("        comparison against rung 1a lag2 = 5.785 is VALID.")
 else:
-    print("  DOSE: COMPARABLE -- same weight movement, more layers.")
-    print("        A floor therefore means CAPACITY DID NOT HELP, not under-dosing.")
+    print("  DOSE: MIS-DOSED (%.1f%% of rung 1a per parameter)." % (100 * rms / RUNG_1A_RMS))
+    print("        ⛔ THE CAPACITY READ IS DEFERRED, NOT FORCED. Record the dose,")
+    print("        choose the next LR, and do not read capacity from this run.")
+    print("        A second confounded run read as a capacity result is exactly")
+    print("        the trap rung 1b fell into.")
 PYDOSE
 
 step verdict_epoch1
@@ -234,7 +254,7 @@ E1=0
 $PY tools/act2_fullft_verdict.py \
     --delta $OUT/weight_delta.json \
     --lag $ROOT/model_lag_${CELL}_e1.json \
-    --ledger runs/act2/ledger.jsonl \
+    --ledger runs/act2/ledger.jsonl --prereg $PREREG_PATH \
     --out $ROOT/verdict_${CELL}_e1.json 2>&1 | tee -a $LOG || E1=$?
 
 if [ $E1 -eq 3 ]; then
@@ -310,7 +330,7 @@ else
   $PY tools/act2_fullft_verdict.py \
       --delta $OUT/weight_delta.json \
       --lag $ROOT/model_lag_${CELL}_e2.json \
-      --ledger runs/act2/ledger.jsonl \
+      --ledger runs/act2/ledger.jsonl --prereg $PREREG_PATH \
       --out $ROOT/verdict_${CELL}_e2.json 2>&1 | tee -a $LOG || E2=$?
   if [ $E2 -eq 3 ]; then
     echo "⛔⛔ INSTRUMENT FAULT at epoch 2 — no row of the verdict table may be read." | tee -a $LOG
