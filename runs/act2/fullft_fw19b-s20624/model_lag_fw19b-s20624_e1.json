@@ -1,0 +1,51 @@
+{
+  "adapter": null,
+  "object": "runs/act2/fullft_fw19b-s20624/model_fw19b-s20624",
+  "object_kind": "full_weight",
+  "measurement_category": "_w",
+  "four_bit": false,
+  "temperature": 0.7,
+  "max_new_tokens": 256,
+  "chains_requested": 12,
+  "chains_used": 12,
+  "chains_dropped_too_short": 0,
+  "turns_total": 120,
+  "turns_requested_per_chain": 10,
+  "lag_profile": {
+    "1": 1.0185185185185186,
+    "2": 0.3958333333333333,
+    "3": 0.21428571428571427,
+    "4": 0.1111111111111111
+  },
+  "z": {
+    "1": 23.35177948700777,
+    "2": 5.966103447722543,
+    "3": 2.2664720057056673,
+    "4": -0.33596122279216406
+  },
+  "null": {
+    "1": {
+      "mean": 0.12504629629629627,
+      "sd": 0.03826141912308325
+    },
+    "2": {
+      "mean": 0.13322916666666665,
+      "sd": 0.04401602636758021
+    },
+    "3": {
+      "mean": 0.12494047619047617,
+      "sd": 0.03942040222439033
+    },
+    "4": {
+      "mean": 0.12618055555555555,
+      "sd": 0.044854713645827105
+    }
+  },
+  "verdict": "REFUSED",
+  "refusal_reason": "CONTENT PERSISTS: lag(s) [2] exceed the chance ceiling z=3.00 (lag2 z=5.97). Content is walking the chain, so the corpus trains persistence -- object permanence rebuilt from local choices. \u26d4 lag 2 is the speaker's OWN previous turn.",
+  "thresholds": {
+    "z_lag1_min": 6.0,
+    "z_lagn_max": 3.0
+  },
+  "INSTRUMENT": "tlon.discourse.transient \u2014 the same functions the corpus was gated on, imported not re-spelt"
+}
