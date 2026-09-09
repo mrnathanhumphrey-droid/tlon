@@ -163,10 +163,43 @@ case $EV in
 esac
 
 # ── THE GATE ON ~/DONE ──────────────────────────────────────────────────────
-# ⭐ `tlon_verify_cells` here re-verifies the cell this run READ FROM and never
-# wrote: proof the object is still intact on the hub after the re-read.
-TLON_SUMMARY="⭐ RE-READ COMPLETE — $CELL re-read from the hub, verdict exit $EV, WEIGHTS UNTOUCHED"
-tlon_gate_done "$PY" "$ROOT" "$HF_REPO" "$CELL" \
+# ⛔⛔ NOT `tlon_gate_done`. It verifies CELLS, and `unpersisted()` checks THIS
+# RUN'S OWN persist ledger -- so a run that deliberately persists no cell can
+# never satisfy it. The first version called it with $CELL on the theory that it
+# would re-verify the object on the hub; it does not, and I asserted that from
+# the function's NAME instead of reading it. It refused, correctly, after the
+# verdict had already been computed and pushed.
+#
+# ⭐ `tlon_mark_done` is factored out from the verification precisely because
+# THE CHECK VARIES AND THE MARKER'S MEANING MUST NOT. A read-only run's
+# certifiable output is its READ ARTIFACTS, so that is what is verified here.
+tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" \
     "$ROOT/model_lag_${CELL}_reread.json" \
     "$ROOT/verdict_${CELL}_reread.json" \
     "$ROOT/vocab_coverage.json"
+
+step verify_reads
+RBASE=$(basename $ROOT)
+$PY - <<PYVER 2>&1 | tee -a $LOG
+import sys
+sys.path.insert(0, "tools")
+from huggingface_hub import HfApi
+import act2_provision as P
+api = HfApi(token=P._hf_token())
+have = set(api.list_repo_files("$HF_REPO"))
+want = ["$RBASE/model_lag_${CELL}_reread.json",
+        "$RBASE/verdict_${CELL}_reread.json",
+        "$RBASE/vocab_coverage.json",
+        "$RBASE/pipeline_fullft_read.log"]
+missing = [w for w in want if w not in have]
+for w in want:
+    print("  %s %s" % ("MISSING" if w in missing else "OK     ", w))
+if missing:
+    raise SystemExit("REFUSING to mark done: %d read artifact(s) are not in "
+                     "durable storage. Until they are, ~/DONE would be a lie "
+                     "and the watchdog terminates on it." % len(missing))
+print("  all %d read artifact(s) verified in durable storage" % len(want))
+PYVER
+
+TLON_SUMMARY="⭐ RE-READ COMPLETE — $CELL re-read from the hub, verdict exit $EV, WEIGHTS UNTOUCHED"
+tlon_mark_done "$HF_REPO" "the read artifacts for $CELL (weights not written)"

@@ -94,9 +94,46 @@ def test_every_verdict_exit_code_is_handled_including_unscoreable():
     assert "UNSCOREABLE" in case
 
 
+def test_it_does_NOT_certify_itself_with_a_CELL_verification():
+    """⛔⛔ `tlon_gate_done` verifies CELLS, and `unpersisted()` reads THIS RUN'S
+    OWN persist ledger — so a run that deliberately persists no cell can never
+    satisfy it. The first version called it with $CELL on the theory that it
+    would re-verify the object on the hub. It does not. That was asserted from
+    the function's NAME rather than read from its body, and it refused after the
+    verdict was already computed.
+
+    ⭐ The library already anticipates this: the marker is factored out from the
+    verification because the check varies and the marker's meaning must not.
+    """
+    assert "tlon_gate_done" not in CODE, \
+        "a read-only run cannot satisfy a cell verification"
+    assert "tlon_mark_done" in CODE
+    assert "tlon_persist_run_files" in CODE
+
+
+def test_it_verifies_its_READ_ARTIFACTS_before_marking_done():
+    """⛔ `~/DONE` is a claim the output is safe, and the watchdog terminates
+    within one poll of seeing it. So the marker must follow a real check of the
+    thing this run actually produced."""
+    assert CODE.index("step verify_reads") < CODE.index("tlon_mark_done"), \
+        "the marker must come AFTER the verification"
+    assert "REFUSING to mark done" in SRC
+    # ⛔ Sliced out of the SAME string the offsets came from. The first version
+    # indexed SRC with CODE's offsets — comments are stripped from one and not
+    # the other, so the window landed hundreds of characters away.
+    window = CODE[CODE.index("step verify_reads"):CODE.index("tlon_mark_done")]
+    for art in ("_reread.json", "vocab_coverage.json",
+                "pipeline_fullft_read.log"):
+        assert art in window, "%s is not verified before ~/DONE" % art
+
+
 def test_it_sources_the_shared_scaffolding_rather_than_respelling_it():
     """⭐ The failure handler, log rotation, watchdog arming and the ~/DONE gate
     are where both 2026-09-04 losses happened. They exist once."""
     assert "source" in CODE and "pipeline_lib.sh" in CODE
     assert "tlon_trap_init" in CODE
-    assert "tlon_gate_done" in CODE
+    # ⭐ `tlon_gate_done` is the CELL path and cannot apply here; the pieces it
+    # composes are used directly instead, in the same order.
+    assert "tlon_persist_run_files" in CODE
+    assert "tlon_arm_watchdog" in CODE
+    assert "tlon_mark_done" in CODE
