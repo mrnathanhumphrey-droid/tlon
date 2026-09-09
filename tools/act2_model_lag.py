@@ -158,6 +158,34 @@ def main() -> int:
                            temperature=a.temperature)
     print("  ready in %.1fs" % (time.perf_counter() - t0))
 
+    # ⛔⛔ THE SAMPLING STREAM WAS NEVER SEEDED, AND `--seed` NAMED A SEED THAT
+    # DID NOT CONTROL IT. `do_sample=True` at temperature 0.70 draws from the
+    # TORCH global RNG; `--seed` reached only the seed surfaces and the
+    # permutation null. So every lag profile in this arc is ONE UNSEEDED DRAW
+    # sitting next to a field called `seed`, and re-reading the same weights
+    # gave a different profile with no record that it could.
+    #
+    # ⭐ This matters most for the campaign, where cross-base comparison is
+    # verdict-vs-verdict: a verdict that is partly a DRAW is not purely a
+    # property of the object. It matters immediately for Run 0, whose chains
+    # collapsed below the length its longer lags needed -- chain length is
+    # exactly what this randomness moves.
+    #
+    # ⛔ Seeding fixes WHICH draw, not the distribution, so it neither biases
+    # this read nor invalidates comparison with the unseeded ones. It does NOT
+    # promise bit-reproducibility across different GPUs or kernel versions, so
+    # the report says `sampling_stream_seeded`, never "reproducible".
+    torch_seeded = False
+    try:
+        import torch
+        torch.manual_seed(a.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(a.seed)
+        torch_seeded = True
+    except Exception as exc:                                   # pragma: no cover
+        print("  ⚠️ could NOT seed the sampling stream (%s) — recording that"
+              % exc)
+
     rng = random.Random(a.seed)
     seeds = seed_surfaces(a.chains, rng=rng)
     chains, dropped = [], 0
@@ -247,6 +275,12 @@ def main() -> int:
         # `n_pairs` travels with every z from here on, and `z: null` beside
         # `n_pairs: 0` is the unscoreable state, which is not a zero.
         "n_pairs": npairs,
+        # ⛔ The honest name. `seed` alone implied it controlled the whole read;
+        # it did not, and for every profile recorded before this run it did not
+        # touch the sampling at all. False here means the numbers above are one
+        # undocumented draw.
+        "seed": a.seed,
+        "sampling_stream_seeded": torch_seeded,
         "unscoreable_lags": sorted(unscoreable),
         "unscoreable_why": {k: unscoreable[k] for k in sorted(unscoreable)},
         "verdict": verdict, "refusal_reason": why,

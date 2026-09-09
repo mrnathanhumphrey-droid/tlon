@@ -303,6 +303,35 @@ def test_the_report_carries_n_pairs_beside_every_z():
     assert '"unscoreable_lags"' in src
 
 
+def test_the_sampling_stream_is_SEEDED_and_the_report_says_so():
+    """⛔⛔ `--seed` NAMED A SEED THAT DID NOT CONTROL THE READ. `do_sample=True`
+    at temperature 0.70 draws from the torch global RNG, and nothing seeded it —
+    `--seed` reached only the seed surfaces and the permutation null. Every lag
+    profile in this arc is one undocumented draw sitting beside a field called
+    `seed`.
+
+    ⭐ Chain LENGTH is exactly what that randomness moves, and chain length is
+    what decides whether a cell is scoreable at all. So the unseeded stream and
+    the empty cell are the same story told twice.
+    """
+    src = (_ROOT / "tools" / "act2_model_lag.py").read_text(encoding="utf-8")
+    assert "torch.manual_seed(a.seed)" in src
+    assert "torch.cuda.manual_seed_all(a.seed)" in src
+    # ⛔ And the claim must be the honest one: seeding fixes WHICH draw, it does
+    # not promise bit-reproducibility across GPUs or kernel versions.
+    assert '"sampling_stream_seeded": torch_seeded' in src
+    assert "reproducible" not in src.lower().split("torch_seeded = False")[0][-1200:]
+
+
+def test_seeding_happens_BEFORE_any_generation():
+    """⛔ A seed set after the first chain is generated seeds nothing that
+    matters. Position is the whole guarantee."""
+    src = (_ROOT / "tools" / "act2_model_lag.py").read_text(encoding="utf-8")
+    seeded = src.index("torch.manual_seed(a.seed)")
+    first_gen = src.index("raw = model_chain(backend, s, turns=a.turns)")
+    assert seeded < first_gen
+
+
 def test_UNSCOREABLE_is_not_filed_as_REFUSED():
     """⛔ A refusal is the gate saying the corpus FAILED a criterion it could
     measure. Collapsing the two would file a speaker that emitted nothing under
