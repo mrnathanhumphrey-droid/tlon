@@ -54,6 +54,16 @@ def test_the_watchdog_is_armed_before_anything_else():
             "%s runs before the watchdog is armed" % later
 
 
+def test_the_watchdog_marker_is_the_SCRIPT_not_an_output_path():
+    """⛔⛔ `is_the_job` matches the marker against argv[0]/argv[1] — the thing
+    being EXECUTED — precisely so `tail -f x.log` is not mistaken for the job.
+    A filename here makes the watchdog refuse to arm, and the pipeline then
+    refuses to run unguarded. Correct, and caught only on a billing box."""
+    call = one_call(CODE, "tlon_arm_watchdog")
+    assert "pipeline_fullft_read.sh" in call
+    assert ".json" not in call, "the marker must not be an output path"
+
+
 def test_it_refuses_an_incomplete_object():
     """⛔ A read of whatever survived is not a read of this run."""
     assert "REFUSING: the persisted object is missing" in SRC

@@ -45,8 +45,12 @@ step watchdog
 # stopped mid-run to save a $9 re-fire and a box billed unguarded for ~35 min.
 # A read is shorter than a train, which makes an unguarded stall CHEAPER, not
 # acceptable.
-tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" "$ROOT/verdict_${CELL}_reread.json" \
-    3 45 $$
+# ⛔ THE MARKER IS THE SCRIPT BEING EXECUTED, not an output path. `is_the_job`
+# matches it against argv[0]/argv[1] precisely so that `tail -f x.log` and
+# `grep foo x.sh` are not mistaken for the job — the 08-10 bug. Passing a
+# filename here made the watchdog refuse to arm, and the pipeline then refused
+# to run unguarded. Both refusals were correct; no GPU time was spent.
+tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_fullft_read.sh 3 45 $$
 
 step prereg_id
 # ⛔ A re-read answers the SAME pre-registered question as the run whose read was
