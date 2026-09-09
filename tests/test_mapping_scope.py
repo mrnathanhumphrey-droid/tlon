@@ -20,9 +20,14 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from tlon.act2.full_weight import (MAPPING_FROZEN,  # noqa: E402
-                                   MAPPING_LEAVES, MAPPING_MOVED, ScopeError,
+                                   MAPPING_LEAVES, MAPPING_MOVED,
+                                   MAPPING_UNVERIFIED, ScopeError,
+                                   expected_moved_fraction,
                                    full_weight_scope, mapping_moved,
                                    mapping_scope)
+
+#: Measured on rung 2: 921 distinct ids over a 152,064-row embedding.
+COVERAGE = 921 / 152064.0
 
 #: The real Qwen2.5-7B-Instruct naming, trimmed to 3 layers.
 def _names(n_layers=3):
@@ -41,7 +46,13 @@ def _row(changed=4096, dn=0.5):
             "fraction_changed": changed / 4096.0, "delta_norm_estimated": dn}
 
 
-def _delta(embed=_row, head=_row, **kw):
+def _embed_row(frac=COVERAGE, dn=1.97):
+    """A HEALTHY embed_tokens row: sparse by construction, ~coverage."""
+    return {"n": 545003776, "sampled": 4096, "changed": int(4096 * frac),
+            "fraction_changed": frac, "delta_norm_estimated": dn}
+
+
+def _delta(embed=_embed_row, head=_row, **kw):
     per = {}
     if embed is not None:
         per["model.embed_tokens.weight"] = embed() if callable(embed) else embed
@@ -119,7 +130,7 @@ def test_a_mapping_leaf_inside_a_layer_does_not_count_as_the_mapping():
 # ── the DELTA guard: floor-vs-no-op ────────────────────────────────────────
 
 def test_both_leaves_moved_reads_MOVED():
-    v, why = mapping_moved(_delta())
+    v, why = mapping_moved(_delta(), vocab_coverage=COVERAGE)
     assert v == MAPPING_MOVED, why
 
 
@@ -129,32 +140,32 @@ def test_a_frozen_embedding_is_caught_even_though_lm_head_MOVED():
     tensor the rung is actually about never moved. Per declared leaf, or the
     guard is satisfied by the wrong half."""
     d = _delta(embed=_row(changed=0, dn=0.0))
-    v, why = mapping_moved(d)
+    v, why = mapping_moved(d, vocab_coverage=COVERAGE)
     assert v == MAPPING_FROZEN, why
     assert "embed_tokens" in why
 
 
 def test_a_frozen_lm_head_is_caught_symmetrically():
-    v, why = mapping_moved(_delta(head=_row(changed=0, dn=0.0)))
+    v, why = mapping_moved(_delta(head=_row(changed=0, dn=0.0)), vocab_coverage=COVERAGE)
     assert v == MAPPING_FROZEN and "lm_head" in why
 
 
 def test_changed_nonzero_but_delta_norm_zero_is_still_FROZEN():
     """⛔ Both conditions, not either: a count that moved with zero norm is a
     sampling artefact, not movement."""
-    v, _ = mapping_moved(_delta(embed=_row(changed=4096, dn=0.0)))
+    v, _ = mapping_moved(_delta(embed=_row(changed=4096, dn=0.0)), vocab_coverage=COVERAGE)
     assert v == MAPPING_FROZEN
 
 
 def test_a_missing_per_module_record_REFUSES_rather_than_certifying():
     """⛔⛔ An unmeasured mapping is not a moved one. `or 0` thinking here would
     certify silence."""
-    v, why = mapping_moved({"verdict": "OK"})
+    v, why = mapping_moved({"verdict": "OK"}, vocab_coverage=COVERAGE)
     assert v == MAPPING_FROZEN and "REFUSING" in why
 
 
 def test_a_missing_leaf_row_REFUSES():
-    v, why = mapping_moved(_delta(head=None))
+    v, why = mapping_moved(_delta(head=None), vocab_coverage=COVERAGE)
     assert v == MAPPING_FROZEN and "lm_head" in why
 
 
@@ -273,3 +284,78 @@ def test_the_pipeline_passes_the_scope_mode_to_the_factorial_entry():
     from textguard import code_only
     pipe = (ROOT / "tools" / "pipeline_fullft.sh").read_text(encoding="utf-8")
     assert 'scope_mode="$SCOPE_MODE"' in code_only(pipe)
+
+# ── THE FIX: a PASS must be self-interpreting ──────────────────────────────
+#
+# ⛔⛔ The first gate tested `changed > 0 and delta_norm > 0`. On rung 2 that
+# passed an embed_tokens at 20/4096 -- and the PASS could not be read until the
+# corpus was measured AFTERWARDS to show 0.49% is what sparse embedding
+# gradients predict. A guard whose PASS needs a follow-up investigation is not
+# yet a guard, and the same threshold would have passed 1/4096.
+
+#: Rung 2's real per-tensor record, copied from
+#: runs/act2/fullft_fwmap-s20624/weight_delta.json.
+RUNG2_EMBED = {"n": 545003776, "sampled": 4096, "changed": 20,
+               "fraction_changed": 0.0048828125,
+               "delta_norm_estimated": 1.9659427065311268}
+RUNG2_HEAD = {"n": 545003776, "sampled": 4096, "changed": 4096,
+              "fraction_changed": 1.0,
+              "delta_norm_estimated": 18.101913613716174}
+
+
+def test_rung_2s_REAL_numbers_still_pass_because_sparsity_predicts_them():
+    """⭐ THE RUN THAT MOTIVATED THE FIX MUST STILL PASS. Its embed_tokens moved
+    0.49% against a predicted 0.61% -- healthy sparse training, correctly
+    certified. The fix must not retroactively invalidate a good run."""
+    d = _delta(embed=RUNG2_EMBED, head=RUNG2_HEAD)
+    v, why = mapping_moved(d, vocab_coverage=COVERAGE)
+    assert v == MAPPING_MOVED, why
+    assert "PREDICTED" in why
+
+
+def test_a_DEAD_embedding_is_now_CAUGHT_where_the_old_gate_passed_it():
+    """⛔⛔ THE WHOLE POINT. 1 changed value in 4,096 is a dead tensor, and
+    `changed > 0` called it moved. Against the prediction it is an order of
+    magnitude short and is refused."""
+    dead = {"n": 545003776, "sampled": 4096, "changed": 1,
+            "fraction_changed": 1 / 4096.0, "delta_norm_estimated": 0.01}
+    v, why = mapping_moved(_delta(embed=dead, head=RUNG2_HEAD),
+                           vocab_coverage=COVERAGE)
+    assert v == MAPPING_FROZEN, why
+    assert "UNDER-MOVED" in why and "embed_tokens" in why
+
+
+def test_a_HALF_TRAINED_lm_head_is_caught_against_its_DENSE_prediction():
+    """⛔ The two leaves get DIFFERENT predictions. lm_head is dense (1.0), so
+    30% is badly short for it -- while 30% would be wildly healthy for the
+    sparse embedding. One threshold for both could not do this."""
+    lazy = {"n": 545003776, "sampled": 4096, "changed": 1200,
+            "fraction_changed": 0.293, "delta_norm_estimated": 5.0}
+    v, why = mapping_moved(_delta(head=lazy), vocab_coverage=COVERAGE)
+    assert v == MAPPING_FROZEN and "lm_head" in why
+
+
+def test_the_sparse_prediction_is_NOT_applied_to_lm_head():
+    assert expected_moved_fraction("lm_head", vocab_coverage=COVERAGE) == 1.0
+    assert expected_moved_fraction("embed_tokens",
+                                   vocab_coverage=COVERAGE) == COVERAGE
+
+
+def test_no_coverage_means_UNVERIFIED_not_a_bare_nonzero_pass():
+    """⛔⛔ An unpredicted movement is not a verified one. Falling back to
+    `> 0` here would reinstate exactly the threshold being replaced."""
+    v, why = mapping_moved(_delta(), vocab_coverage=None)
+    assert v == MAPPING_UNVERIFIED
+    assert "REFUSING" in why and v != MAPPING_MOVED
+
+
+def test_a_nonsense_coverage_is_UNVERIFIED():
+    for bad in (0.0, -0.1, 1.5):
+        v, _ = mapping_moved(_delta(), vocab_coverage=bad)
+        assert v == MAPPING_UNVERIFIED, bad
+
+
+def test_UNVERIFIED_blocks_the_floor_exactly_as_FROZEN_does():
+    """⭐ Three states, and only ONE of them lets a floor be read."""
+    assert MAPPING_UNVERIFIED != MAPPING_MOVED
+    assert MAPPING_FROZEN != MAPPING_MOVED

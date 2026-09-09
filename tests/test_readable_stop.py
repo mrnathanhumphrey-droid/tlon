@@ -92,16 +92,20 @@ def test_the_verdict_tool_returns_4_for_a_readable_stop_and_1_otherwise():
     assert "return 0" in src          # GO, unchanged
 
 
-def test_rung_2_config_is_what_the_prereg_declares():
-    """⭐ PREREG c2a4f0ca §1/§2: the MAPPING scope — embed_tokens + lm_head,
-    1,089,994,752 params, all 28 layers frozen — at the same 1e-5.
+def test_run_0_config_is_what_the_prereg_declares():
+    """⭐ CAMPAIGN Run 0: the MAPPING scope — embed_tokens + lm_head,
+    1,089,994,752 params, all 28 layers frozen — at 5e-6, the pre-declared (c)
+    dial-back. Rung 2 ran this scope at 1e-5 and collapsed the speaker
+    (perceive 2.232, f_local FAIL), so this run buys READABILITY.
 
     ⛔ `--unfreeze-top` must NOT be passed in this mode: it names a layer scope
     the run does not have, and on a floor-hunting rung a mislabelled scope is a
     mislabelled finding."""
     s = PIPE.read_text(encoding="utf-8")
-    assert re.search(r"^SCOPE_MODE=mapping\b", s, re.M), "c2a4f0ca §1: Option A"
-    assert re.search(r"^LR=1e-5\b", s, re.M), "c2a4f0ca §2"
+    assert re.search(r"^SCOPE_MODE=mapping\b", s, re.M), "Run 0: the mapping scope"
+    assert re.search(r"^LR=5e-6\b", s, re.M), (
+        "Run 0 is the 5e-6 dial-back; 1e-5 is rung 2, which collapsed the "
+        "speaker and is the run this one exists to make readable")
     assert re.search(r"^TRAINABLE_B=1\.090\b", s, re.M), "1.090 B, verified"
     assert re.search(r"^ATTN_IMPL=eager\b", s, re.M), "D-8"
     # ⚠️ EXECUTABLE LINES ONLY, via the shared helper. The first form asserted
@@ -141,11 +145,11 @@ def test_the_cell_does_not_collide_with_any_fired_rung():
     m = re.search(r"^CELL=(\S+)", s, re.M)
     assert m, "no CELL is set"
     fired = {"fw-s$SEED": "rung 1a", "fw19-s$SEED": "rung 1b",
-             "fw19b-s$SEED": "rung 1b-prime"}
+             "fw19b-s$SEED": "rung 1b-prime", "fwmap-s$SEED": "rung 2"}
     assert m.group(1) not in fired, (
         "CELL=%s would overwrite %s's artifacts on the hub"
         % (m.group(1), fired[m.group(1)]))
-    assert m.group(1) == "fwmap-s$SEED"
+    assert m.group(1) == "fwmap6-s$SEED"
 
 
 def test_the_dose_check_runs_before_the_verdict():

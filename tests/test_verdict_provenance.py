@@ -125,7 +125,7 @@ def test_the_pipeline_points_at_the_prereg_its_config_implements():
     assert m, "PREREG_PATH is not set with a default"
     named = ROOT / m.group(1)
     assert named.exists(), named
-    assert verified_prereg_id(named) == "c2a4f0ca"
+    assert verified_prereg_id(named) == "e91f7c11"
 
 
 def test_the_factorial_entry_is_not_a_SECOND_hardcoded_prereg():

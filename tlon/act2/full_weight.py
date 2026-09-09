@@ -287,9 +287,40 @@ def apply_mapping_scope(model) -> dict:
 #: Returned by `mapping_moved` -- a floor may only be read on MOVED.
 MAPPING_MOVED = "MAPPING_MOVED"
 MAPPING_FROZEN = "MAPPING_FROZEN"
+MAPPING_UNVERIFIED = "MAPPING_UNVERIFIED"
+
+#: ⭐ How much of the PREDICTED movement a leaf must actually show. Set at half
+#: because the prediction itself is sampled: at 4,096 sampled values and ~0.6%
+#: coverage the expected count is ~25, whose Poisson sd is ~5, so a healthy run
+#: can land 20% low by chance alone. Half is comfortably outside that and still
+#: an order of magnitude above the `> 0` test it replaces.
+MOVED_TOLERANCE = 0.5
 
 
-def mapping_moved(delta: dict, *, mapping_leaves=MAPPING_LEAVES):
+def expected_moved_fraction(leaf: str, *, vocab_coverage: float) -> float:
+    """What fraction of a leaf's sampled values SHOULD change in a healthy run.
+
+    ⛔⛔ THE TWO MAPPING TENSORS HAVE DIFFERENT PREDICTIONS, AND THAT IS THE
+    WHOLE POINT. `lm_head` produces logits over the entire vocabulary on every
+    step, so every row receives gradient and ~all sampled values move.
+    `embed_tokens` receives gradient ONLY on rows for tokens that actually
+    appear, so its expected fraction is the corpus's VOCABULARY COVERAGE --
+    about 0.6% on the content-transient corpus, not 100%.
+
+    ⭐ Measured on rung 2 (2026-09-08): coverage 921/152,064 = 0.61% predicted
+    ~25 of 4,096 sampled values; the run produced **20**. Comparing that against
+    `> 0` said "moved" and told you nothing; comparing it against the PREDICTION
+    says "moved as much as a working run should", which is the claim a floor
+    verdict actually rests on.
+    """
+    if leaf == "embed_tokens":
+        return vocab_coverage
+    return 1.0
+
+
+def mapping_moved(delta: dict, *, mapping_leaves=MAPPING_LEAVES,
+                  vocab_coverage: float | None = None,
+                  tolerance: float = MOVED_TOLERANCE):
     """Did the MAPPING TENSORS THEMSELVES move? -> (verdict, why)
 
     ⛔⛔ THIS IS WHAT SEPARATES THE FINDING FROM THE BUG. Rung 2's expected
@@ -312,24 +343,45 @@ def mapping_moved(delta: dict, *, mapping_leaves=MAPPING_LEAVES):
             "weight_delta carries no per_module record, so per-tensor movement "
             "cannot be checked. REFUSING to certify: an unmeasured mapping is "
             "not a moved one.")
-    found, still = {}, []
+    if vocab_coverage is None:
+        return MAPPING_UNVERIFIED, (
+            "no vocab_coverage given, so the expected movement of "
+            "`embed_tokens` cannot be predicted. REFUSING to certify on a bare "
+            "non-zero test: that is the threshold that passed 20/4096 on rung 2 "
+            "and could not say whether it was healthy sparsity or a dead "
+            "tensor.")
+    if not 0.0 < vocab_coverage <= 1.0:
+        return MAPPING_UNVERIFIED, (
+            "vocab_coverage=%r is not a fraction in (0, 1]." % (vocab_coverage,))
+
+    detail, short = [], []
     for leaf in mapping_leaves:
         rows = {n: r for n, r in per.items() if leaf in n.split(".")}
         if not rows:
             return MAPPING_FROZEN, (
                 "no per_module row for %r -- the delta never sampled the "
                 "tensor this run exists to move." % leaf)
-        moved = {n: r for n, r in rows.items()
-                 if (r.get("changed") or 0) > 0
-                 and (r.get("delta_norm_estimated") or 0) > 0}
-        found[leaf] = (len(moved), len(rows))
-        if not moved:
-            still.append(leaf)
-    if still:
+        want = expected_moved_fraction(leaf, vocab_coverage=vocab_coverage)
+        floor = want * tolerance
+        for n, r in sorted(rows.items()):
+            got = r.get("fraction_changed")
+            dn = r.get("delta_norm_estimated") or 0
+            if got is None:
+                return MAPPING_FROZEN, (
+                    "%s has no fraction_changed; movement is unmeasured." % n)
+            detail.append("%s observed %.4f vs predicted %.4f (floor %.4f), "
+                          "delta_norm %.4g" % (leaf, got, want, floor, dn))
+            if dn <= 0 or got < floor:
+                short.append(
+                    "%s moved %.4f of sampled values against a prediction of "
+                    "%.4f (floor %.4f, delta_norm %.4g)"
+                    % (leaf, got, want, floor, dn))
+    if short:
         return MAPPING_FROZEN, (
-            "%s did not move (changed=0 / delta_norm=0). A floor read here "
-            "would be a FROZEN-MAPPING NO-OP wearing the shape of the finding."
-            % ", ".join(sorted(still)))
-    return MAPPING_MOVED, ("every declared mapping leaf moved: "
-                           + ", ".join("%s %d/%d tensor(s)" % (k, v[0], v[1])
-                                       for k, v in sorted(found.items())))
+            "UNDER-MOVED: " + "; ".join(short)
+            + ". A floor read here would be a partly-untrained mapping wearing "
+              "the shape of the finding. `lm_head` is dense (predicted 1.0); "
+              "`embed_tokens` is sparse (predicted = corpus vocabulary "
+              "coverage), so each leaf is judged against its OWN prediction.")
+    return MAPPING_MOVED, ("every declared mapping leaf moved AS PREDICTED: "
+                           + "; ".join(detail))

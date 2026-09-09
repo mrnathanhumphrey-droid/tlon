@@ -26,7 +26,7 @@ SEED=${SEED:-20624}
 # with its model, both verdicts and its lag profiles. Reusing it would overwrite
 # the artifact this run is COMPARED AGAINST -- destroying the 17.81 dose figure
 # and the lag2 z=+5.79 baseline that PREREG 9ccf98d6 §2.1 and §5 read against.
-CELL=fwmap-s$SEED               # rung 2: embed_tokens + lm_head, layers FROZEN
+CELL=fwmap6-s$SEED              # RUN 0: mapping @ 5e-6, the readable retry
 ROOT=${ROOT:-runs/act2/fullft_$CELL}
 tlon_log_init "$ROOT" pipeline_fullft.log
 
@@ -45,7 +45,7 @@ HF_REPO=${HF_REPO:-keyzersoze04/tlon-act2-adapters}
 # mislabelled finding rather than a typo.
 SCOPE_MODE=mapping              # PREREG c2a4f0ca §1: Option A, layers frozen
 OPTIM=adamw_bnb_8bit            # fp32 master params, 8-bit moments (FORCED)
-LR=1e-5                         # PREREG c2a4f0ca §2: as rung 1a/1b'. ⛔ NOT a
+LR=5e-6                         # PREREG RUN 0 §2: the dial-back. ⛔ NOT a
                                 # dose-matched choice -- §3 declares the rms
                                 # comparison to rung 1a is CROSS-POPULATION
                                 # (embedding rows vs layer matrices) and is
@@ -68,7 +68,7 @@ CORPUS_SHA=dd40e22f85b0b6e4     # §5: sha-verified BEFORE training
 # rule — shipped an artifact claiming the wrong pre-registration. Nothing
 # failed; the file simply described itself falsely, and would outlive anyone's
 # memory of which prereg was which.
-PREREG_PATH=${PREREG_PATH:-docs/PREREG_FULL_FINETUNE_RUNG_2_2026_09_08.md}
+PREREG_PATH=${PREREG_PATH:-docs/PREREG_CAMPAIGN_RUN0_MAPPING_5E6_2026_09_09.md}
 # ⛔⛔ D-8, DECLARED AGAINST LOCK a0450b36 BEFORE FIRING. §5 named no attention
 # implementation, so every run of this arm silently took the transformers
 # default (fused SDPA) -- which is precisely how it stayed a constant nobody
@@ -288,6 +288,18 @@ else:
     print("        the trap rung 1b fell into.")
 PYDOSE
 
+step vocab_coverage
+# ⭐⭐ THE PREDICTION THE GATE COMPARES AGAINST, MEASURED BEFORE THE GATE RUNS.
+# `embed_tokens` receives gradient ONLY on rows for tokens that appear, so a
+# healthy mapping run moves about `coverage` of it -- not all of it. Rung 2's
+# gate tested `> 0`, passed 20/4096, and could not say whether that was healthy
+# sparsity or a dead tensor until the corpus was measured AFTERWARDS. A guard
+# whose PASS needs a follow-up investigation is not yet a guard.
+# ⛔ Per base AND per corpus: a different tokenizer over the same corpus gives a
+# different number, so this must never become a constant.
+$PY tools/act2_vocab_coverage.py --model $MODEL \
+    --corpus $ROOT/corpus_ct-s$SEED --out $ROOT/vocab_coverage.json 2>&1 | tee -a $LOG
+
 step mapping_moved
 # ⛔⛔ PREREG c2a4f0ca §5 — THE GATE THAT KEEPS THIS RUN'S FLOOR HONEST.
 # This rung inverts the gradient geometry: `lm_head` sits one step from the
@@ -304,7 +316,10 @@ import json, pathlib, sys
 sys.path.insert(0, ".")
 from tlon.act2.full_weight import MAPPING_MOVED, mapping_moved
 d = json.loads(pathlib.Path("$OUT/weight_delta.json").read_text(encoding="utf-8"))
-verdict, why = mapping_moved(d)
+cov = json.loads(pathlib.Path("$ROOT/vocab_coverage.json").read_text(encoding="utf-8"))
+print("  vocab coverage = %.6f (%d distinct ids / %d rows)"
+      % (cov["coverage"], cov["distinct_token_ids"], cov["vocab_size"]))
+verdict, why = mapping_moved(d, vocab_coverage=cov["coverage"])
 print("  %s" % verdict)
 print("  %s" % why)
 if verdict != MAPPING_MOVED:
