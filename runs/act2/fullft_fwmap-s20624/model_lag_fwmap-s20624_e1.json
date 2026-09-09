@@ -1,0 +1,51 @@
+{
+  "adapter": null,
+  "object": "runs/act2/fullft_fwmap-s20624/model_fwmap-s20624",
+  "object_kind": "full_weight",
+  "measurement_category": "_w",
+  "four_bit": false,
+  "temperature": 0.7,
+  "max_new_tokens": 256,
+  "chains_requested": 12,
+  "chains_used": 6,
+  "chains_dropped_too_short": 6,
+  "turns_total": 30,
+  "turns_requested_per_chain": 10,
+  "lag_profile": {
+    "1": 0.5416666666666666,
+    "2": 0.3333333333333333,
+    "3": 0.16666666666666666,
+    "4": 0.125
+  },
+  "z": {
+    "1": 2.232234562415789,
+    "2": 0.6807668777083301,
+    "3": -0.3879996587944212,
+    "4": -0.48414680724389664
+  },
+  "null": {
+    "1": {
+      "mean": 0.25812500000000005,
+      "sd": 0.12702144812228405
+    },
+    "2": {
+      "mean": 0.23777777777777775,
+      "sd": 0.14036457807292982
+    },
+    "3": {
+      "mean": 0.2333333333333335,
+      "sd": 0.17182145694099615
+    },
+    "4": {
+      "mean": 0.230625,
+      "sd": 0.21816729640600466
+    }
+  },
+  "verdict": "REFUSED",
+  "refusal_reason": "NOT RESPONSIVE: lag-1 z=2.23 is below the floor 6.00. The response is independent of what provoked it -- this is the CONTENT-FREE recipe, and labelling it content-transient would put the control arm in the treatment cell.",
+  "thresholds": {
+    "z_lag1_min": 6.0,
+    "z_lagn_max": 3.0
+  },
+  "INSTRUMENT": "tlon.discourse.transient \u2014 the same functions the corpus was gated on, imported not re-spelt"
+}

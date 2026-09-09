@@ -1,0 +1,46 @@
+{
+  "PRECONDITION": "PREREG a0450b36 \u00a74.1",
+  "lr": 1e-05,
+  "bf16_absorbable_ceiling": 0.00256,
+  "n_trainable_params": 1089994752,
+  "n_sampled": 8192,
+  "fraction_changed": 0.50244140625,
+  "fraction_nonfinite": 0.0,
+  "prediction_working_fp32_master": 1.0,
+  "prediction_bf16_dead_zone": 0.1865234375,
+  "delta_norm_estimated": 18.20835542282185,
+  "verdict": "OK",
+  "why": "fraction changed 0.5024 sits closer to the working prediction 1.0 than to the bf16 dead-zone prediction 0.1865; the optimizer wrote the update.",
+  "per_module": {
+    "model.embed_tokens.weight": {
+      "n": 544997376,
+      "sampled": 4096,
+      "changed": 20,
+      "fraction_changed": 0.0048828125,
+      "delta_norm_estimated": 1.9659427065311268,
+      "norm_init_exact": 285.3244323730469,
+      "relative_delta_estimated": 0.006890201060527333,
+      "fraction_under_bf16_ceiling": 0.1884765625,
+      "fraction_nonfinite": 0.0
+    },
+    "lm_head.weight": {
+      "n": 544997376,
+      "sampled": 4096,
+      "changed": 4096,
+      "fraction_changed": 1.0,
+      "delta_norm_estimated": 18.101913613716174,
+      "norm_init_exact": 252.6208953857422,
+      "relative_delta_estimated": 0.07165643834044394,
+      "fraction_under_bf16_ceiling": 0.1845703125,
+      "fraction_nonfinite": 0.0
+    }
+  },
+  "scope": {
+    "scope_mode": "mapping",
+    "n_layers": 28,
+    "unfreeze_top": 0,
+    "cutoff_layer": null,
+    "n_trainable_params": 1089994752,
+    "n_frozen_params": 6525621760
+  }
+}
