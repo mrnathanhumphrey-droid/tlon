@@ -221,7 +221,8 @@ sys.path.insert(0, ".")
 from tlon.act2.factorial import weight_arm_entry
 from tlon.discourse.transient import CONTENT_TRANSIENT
 e = weight_arm_entry("$CELL", recipe=CONTENT_TRANSIENT, seed=$SEED,
-                     unfreeze_top=$UNFREEZE_TOP, prereg="$PREREG_ID",
+                     unfreeze_top=$UNFREEZE_TOP, scope_mode="$SCOPE_MODE",
+                     prereg="$PREREG_ID",
                      manifest=json.loads(pathlib.Path("$CM").read_text()))
 pathlib.Path("$OUT/factorial.json").write_text(json.dumps(e, indent=2))
 print("  ✅ %s: cell=%r pair_key=%r category=%s"

@@ -211,3 +211,65 @@ def test_the_two_scopes_are_complements_on_the_mapping():
     once and cannot drift."""
     from tlon.act2.full_weight import FROZEN_LEAVES
     assert MAPPING_LEAVES == FROZEN_LEAVES
+
+
+# ── the THIRD call site of the zero-scope guard ────────────────────────────
+
+def test_the_factorial_entry_accepts_the_mapping_scope():
+    """⛔⛔ THE GUARD FAMILY'S THIRD CALL SITE, AND IT COST A RUN.
+
+    `full_weight_scope` was extended for rung 2 and the trainer was wired, but
+    `weight_arm_entry` carries its OWN copy of the zero-trainable refusal and
+    nothing asked it. Rung 2 trained 3,760 clean steps, then died at
+    `factorial_json` on `unfreeze_top=0 trains nothing` -- ~$9 and 45 minutes,
+    one step after the training that produced the result.
+
+    ⭐ Same lesson as the prereg id, in the same session: a fix written on the
+    file that got caught does not close the failure mode. The scope WIDENED to
+    a second locus, so the rule is RE-DERIVED, not stretched."""
+    from tlon.act2.factorial import weight_arm_entry
+    from tlon.discourse.transient import CONTENT_TRANSIENT
+    e = weight_arm_entry("fwmap", recipe=CONTENT_TRANSIENT, seed=20624,
+                         unfreeze_top=0, scope_mode="mapping", prereg="c2a4f0ca")
+    assert e["scope_mode"] == "mapping"
+    assert e["unfreeze_top"] == 0
+    # ⭐ POSITIVE: the artifact names what moved, so "trains nothing" is
+    # falsifiable from the record rather than inferred from a zero.
+    assert e["trainable_leaves"] == ["embed_tokens", "lm_head"]
+    assert e["cell"] is None and e["measurement_category"] == "_w"
+
+
+def test_the_zero_LAYER_scope_is_still_refused():
+    """⛔ The guard's PURPOSE is untouched: a scope that trains nothing is
+    still refused. Only the inference from a layer count changed."""
+    from tlon.act2.factorial import FactorialError, weight_arm_entry
+    from tlon.discourse.transient import CONTENT_TRANSIENT
+    with pytest.raises(FactorialError, match="trains nothing"):
+        weight_arm_entry("x", recipe=CONTENT_TRANSIENT, seed=1,
+                         unfreeze_top=0, prereg="p")
+
+
+def test_a_mapping_scope_with_a_LAYER_COUNT_is_refused():
+    """⛔ That would record Option B while training Option A."""
+    from tlon.act2.factorial import FactorialError, weight_arm_entry
+    from tlon.discourse.transient import CONTENT_TRANSIENT
+    with pytest.raises(FactorialError, match="unfreeze_top must be 0"):
+        weight_arm_entry("x", recipe=CONTENT_TRANSIENT, seed=1,
+                         unfreeze_top=19, scope_mode="mapping", prereg="p")
+
+
+def test_an_unnamed_scope_mode_is_refused():
+    from tlon.act2.factorial import FactorialError, weight_arm_entry
+    from tlon.discourse.transient import CONTENT_TRANSIENT
+    with pytest.raises(FactorialError, match="unknown scope_mode"):
+        weight_arm_entry("x", recipe=CONTENT_TRANSIENT, seed=1,
+                         unfreeze_top=0, scope_mode="everything", prereg="p")
+
+
+def test_the_pipeline_passes_the_scope_mode_to_the_factorial_entry():
+    """⛔ The artifact must record the scope the run actually had. Wiring the
+    trainer alone is what left this call site behind the first time."""
+    sys.path.insert(0, str(ROOT / "tests"))
+    from textguard import code_only
+    pipe = (ROOT / "tools" / "pipeline_fullft.sh").read_text(encoding="utf-8")
+    assert 'scope_mode="$SCOPE_MODE"' in code_only(pipe)

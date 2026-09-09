@@ -156,7 +156,7 @@ CATEGORY_W = "_w"
 
 
 def weight_arm_entry(name: str, *, recipe: str, seed: int, unfreeze_top: int,
-                     prereg: str, manifest=None) -> dict:
+                     prereg: str, manifest=None, scope_mode: str = "layers") -> dict:
     """The fields that ride with a `_w` OBJECT. ⛔⛔ IT IS NOT A CELL EITHER.
 
     A full-weight model is not a member of the `{content-free, content-transient}
@@ -178,11 +178,45 @@ def weight_arm_entry(name: str, *, recipe: str, seed: int, unfreeze_top: int,
     """
     if recipe not in RECIPES:
         raise FactorialError("unknown recipe %r" % (recipe,))
-    if unfreeze_top < 1:
+    # ⛔⛔ THE SCOPE IS NAMED, NOT INFERRED FROM A LAYER COUNT — and this is the
+    # rule RE-DERIVED after the scope widened, not stretched to fit.
+    #
+    # The original guard read `unfreeze_top < 1 -> refuse`, and it was correct
+    # for a world with ONE locus: a layer count of zero trained nothing, and a
+    # model that trains nothing reports a zero delta and reads as a substrate
+    # floor. Rung 2 introduced a SECOND locus (embed_tokens + lm_head, layers
+    # frozen), where `unfreeze_top=0` means "the layers are deliberately frozen
+    # and the mapping is trained" -- something IS trained, and the old rule
+    # refused it.
+    #
+    # ⛔ The guard's PURPOSE is preserved exactly: a scope that trains nothing
+    # is still refused. What changed is that "trains nothing" can no longer be
+    # read off the layer count alone, so the entry says POSITIVELY what trained.
+    if scope_mode not in ("layers", "mapping"):
         raise FactorialError(
-            "unfreeze_top=%d trains nothing; a model with no trainable layers "
-            "reports a zero weight delta and reads as a substrate floor."
-            % unfreeze_top)
+            "unknown scope_mode %r -- the scope must be NAMED, because a "
+            "artifact that cannot say which weights moved cannot be read later."
+            % (scope_mode,))
+    if scope_mode == "layers":
+        if unfreeze_top < 1:
+            raise FactorialError(
+                "unfreeze_top=%d trains nothing; a model with no trainable "
+                "layers reports a zero weight delta and reads as a substrate "
+                "floor." % unfreeze_top)
+    else:
+        if unfreeze_top != 0:
+            raise FactorialError(
+                "scope_mode='mapping' freezes every transformer layer, so "
+                "unfreeze_top must be 0, got %d. A non-zero layer count here "
+                "would record a layer scope the run does not have -- and on a "
+                "floor-hunting rung a mislabelled scope is a mislabelled "
+                "finding." % unfreeze_top)
+    entry_scope = {"scope_mode": scope_mode}
+    if scope_mode == "mapping":
+        # ⭐ POSITIVE. The artifact names the tensors that moved, so "trains
+        # nothing" is falsifiable from the record rather than inferred from a
+        # zero.
+        entry_scope["trainable_leaves"] = ["embed_tokens", "lm_head"]
     return {
         "name": name,
         "recipe": recipe,
@@ -190,6 +224,7 @@ def weight_arm_entry(name: str, *, recipe: str, seed: int, unfreeze_top: int,
         "training_mode": FULL_WEIGHT,
         "measurement_category": CATEGORY_W,
         "unfreeze_top": unfreeze_top,
+        **entry_scope,
         "prereg": prereg,
         "WEIGHT_ARM": True,
         "cell": None,
