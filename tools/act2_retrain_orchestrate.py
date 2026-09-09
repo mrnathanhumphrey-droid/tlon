@@ -294,7 +294,13 @@ def cmd_env(a):
 #: which is how the watchdog it spawns inherits the credential it needs to
 #: persist. A launcher nobody can use is a launcher that gets bypassed.
 PIPELINES = ("pipeline_retrain.sh", "pipeline_solo_regen.sh",
-             "pipeline_positive_control.sh", "pipeline_fullft.sh")
+             "pipeline_positive_control.sh", "pipeline_fullft.sh",
+             # ⭐ Re-reads a PERSISTED `_w` object: no training leg, no
+             # re-persist of the weights, no epoch-2 branch. It exists because
+             # Run 0 lost only its READ, and the alternative -- re-running
+             # `pipeline_fullft.sh` at the same cell -- would have overwritten
+             # the object whose verdict is missing.
+             "pipeline_fullft_read.sh")
 #: ⛔ The recipe is the FACTORIAL'S CORPUS AXIS, so it belongs to the pipeline
 #: that builds corpora and to no other. Requiring it everywhere would file a
 #: transcript re-run into an arm it is not in.
