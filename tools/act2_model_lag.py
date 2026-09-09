@@ -48,7 +48,8 @@ for _s in (sys.stdout, sys.stderr):
 
 # ⛔ THE INSTRUMENT, IMPORTED. Not re-implemented, not re-parameterised.
 from tlon.discourse.transient import (Z_LAG1_MIN, Z_LAGN_MAX,      # noqa: E402
-                                      check_transience, lag_profile,
+                                      UnscoreableLag, check_transience,
+                                      lag_pairs, lag_profile,
                                       permutation_null)
 from tlon.discourse.multiturn import MultiturnError                # noqa: E402
 from tlon.discourse.provocation import DIRECTION as PROVOKE        # noqa: E402
@@ -181,21 +182,50 @@ def main() -> int:
     lex_r = C.load()["classes"]["R"]
     prof = lag_profile(chains, max_lag=a.max_lag, lex_r=lex_r)
     nrng = random.Random(a.seed)
-    zs, nulls = {}, {}
+    # ⭐⭐ PER-LAG, SO A DEGENERATE SPEAKER STILL LEAVES A RECORD. Run 0 lost its
+    # whole read to one empty cell: lag 1 and lag 2 were scoreable and died with
+    # the lag that was not. A lag that cannot be scored is recorded as
+    # `z = None` beside its pair count, never as a number.
+    #
+    # ⛔ The RNG stream is unharmed by a skip: `permutation_null` refuses BEFORE
+    # it draws, so the lags that ARE scoreable consume exactly what they would
+    # have consumed. A skip that shifted the stream would silently change the
+    # numbers this report is compared against.
+    zs, nulls, npairs, unscoreable = {}, {}, {}, {}
     for k in range(1, a.max_lag + 1):
-        mu, sd = permutation_null(chains, lag=k, shuffles=a.shuffles,
-                                  rng=nrng, lex_r=lex_r)
+        npairs[k] = lag_pairs(chains, lag=k)
+        try:
+            mu, sd = permutation_null(chains, lag=k, shuffles=a.shuffles,
+                                      rng=nrng, lex_r=lex_r)
+        except UnscoreableLag as exc:
+            zs[k], nulls[k] = None, None
+            unscoreable[k] = str(exc)
+            print("  ⛔ lag %d UNSCOREABLE — 0 pairs" % k)
+            continue
         nulls[k] = {"mean": mu, "sd": sd}
         zs[k] = (prof[k] - mu) / sd if sd else float("nan")
 
-    # ⭐ THE GATE ITSELF, RUN BY THE CORPUS-SIDE FUNCTION. Not a re-implementation
-    # of its logic with model-shaped variable names.
-    try:
-        check_transience(chains, lex_r=lex_r, max_lag=a.max_lag,
-                         shuffles=a.shuffles, seed=a.seed)
-        verdict, why = "content-transient", ""
-    except MultiturnError as exc:
-        verdict, why = "REFUSED", str(exc)
+    if unscoreable:
+        # ⛔⛔ NOT `REFUSED`. A refusal is the gate saying the corpus failed a
+        # criterion it could measure; this is the instrument saying it could not
+        # measure at all. Collapsing them would file a speaker that emitted
+        # nothing under the same verdict as one that emitted the wrong thing,
+        # and `check_transience` below would only raise the same diagnosis while
+        # wearing the failed-a-criterion name.
+        verdict = "UNSCOREABLE"
+        why = ("the speaker produced no exchange long enough to score at lag(s) "
+               "%s: %s" % (sorted(unscoreable),
+                           " | ".join(unscoreable[k]
+                                      for k in sorted(unscoreable))))
+    else:
+        # ⭐ THE GATE ITSELF, RUN BY THE CORPUS-SIDE FUNCTION. Not a
+        # re-implementation of its logic with model-shaped variable names.
+        try:
+            check_transience(chains, lex_r=lex_r, max_lag=a.max_lag,
+                             shuffles=a.shuffles, seed=a.seed)
+            verdict, why = "content-transient", ""
+        except MultiturnError as exc:
+            verdict, why = "REFUSED", str(exc)
 
     n_turns = sum(len(c) for c in chains)
     report = {
@@ -210,6 +240,15 @@ def main() -> int:
         "chains_dropped_too_short": dropped, "turns_total": n_turns,
         "turns_requested_per_chain": a.turns,
         "lag_profile": prof, "z": zs, "null": nulls,
+        # ⭐⭐ THE CAVEAT IN THE FIELD, NOT IN PROSE. A z is only as good as the
+        # cell it came from, and a long lag on short chains rests on very few
+        # pairs -- rung 2's lag-4 z=-0.48 came off roughly EIGHT pairs, carried
+        # by whichever two chains happened to run long. Nothing recorded that.
+        # `n_pairs` travels with every z from here on, and `z: null` beside
+        # `n_pairs: 0` is the unscoreable state, which is not a zero.
+        "n_pairs": npairs,
+        "unscoreable_lags": sorted(unscoreable),
+        "unscoreable_why": {k: unscoreable[k] for k in sorted(unscoreable)},
         "verdict": verdict, "refusal_reason": why,
         "thresholds": {"z_lag1_min": Z_LAG1_MIN, "z_lagn_max": Z_LAGN_MAX},
         "INSTRUMENT": "tlon.discourse.transient — the same functions the corpus "
@@ -222,7 +261,11 @@ def main() -> int:
     print("\n  MODEL LAG PROFILE — %s [%s]" % (obj, kind))
     print("    " + "  ".join("lag%d %.4f" % (k, prof[k])
                              for k in sorted(prof)))
-    print("    " + "  ".join("lag%d z=%+.2f" % (k, zs[k]) for k in sorted(zs)))
+    print("    " + "  ".join(
+        "lag%d UNSCOREABLE" % k if zs[k] is None else "lag%d z=%+.2f" % (k, zs[k])
+        for k in sorted(zs)))
+    print("    " + "  ".join("lag%d n=%d" % (k, npairs[k])
+                             for k in sorted(npairs)))
     print("    chains %d used / %d dropped · %d turns"
           % (len(chains), dropped, n_turns))
     print("    VERDICT: %s" % verdict)

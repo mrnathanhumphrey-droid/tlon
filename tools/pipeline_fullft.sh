@@ -345,6 +345,21 @@ if [ $E1 -eq 3 ]; then
   exit 1
 fi
 
+if [ $E1 -eq 5 ]; then
+  # ⛔⛔ NOTHING WAS SCOREABLE. The speaker produced no exchange long enough for
+  # the lag instrument to measure, so no axis has a value.
+  #
+  # ⛔ THIS HALTS. Without its own branch it would fall to the `else` below,
+  # whose rule is "epoch 1 left no readable state to protect, so run epoch 2" —
+  # true of a FAILED axis, false of an UNMEASURED one. A degenerate speaker does
+  # not become scoreable by training it further; that branch would buy a second
+  # epoch to reproduce this same non-result.
+  echo "⛔⛔ NO VERDICT at epoch 1 — the speaker was UNSCOREABLE. Stopping." | tee -a $LOG
+  echo "   This is a reading of the OBJECT, not a fault: it emitted no exchange long enough to score." | tee -a $LOG
+  echo "   ⛔ Epoch 2 is NOT run — more training does not make a degenerate speaker measurable." | tee -a $LOG
+  exit 1
+fi
+
 if [ $E1 -eq 0 ] || [ $E1 -eq 4 ]; then
   # ⭐⭐ THE FIXED STOP — PREREG 9ccf98d6 §3, and it is rung 1a's procedural bug
   # closed. The old condition was `[ $E1 -eq 0 ]`, i.e. GO ALONE. Rung 1a's

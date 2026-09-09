@@ -286,6 +286,57 @@ def chain_transient(pool, idx, *, turns: int, rng: random.Random,
 
 # ── measurement ─────────────────────────────────────────────────────────────
 
+def lag_pairs(chains, *, lag: int) -> int:
+    """How many (i, i+lag) turn pairs the corpus actually holds.
+
+    ⭐ THE SCOREABILITY QUESTION, ASKED IN ONE PLACE. A chain of n turns holds
+    n-lag pairs, so short chains contribute NOTHING to a long lag.
+
+    ⛔⛔ `lag_profile` and `permutation_null` must agree about which cells are
+    measurable, and they did not: the profile returned `nan` for an empty cell
+    while the null divided by its length. Both count through here now, and
+    `lag_profile` asserts the agreement rather than restating it in a comment.
+    """
+    return sum(max(0, len(ch) - lag) for ch in chains)
+
+
+class UnscoreableLag(MultiturnError):
+    """⛔⛔ THE SPEAKER EMITTED NOTHING SCOREABLE AT THIS LAG. A DIAGNOSIS.
+
+    NOT a code fault. A model whose chains all collapse to three turns has ZERO
+    lag-4 pairs, so there is nothing to permute. That is a fact ABOUT THE
+    SPEAKER and has to be reported as one — a `ZeroDivisionError` mid-read reads
+    as a broken harness, which is the wrong conclusion and the expensive one to
+    debug on a rented box.
+
+    ⛔ And it must not be reported as a NUMBER either. `nan` would flow into `z`,
+    where every comparison against a threshold is silently False: `nan >= 6.0`
+    fails perceive, `nan <= 3.0` fails release, and neither is a measurement.
+    An unmeasured axis is not a failed one and is certainly not a passed one, so
+    the unscoreable state gets its own name and its own branch everywhere.
+
+    ⭐ Raised, not returned, deliberately: a sentinel return value has to be
+    checked at all five call sites and one of them would be missed — the exact
+    shape of the zero-scope guard that had a third call site and cost a trained
+    model. An exception cannot be ignored into a pass.
+    """
+
+    def __init__(self, *, lag: int, n_chains: int, n_turns: int, lengths):
+        self.lag = lag
+        self.n_pairs = 0
+        self.n_chains = n_chains
+        self.n_turns = n_turns
+        self.lengths = list(lengths)
+        super().__init__(
+            "UNSCOREABLE AT LAG %d: %d chain(s) / %d turn(s) hold ZERO lag-%d "
+            "pairs, so the permutation null has nothing to permute. Chain "
+            "lengths %s -- a chain needs more than %d turns to contribute one. "
+            "⛔ This is a diagnosis of the SPEAKER, not an instrument fault: it "
+            "produced no exchange long enough to score at this lag. It is "
+            "neither a pass nor a fail of any axis."
+            % (lag, n_chains, n_turns, lag, self.lengths, lag))
+
+
 def lag_profile(chains, *, max_lag: int, lex_r) -> dict[int, float]:
     """Mean shared roots between turns `lag` apart. ⭐ THE CLAIM, AS A NUMBER.
 
@@ -301,6 +352,11 @@ def lag_profile(chains, *, max_lag: int, lex_r) -> dict[int, float]:
             for i in range(len(rs) - k):
                 sums[k] += len(rs[i] & rs[i + k])
                 ns[k] += 1
+    # ⭐ THE AGREEMENT, ASSERTED. If this ever fails, the profile and the null
+    # disagree about which cells exist -- and that disagreement is exactly what
+    # let a `nan` cell sit beside a division by that cell's zero length.
+    assert ns == {k: lag_pairs(chains, lag=k) for k in range(1, max_lag + 1)}, \
+        "⛔⛔ lag_profile and lag_pairs disagree about the scoreable cells"
     return {k: (sums[k] / ns[k] if ns[k] else float("nan"))
             for k in range(1, max_lag + 1)}
 
@@ -313,10 +369,22 @@ def permutation_null(chains, *, lag: int, shuffles: int, rng: random.Random,
     Chance overlap between two short utterances drawn from 156 roots is ~0.042
     shared roots, so a generator that does nothing at all already "passes" a
     `> 0` test. Measured, not assumed.
+
+    ⛔⛔ RAISES `UnscoreableLag` WHEN THE CELL IS EMPTY, and that is a reading of
+    the speaker rather than a failure of this function. Run 0 (`e91f7c11`) died
+    here with a bare `ZeroDivisionError` after training and persisting cleanly:
+    the mapping run at 5e-6 was degenerate enough that no chain survived long
+    enough to hold a pair at the longer lags. The measurement was lost and the
+    traceback said "instrument", not "speaker".
     """
     flat = [roots_of(t.surface, lex_r) for ch in chains for t in ch]
     a = [roots_of(ch[i].surface, lex_r)
          for ch in chains for i in range(len(ch) - lag)]
+    if not a:
+        # ⛔ Covers the no-chains case too: no chains means no pairs, and the
+        # diagnosis is the same one -- there is nothing to score.
+        raise UnscoreableLag(lag=lag, n_chains=len(chains), n_turns=len(flat),
+                             lengths=sorted(len(ch) for ch in chains))
     means = []
     for _ in range(shuffles):
         b = rng.sample(flat, len(a)) if len(a) <= len(flat) else \

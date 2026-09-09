@@ -15,7 +15,8 @@ nothing is not evidence about the substrate, and the only way to keep that true
 is to refuse to compute the other axes at all.
 
 Exit codes are the pipeline's branch: 0 = GO, 1 = a STOP row, 3 = the
-precondition failed. ⭐ The epoch-1 early-stop in §5 is exactly `exit 0 here`.
+precondition failed, 4 = a READABLE stop, 5 = nothing was scoreable.
+⭐ The epoch-1 early-stop in §5 is exactly `exit 0 here`.
 """
 from __future__ import annotations
 
@@ -41,6 +42,11 @@ STOP_CRATERED = "STOP — fluency cratered"
 STOP_PERCEIVE = "STOP — perceive killed"
 STOP_INCOHERENT = "STOP — incoherent"
 FAULT = "INSTRUMENT FAULT"
+#: ⛔⛔ NOT A ROW OF §4.2 — THE ABSENCE OF ONE. The speaker emitted nothing the
+#: lag instrument could score, so no axis has a value and none may be read.
+#: Distinct from INSTRUMENT FAULT (§4.1, the weights did not move) because the
+#: instrument here worked perfectly and the object gave it nothing.
+NO_VERDICT = "NO VERDICT — speaker unscoreable"
 
 
 def last_f_local(ledger_path) -> dict:
@@ -147,6 +153,38 @@ def decide(delta: dict, lag: dict, flocal: dict, *, prereg: str) -> dict:
                        "did not produce a readable profile.",
                 "axes_not_computed": True}
 
+    # ⛔⛔ AN UNSCOREABLE LAG IS NOT A FAILED ONE, AND THE COMPARISONS BELOW
+    # CANNOT SAY SO. `None <= 3.0` raises; `nan <= 3.0` and `nan >= 6.0` are both
+    # False, which would silently render "we could not measure this" as "release
+    # persists" or "perceive collapsed" — a fabricated finding with a threshold
+    # attached. `None` is `act2_model_lag.py` reporting a cell with zero pairs;
+    # `nan` is a permutation null with zero spread. Neither is a number, so
+    # neither reaches an axis.
+    #
+    # ⭐ Same shape as the F-LOCAL rule below: unscoreable is its own state.
+    blind = sorted(k for k, v in z.items() if v is None or v != v)
+    if blind:
+        return {
+            "verdict": NO_VERDICT,
+            "why": ("lag(s) %s could not be scored (%s), so NO AXIS HAS A "
+                    "VALUE and no row of §4.2 may be read. ⛔ This is a reading "
+                    "of the SPEAKER — it produced no exchange long enough to "
+                    "score — not a failure of release or perceive. %s"
+                    % (blind,
+                       ", ".join("lag%d n_pairs=%s" % (k, (lag.get("n_pairs")
+                                                           or {}).get(str(k),
+                                                                      "?"))
+                                 for k in blind),
+                       (lag.get("refusal_reason") or ""))),
+            "unscoreable_lags": blind,
+            "n_pairs": lag.get("n_pairs"),
+            "delta_verdict": delta.get("verdict"),
+            "fraction_changed": delta.get("fraction_changed"),
+            "measurement_category": "_w",
+            "PREREG": prereg,
+            "axes_not_computed": True,
+        }
+
     longer = {k: v for k, v in z.items() if k >= 2}
     release_ok = all(v <= Z_LAGN_MAX for v in longer.values())
     perceive_ok = z[1] >= Z_LAG1_MIN
@@ -238,6 +276,14 @@ def main() -> int:
 
     if out["verdict"] == FAULT:
         return 3
+    # ⛔⛔ EXIT 5 = NOTHING WAS MEASURED. It must NOT fall through to the `else`
+    # branch of the pipeline, which runs epoch 2: a speaker that already emits
+    # nothing scoreable does not become scoreable by training it further, so
+    # that branch would spend a second epoch to reproduce this same non-result.
+    # Run 0 never got here — it died inside the instrument — but its successor
+    # would have, and the default path was "train more".
+    if out["verdict"] == NO_VERDICT:
+        return 5
     if out["verdict"] == GO:
         return 0
     # ⭐⭐ EXIT 4 = A READABLE STOP. PREREG `9ccf98d6` §3, and it is the
