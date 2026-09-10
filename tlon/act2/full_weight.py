@@ -34,14 +34,54 @@ class ScopeError(RuntimeError):
     """⛔ Raised, never warned."""
 
 
-def layer_indices(names) -> set:
-    """Every transformer-layer index present in the parameter names."""
-    out = set()
+def layer_stacks(names) -> dict:
+    """-> {prefix before `layers.<i>.`: {indices}}. ⭐ ONE ENTRY PER STACK.
+
+    ⛔⛔ A MULTIMODAL BASE HAS TWO LAYER STACKS AND THE OLD CODE POOLED THEM.
+    `Ministral-3-8B-Instruct-2512-BF16` carries
+    `language_model.model.layers.0..33` AND `vision_tower.transformer.layers.
+    0..23`; `_LAYER_RE` matches both, so the pooled index set was 0..33 --
+    CONTIGUOUS, so every existing guard passed -- and `unfreeze_top=14`
+    unfroze text layers 20-33 plus **36 vision-tower tensors**, training an
+    image encoder as if it were part of the language model.
+
+    ⭐ Nothing was wrong with the regex. The scope WIDENED to bases with more
+    than one stack and the rule needed re-deriving, not stretching -- the same
+    lesson `scope_mode` learned when the locus widened.
+    """
+    out = {}
     for n in names:
         m = _LAYER_RE.search(n)
         if m:
-            out.add(int(m.group(1)))
+            out.setdefault(n[:m.start()], set()).add(int(m.group(1)))
     return out
+
+
+def layer_indices(names, *, stack: str | None = None) -> set:
+    """Every transformer-layer index in ONE stack.
+
+    ⛔ With more than one stack present this REFUSES rather than pooling. A
+    pooled set silently mixes an image encoder into the language model's layer
+    count, and the resulting union can look perfectly contiguous.
+    """
+    stacks = layer_stacks(names)
+    if not stacks:
+        return set()
+    if stack is not None:
+        if stack not in stacks:
+            raise ScopeError("no layer stack with prefix %r; found %s"
+                             % (stack, sorted(stacks)))
+        return set(stacks[stack])
+    if len(stacks) > 1:
+        raise ScopeError(
+            "MORE THAN ONE TRANSFORMER-LAYER STACK: %s. This base is not a "
+            "plain causal LM, and pooling the stacks would train one module's "
+            "layers as if they belonged to another -- on a multimodal "
+            "checkpoint the pooled indices can even look contiguous, so no "
+            "existing guard fires. Name the stack explicitly."
+            % ", ".join("%r(%d layers)" % (p, len(v))
+                        for p, v in sorted(stacks.items())))
+    return set(next(iter(stacks.values())))
 
 
 def full_weight_scope(names, *, unfreeze_top: int,
