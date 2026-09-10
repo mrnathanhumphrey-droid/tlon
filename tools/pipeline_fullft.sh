@@ -101,7 +101,7 @@ echo "  lr         $LR   trainable_b=$TRAINABLE_B  total_b=$TOTAL_B" | tee -a $L
 echo "  prereg     $PREREG_PATH" | tee -a $LOG
 echo "  attn       $ATTN_IMPL" | tee -a $LOG
 
-step watchdog
+step watchdog            # SCOPE: any
 # ⛔⛔ THE DEADLINE IS A COST BOUND, NOT ONLY A STALL GUARD, AND IT IS DERIVED
 # FROM THE CARD'S PRICE. At $3.29/hr the standing $70-per-run alert is reached
 # at 21.3 h, so a 24 h deadline would have let a hung run bill $79 — past the
@@ -119,7 +119,7 @@ step watchdog
 tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_fullft.sh 14 90 $$
 
 # ── 2 · FLOORS ──────────────────────────────────────────────────────────────
-step syntax_floor
+step syntax_floor            # SCOPE: any
 $PY --version | tee -a $LOG
 $PY -m compileall -q tools/ tlon/ tests/ 2>&1 | tee -a $LOG
 # ⭐ The two suites that cover THIS arm, plus provisioning. A green suite proves
@@ -128,7 +128,7 @@ $PY -m compileall -q tools/ tlon/ tests/ 2>&1 | tee -a $LOG
 $PY -m pytest -q tests/test_full_weight.py tests/test_w_object.py \
      tests/test_provision.py 2>&1 | tail -3 | tee -a $LOG
 
-step optim_probe
+step optim_probe            # SCOPE: any
 # ⛔⛔ THE THIRD OBLIGATION, IN THE RUN'S OWN RECORD. The provisioner probes this
 # too, but that proof lives in a terminal; this one lives in the log that gets
 # persisted. It costs under a second and it forecloses the most expensive
@@ -136,7 +136,7 @@ step optim_probe
 # zero delta that looks exactly like the substrate finding.
 $PY tools/act2_finetune.py --probe-optim --lr $LR 2>&1 | tee -a $LOG
 
-step cell_guard
+step cell_guard            # SCOPE: any
 # \u26d4\u26d4 WOULD THIS RUN OVERWRITE A FIRED RESULT? Asked against the HUB, not a
 # list in this file. `CELL` is env-overridable so the campaign can drive four
 # configurations from one prereg, and the old source-level guard could only ever
@@ -159,7 +159,7 @@ if marker in have:
 print("  cell $CELL is unused on the hub")
 PYCELL
 
-step hub_capacity
+step hub_capacity            # SCOPE: any
 # ⛔⛔ IS THERE ROOM FOR THE RESULT — asked BEFORE the GPU hours, not after.
 # Rung 1b' trained 3,760 clean steps and then died at persist_leg1 on "Private
 # repository storage limit reached". The reads never ran; ~2 H100-hours bought
@@ -173,7 +173,7 @@ step hub_capacity
 $PY tools/act2_hub_capacity.py --repo $HF_REPO \
     --trainable-b $TRAINABLE_B --total-b $TOTAL_B 2>&1 | tee -a $LOG
 
-step prereg_id
+step prereg_id            # SCOPE: any
 # ⛔⛔ THE SAME DEFECT, ONE FILE OVER — CAUGHT BEFORE THIS RUN SHIPPED IT.
 # The verdict tool was fixed to read its prereg id from the locked file, but
 # `factorial.json` -- a DIFFERENT artifact, persisted to the hub beside the
@@ -189,7 +189,7 @@ from act2_fullft_verdict import verified_prereg_id; \
 print(verified_prereg_id('$PREREG_PATH'))")
 echo "  ✅ prereg $PREREG_PATH verifies as $PREREG_ID" | tee -a $LOG
 
-step vram
+step vram            # SCOPE: any
 # ⛔ Sized on the FULL-WEIGHT arithmetic. The planner's LoRA rows would report
 # ~26 GiB for a job that needs 51 — the wrong number in the confident shape of
 # a right one. And the +28 % is applied because `PLANNER_IS_A_LOWER_BOUND`.
@@ -209,12 +209,12 @@ print("  ✅ fits with %.1f GiB of margin" % ($VRAM_WALL - worst))
 PY
 
 # ── 3 · THE CORPUS, SHA-PINNED BEFORE TRAINING ──────────────────────────────
-step corpus
+step corpus            # SCOPE: any
 $PY tools/act2_build_multiturn.py --recipe content-transient \
     --suppression-window 0 --chains 1445 --multiturn-fraction 0.5 \
     --map derived --seed $SEED --out $ROOT/corpus_ct-s$SEED 2>&1 | tee -a $LOG
 
-step corpus_pin
+step corpus_pin            # SCOPE: any
 # ⛔⛔ PINNED, NOT RECORDED. Unlike the LoRA batch's new seeds, this corpus has a
 # KNOWN sha: §5 names `dd40e22f85b0b6e4`, and the whole comparison to the gate
 # rests on this being the same corpus. A mismatch here means the deterministic
@@ -227,7 +227,7 @@ if [ "$GOT" != "$CORPUS_SHA" ]; then
 fi
 echo "  ✅ corpus is byte-identical to the one §5 declares" | tee -a $LOG
 
-step corpus_manifest
+step corpus_manifest            # SCOPE: any
 CM=$ROOT/corpus_ct-s$SEED/manifest.json
 [ -f "$CM" ] || { echo "⛔⛔ no corpus manifest at $CM — it carries the corpus lag profile the model is compared against" | tee -a $LOG; exit 1; }
 
@@ -249,7 +249,7 @@ fi
 OUT=$ROOT/model_$CELL
 SNAP=$ROOT/delta_snapshot.pt
 
-step train_leg1
+step train_leg1            # SCOPE: any
 $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
     --full --scope-mode $SCOPE_MODE --optim $OPTIM $LAYER_ARGS \
@@ -257,7 +257,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
     --seed $SEED --delta-snapshot-out $SNAP 2>&1 | tee -a $LOG
 
-step factorial_json
+step factorial_json            # SCOPE: any
 # ⛔⛔ A `_w` OBJECT GETS NO CELL AND NO PAIR KEY. §0/§6: its weights changed, so
 # it is not a member of the `_ctx` factorial and must never be pooled into one.
 # `weight_arm_entry` is the only constructor that will build it, and `entry()`
@@ -278,16 +278,16 @@ print("  ✅ %s: cell=%r pair_key=%r category=%s"
          e["measurement_category"]))
 PY
 
-step persist_leg1
+step persist_leg1            # SCOPE: any
 # ⭐ BEFORE the reads, not after. The object is ~13 GiB that cost H100-hours; a
 # fault in the read should cost the read and not the weights.
 $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
     full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG
 
-step flocal_epoch1
+step flocal_epoch1            # SCOPE: any
 $PY tools/act2_flocal.py --model $OUT --n 64 2>&1 | tee -a $LOG
 
-step lag_epoch1
+step lag_epoch1            # SCOPE: any
 $PY tools/act2_model_lag.py --model $OUT --object-kind full_weight \
     --chains 12 --turns 10 --temperature 0.70 --max-new-tokens 256 \
     --seed $SEED --out $ROOT/model_lag_${CELL}_e1.json 2>&1 | tee -a $LOG
@@ -299,7 +299,7 @@ $PY tools/act2_model_lag.py --model $OUT --object-kind full_weight \
 # train it enough".
 # ⛔ fraction_changed CANNOT do this job -- it saturated to the same 16 digits at
 # both of rung 1a's epochs. delta_norm_estimated is the dose measure.
-step dose_check
+step dose_check            # SCOPE: any
 $PY - <<PYDOSE 2>&1 | tee -a $LOG
 import json, math, pathlib
 # ⭐⭐ THE GATE KEYS ON PER-PARAMETER RMS, NOT ON delta_norm.
@@ -336,7 +336,16 @@ else:
     print("        the trap rung 1b fell into.")
 PYDOSE
 
-step vocab_coverage
+# ⛔⛔ MAPPING-ONLY FROM HERE. `vocab_coverage` measures the prediction
+# `mapping_moved` compares against and feeds nothing else; on a LAYER rung it
+# computes a number no gate consumes. `mapping_moved` asserts movement in
+# leaves a layer rung FREEZES BY DESIGN, and running it unguarded refused
+# run 2a after a clean train and a clean read -- killing the pipeline before
+# `verdict_epoch1` and before the run files were persisted.
+# ⭐ `tools/lint_step_scope.py` now enforces the pairing structurally.
+if [ "$SCOPE_MODE" = "mapping" ]; then
+
+step vocab_coverage            # SCOPE: mapping
 # ⭐⭐ THE PREDICTION THE GATE COMPARES AGAINST, MEASURED BEFORE THE GATE RUNS.
 # `embed_tokens` receives gradient ONLY on rows for tokens that appear, so a
 # healthy mapping run moves about `coverage` of it -- not all of it. Rung 2's
@@ -354,9 +363,8 @@ $PY tools/act2_vocab_coverage.py --model $MODEL \
 # -- MAPPING_FROZEN on a run whose scope froze the mapping on purpose.
 # Same class as --unfreeze-top: a step configured for the mapping rung
 # with no business running in layers mode.
-if [ "$SCOPE_MODE" = "mapping" ]; then
 
-step mapping_moved
+step mapping_moved            # SCOPE: mapping
 # ⛔⛔ PREREG c2a4f0ca §5 — THE GATE THAT KEEPS THIS RUN'S FLOOR HONEST.
 # This rung inverts the gradient geometry: `lm_head` sits one step from the
 # loss, `embed_tokens` is reached only after the gradient traverses all 28
@@ -388,7 +396,7 @@ else
   echo "  (mapping_moved SKIPPED: scope_mode=$SCOPE_MODE freezes the mapping by design)" | tee -a $LOG
 fi
 
-step verdict_epoch1
+step verdict_epoch1            # SCOPE: any
 # ⛔ `set -e` would abort on the STOP exit code, and a STOP at epoch 1 is not a
 # pipeline failure — it is the branch §5 declares. Captured, not trapped.
 E1=0
@@ -452,7 +460,7 @@ else
   echo "  epoch 1 is NOT READABLE (not GO, not floored-but-fluent); epoch 2 runs and IS the verdict" | tee -a $LOG
 
   # ── 5 · LEG 2 — THE SECOND EPOCH ──────────────────────────────────────────
-  step train_leg2
+  step train_leg2            # SCOPE: any
   # ⛔⛔ --delta-snapshot-in CARRIES THE BASE-MODEL SNAPSHOT. Without it this leg
   # would measure one epoch of movement and report it as the total, and a run
   # whose first epoch moved the weights and whose second did not would read
@@ -469,19 +477,19 @@ else
       --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
       --seed $SEED --delta-snapshot-in $SNAP 2>&1 | tee -a $LOG
 
-  step persist_leg2
+  step persist_leg2            # SCOPE: any
   $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
       full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG
 
-  step flocal_epoch2
+  step flocal_epoch2            # SCOPE: any
   $PY tools/act2_flocal.py --model $OUT --n 64 2>&1 | tee -a $LOG
 
-  step lag_epoch2
+  step lag_epoch2            # SCOPE: any
   $PY tools/act2_model_lag.py --model $OUT --object-kind full_weight \
       --chains 12 --turns 10 --temperature 0.70 --max-new-tokens 256 \
       --seed $SEED --out $ROOT/model_lag_${CELL}_e2.json 2>&1 | tee -a $LOG
 
-  step verdict_epoch2
+  step verdict_epoch2            # SCOPE: any
   E2=0
   $PY tools/act2_fullft_verdict.py \
       --delta $OUT/weight_delta.json \
