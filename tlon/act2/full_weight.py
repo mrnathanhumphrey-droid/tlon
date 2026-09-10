@@ -85,7 +85,8 @@ def layer_indices(names, *, stack: str | None = None) -> set:
 
 
 def full_weight_scope(names, *, unfreeze_top: int,
-                      frozen_leaves=FROZEN_LEAVES) -> dict:
+                      frozen_leaves=FROZEN_LEAVES,
+                      stack: str | None = None) -> dict:
     """Split parameter names into trainable and frozen per §5.
 
     ⛔ `model.norm` (the final RMSNorm, outside the layer stack) stays FROZEN.
@@ -96,7 +97,7 @@ def full_weight_scope(names, *, unfreeze_top: int,
     names = list(names)
     if not names:
         raise ScopeError("no parameter names given")
-    idx = layer_indices(names)
+    idx = layer_indices(names, stack=stack)
     if not idx:
         raise ScopeError(
             "no parameter name matched the transformer-layer pattern %r. A "
@@ -123,13 +124,37 @@ def full_weight_scope(names, *, unfreeze_top: int,
         parts = n.split(".")
         leaf_frozen = any(f in parts for f in frozen_leaves)
         m = _LAYER_RE.search(n)
-        if m and not leaf_frozen and int(m.group(1)) >= cutoff:
+        # ⛔⛔ THE SELECTION MUST BE RESTRICTED TO THE NAMED STACK, NOT ONLY
+        # THE COUNT. Widening `layer_indices` alone fixed which layers were
+        # COUNTED and left this loop matching `_LAYER_RE` across every name, so
+        # a multimodal base still put 36 vision-tower tensors in the trainable
+        # set -- the count was right and the scope was still wrong.
+        # ⭐ Same shape as the pipeline branch that ignored a correct verdict:
+        # a guard the consumer does not apply is not a guard.
+        in_stack = (stack is None) or (m and n[:m.start()] == stack)
+        if m and in_stack and not leaf_frozen and int(m.group(1)) >= cutoff:
             trainable.append(n)
         else:
             frozen.append(n)
     if not trainable:
         raise ScopeError(
             "scope selected 0 trainable tensors out of %d" % len(names))
+    # ⚠️ TRIPWIRE, NOT A REACHABLE BRANCH. While the selection above is
+    # correct this can never fire, and injecting its removal leaves the suite
+    # GREEN -- recorded rather than papered over with a test that would only be
+    # consulted, never passed. It exists to catch a FUTURE edit to `_LAYER_RE`
+    # or to the loop, which is exactly the edit that produced the half-fix.
+    if stack is not None:
+        stray = [n for n in trainable
+                 if _LAYER_RE.search(n) and
+                 n[:_LAYER_RE.search(n).start()] != stack]
+        if stray:
+            raise ScopeError(
+                "%d tensor(s) from OUTSIDE the named stack %r leaked into the "
+                "trainable set (first: %s). Training another module's layers as "
+                "if they were the language model's is the failure this stack "
+                "argument exists to prevent."
+                % (len(stray), stack, stray[0]))
     return {
         "n_layers": n_layers,
         "unfreeze_top": unfreeze_top,
@@ -204,7 +229,8 @@ def apply_scope(model, *, unfreeze_top: int) -> dict:
 MAPPING_LEAVES = FROZEN_LEAVES
 
 
-def mapping_scope(names, *, mapping_leaves=MAPPING_LEAVES) -> dict:
+def mapping_scope(names, *, mapping_leaves=MAPPING_LEAVES,
+                  stack: str | None = None) -> dict:
     """Trainable = the token mapping ONLY. Every transformer layer frozen.
 
     ⛔ Refuses unless BOTH leaves are present. `tie_word_embeddings` is false on
@@ -217,7 +243,15 @@ def mapping_scope(names, *, mapping_leaves=MAPPING_LEAVES) -> dict:
     if not names:
         raise ScopeError("no parameter names given")
 
-    idx = layer_indices(names)
+    # ⛔ `stack` is used ONLY for the layer COUNT and the frozen-layers
+    # check. The LEAVES are deliberately NOT filtered by it: on
+    # `Ministral-3-8B` the two leaves sit at DIFFERENT depths --
+    # `language_model.model.embed_tokens.weight` but
+    # `language_model.lm_head.weight` -- so filtering by the layer stack's
+    # prefix would drop `lm_head` and quietly halve the declared scope.
+    # ⭐ The per-leaf positive assertion below is what makes that safe: a
+    # half selection is refused loudly rather than trained.
+    idx = layer_indices(names, stack=stack)
     if not idx:
         raise ScopeError(
             "no parameter name matched the transformer-layer pattern %r, so "

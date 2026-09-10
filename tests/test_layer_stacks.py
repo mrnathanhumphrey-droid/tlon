@@ -47,7 +47,13 @@ def _causal(prefix, n_layers):
 
 QWEN = _causal("model", 28)
 OLMO = _causal("model", 32)
-MISTRAL3 = (_causal("language_model.model", 34)
+#: ⛔ The real index puts `lm_head` at `language_model.lm_head.weight` -- one
+#: level ABOVE `embed_tokens`. Copied, not guessed: the first version of this
+#: fixture used the bare `lm_head.weight` that Qwen and OLMo have, and it made
+#: the leaf-depth test pass for the wrong reason.
+MISTRAL3 = ([n for n in _causal("language_model.model", 34)
+             if n != "lm_head.weight"]
+            + ["language_model.lm_head.weight"]
             + ["vision_tower.transformer.layers.%d.attention.%s.weight" % (i, p)
                for i in range(24)
                for p in ("q_proj", "k_proj", "v_proj", "o_proj")]
@@ -118,6 +124,40 @@ def test_OLMo_is_a_DROP_IN_for_the_Qwen_scope():
     assert layer_stacks(OLMO) == {"model": set(range(32))}
     sc = full_weight_scope(OLMO, unfreeze_top=14)
     assert len(sc["trainable"]) == 14 * 7
+    assert not [n for n in sc["trainable"] if "vision" in n]
+
+
+def test_naming_the_stack_restricts_the_SELECTION_not_only_the_COUNT():
+    """⛔⛔ THE HALF-FIX, GUARDED. Widening `layer_indices` alone fixed which
+    layers were COUNTED and left the selection loop matching `_LAYER_RE` across
+    every name — so `stack=` gave the right `n_layers` and STILL put 36
+    vision-tower tensors in the trainable set. A correct count with a wrong
+    scope is worse than an outright refusal, because it looks right.
+
+    ⭐ Same shape as the pipeline branch that ignored a correct verdict: a guard
+    the consumer does not apply is not a guard.
+    """
+    sc = full_weight_scope(MISTRAL3, unfreeze_top=14,
+                           stack="language_model.model")
+    assert sc["n_layers"] == 34
+    assert not [n for n in sc["trainable"] if "vision" in n], \
+        "vision-tower tensors leaked into the trainable set"
+    assert all(n.startswith("language_model.model.layers.")
+               for n in sc["trainable"])
+    # 14 layers x 7 leaves in this fixture
+    assert len(sc["trainable"]) == 14 * 7
+
+
+def test_the_mapping_leaves_are_NOT_filtered_by_the_stack_prefix():
+    """⛔ On Mistral 3 the two leaves sit at DIFFERENT depths —
+    `language_model.model.embed_tokens.weight` but
+    `language_model.lm_head.weight`. Filtering leaves by the layer stack's
+    prefix would drop `lm_head` and quietly halve the declared scope."""
+    from tlon.act2.full_weight import mapping_scope
+    sc = mapping_scope(MISTRAL3, stack="language_model.model")
+    got = sorted(sc["trainable"])
+    assert got == ["language_model.lm_head.weight",
+                   "language_model.model.embed_tokens.weight"]
     assert not [n for n in sc["trainable"] if "vision" in n]
 
 
