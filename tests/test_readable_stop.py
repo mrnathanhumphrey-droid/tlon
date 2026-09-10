@@ -102,12 +102,25 @@ def test_run_0_config_is_what_the_prereg_declares():
     the run does not have, and on a floor-hunting rung a mislabelled scope is a
     mislabelled finding."""
     s = PIPE.read_text(encoding="utf-8")
-    assert re.search(r"^SCOPE_MODE=mapping\b", s, re.M), "Run 0: the mapping scope"
-    assert re.search(r"^LR=5e-6\b", s, re.M), (
+    # \u2b50 The pipeline now expresses FOUR locked configurations (PREREG
+    # 91956dbe) instead of one, so each campaign variable is
+    # `VAR=${VAR:-<default>}`. The guard is re-derived, not weakened: it pins the
+    # DEFAULT to Run 0's value AND pins that the variable is overridable, which
+    # is strictly more than the old literal match.
+    assert re.search(r"^SCOPE_MODE=\$\{SCOPE_MODE:-mapping\}", s, re.M), \
+        "Run 0's default scope is the mapping scope"
+    assert re.search(r"^LR=\$\{LR:-5e-6\}", s, re.M), (
         "Run 0 is the 5e-6 dial-back; 1e-5 is rung 2, which collapsed the "
         "speaker and is the run this one exists to make readable")
-    assert re.search(r"^TRAINABLE_B=1\.090\b", s, re.M), "1.090 B, verified"
+    assert re.search(r"^TRAINABLE_B=\$\{TRAINABLE_B:-1\.090\}", s, re.M), \
+        "1.090 B, verified"
     assert re.search(r"^ATTN_IMPL=eager\b", s, re.M), "D-8"
+    # \u26d4 AND THE PLANNER MUST NOT CARRY QWEN'S SIZE AS A LITERAL. It did:
+    # `--params 7.616` would have planned OLMo's and Ministral's VRAM against
+    # Qwen's parameter count -- a wrong number in the confident shape of a right
+    # one, which is the planner's own failure mode one level up.
+    assert "--params $TOTAL_B" in s
+    assert "--params 7.616" not in s
     # ⚠️ EXECUTABLE LINES ONLY, via the shared helper. The first form asserted
     # the flag was absent from the whole file and matched the pipeline's own
     # comment explaining that the flag is refused — one of five instances in a
@@ -149,7 +162,15 @@ def test_the_cell_does_not_collide_with_any_fired_rung():
     assert m.group(1) not in fired, (
         "CELL=%s would overwrite %s's artifacts on the hub"
         % (m.group(1), fired[m.group(1)]))
-    assert m.group(1) == "fwmap6-s$SEED"
+    # ⭐ The literal is now the DEFAULT of an overridable variable, and a source
+    # test cannot see an env override at all — which is exactly when a collision
+    # happens. The real guard is `step cell_guard`, which asks the HUB about the
+    # value actually used; this pins the default and that the runtime guard is
+    # still there.
+    assert m.group(1) == "${CELL:-fwmap6-s$SEED}"
+    assert "step cell_guard" in s, (
+        "the runtime cell-collision guard is gone; a source check cannot see "
+        "an env override and cannot replace it")
 
 
 def test_the_dose_check_runs_before_the_verdict():

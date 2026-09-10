@@ -26,12 +26,12 @@ SEED=${SEED:-20624}
 # with its model, both verdicts and its lag profiles. Reusing it would overwrite
 # the artifact this run is COMPARED AGAINST -- destroying the 17.81 dose figure
 # and the lag2 z=+5.79 baseline that PREREG 9ccf98d6 §2.1 and §5 read against.
-CELL=fwmap6-s$SEED              # RUN 0: mapping @ 5e-6, the readable retry
+CELL=${CELL:-fwmap6-s$SEED}              # RUN 0: mapping @ 5e-6, the readable retry
 ROOT=${ROOT:-runs/act2/fullft_$CELL}
 tlon_log_init "$ROOT" pipeline_fullft.log
 
 PY=${PY:-$HOME/venv/bin/python}
-MODEL=Qwen/Qwen2.5-7B-Instruct
+MODEL=${MODEL:-Qwen/Qwen2.5-7B-Instruct}
 HF_REPO=${HF_REPO:-keyzersoze04/tlon-act2-adapters}
 
 # ⛔⛔ EVERY VALUE HERE IS QUOTED FROM THE LOCKED §5, NOT CHOSEN. Changing one
@@ -43,9 +43,9 @@ HF_REPO=${HF_REPO:-keyzersoze04/tlon-act2-adapters}
 # freeze, and `--unfreeze-top` is REFUSED in this mode -- passing it would log a
 # layer scope this run does not have, which on a floor-hunting rung is a
 # mislabelled finding rather than a typo.
-SCOPE_MODE=mapping              # PREREG c2a4f0ca §1: Option A, layers frozen
+SCOPE_MODE=${SCOPE_MODE:-mapping}              # PREREG c2a4f0ca §1: Option A, layers frozen
 OPTIM=adamw_bnb_8bit            # fp32 master params, 8-bit moments (FORCED)
-LR=5e-6                         # PREREG RUN 0 §2: the dial-back. ⛔ NOT a
+LR=${LR:-5e-6}                         # PREREG RUN 0 §2: the dial-back. ⛔ NOT a
                                 # dose-matched choice -- §3 declares the rms
                                 # comparison to rung 1a is CROSS-POPULATION
                                 # (embedding rows vs layer matrices) and is
@@ -53,12 +53,12 @@ LR=5e-6                         # PREREG RUN 0 §2: the dial-back. ⛔ NOT a
 SEQ=384                         # the gate's actual seq, not 256
 BATCH=4; ACCUM=4                # effective 16, the gate's shape
 VRAM_WALL=80                    # D-7: gpu_1x_h100_sxm5, also 80 GiB (see DEVIATIONS)
-TRAINABLE_B=1.090               # rung 2: embed_tokens + lm_head only
+TRAINABLE_B=${TRAINABLE_B:-1.090}               # rung 2: embed_tokens + lm_head only
 # ⭐ RECORDED AS 0 BECAUSE THAT IS WHAT IT IS. `mapping_scope` itself returns
 # `unfreeze_top: 0` -- layers frozen, stated not implied -- so factorial.json
 # says the same thing the scope function says.
-UNFREEZE_TOP=0
-TOTAL_B=7.616                   # Qwen2.5-7B-Instruct, all parameters. Frozen is
+UNFREEZE_TOP=${UNFREEZE_TOP:-0}
+TOTAL_B=${TOTAL_B:-7.616}                   # Qwen2.5-7B-Instruct, all parameters. Frozen is
                                 # the difference, and BOTH are persisted -- the
                                 # `_w` object is a whole model, not a delta.
 CORPUS_SHA=dd40e22f85b0b6e4     # §5: sha-verified BEFORE training
@@ -93,6 +93,14 @@ STACK=${STACK:-}
 # The safety net deploys before the risk. A broken tree failing floors AFTER
 # arming triggers the watchdog, which is its job; floors-first leaves the
 # un-guarded idle window that leaked $0.75 twice.
+echo "=== RESOLVED CONFIG ===" | tee -a $LOG
+echo "  base       $MODEL" | tee -a $LOG
+echo "  cell       $CELL" | tee -a $LOG
+echo "  scope      $SCOPE_MODE  unfreeze_top=$UNFREEZE_TOP  stack=${STACK:-<single>}" | tee -a $LOG
+echo "  lr         $LR   trainable_b=$TRAINABLE_B  total_b=$TOTAL_B" | tee -a $LOG
+echo "  prereg     $PREREG_PATH" | tee -a $LOG
+echo "  attn       $ATTN_IMPL" | tee -a $LOG
+
 step watchdog
 # ⛔⛔ THE DEADLINE IS A COST BOUND, NOT ONLY A STALL GUARD, AND IT IS DERIVED
 # FROM THE CARD'S PRICE. At $3.29/hr the standing $70-per-run alert is reached
@@ -128,6 +136,29 @@ step optim_probe
 # zero delta that looks exactly like the substrate finding.
 $PY tools/act2_finetune.py --probe-optim --lr $LR 2>&1 | tee -a $LOG
 
+step cell_guard
+# \u26d4\u26d4 WOULD THIS RUN OVERWRITE A FIRED RESULT? Asked against the HUB, not a
+# list in this file. `CELL` is env-overridable so the campaign can drive four
+# configurations from one prereg, and the old source-level guard could only ever
+# see the default -- blind to exactly the override that would collide.
+# \u2b50 `factorial.json` is the marker because it is written once per run and
+# survives the weights being archived away.
+$PY - <<PYCELL 2>&1 | tee -a $LOG
+import sys
+sys.path.insert(0, "tools")
+import act2_provision as P
+from huggingface_hub import HfApi
+api = HfApi(token=P._hf_token())
+have = set(api.list_repo_files("$HF_REPO"))
+marker = "$CELL/factorial.json"
+if marker in have:
+    raise SystemExit(
+        "REFUSING: cell $CELL already produced a run on the hub (%s exists). "
+        "Firing here would overwrite an artifact another result is compared "
+        "against. Choose a new CELL." % marker)
+print("  cell $CELL is unused on the hub")
+PYCELL
+
 step hub_capacity
 # ⛔⛔ IS THERE ROOM FOR THE RESULT — asked BEFORE the GPU hours, not after.
 # Rung 1b' trained 3,760 clean steps and then died at persist_leg1 on "Private
@@ -162,13 +193,13 @@ step vram
 # ⛔ Sized on the FULL-WEIGHT arithmetic. The planner's LoRA rows would report
 # ~26 GiB for a job that needs 51 — the wrong number in the confident shape of
 # a right one. And the +28 % is applied because `PLANNER_IS_A_LOWER_BOUND`.
-$PY tools/act2_finetune.py --plan --params 7.616 \
+$PY tools/act2_finetune.py --plan --params $TOTAL_B \
     --trainable-params $TRAINABLE_B --moment-bytes 2 \
     --seq $SEQ --batch $BATCH --vram $VRAM_WALL 2>&1 | tee -a $LOG
 $PY - <<PY 2>&1 | tee -a $LOG
 import sys; sys.path.insert(0, "tools")
 from act2_finetune import plan
-p = plan(7.616, "bf16", $SEQ, $BATCH, True, trainable_b=$TRAINABLE_B,
+p = plan($TOTAL_B, "bf16", $SEQ, $BATCH, True, trainable_b=$TRAINABLE_B,
          moment_bytes=2)
 worst = p["total_GiB"] * 1.28
 print("  planner %.1f GiB, +28%% worst-observed miss -> %.1f vs %d wall"
