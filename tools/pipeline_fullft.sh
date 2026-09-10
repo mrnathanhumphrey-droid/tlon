@@ -82,6 +82,11 @@ PREREG_PATH=${PREREG_PATH:-docs/PREREG_CAMPAIGN_RUN0_MAPPING_5E6_2026_09_09.md}
 # would be exactly that mid-flight swap, which is why the flag is on leg 2 as
 # well as leg 1.
 ATTN_IMPL=eager
+# ⛔ REQUIRED on a base with more than one transformer-layer stack -- a
+# multimodal checkpoint pools its vision tower's layer indices with the
+# text model's into a set that can look perfectly contiguous. Empty for a
+# plain causal LM. PREREG 91956dbe §4.1.
+STACK=${STACK:-}
 
 # ── 1 · WATCHDOG FIRST, BEFORE THE FLOORS ───────────────────────────────────
 # ⛔⛔ THE ORDER IS THE PREREG'S (§8, R5) AND IT IS A CHANGE FROM THE LoRA ARM.
@@ -207,7 +212,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
     --full --scope-mode $SCOPE_MODE --optim $OPTIM \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
-    --attn-impl $ATTN_IMPL \
+    --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
     --seed $SEED --delta-snapshot-out $SNAP 2>&1 | tee -a $LOG
 
 step factorial_json
@@ -220,9 +225,10 @@ import json, pathlib, sys
 sys.path.insert(0, ".")
 from tlon.act2.factorial import weight_arm_entry
 from tlon.discourse.transient import CONTENT_TRANSIENT
+stack = "$STACK" or None
 e = weight_arm_entry("$CELL", recipe=CONTENT_TRANSIENT, seed=$SEED,
                      unfreeze_top=$UNFREEZE_TOP, scope_mode="$SCOPE_MODE",
-                     prereg="$PREREG_ID",
+                     prereg="$PREREG_ID", base_model="$MODEL", stack=stack,
                      manifest=json.loads(pathlib.Path("$CM").read_text()))
 pathlib.Path("$OUT/factorial.json").write_text(json.dumps(e, indent=2))
 print("  ✅ %s: cell=%r pair_key=%r category=%s"
@@ -406,7 +412,7 @@ else
       --corpus $ROOT/corpus_ct-s$SEED \
       --full --scope-mode $SCOPE_MODE --optim $OPTIM \
       --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
-      --attn-impl $ATTN_IMPL \
+      --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
       --seed $SEED --delta-snapshot-in $SNAP 2>&1 | tee -a $LOG
 
   step persist_leg2

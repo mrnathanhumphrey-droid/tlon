@@ -156,7 +156,10 @@ CATEGORY_W = "_w"
 
 
 def weight_arm_entry(name: str, *, recipe: str, seed: int, unfreeze_top: int,
-                     prereg: str, manifest=None, scope_mode: str = "layers") -> dict:
+                     prereg: str, manifest=None,
+                     scope_mode: str = "layers",
+                     base_model: str | None = None,
+                     stack: str | None = None) -> dict:
     """The fields that ride with a `_w` OBJECT. ⛔⛔ IT IS NOT A CELL EITHER.
 
     A full-weight model is not a member of the `{content-free, content-transient}
@@ -211,7 +214,24 @@ def weight_arm_entry(name: str, *, recipe: str, seed: int, unfreeze_top: int,
                 "would record a layer scope the run does not have -- and on a "
                 "floor-hunting rung a mislabelled scope is a mislabelled "
                 "finding." % unfreeze_top)
-    entry_scope = {"scope_mode": scope_mode}
+    # ⛔⛔ THE BASE MODEL IS RECORDED, BECAUSE IT USED TO BE AN UNRECORDED
+    # CONSTANT. Every finding of the Qwen arc is strictly a fact about
+    # Qwen2.5-7B-Instruct, and nothing in any artifact SAID so -- which is the
+    # whole reason PREREG 91956dbe exists. Now that the base is a VARIABLE, an
+    # artifact that does not name it would repeat that same mistake one level
+    # down, on the axis the campaign was built to isolate.
+    if base_model is None:
+        raise FactorialError(
+            "base_model is REQUIRED. The base was an unrecorded constant for "
+            "the entire Qwen arc, so every result from it is silently scoped to "
+            "one checkpoint; a campaign that VARIES the base and still does not "
+            "record it would be unreadable the moment the scrollback is gone.")
+    entry_scope = {"scope_mode": scope_mode, "base_model": base_model}
+    # ⭐ And the stack, when one had to be named: on a multimodal base the
+    # trainable set depends on it, so a run that omitted it from the record
+    # could not say WHICH layers it trained.
+    if stack is not None:
+        entry_scope["layer_stack"] = stack
     if scope_mode == "mapping":
         # ⭐ POSITIVE. The artifact names the tensors that moved, so "trains
         # nothing" is falsifiable from the record rather than inferred from a

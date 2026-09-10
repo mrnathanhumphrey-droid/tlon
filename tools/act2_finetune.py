@@ -335,6 +335,16 @@ def main() -> int:
                          "mapping frozen). 'mapping' = embed_tokens + lm_head "
                          "ONLY with every layer frozen (rung 2: does release "
                          "live in the token mapping?).")
+    ap.add_argument("--stack", default=None,
+                    help="prefix of the transformer-layer stack to train, "
+                         "e.g. language_model.model. REQUIRED on a base "
+                         "with more than one stack: a multimodal "
+                         "checkpoint carries a vision tower whose layer "
+                         "indices pool with the text model's into a set "
+                         "that looks perfectly contiguous, and the scope "
+                         "then trains an image encoder as if it were part "
+                         "of the language model. Refused rather than "
+                         "guessed; single-stack bases need no value.")
     ap.add_argument("--unfreeze-top", type=int, default=None,
                     help="train the top N transformer layers; everything below, "
                          "plus embed_tokens and lm_head, is frozen. §5 = 14.")
@@ -586,7 +596,7 @@ def main() -> int:
             # because this rung's expected outcome is a FLOOR: a selector that
             # matched nothing would train a frozen model, report a zero delta,
             # and read as exactly the finding being tested for.
-            scope = _apply_mapping_scope(model)
+            scope = _apply_mapping_scope(model, stack=a.stack)
             print("⭐ FULL-WEIGHT scope — MAPPING ONLY (embed_tokens + lm_head), "
                   "all %d transformer layers FROZEN: %s trainable / %s frozen"
                   % (scope["n_layers"],
@@ -594,7 +604,8 @@ def main() -> int:
                      f"{scope['n_frozen_params']:,}"))
             print("   trainable tensors: %s" % sorted(scope["trainable"]))
         else:
-            scope = _apply_scope(model, unfreeze_top=a.unfreeze_top)
+            scope = _apply_scope(model, unfreeze_top=a.unfreeze_top,
+                                 stack=a.stack)
             print("⭐ FULL-WEIGHT scope — top %d of %d layers trainable: "
                   "%s trainable / %s frozen params"
                   % (scope["unfreeze_top"], scope["n_layers"],

@@ -34,7 +34,8 @@ def _persist():
 def test_a_weight_arm_entry_has_no_cell_and_no_pair_key():
     """⛔ The three fields every pooling and pairing routine reads."""
     e = weight_arm_entry("fw", recipe=CONTENT_TRANSIENT, seed=20624,
-                         unfreeze_top=14, prereg=PREREG)
+                         unfreeze_top=14, prereg=PREREG,
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
     assert e["cell"] is None
     assert e["factorial_cell"] is None
     assert "factorial_pair_key" not in e
@@ -47,7 +48,8 @@ def test_the_recipe_stays_true_because_it_is_what_it_trained_on():
     Refusing the recipe would be a lie about the corpus; refusing the CELL is
     the accurate statement."""
     e = weight_arm_entry("fw", recipe=CONTENT_TRANSIENT, seed=20624,
-                         unfreeze_top=14, prereg=PREREG)
+                         unfreeze_top=14, prereg=PREREG,
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
     assert e["recipe"] == CONTENT_TRANSIENT
     assert e["training_mode"] == FULL_WEIGHT
     assert e["unfreeze_top"] == 14
@@ -71,7 +73,8 @@ def test_a_weight_arm_cannot_be_pooled_even_though_its_recipe_is_real():
     assert pair_regimes(ctx) != {}          # the real pair still works
 
     w = weight_arm_entry("fw", recipe=CONTENT_TRANSIENT, seed=20624,
-                         unfreeze_top=14, prereg=PREREG)
+                         unfreeze_top=14, prereg=PREREG,
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
     for fn in (pair_regimes, unpaired, check_balanced):
         with pytest.raises(FactorialError, match="not factorial members"):
             fn(ctx + [w])
@@ -81,7 +84,8 @@ def test_the_refusal_raises_rather_than_filtering():
     """⛔ Silently dropping it would leave the caller believing the population
     included it — a count that is right for a reason nobody stated."""
     w = weight_arm_entry("fw", recipe=CONTENT_TRANSIENT, seed=20624,
-                         unfreeze_top=14, prereg=PREREG)
+                         unfreeze_top=14, prereg=PREREG,
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
     with pytest.raises(FactorialError):
         pair_regimes([w])
 
@@ -94,7 +98,8 @@ def test_adapters_carry_the_ctx_label_so_a_mixed_set_is_visible():
 def test_unfreeze_top_zero_is_refused_at_the_ledger_too():
     with pytest.raises(FactorialError, match="trains nothing"):
         weight_arm_entry("fw", recipe=CONTENT_TRANSIENT, seed=20624,
-                         unfreeze_top=0, prereg=PREREG)
+                         unfreeze_top=0, prereg=PREREG,
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
 
 
 # ── the persist shape ────────────────────────────────────────────────────────

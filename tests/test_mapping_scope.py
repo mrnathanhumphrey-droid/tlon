@@ -241,7 +241,8 @@ def test_the_factorial_entry_accepts_the_mapping_scope():
     from tlon.act2.factorial import weight_arm_entry
     from tlon.discourse.transient import CONTENT_TRANSIENT
     e = weight_arm_entry("fwmap", recipe=CONTENT_TRANSIENT, seed=20624,
-                         unfreeze_top=0, scope_mode="mapping", prereg="c2a4f0ca")
+                         unfreeze_top=0, scope_mode="mapping", prereg="c2a4f0ca",
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
     assert e["scope_mode"] == "mapping"
     assert e["unfreeze_top"] == 0
     # ⭐ POSITIVE: the artifact names what moved, so "trains nothing" is
@@ -257,7 +258,8 @@ def test_the_zero_LAYER_scope_is_still_refused():
     from tlon.discourse.transient import CONTENT_TRANSIENT
     with pytest.raises(FactorialError, match="trains nothing"):
         weight_arm_entry("x", recipe=CONTENT_TRANSIENT, seed=1,
-                         unfreeze_top=0, prereg="p")
+                         unfreeze_top=0, prereg="p",
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
 
 
 def test_a_mapping_scope_with_a_LAYER_COUNT_is_refused():
@@ -266,7 +268,8 @@ def test_a_mapping_scope_with_a_LAYER_COUNT_is_refused():
     from tlon.discourse.transient import CONTENT_TRANSIENT
     with pytest.raises(FactorialError, match="unfreeze_top must be 0"):
         weight_arm_entry("x", recipe=CONTENT_TRANSIENT, seed=1,
-                         unfreeze_top=19, scope_mode="mapping", prereg="p")
+                         unfreeze_top=19, scope_mode="mapping", prereg="p",
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
 
 
 def test_an_unnamed_scope_mode_is_refused():
@@ -274,7 +277,8 @@ def test_an_unnamed_scope_mode_is_refused():
     from tlon.discourse.transient import CONTENT_TRANSIENT
     with pytest.raises(FactorialError, match="unknown scope_mode"):
         weight_arm_entry("x", recipe=CONTENT_TRANSIENT, seed=1,
-                         unfreeze_top=0, scope_mode="everything", prereg="p")
+                         unfreeze_top=0, scope_mode="everything", prereg="p",
+                         base_model="Qwen/Qwen2.5-7B-Instruct")
 
 
 def test_the_pipeline_passes_the_scope_mode_to_the_factorial_entry():

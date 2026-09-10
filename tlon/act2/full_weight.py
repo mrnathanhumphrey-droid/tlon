@@ -164,7 +164,8 @@ def full_weight_scope(names, *, unfreeze_top: int,
     }
 
 
-def apply_scope(model, *, unfreeze_top: int) -> dict:
+def apply_scope(model, *, unfreeze_top: int,
+                stack: str | None = None) -> dict:
     """Set `requires_grad` per §5 and cast the trainable set to fp32.
 
     ⛔⛔ THE fp32 CAST IS THE POINT, NOT AN OPTIMISATION. §4.1: under a bf16
@@ -177,7 +178,10 @@ def apply_scope(model, *, unfreeze_top: int) -> dict:
     import torch
 
     names = [n for n, _ in model.named_parameters()]
-    scope = full_weight_scope(names, unfreeze_top=unfreeze_top)
+    # ⛔ `stack` reaches the SELECTION, not only the layer count. A
+    # multimodal base has two layer stacks and the pooled set can look
+    # perfectly contiguous -- see `layer_stacks`.
+    scope = full_weight_scope(names, unfreeze_top=unfreeze_top, stack=stack)
     train = set(scope["trainable"])
     n_train = n_frozen = 0
     for name, p in model.named_parameters():
@@ -300,7 +304,7 @@ def mapping_scope(names, *, mapping_leaves=MAPPING_LEAVES,
     }
 
 
-def apply_mapping_scope(model) -> dict:
+def apply_mapping_scope(model, *, stack: str | None = None) -> dict:
     """`requires_grad` for rung 2, with the layer freeze ASSERTED on the model.
 
     ⛔ The name-level checks in `mapping_scope` prove the SELECTION; this proves
@@ -311,7 +315,7 @@ def apply_mapping_scope(model) -> dict:
     import torch
 
     names = [n for n, _ in model.named_parameters()]
-    scope = mapping_scope(names)
+    scope = mapping_scope(names, stack=stack)
     train = set(scope["trainable"])
     n_train = n_frozen = 0
     for name, p in model.named_parameters():
