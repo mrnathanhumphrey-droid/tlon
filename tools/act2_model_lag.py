@@ -50,7 +50,8 @@ for _s in (sys.stdout, sys.stderr):
 from tlon.discourse.transient import (Z_LAG1_MIN, Z_LAGN_MAX,      # noqa: E402
                                       UnscoreableLag, check_transience,
                                       lag_pairs, lag_profile,
-                                      permutation_null)
+                                      permutation_null, resolving_power,
+                                      threshold_for_lag)
 from tlon.discourse.multiturn import MultiturnError                # noqa: E402
 from tlon.discourse.provocation import DIRECTION as PROVOKE        # noqa: E402
 from tlon.grammar import classes as C                              # noqa: E402
@@ -219,7 +220,7 @@ def main() -> int:
     # it draws, so the lags that ARE scoreable consume exactly what they would
     # have consumed. A skip that shifted the stream would silently change the
     # numbers this report is compared against.
-    zs, nulls, npairs, unscoreable = {}, {}, {}, {}
+    zs, nulls, npairs, unscoreable, powers, needs = {}, {}, {}, {}, {}, {}
     for k in range(1, a.max_lag + 1):
         npairs[k] = lag_pairs(chains, lag=k)
         try:
@@ -229,6 +230,34 @@ def main() -> int:
             zs[k], nulls[k] = None, None
             unscoreable[k] = str(exc)
             print("  ⛔ lag %d UNSCOREABLE — 0 pairs" % k)
+            continue
+        # ⛔⛔ CAN THIS CELL REACH ITS THRESHOLD AT ALL? The null's sd is the
+        # spread of a MEAN over n pairs, so it falls like sigma/sqrt(n) and a
+        # small cell yields a small z NO MATTER WHAT THE SPEAKER DID. That is
+        # not noise, it is a fixed direction: lag 1 can then never clear 6.0
+        # (fabricated "perceive collapsed") and lag >=2 can never exceed 3.0
+        # (vacuous "release passed"). Both wrong, and together they spell the
+        # (d) row.
+        #
+        # ⭐ Derived, never picked: the bar is the LOCKED threshold, and the
+        # quantity compared against it is this run's own maximum attainable z.
+        # Closing the n=0 hole moved the probability onto n=1, and `n_pairs > 0`
+        # was the same too-weak threshold `changed > 0` had been.
+        power = resolving_power(chains, lag=k, lex_r=lex_r, mu=mu, sd=sd)
+        need = threshold_for_lag(k)
+        powers[k], needs[k] = power, need
+        if power < need:
+            zs[k], nulls[k] = None, {"mean": mu, "sd": sd}
+            unscoreable[k] = (
+                "UNRESOLVABLE AT LAG %d: %d pair(s) give the null sd=%.4f, so "
+                "the highest z this cell can emit is %.3f -- below the %.1f "
+                "threshold it would be judged against. The comparison is "
+                "decided by arithmetic before the speaker is consulted: at lag "
+                "1 that fabricates a perceive collapse, at lag >=2 it grants a "
+                "vacuous release pass. Neither is a measurement."
+                % (k, npairs[k], sd, power, need))
+            print("  ⛔ lag %d UNRESOLVABLE — z_max %.3f < %.1f (n=%d)"
+                  % (k, power, need, npairs[k]))
             continue
         nulls[k] = {"mean": mu, "sd": sd}
         zs[k] = (prof[k] - mu) / sd if sd else float("nan")
@@ -275,6 +304,10 @@ def main() -> int:
         # `n_pairs` travels with every z from here on, and `z: null` beside
         # `n_pairs: 0` is the unscoreable state, which is not a zero.
         "n_pairs": npairs,
+        # ⭐ The cell's CEILING beside its reading. `resolving_power`
+        # below `threshold` means the verdict was decided by arithmetic.
+        "resolving_power": powers,
+        "threshold_by_lag": needs,
         # ⛔ The honest name. `seed` alone implied it controlled the whole read;
         # it did not, and for every profile recorded before this run it did not
         # touch the sampling at all. False here means the numbers above are one

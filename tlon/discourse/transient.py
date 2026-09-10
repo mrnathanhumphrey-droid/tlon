@@ -300,6 +300,63 @@ def lag_pairs(chains, *, lag: int) -> int:
     return sum(max(0, len(ch) - lag) for ch in chains)
 
 
+def max_attainable_profile(chains, *, lag: int, lex_r) -> float:
+    """The largest lag-`lag` profile THESE chains could possibly produce.
+
+    ⭐ Two turns can share at most `min(|roots_a|, |roots_b|)` roots, so this is
+    the profile a perfectly-persistent speaker would have scored on exactly this
+    material. It is measured from the chains, never assumed.
+    """
+    n = lag_pairs(chains, lag=lag)
+    if n == 0:
+        raise UnscoreableLag(lag=lag, n_chains=len(chains),
+                             n_turns=sum(len(ch) for ch in chains),
+                             lengths=sorted(len(ch) for ch in chains))
+    tot = 0
+    for ch in chains:
+        rs = [roots_of(t.surface, lex_r) for t in ch]
+        for i in range(len(rs) - lag):
+            tot += min(len(rs[i]), len(rs[i + lag]))
+    return tot / n
+
+
+def threshold_for_lag(lag: int, *, z_lag1_min: float = Z_LAG1_MIN,
+                      z_lagn_max: float = Z_LAGN_MAX) -> float:
+    """⛔ The locked thresholds, selected by lag. Nothing new is invented here."""
+    return z_lag1_min if lag == 1 else z_lagn_max
+
+
+def resolving_power(chains, *, lag: int, lex_r, mu: float, sd: float) -> float:
+    """The HIGHEST z this cell is capable of emitting. ⭐ Just the z of the
+    maximum attainable profile — same null, same formula, no new constant.
+
+    ⛔⛔ WHY A CELL SIZE CAN DECIDE A VERDICT BY ITSELF. The null's `sd` is the
+    spread of a MEAN over n pairs, so it falls like sigma/sqrt(n): a SMALL cell
+    gives a LARGE sd and therefore a SMALL z. That does not merely make z noisy,
+    it biases both axes in a fixed direction --
+
+        lag 1   PASS is `z >= 6.0`  -> a small cell CANNOT pass  -> fabricated
+                                       "perceive collapsed"
+        lag >=2 PASS is `z <= 3.0`  -> a small cell CANNOT fail  -> vacuous
+                                       "release passed"
+
+    -- so a degenerate speaker reads as (d) "collapsed toward content-free" for
+    reasons of arithmetic. Measured on Run 0's re-read: lag-1 sd 0.5167 against
+    rung 2's 0.1270, and the ceiling was unreachable on every lag.
+
+    ⭐ When `resolving_power < threshold_for_lag(lag)` the comparison is decided
+    before the model speaks. That is `arithmetic_closes_inquiry` turned into a
+    guard: a result true BY CONSTRUCTION must say so instead of being reported
+    as a finding.
+    """
+    if not sd:
+        # ⛔ Zero spread resolves nothing, and the safe direction is
+        # unresolvable. The z is `nan` in this case anyway and the verdict tool
+        # refuses on it.
+        return 0.0
+    return (max_attainable_profile(chains, lag=lag, lex_r=lex_r) - mu) / sd
+
+
 class UnscoreableLag(MultiturnError):
     """⛔⛔ THE SPEAKER EMITTED NOTHING SCOREABLE AT THIS LAG. A DIAGNOSIS.
 
