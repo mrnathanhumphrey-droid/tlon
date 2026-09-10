@@ -1,11 +1,11 @@
 # PREREG — CAMPAIGN family matrix: is the mapping untouchable across families?
 
 - **Status:** LOCKED — pre-registered. Not fired.
-- **LOCK:** `91956dbe` (sha256[:8] of draft body at lock, 2026-09-10T01:24Z)
+- **LOCK:** `5f4a554c` (sha256[:8] of draft body at lock, 2026-09-10T20:31Z)
 - **Date:** 2026-09-09
 - **Fires on:** four full-weight fine-tunes — **two bases × two rungs** —
   `allenai/Olmo-3-7B-Instruct` and
-  `mistralai/Ministral-3-8B-Instruct-2512-BF16`, each at the **layer rung**
+  `mistralai/Mistral-7B-Instruct-v0.3` (AMENDMENT A), each at the **layer rung**
   (speakerhood gate) and then the **mapping rung** (the question), on the
   content-transient corpus `dd40e22f85b0b6e4`.
 - **Predecessors:** `a0450b36` / `9ccf98d6` / `bd435b37` (Qwen layer rungs),
@@ -41,8 +41,8 @@ this is two bases and not four.
 |---|---|---|---|
 | **2a** | Olmo-3-7B-Instruct | layer, top-half | speakerhood gate |
 | **2b** | Olmo-3-7B-Instruct | mapping | THE QUESTION |
-| **3a** | Ministral-3-8B-BF16 | layer, top-half | speakerhood gate |
-| **3b** | Ministral-3-8B-BF16 | mapping | THE QUESTION |
+| **3a** | Mistral-7B-Instruct-v0.3 | layer, top-half | speakerhood gate |
+| **3b** | Mistral-7B-Instruct-v0.3 | mapping | THE QUESTION |
 
 ⛔ **Gemma 4 is deliberately EXCLUDED from this matrix.** It is Apache-2.0 and
 ungated (verified at decision time, 2026-09-09), but
@@ -115,36 +115,76 @@ predicted — read from the downloaded safetensors headers):
 |---|---|---|---|---|---|
 | Qwen2.5-7B-Instruct *(incumbent)* | 7.616 B | 28 | 14 | 3.263 B | 1.090 B |
 | **Olmo-3-7B-Instruct** | 7.298 B | 32 | **16** | **3,238,264,832** | **821,477,376** |
-| **Ministral-3-8B-BF16** | 8.918 B | 34 | **17** | **3,707,904,000** | **1,073,741,824** |
+| **Mistral-7B-Instruct-v0.3** | 7.248 B | 32 | **16** | **3,489,792,000** | **268,435,456** |
 
 ⭐ OLMo's layer rung lands within **0.8 %** of Qwen's incumbent by coincidence,
 Ministral's is +13.6 %. Recorded as context; the read is verdict-vs-verdict, so
 neither is a dose match and neither is required to be.
 
-### 4.1 ⛔⛔ The layer STACK must be named for Ministral
+### 4.1 ⛔⛔ AMENDMENT A: the Mistral base is TEXT-ONLY, and that is the point
 
-`Ministral-3-8B` is **multimodal** and carries two transformer-layer stacks:
+**Both bases in this matrix are single-stack causal LMs, so no `stack` argument
+is used.** Verified against each base's real tensors on 2026-09-10:
+
+- **Olmo-3-7B-Instruct** — one stack (`model`), Qwen/Llama naming
+  byte-for-byte. 0 vision tensors.
+- **Mistral-7B-Instruct-v0.3** — one stack (`model`), `MistralForCausalLM`,
+  untied. 32 layers, 3,489,792,000 trainable at top-16.
+
+⛔ **THE BASE WAS SWAPPED FROM `Ministral-3-8B-Instruct-2512-BF16`, AND THE
+REASON IS THE AXIS, NOT THE EFFORT.** Ministral-3 is
+`Mistral3ForConditionalGeneration`: a multimodal model carrying TWO
+transformer-layer stacks (`language_model.model.layers.0..33` and
+`vision_tower.transformer.layers.0..23`). Two things followed.
+
+1. **It could not be loaded.** `AutoModelForCausalLM` refuses a
+   `Mistral3Config`, so run 3a died at the training leg with
+   *"Unrecognized configuration class ... for this kind of AutoModel"*.
+   Supporting it means a different AutoClass, the trainer's loss path, the
+   `LocalBackend` read path and a chat template carrying image tokens — a
+   modality port across train AND read.
+2. ⭐ **And the port would have WEAKENED the axis it was meant to serve.** This
+   matrix exists to vary FAMILY while holding architecture constant. A
+   multimodal base varies family AND modality, so a Ministral result differing
+   from Qwen's could not distinguish "different training lineage" from
+   "different architecture". The effort would have bought a CONFOUNDED arm.
+
+⭐ `Mistral-7B-Instruct-v0.3` holds architecture constant (text-only causal LM,
+same tensor naming as Qwen and OLMo) and varies only family — a different lab,
+a different pretraining corpus, a different instruction-tuning recipe. It is
+therefore the BETTER object for this axis, not a fallback.
+
+⚠️ **Recorded honestly: it is the 2024 v0.3 line, not the 2025 Mistral-3 line.**
+The axis is LINEAGE, not recency — "is this a Qwen-recipe artifact or an LLM
+property" is answered by any capable different-lineage 7B. Recency would matter
+only for a claim about frontier models specifically, which this campaign does
+not make.
+
+⚠️ **THE MAPPING LOCUS IS NOT THE SAME SIZE ACROSS THE MATRIX, AND THAT IS
+RECORDED BEFORE THE RUN, NOT DISCOVERED AFTER IT.** Vocabulary drives it:
 
 ```
-language_model.model.layers.0..33       the text model
-vision_tower.transformer.layers.0..23   an image encoder
+Qwen2.5-7B        vocab 152,064  hidden 3584  ->  1,089,994,752
+Olmo-3-7B         vocab 100,278  hidden 4096  ->    821,477,376
+Mistral-7B-v0.3   vocab  32,768  hidden 4096  ->    268,435,456
 ```
 
-The pooled index set is `0..33` — **contiguous**, so every pre-existing scope
-guard passed and `unfreeze_top=14` put **36 vision-tower tensors** in the
-trainable set. Fixed in `de1d846`/`563b5a6`: the scope refuses a multi-stack
-base unless the stack is named, and naming it restricts the SELECTION, not only
-the layer count.
+Mistral's mapping rung is **4.1x smaller than Qwen's**. The read stays valid —
+it is verdict-vs-verdict and ruler-free (§3) — but "the mapping" is a materially
+different fraction of each model, so a cross-family mapping result is a claim
+about the LOCUS, never about a matched parameter budget. ⛔ Do not read a
+magnitude difference between these runs as a dose effect.
 
-- **Olmo-3-7B** — one stack (`model`), Qwen/Llama naming byte-for-byte. **No
-  stack argument.** Verified: 0 vision tensors, trainable set is exactly the
-  text layers.
-- **Ministral-3-8B** — `stack="language_model.model"`, RECORDED IN THE RUN.
-  Verified: 126 tensors at top-14, **0 vision**, and the mapping leaves resolve
-  to `language_model.model.embed_tokens.weight` +
-  `language_model.lm_head.weight` (different depths — the leaves are
-  deliberately not filtered by the stack prefix, and the per-leaf positive
-  assertion is what makes that safe).
+⛔ `Ministral-3-3B` is also excluded, and for the Gemma reason as well as the
+modality one: `tie_word_embeddings = True`, so `mapping_scope` refuses it and it
+could not occupy the mapping row either.
+
+⛔ **A GAP THIS EXPOSED, recorded for the preflight suite:** every preflight
+passed before run 3a died — because NONE OF THEM LOAD THE MODEL. VRAM plans
+from parameter counts, `cell_guard` and `hub_capacity` query the hub, `corpus`
+is CPU-only. The first thing that touches the architecture is the training leg,
+so an unloadable base is not caught until GPU time is being spent. Cheap here
+(~$0.45, 8 min) and loud, but the check belongs at minute zero.
 
 ---
 
