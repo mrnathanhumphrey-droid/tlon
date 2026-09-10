@@ -348,6 +348,14 @@ step vocab_coverage
 $PY tools/act2_vocab_coverage.py --model $MODEL \
     --corpus $ROOT/corpus_ct-s$SEED --out $ROOT/vocab_coverage.json 2>&1 | tee -a $LOG
 
+# LAYERS-MODE SKIP: mapping_moved asserts per-leaf movement of embed_tokens
+# and lm_head, which a LAYER rung deliberately FREEZES. It ran
+# unconditionally and refused run 2a after a clean train and a clean read
+# -- MAPPING_FROZEN on a run whose scope froze the mapping on purpose.
+# Same class as --unfreeze-top: a step configured for the mapping rung
+# with no business running in layers mode.
+if [ "$SCOPE_MODE" = "mapping" ]; then
+
 step mapping_moved
 # ⛔⛔ PREREG c2a4f0ca §5 — THE GATE THAT KEEPS THIS RUN'S FLOOR HONEST.
 # This rung inverts the gradient geometry: `lm_head` sits one step from the
@@ -375,6 +383,10 @@ if verdict != MAPPING_MOVED:
     raise SystemExit(1)
 print("  the floor verdict below is READABLE: both mapping halves trained.")
 PYMAP
+
+else
+  echo "  (mapping_moved SKIPPED: scope_mode=$SCOPE_MODE freezes the mapping by design)" | tee -a $LOG
+fi
 
 step verdict_epoch1
 # ⛔ `set -e` would abort on the STOP exit code, and a STOP at epoch 1 is not a
