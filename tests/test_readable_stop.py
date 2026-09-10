@@ -126,8 +126,18 @@ def test_run_0_config_is_what_the_prereg_declares():
     # comment explaining that the flag is refused — one of five instances in a
     # single session of a whole-file guard tripping on its own documentation.
     # `textguard.code_only` is that fix made once instead of five times.
-    assert "--unfreeze-top" not in code_only(s), (
-        "a mapping-scope run must not pass --unfreeze-top")
+    # RE-DERIVED, NOT WEAKENED. The old form pinned the flag's ABSENCE,
+    # which was right while this file ran one rung and made it impossible to
+    # run the other. --unfreeze-top is REFUSED in mapping mode and REQUIRED in
+    # layers mode, so what must be pinned is the CONDITION: the flag may
+    # appear only inside the SCOPE_MODE=layers guard.
+    code = code_only(s)
+    assert code.count("--unfreeze-top") == 1, (
+        "--unfreeze-top must be emitted from exactly one place")
+    guard = code.index('if [ "$SCOPE_MODE" = "layers" ]; then')
+    assert guard < code.index("--unfreeze-top"), (
+        "--unfreeze-top escaped the layers guard; a mapping run would pass a "
+        "layer scope it does not have")
 
 
 def test_the_per_leaf_mapping_gate_runs_before_the_verdict():

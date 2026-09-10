@@ -235,13 +235,24 @@ CM=$ROOT/corpus_ct-s$SEED/manifest.json
 # ⛔⛔ §5: "2 epochs declared, with a MANDATORY read at end of epoch 1", and a
 # pre-declared early-stop if epoch 1 is GO on all three axes. Both branches are
 # in the locked body, so neither is a choice made after seeing the number.
+# LAYER_ARGS: --unfreeze-top is REFUSED in mapping mode and REQUIRED in
+# layers mode, so it cannot be a constant here. It was deleted outright when
+# this file was configured for the mapping rung, which left the pipeline
+# unable to run a LAYER rung at all -- and PREREG 91956dbe makes the layer
+# rung the speakerhood gate every family run starts with. Emitted from the
+# scope so the two cannot disagree.
+LAYER_ARGS=""
+if [ "$SCOPE_MODE" = "layers" ]; then
+  LAYER_ARGS="--unfreeze-top $UNFREEZE_TOP"
+fi
+
 OUT=$ROOT/model_$CELL
 SNAP=$ROOT/delta_snapshot.pt
 
 step train_leg1
 $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
-    --full --scope-mode $SCOPE_MODE --optim $OPTIM \
+    --full --scope-mode $SCOPE_MODE --optim $OPTIM $LAYER_ARGS \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
     --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
     --seed $SEED --delta-snapshot-out $SNAP 2>&1 | tee -a $LOG
@@ -441,7 +452,7 @@ else
   # byte-identical to one continuous 2-epoch run. See DEVIATIONS.
   $PY tools/act2_finetune.py --model $OUT --out $OUT \
       --corpus $ROOT/corpus_ct-s$SEED \
-      --full --scope-mode $SCOPE_MODE --optim $OPTIM \
+      --full --scope-mode $SCOPE_MODE --optim $OPTIM $LAYER_ARGS \
       --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
       --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
       --seed $SEED --delta-snapshot-in $SNAP 2>&1 | tee -a $LOG
