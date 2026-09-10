@@ -1,0 +1,45 @@
+{
+  "PROVENANCE": "RECONSTRUCTED from pipeline_fullft.log. The original JSON was written on the box and never persisted: the pipeline died at `mapping_moved` -- a mapping-rung gate running in layers mode -- before tlon_persist_run_files, and the watchdog terminated the instance. The log survived because the watchdog's flush-cmd pushed it.",
+  "RECONSTRUCTED": true,
+  "ABSENT_FIELDS": {
+    "null": "the permutation null's mean/sd were never printed to the log",
+    "resolving_power": "not recomputable without the null; NOT estimated",
+    "sampling_stream_seeded": "not printed; the run was under b6bfd46, which does seed it"
+  },
+  "object": "runs/act2/fullft_olmo16-s20624/model_olmo16-s20624",
+  "object_kind": "full_weight",
+  "measurement_category": "_w",
+  "base_model": "allenai/Olmo-3-7B-Instruct",
+  "PREREG": "91956dbe",
+  "rung": "layer, top-half (16 of 32)",
+  "n_trainable": 3238264832,
+  "lr": "1e-5",
+  "seed": 20624,
+  "lag_profile": {
+    "1": 1.037,
+    "2": 0.4688,
+    "3": 0.1786,
+    "4": 0.1528
+  },
+  "z": {
+    "1": 23.38,
+    "2": 8.89,
+    "3": 1.71,
+    "4": 0.99
+  },
+  "n_pairs": {
+    "1": 108,
+    "2": 96,
+    "3": 84,
+    "4": 72
+  },
+  "chains_used": 12,
+  "chains_dropped_too_short": 0,
+  "turns_total": 120,
+  "verdict": "REFUSED",
+  "refusal_reason": "CONTENT PERSISTS: lag(s) [2] exceed the chance ceiling z=3.00 (lag2 z=8.89). Content is walking the chain, so the corpus trains persistence -- object permanence rebuilt from local choices. \u26d4 lag 2 is the speaker's OWN previous turn.",
+  "thresholds": {
+    "z_lag1_min": 6.0,
+    "z_lagn_max": 3.0
+  }
+}
