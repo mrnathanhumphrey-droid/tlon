@@ -818,6 +818,30 @@ def main() -> int:
     # downstream should read it as one.
     trainer.save_model(a.out)
 
+    # ⛔⛔ SAVE THE TOKENIZER EXPLICITLY, AND PROVE THE OBJECT READS BACK.
+    # `save_model` writes a tokenizer only when one is reachable — from
+    # `processing_class` (never set here) or, failing that, from
+    # `data_collator.tokenizer`. So for this whole arc the tokenizer was saved
+    # as a SIDE EFFECT of which collator happened to be in use, and swapping the
+    # collator silently stopped it: run 3a's re-run trained 62 clean minutes and
+    # died at F-LOCAL on a model directory with no tokenizer, reported as an
+    # unrelated-looking sentencepiece error two stages downstream.
+    # ⭐ An explicit save does not care what the Trainer infers. And the readback
+    # is the check that matters — a model that cannot be re-opened is not a
+    # result, and here it costs seconds to learn instead of a whole read leg.
+    tok.save_pretrained(a.out)
+    from transformers import AutoTokenizer as _AT
+    try:
+        _back = _AT.from_pretrained(a.out)
+    except Exception as exc:                                     # noqa: BLE001
+        raise SystemExit(
+            "⛔⛔ THE SAVED OBJECT CANNOT BE RE-OPENED: AutoTokenizer refused "
+            "%s (%s). Every downstream read — F-LOCAL, the lag profile, the "
+            "verdict — loads this directory. Refusing to report a trained "
+            "model that nothing can read." % (a.out, exc)) from None
+    print("⭐ tokenizer saved and READ BACK from %s: %s, eos %r (%s)"
+          % (a.out, type(_back).__name__, _back.eos_token, _back.eos_token_id))
+
     if a.full:
         # ⛔⛔ THE §4.1 PRECONDITION, COMPUTED HERE AND NOWHERE ELSE. It is
         # written beside the weights it describes, in the process that trained

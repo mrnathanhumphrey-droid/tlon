@@ -86,6 +86,22 @@ SINGLE_SHARD = "model.safetensors"
 #: ⭐ Tokenizer/generation files ride along when present. Absent ones are not an
 #: error: `save_model` writes them only when a tokenizer was attached, and
 #: demanding one that was never written would fail a complete run.
+#: ⛔⛔ A TOKENIZER IS NOT OPTIONAL FOR A FULL-WEIGHT OBJECT. Every downstream
+#: stage — F-LOCAL, the lag profile, the verdict — opens this directory with
+#: `AutoTokenizer.from_pretrained`, so a `_w` object without one cannot be read
+#: for anything, exactly like a missing `weight_delta.json`. Run 3a's re-run
+#: persisted "6 files" and reported success with no tokenizer among them, and
+#: the absence surfaced two stages later as an unrelated-looking sentencepiece
+#: error. ⭐ "Absent ones are not an error" was true of `generation_config.json`
+#: and got extended to the tokenizer by proximity — a vacuous pass, filed under
+#: the same rule as an empty lag cell rendering as a failed one.
+#: ⭐ Bases spell the vocabulary differently (Qwen writes vocab.json + merges.txt,
+#: Mistral a sentencepiece tokenizer.model, both a fast tokenizer.json), so the
+#: requirement is the CONFIG plus AT LEAST ONE vocabulary file — never a single
+#: filename, which would refuse a perfectly readable object from another family.
+TOKENIZER_CONFIG = "tokenizer_config.json"
+TOKENIZER_VOCAB_ANY = ("tokenizer.json", "tokenizer.model", "vocab.json")
+
 FULL_WEIGHT_OPTIONAL = ("generation_config.json", "tokenizer.json",
                         "tokenizer_config.json", "special_tokens_map.json",
                         "chat_template.jinja", "vocab.json", "merges.txt",
@@ -320,6 +336,50 @@ def persist_cell(root, cell, repo, *, solo_n, corpus_manifest,
     return entry
 
 
+def full_weight_preflight(root, cell):
+    """-> the model directory, or raise. Pure; unit-tested.
+
+    ⭐ SPLIT OUT SO IT CAN BE RED-PROOFED WITHOUT A NETWORK. These checks decide
+    whether an object is persistable at all, and they lived inside a function
+    whose next act is a multi-gigabyte upload — so the only way to exercise them
+    was to attempt a real push. A guard nobody can test in isolation is a guard
+    that gets asserted from its own source rather than run.
+    """
+    root = pathlib.Path(root)
+    d = root / ("model_%s" % cell)
+    if not d.is_dir():
+        raise TransferError(
+            "%s: no full-weight model directory at %s. A `_w` run that saved "
+            "nowhere would otherwise persist an empty file set and record it "
+            "as complete." % (cell, d))
+
+    miss = [n for n in FULL_WEIGHT_REQUIRED if not (d / n).exists()]
+    if miss:
+        raise TransferError(
+            "%s: refusing to persist an incomplete `_w` object — missing %s. "
+            "%s"
+            % (cell, ", ".join(miss),
+               "weight_delta.json is required: PREREG a0450b36 §4.1 makes the "
+               "delta a precondition on the whole verdict table, so a model "
+               "saved without it cannot be read for anything."
+               if "weight_delta.json" in miss else
+               "A partial model in durable storage reads as saved."))
+
+    # ⛔⛔ AND IT MUST CARRY A TOKENIZER. See TOKENIZER_VOCAB_ANY above.
+    if not (d / TOKENIZER_CONFIG).exists() or \
+            not any((d / n).exists() for n in TOKENIZER_VOCAB_ANY):
+        raise TransferError(
+            "%s: refusing to persist a `_w` object with NO TOKENIZER — %s is "
+            "%s and none of %s is present. Every read of this cell opens the "
+            "directory with AutoTokenizer, so an object without one cannot be "
+            "read for anything; persisting it would put a model in durable "
+            "storage that reports as saved and fails at the first read."
+            % (cell, TOKENIZER_CONFIG,
+               "present" if (d / TOKENIZER_CONFIG).exists() else "missing",
+               "/".join(TOKENIZER_VOCAB_ANY)))
+    return d
+
+
 def persist_full_weight(root, cell, repo, *, corpus_manifest,
                         push=push_durable) -> dict:
     """Push one `_w` object — a full-weight model — verifying each arrival.
@@ -337,25 +397,8 @@ def persist_full_weight(root, cell, repo, *, corpus_manifest,
     remembers — and this is the module written because nobody did.
     """
     root = pathlib.Path(root)
-    d = root / ("model_%s" % cell)
-    if not d.is_dir():
-        raise TransferError(
-            "%s: no full-weight model directory at %s. A `_w` run that saved "
-            "nowhere would otherwise persist an empty file set and record it "
-            "as complete." % (cell, d))
-
+    d = full_weight_preflight(root, cell)
     shards = shard_files(d)
-    miss = [n for n in FULL_WEIGHT_REQUIRED if not (d / n).exists()]
-    if miss:
-        raise TransferError(
-            "%s: refusing to persist an incomplete `_w` object — missing %s. "
-            "%s"
-            % (cell, ", ".join(miss),
-               "weight_delta.json is required: PREREG a0450b36 §4.1 makes the "
-               "delta a precondition on the whole verdict table, so a model "
-               "saved without it cannot be read for anything."
-               if "weight_delta.json" in miss else
-               "A partial model in durable storage reads as saved."))
 
     # ⛔⛔ THE DELTA IS READ, NOT JUST COUNTED. A `weight_delta.json` that exists
     # but records INSTRUMENT_FAULT describes a run whose optimizer wrote nothing.

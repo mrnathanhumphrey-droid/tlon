@@ -70,11 +70,34 @@ class PositionMaskedCollator:
     about the batch can drift from what the standing runs saw.
     """
 
+    #: ⛔⛔ THE ATTRIBUTE NAME IS LOAD-BEARING AND NOTHING SAID SO. `Trainer._save`
+    #: reads it when no `processing_class` was passed:
+    #:
+    #:     elif (self.data_collator is not None
+    #:           and hasattr(self.data_collator, "tokenizer")
+    #:           and self.data_collator.tokenizer is not None):
+    #:         self.data_collator.tokenizer.save_pretrained(output_dir)
+    #:
+    #: So every run in this arc saved its tokenizer ONLY because
+    #: `DataCollatorForLanguageModeling` happens to expose `.tokenizer`. The
+    #: first version of this class stored it as `.tok`, and run 3a's re-run
+    #: trained for 62 minutes and then died at F-LOCAL on a model directory
+    #: with no tokenizer in it — the collator had been doubling as the
+    #: tokenizer's carrier, and swapping the collator broke a dependency
+    #: nothing named. ⭐ The real repair is `act2_finetune.py` saving the
+    #: tokenizer EXPLICITLY; this attribute is defence in depth, so the
+    #: upstream path keeps working for any other caller.
     def __init__(self, tok, *, pad_to_multiple_of=None):
         from transformers import DataCollatorForLanguageModeling
-        self.tok = tok
+        self.tokenizer = tok
         self._inner = DataCollatorForLanguageModeling(
             tok, mlm=False, pad_to_multiple_of=pad_to_multiple_of)
+
+    @property
+    def tok(self):
+        """Alias — the internal name this class used before the save path
+        above was understood. Kept so both spellings mean one object."""
+        return self.tokenizer
 
     def __call__(self, examples, return_tensors=None):
         return self.torch_call(examples)

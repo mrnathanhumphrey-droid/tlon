@@ -106,9 +106,16 @@ def test_unfreeze_top_zero_is_refused_at_the_ledger_too():
 
 def _model_dir(tmp_path, *, shards=("model-00001-of-00002.safetensors",
                                     "model-00002-of-00002.safetensors"),
-               index=True, delta="OK", write=None):
+               index=True, delta="OK", write=None, tokenizer=True):
     d = tmp_path / "model_fw-s20624"
     d.mkdir(parents=True, exist_ok=True)
+    # ⛔ A REAL `_w` OBJECT ALWAYS CARRIES ONE, and persist now refuses without
+    # it — a tokenizer-less model cannot be opened by any downstream read
+    # (run 3a's re-run, 62 H100-minutes, died exactly there). The flag exists so
+    # the refusal itself stays testable.
+    if tokenizer:
+        (d / "tokenizer_config.json").write_text("{}")
+        (d / "tokenizer.json").write_text("{}")
     for s in (write if write is not None else shards):
         (d / s).write_bytes(b"weights")
     if index:
