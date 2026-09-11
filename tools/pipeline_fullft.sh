@@ -231,6 +231,21 @@ step corpus_manifest            # SCOPE: any
 CM=$ROOT/corpus_ct-s$SEED/manifest.json
 [ -f "$CM" ] || { echo "⛔⛔ no corpus manifest at $CM — it carries the corpus lag profile the model is compared against" | tee -a $LOG; exit 1; }
 
+step eos_guard            # SCOPE: any
+# ⛔⛔ IS THE MODEL BEING TAUGHT TO STOP? Every preflight above passes without
+# ever touching the tokenizer — `vram` plans from parameter counts, `cell_guard`
+# and `hub_capacity` query the hub, `corpus` is CPU. The first thing that met
+# the base's real tokenizer was the training leg, which is how a base with no
+# pad token of its own (pad := eos, then a by-id collator masking every genuine
+# end-of-sequence) cost run 3a ~$6 and 100 minutes before showing `speak 0%`.
+# Tokenizer-only, no weights, seconds — and it runs the REAL corpus rows through
+# the REAL formatter at the REAL --seq.
+# ⭐ `set -uo pipefail` + `set -e` halt on the non-zero exit; the guard's own
+# message is the diagnosis, so nothing is re-checked here.
+$PY tools/act2_eos_guard.py --model $MODEL \
+    --corpus $ROOT/corpus_ct-s$SEED --seq $SEQ --rows 32 \
+    --out $ROOT/eos_guard.json 2>&1 | tee -a $LOG
+
 # ── 4 · LEG 1 — ONE EPOCH, THEN THE MANDATORY READ ──────────────────────────
 # ⛔⛔ §5: "2 epochs declared, with a MANDATORY read at end of epoch 1", and a
 # pre-declared early-stop if epoch 1 is GO on all three axes. Both branches are

@@ -38,6 +38,7 @@ CORPUS = _DEFAULT_CORPUS
 #: the two inputs are the two languages — exactly the discrimination that failed.
 from tlon.act2.full_weight import apply_scope as _apply_scope
 from tlon.act2.full_weight import apply_mapping_scope as _apply_mapping_scope
+from tlon.act2.collator import PositionMaskedCollator
 from tlon.act2.weight_delta import INSTRUMENT_FAULT as _FAULT
 from tlon.act2.weight_delta import OK as _DELTA_OK
 from tlon.act2.weight_delta import measure as _delta_measure
@@ -547,13 +548,23 @@ def main() -> int:
     import torch
     from datasets import load_dataset
     from peft import LoraConfig, get_peft_model
-    from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                              DataCollatorForLanguageModeling, Trainer,
+    from transformers import (AutoModelForCausalLM, AutoTokenizer, Trainer,
                               TrainingArguments)
 
     tok = AutoTokenizer.from_pretrained(a.model)
+    # ⛔⛔ SAY SO WHEN IT FIRES. This substitution never happened once while Qwen
+    # was the only base (Qwen has a distinct pad token), so nothing in any log
+    # of this arc records it — and on Mistral-7B-v0.3 it silently made pad and
+    # eos the same token, which the by-id collator then masked wholesale. A
+    # default that is never printed is a decision nobody made.
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
+        print("⚠️ this base has NO pad token — pad := eos (%r, id %s). Labels "
+              "are masked BY POSITION, so genuine end-of-sequence tokens are "
+              "still trained." % (tok.eos_token, tok.eos_token_id))
+    print("⭐ pad %r (%s) · eos %r (%s) · pad_is_eos=%s"
+          % (tok.pad_token, tok.pad_token_id, tok.eos_token, tok.eos_token_id,
+             tok.pad_token_id == tok.eos_token_id))
 
     def fmt(row):
         # ⛔ Back-compatible: a corpus written before the read direction existed
@@ -655,7 +666,11 @@ def main() -> int:
 
     trainer = Trainer(
         model=model, train_dataset=ds["train"], eval_dataset=ds["eval"],
-        data_collator=DataCollatorForLanguageModeling(tok, mlm=False),
+        # ⛔⛔ BY POSITION, NOT BY TOKEN ID. `DataCollatorForLanguageModeling`
+        # masks `labels[labels == pad_token_id] = -100`, which on a base whose
+        # pad IS its eos masks every genuine end-of-sequence and never trains
+        # the model to STOP. That destroyed run 3a. See tlon/act2/collator.py.
+        data_collator=PositionMaskedCollator(tok),
         args=TrainingArguments(
             output_dir=a.out, per_device_train_batch_size=a.batch,
             gradient_accumulation_steps=a.accum, num_train_epochs=a.epochs,
