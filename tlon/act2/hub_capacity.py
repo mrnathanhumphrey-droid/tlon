@@ -104,23 +104,28 @@ def used_storage_bytes(repo: str, *, api) -> int:
     overwritten cells. Summing `siblings` -- the obvious implementation -- would
     have under-reported by 46% and admitted a run that cannot persist.
 
-    ⛔⛔ AND THEN IT INVERTED, WHICH IS WHY THIS NOW TAKES THE MAXIMUM OF BOTH.
-    On 2026-09-12 the live files totalled **90.43 GB** while `usedStorage`
-    reported **68.88 GB** -- stale by exactly one 21.48 GB model, the cell that
-    had just been pushed. The guard said a fourth run FITS (68.88 + 21.69 =
-    90.57 against 94.21) when the truth was 90.43 + 21.69 = **112.12 GB**. It
-    would have trained for ~62 minutes and died at `persist_leg1` on "storage
-    limit reached" -- rung 1b''s exact death, for the second time.
+    ⛔⛔ SO THIS TAKES THE MAXIMUM OF TWO FIGURES, AND THE SECOND ONE MUST BE
+    COMPUTED CORRECTLY OR IT IS WORSE THAN ABSENT. First attempt summed
+    filenames and reported **90.43 GB** against `usedStorage`'s **68.88 GB** --
+    a 21.48 GB "disagreement" that I read as a stale summary field and that was
+    in fact MY OWN DOUBLE COUNT: `mis16b` and `mis16c` are byte-identical and
+    share one LFS blob. Deduplicated by sha256 the live sum is **68.96 GB** and
+    the two agree to 0.08 GB. ⛔ The wrong version of this guard would have
+    refused a run that fits (68.88 + 21.69 = 90.57 against 94.21).
 
-    ⭐ SO NEITHER FIGURE IS SAFE ALONE, AND THEY FAIL IN OPPOSITE DIRECTIONS:
+    ⭐ WHY KEEP THE MAXIMUM ANYWAY. The two figures can still diverge for a real
+    reason -- dead LFS history is charged and does not appear in the current
+    file listing at all, which is the case the original single-field version was
+    written for (live 50.72 GB against 94.21 GB charged). A result cannot be
+    kept if EITHER figure says no room, so the binding constraint is the larger.
+    Both are printed, so a future reader sees the disagreement rather than
+    inheriting one number's blind spot.
 
-        usedStorage > live files    dead LFS history is being charged
-        live files > usedStorage    the summary field has not caught up
-
-    Two independent paths to one quantity; when they disagree, take the
-    conservative one and SAY SO. A guard that reads one summary field is a guard
-    that trusts a value it did not compute -- the recurring failure this project
-    has now paid for at every level of the stack.
+    ⛔ AND THE LESSON THAT COST THE MOST HERE: a second opinion computed the
+    WRONG WAY does not corroborate, it manufactures a disagreement and then gets
+    resolved in whichever direction the arithmetic points. Two figures agreeing
+    is not corroboration unless they can fail independently AND are measuring
+    the same quantity.
     """
     info = api.model_info(repo, expand=["usedStorage"])
     used = getattr(info, "used_storage", None)
@@ -138,10 +143,25 @@ def used_storage_bytes(repo: str, *, api) -> int:
 
 
 def live_file_bytes(repo: str, *, api):
-    """Sum of the repo's CURRENT files, or None if the listing is unavailable.
+    """Bytes of the repo's CURRENT files, counting each BLOB ONCE.
 
     ⭐ The second opinion for `used_storage_bytes`. Returns None rather than 0:
     an unreadable listing is not an empty repo.
+
+    ⛔⛔ DEDUPLICATED BY sha256, AND THE FIRST VERSION WAS NOT. LFS is
+    content-addressed, so two paths holding identical bytes cost storage ONCE.
+    Summing filenames reported **90.43 GB** where the true figure was
+    **68.96 GB** — because `mis16b-s20624/model.safetensors` and
+    `mis16c-s20624/model.safetensors` are byte-identical and share one blob.
+
+    ⭐ That 21.48 GB phantom is what made `usedStorage` (68.88 GB) look STALE BY
+    EXACTLY ONE MODEL. It was not stale; it was right, and the file sum was
+    wrong. Deduplicated, the two figures agree to 0.08 GB — which is the only
+    reason to trust either. ⛔ A second opinion computed the wrong way does not
+    corroborate anything; it manufactures a disagreement and then resolves it in
+    whichever direction the arithmetic happens to point. Two figures agreeing is
+    not corroboration unless they can fail independently — and unless they are
+    measuring the same quantity.
     """
     try:
         info = api.repo_info(repo, files_metadata=True)
@@ -150,13 +170,23 @@ def live_file_bytes(repo: str, *, api):
     sibs = getattr(info, "siblings", None)
     if not sibs:
         return None
-    total = 0
+    seen, total, n_anon = set(), 0, 0
     for f in sibs:
+        lfs = getattr(f, "lfs", None)
+        sha = (lfs.get("sha256") if isinstance(lfs, dict)
+               else getattr(lfs, "sha256", None)) if lfs else None
         sz = getattr(f, "size", None)
         if not sz:
-            lfs = getattr(f, "lfs", None)
             sz = (lfs.get("size") if isinstance(lfs, dict)
                   else getattr(lfs, "size", None)) or 0
+        if sha is not None:
+            if sha in seen:
+                continue                       # same blob, already counted
+            seen.add(sha)
+        else:
+            # ⛔ No sha to dedupe on (small non-LFS files). Counted in full,
+            # which can only OVER-state — the safe direction for a floor.
+            n_anon += 1
         total += int(sz)
     return total
 

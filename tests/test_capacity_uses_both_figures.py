@@ -38,9 +38,10 @@ GB = 1_000_000_000
 
 
 class _Sib:
-    def __init__(self, size, lfs=None):
-        self.size, self.lfs = size, lfs
-        self.rfilename = "x"
+    def __init__(self, size, lfs=None, sha=None, name="x"):
+        self.size = size
+        self.lfs = lfs if lfs is not None else ({"sha256": sha} if sha else None)
+        self.rfilename = name
 
 
 class _Api:
@@ -98,6 +99,54 @@ def test_live_file_bytes_returns_NONE_not_ZERO_when_it_cannot_look():
     largest possible lie: it would make every repo look empty."""
     assert live_file_bytes("r", api=_Api(1 * GB, None, listing=False)) is None
     assert live_file_bytes("r", api=_Api(1 * GB, None)) is None
+
+
+def test_IDENTICAL_BLOBS_ARE_COUNTED_ONCE():
+    """⛔⛔ THE DEFECT I ACTUALLY HAD, AND IT FAKED THE BUG I THOUGHT I'D FOUND.
+
+    LFS is content-addressed: two paths holding identical bytes cost storage
+    ONCE. Summing filenames reported 90.43 GB where the truth was 68.96 GB,
+    because `mis16b-s20624/model.safetensors` and `mis16c-s20624/model.safetensors`
+    are byte-identical. That 21.48 GB phantom is what made `usedStorage` look
+    "stale by exactly one model" — it was not stale, my second opinion was wrong,
+    and the guard would then have refused a run that fits.
+    """
+    class _A(_Api):
+        def repo_info(self, repo, files_metadata=False):
+            return type("I", (), {"siblings": [
+                _Sib(21 * GB, sha="aaa", name="mis16b/model.safetensors"),
+                _Sib(21 * GB, sha="aaa", name="mis16c/model.safetensors"),
+                _Sib(21 * GB, sha="bbb", name="mis16/model.safetensors"),
+            ]})()
+    assert live_file_bytes("r", api=_A(1 * GB, None)) == 42 * GB, \
+        "the shared blob must be counted once, not twice"
+
+
+def test_a_file_with_NO_sha_is_counted_in_full():
+    """⭐ Small non-LFS files carry no sha to dedupe on. Counting them in full
+    can only OVER-state, which is the safe direction for a floor — but it must
+    not be silently treated as a duplicate of the previous shaless file."""
+    class _A(_Api):
+        def repo_info(self, repo, files_metadata=False):
+            return type("I", (), {"siblings": [
+                _Sib(3, name="a.json"), _Sib(5, name="b.json")]})()
+    assert live_file_bytes("r", api=_A(1 * GB, None)) == 8
+
+
+def test_the_two_figures_AGREE_once_dedup_is_correct():
+    """⭐ THE STATE THAT MAKES EITHER FIGURE TRUSTWORTHY. Deduplicated, the live
+    sum and `usedStorage` landed within 0.08 GB of each other on the real repo.
+    Agreement is only evidence when both paths measure the same quantity."""
+    class _A(_Api):
+        def repo_info(self, repo, files_metadata=False):
+            return type("I", (), {"siblings": [
+                _Sib(21 * GB, sha="aaa", name="b/model.safetensors"),
+                _Sib(21 * GB, sha="aaa", name="c/model.safetensors"),
+                _Sib(47 * GB, sha="bbb", name="rest")]})()
+    api = _A(68 * GB, None)
+    assert live_file_bytes("r", api=api) == 68 * GB
+    assert used_storage_bytes("r", api=api) == 68 * GB, \
+        "no spurious disagreement, so no spurious refusal"
 
 
 def test_live_file_bytes_reads_the_LFS_size_when_size_is_absent():
