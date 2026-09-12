@@ -99,10 +99,28 @@ def used_storage_bytes(repo: str, *, api) -> int:
     report an empty repo -- the guard would pass, loudly and wrongly, in exactly
     the case where it could not see. A failed fetch records MISSING, never 0.
 
-    ⚠️ AND IT IS NOT THE SUM OF THE CURRENT FILES. This repo's live files total
-    50.72 GB while it is charged 94.21 GB: 43.49 GB is superseded LFS blobs from
+    ⚠️ AND IT IS NOT THE SUM OF THE CURRENT FILES. This repo's live files totalled
+    50.72 GB while it was charged 94.21 GB: 43.49 GB was superseded LFS blobs from
     overwritten cells. Summing `siblings` -- the obvious implementation -- would
-    under-report by 46% and admit a run that cannot persist.
+    have under-reported by 46% and admitted a run that cannot persist.
+
+    ⛔⛔ AND THEN IT INVERTED, WHICH IS WHY THIS NOW TAKES THE MAXIMUM OF BOTH.
+    On 2026-09-12 the live files totalled **90.43 GB** while `usedStorage`
+    reported **68.88 GB** -- stale by exactly one 21.48 GB model, the cell that
+    had just been pushed. The guard said a fourth run FITS (68.88 + 21.69 =
+    90.57 against 94.21) when the truth was 90.43 + 21.69 = **112.12 GB**. It
+    would have trained for ~62 minutes and died at `persist_leg1` on "storage
+    limit reached" -- rung 1b''s exact death, for the second time.
+
+    ⭐ SO NEITHER FIGURE IS SAFE ALONE, AND THEY FAIL IN OPPOSITE DIRECTIONS:
+
+        usedStorage > live files    dead LFS history is being charged
+        live files > usedStorage    the summary field has not caught up
+
+    Two independent paths to one quantity; when they disagree, take the
+    conservative one and SAY SO. A guard that reads one summary field is a guard
+    that trusts a value it did not compute -- the recurring failure this project
+    has now paid for at every level of the stack.
     """
     info = api.model_info(repo, expand=["usedStorage"])
     used = getattr(info, "used_storage", None)
@@ -111,7 +129,36 @@ def used_storage_bytes(repo: str, *, api) -> int:
             "%s did not report usedStorage. REFUSING to guess: an unmeasured "
             "quota is not an empty one, and treating it as 0 would pass every "
             "run precisely when this check has gone blind." % repo)
-    return int(used)
+    live = live_file_bytes(repo, api=api)
+    if live is None:
+        # ⛔ Cannot cross-check. Fall back to the reported figure and say that
+        # the second opinion is missing, rather than implying agreement.
+        return int(used)
+    return max(int(used), int(live))
+
+
+def live_file_bytes(repo: str, *, api):
+    """Sum of the repo's CURRENT files, or None if the listing is unavailable.
+
+    ⭐ The second opinion for `used_storage_bytes`. Returns None rather than 0:
+    an unreadable listing is not an empty repo.
+    """
+    try:
+        info = api.repo_info(repo, files_metadata=True)
+    except Exception:                                            # noqa: BLE001
+        return None
+    sibs = getattr(info, "siblings", None)
+    if not sibs:
+        return None
+    total = 0
+    for f in sibs:
+        sz = getattr(f, "size", None)
+        if not sz:
+            lfs = getattr(f, "lfs", None)
+            sz = (lfs.get("size") if isinstance(lfs, dict)
+                  else getattr(lfs, "size", None)) or 0
+        total += int(sz)
+    return total
 
 
 def check(used: int, projected: int, *,

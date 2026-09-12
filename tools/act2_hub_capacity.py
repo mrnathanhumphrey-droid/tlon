@@ -62,6 +62,23 @@ def main() -> int:
 
     api = HfApi(token=prov._hf_token())
     used = used_storage_bytes(a.repo, api=api)
+    # ⛔⛔ BOTH FIGURES, PRINTED. They fail in opposite directions — dead LFS
+    # history inflates `usedStorage`, and a recent push leaves it STALE and
+    # too low. On 2026-09-12 it read 68.88 GB against 90.43 GB of live files
+    # and would have admitted a run that could not persist.
+    from tlon.act2.hub_capacity import live_file_bytes
+    _live = live_file_bytes(a.repo, api=api)
+    _rep = getattr(api.model_info(a.repo, expand=["usedStorage"]),
+                   "used_storage", None)
+    if _live is None:
+        print("   ⚠️ live-file listing unavailable — NO second opinion on the "
+              "reported figure")
+    else:
+        print("   reported %10.2f GB   live files %.2f GB   -> using %.2f GB%s"
+              % ((_rep or 0) / 1e9, _live / 1e9, used / 1e9,
+                 "" if abs((_rep or 0) - _live) < 1e9 else
+                 "  ⛔ THEY DISAGREE by %.2f GB — taking the larger"
+                 % (abs((_rep or 0) - _live) / 1e9)))
     projected = projected_artifact_bytes(n_trainable, n_frozen,
                                          master_bytes=a.master_bytes,
                                          frozen_bytes=a.frozen_bytes)
