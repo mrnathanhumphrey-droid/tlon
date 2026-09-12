@@ -1,0 +1,594 @@
+{
+  "Qwen/Qwen2.5-7B-Instruct": {
+    "counts": {
+      "OK": 19,
+      "FAIL": 0,
+      "WARN": 1,
+      "UNKNOWN": 1
+    },
+    "rows": [
+      {
+        "path": "1-tokenizer",
+        "check": "pad token",
+        "status": "OK",
+        "detail": "pad 151643 != eos 151645"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "genuine eos survives label masking",
+        "status": "OK",
+        "detail": "3 genuine eos, 0 masked"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "BOS is not duplicated",
+        "status": "OK",
+        "detail": "leading BOS: train=0 read=0"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "embedding rows the tokenizer can reach",
+        "status": "WARN",
+        "detail": "tok.vocab_size=151643 len(tok)=151665 added=22 config.vocab_size=152064 -> 399 UNREACHABLE ROWS in the mapping locus"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "declared special tokens resolve to ids",
+        "status": "OK",
+        "detail": "all resolve"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (write)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (write)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (write)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (read)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (read)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (read)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (provoke)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (provoke)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (provoke)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "3-load",
+        "check": "architectures",
+        "status": "OK",
+        "detail": "['Qwen2ForCausalLM'] / model_type=qwen2"
+      },
+      {
+        "path": "3-load",
+        "check": "AutoModelForCausalLM supports this config",
+        "status": "OK",
+        "detail": "model_type 'qwen2' is in the causal-LM mapping"
+      },
+      {
+        "path": "3-load",
+        "check": "embeddings are untied (the mapping rung needs two tensors)",
+        "status": "OK",
+        "detail": "tie_word_embeddings=False"
+      },
+      {
+        "path": "3-load",
+        "check": "config.num_hidden_layers",
+        "status": "OK",
+        "detail": "28"
+      },
+      {
+        "path": "3-load",
+        "check": "config.vocab_size",
+        "status": "OK",
+        "detail": "152064"
+      },
+      {
+        "path": "3-load",
+        "check": "config.hidden_size",
+        "status": "OK",
+        "detail": "3584"
+      },
+      {
+        "path": "4-scope",
+        "check": "layer stacks / mapping leaves (REAL TENSORS)",
+        "status": "UNKNOWN",
+        "detail": "weights are not on this machine — nothing to read. NOT a pass: the scope claims can only be made against real tensor names."
+      }
+    ]
+  },
+  "allenai/Olmo-3-7B-Instruct": {
+    "counts": {
+      "OK": 25,
+      "FAIL": 0,
+      "WARN": 0,
+      "UNKNOWN": 0
+    },
+    "rows": [
+      {
+        "path": "1-tokenizer",
+        "check": "pad token",
+        "status": "OK",
+        "detail": "pad 100277 != eos 100257"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "genuine eos survives label masking",
+        "status": "OK",
+        "detail": "1 genuine eos, 0 masked"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "BOS is not duplicated",
+        "status": "OK",
+        "detail": "leading BOS: train=0 read=0"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "embedding rows the tokenizer can reach",
+        "status": "OK",
+        "detail": "tok.vocab_size=100278 len(tok)=100278 added=22 config.vocab_size=100278"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "declared special tokens resolve to ids",
+        "status": "OK",
+        "detail": "all resolve"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (write)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (write)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (write)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (read)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (read)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (read)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (provoke)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (provoke)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (provoke)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "3-load",
+        "check": "architectures",
+        "status": "OK",
+        "detail": "['Olmo3ForCausalLM'] / model_type=olmo3"
+      },
+      {
+        "path": "3-load",
+        "check": "AutoModelForCausalLM supports this config",
+        "status": "OK",
+        "detail": "model_type 'olmo3' is in the causal-LM mapping"
+      },
+      {
+        "path": "3-load",
+        "check": "embeddings are untied (the mapping rung needs two tensors)",
+        "status": "OK",
+        "detail": "tie_word_embeddings=False"
+      },
+      {
+        "path": "3-load",
+        "check": "config.num_hidden_layers",
+        "status": "OK",
+        "detail": "32"
+      },
+      {
+        "path": "3-load",
+        "check": "config.vocab_size",
+        "status": "OK",
+        "detail": "100278"
+      },
+      {
+        "path": "3-load",
+        "check": "config.hidden_size",
+        "status": "OK",
+        "detail": "4096"
+      },
+      {
+        "path": "4-scope",
+        "check": "exactly ONE transformer-layer stack",
+        "status": "OK",
+        "detail": "stacks={'model': 32}"
+      },
+      {
+        "path": "4-scope",
+        "check": "tensor layer count matches the config",
+        "status": "OK",
+        "detail": "tensors=32 config=32"
+      },
+      {
+        "path": "4-scope",
+        "check": "layer rung selects top-HALF",
+        "status": "OK",
+        "detail": "top-16 of 32 = 3,238,264,832 params in 176 tensors"
+      },
+      {
+        "path": "4-scope",
+        "check": "mapping rung addresses BOTH leaves",
+        "status": "OK",
+        "detail": "821,477,376 params: ['lm_head.weight', 'model.embed_tokens.weight']"
+      },
+      {
+        "path": "4-scope",
+        "check": "embed_tokens rows match config.vocab_size",
+        "status": "OK",
+        "detail": "tensor=100278 config=100278"
+      }
+    ]
+  },
+  "mistralai/Mistral-7B-Instruct-v0.3": {
+    "counts": {
+      "OK": 20,
+      "FAIL": 0,
+      "WARN": 5,
+      "UNKNOWN": 0
+    },
+    "rows": [
+      {
+        "path": "1-tokenizer",
+        "check": "pad token",
+        "status": "WARN",
+        "detail": "no pad token of its own -> training sets pad := eos. Safe ONLY because labels are masked by POSITION (tlon/act2/collator.py)."
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "genuine eos survives label masking",
+        "status": "OK",
+        "detail": "1 genuine eos, 0 masked"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "BOS is not duplicated",
+        "status": "WARN",
+        "detail": "leading BOS: train=2 read=2 (add_bos_token=False, template emits bos=True). train head [1, 1, 3, 1763] / read head [1, 1, 3, 1763]. consistent across train and read, so not a mismatch — but the model never sees a single-BOS sequence"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "embedding rows the tokenizer can reach",
+        "status": "OK",
+        "detail": "tok.vocab_size=32768 len(tok)=32768 added=771 config.vocab_size=32768"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "declared special tokens resolve to ids",
+        "status": "OK",
+        "detail": "all resolve"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (write)",
+        "status": "WARN",
+        "detail": "template DROPS system — chat_shape.train_text repairs it by rebuilding as read_prompt + answer"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (write)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (write)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (read)",
+        "status": "WARN",
+        "detail": "template DROPS system — chat_shape.train_text repairs it by rebuilding as read_prompt + answer"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (read)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (read)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (provoke)",
+        "status": "WARN",
+        "detail": "template DROPS system — chat_shape.train_text repairs it by rebuilding as read_prompt + answer"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (provoke)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (provoke)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "3-load",
+        "check": "architectures",
+        "status": "OK",
+        "detail": "['MistralForCausalLM'] / model_type=mistral"
+      },
+      {
+        "path": "3-load",
+        "check": "AutoModelForCausalLM supports this config",
+        "status": "OK",
+        "detail": "model_type 'mistral' is in the causal-LM mapping"
+      },
+      {
+        "path": "3-load",
+        "check": "embeddings are untied (the mapping rung needs two tensors)",
+        "status": "OK",
+        "detail": "tie_word_embeddings=False"
+      },
+      {
+        "path": "3-load",
+        "check": "config.num_hidden_layers",
+        "status": "OK",
+        "detail": "32"
+      },
+      {
+        "path": "3-load",
+        "check": "config.vocab_size",
+        "status": "OK",
+        "detail": "32768"
+      },
+      {
+        "path": "3-load",
+        "check": "config.hidden_size",
+        "status": "OK",
+        "detail": "4096"
+      },
+      {
+        "path": "4-scope",
+        "check": "exactly ONE transformer-layer stack",
+        "status": "OK",
+        "detail": "stacks={'model': 32}"
+      },
+      {
+        "path": "4-scope",
+        "check": "tensor layer count matches the config",
+        "status": "OK",
+        "detail": "tensors=32 config=32"
+      },
+      {
+        "path": "4-scope",
+        "check": "layer rung selects top-HALF",
+        "status": "OK",
+        "detail": "top-16 of 32 = 3,489,792,000 params in 144 tensors"
+      },
+      {
+        "path": "4-scope",
+        "check": "mapping rung addresses BOTH leaves",
+        "status": "OK",
+        "detail": "268,435,456 params: ['lm_head.weight', 'model.embed_tokens.weight']"
+      },
+      {
+        "path": "4-scope",
+        "check": "embed_tokens rows match config.vocab_size",
+        "status": "OK",
+        "detail": "tensor=32768 config=32768"
+      }
+    ]
+  },
+  "mistralai/Ministral-3-8B-Instruct-2512-BF16": {
+    "counts": {
+      "OK": 18,
+      "FAIL": 2,
+      "WARN": 1,
+      "UNKNOWN": 0
+    },
+    "rows": [
+      {
+        "path": "1-tokenizer",
+        "check": "pad token",
+        "status": "OK",
+        "detail": "pad 11 != eos 2"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "genuine eos survives label masking",
+        "status": "OK",
+        "detail": "1 genuine eos, 0 masked"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "BOS is not duplicated",
+        "status": "WARN",
+        "detail": "leading BOS: train=2 read=2 (add_bos_token=False, template emits bos=True). train head [1, 1, 17, 4568] / read head [1, 1, 17, 4568]. consistent across train and read, so not a mismatch — but the model never sees a single-BOS sequence"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "embedding rows the tokenizer can reach",
+        "status": "OK",
+        "detail": "tok.vocab_size=131072 len(tok)=131072 added=1000 config.vocab_size=131072"
+      },
+      {
+        "path": "1-tokenizer",
+        "check": "declared special tokens resolve to ids",
+        "status": "OK",
+        "detail": "all resolve"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (write)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (write)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (write)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (read)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (read)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (read)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "2-template",
+        "check": "TRAIN shape keeps every message (provoke)",
+        "status": "OK",
+        "detail": "nothing dropped"
+      },
+      {
+        "path": "2-template",
+        "check": "read prompt is a PREFIX of the training text (provoke)",
+        "status": "OK",
+        "detail": "prefix holds"
+      },
+      {
+        "path": "2-template",
+        "check": "READ shape keeps the system message (provoke)",
+        "status": "OK",
+        "detail": "present"
+      },
+      {
+        "path": "3-load",
+        "check": "architectures",
+        "status": "OK",
+        "detail": "['Mistral3ForConditionalGeneration'] / model_type=mistral3"
+      },
+      {
+        "path": "3-load",
+        "check": "AutoModelForCausalLM supports this config",
+        "status": "FAIL",
+        "detail": "model_type 'mistral3' is NOT in the causal-LM mapping — the training leg would die on 'Unrecognized configuration class'"
+      },
+      {
+        "path": "3-load",
+        "check": "embeddings are untied (the mapping rung needs two tensors)",
+        "status": "OK",
+        "detail": "tie_word_embeddings=False"
+      },
+      {
+        "path": "3-load",
+        "check": "config.num_hidden_layers",
+        "status": "OK",
+        "detail": "34"
+      },
+      {
+        "path": "3-load",
+        "check": "config.vocab_size",
+        "status": "OK",
+        "detail": "131072"
+      },
+      {
+        "path": "3-load",
+        "check": "config.hidden_size",
+        "status": "OK",
+        "detail": "4096"
+      },
+      {
+        "path": "4-scope",
+        "check": "exactly ONE transformer-layer stack",
+        "status": "FAIL",
+        "detail": "stacks={'language_model.model': 34, 'vision_tower.transformer': 24} — MULTI-STACK: --stack must restrict the SELECTION, not only the count"
+      }
+    ]
+  }
+}

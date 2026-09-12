@@ -21,6 +21,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from tlon.act2.llm import BackendError                        # noqa: E402
+from tlon.act2.chat_shape import read_prompt             # noqa: E402
 
 PRICES = {"claude-sonnet-5": (3.00, 15.00),
           "claude-haiku-4-5": (1.00, 5.00),
@@ -175,12 +176,13 @@ class LocalBackend:
         self.model.eval()
 
     def _prompt(self, system: str, user: str) -> str:
-        msgs = [{"role": "system", "content": system},
-                {"role": "user", "content": user}]
-        if getattr(self.tok, "chat_template", None):
-            return self.tok.apply_chat_template(
-                msgs, tokenize=False, add_generation_prompt=True)
-        return f"{system}\n\n{user}\n\n"
+        # ⛔⛔ ONE FOLD WITH THE TRAINER. This construction was spelled here AND
+        # (differently) in `row_to_text`, and the two disagreed on Mistral-7B:
+        # the reader's shape carried the system message and the trainer's shape
+        # dropped it, so the model was read out-of-distribution and F-LOCAL
+        # scored a prompt the model had never been trained on. Byte-identical
+        # behaviour for every base — `read_prompt` IS this code, moved.
+        return read_prompt(self.tok, system, user)
 
     def call(self, *, system: str, user: str, schema: dict, kind: str) -> dict:
         import torch

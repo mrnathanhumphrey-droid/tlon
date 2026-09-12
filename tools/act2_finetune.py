@@ -39,6 +39,7 @@ CORPUS = _DEFAULT_CORPUS
 from tlon.act2.full_weight import apply_scope as _apply_scope
 from tlon.act2.full_weight import apply_mapping_scope as _apply_mapping_scope
 from tlon.act2.collator import PositionMaskedCollator
+from tlon.act2.chat_shape import train_text
 from tlon.act2.weight_delta import INSTRUMENT_FAULT as _FAULT
 from tlon.act2.weight_delta import OK as _DELTA_OK
 from tlon.act2.weight_delta import measure as _delta_measure
@@ -87,12 +88,16 @@ def row_messages(row) -> list[dict]:
 
 
 def row_to_text(row, tok) -> str:
-    """Messages → the literal string that gets tokenized."""
-    msgs = row_messages(row)
-    if getattr(tok, "chat_template", None):
-        return tok.apply_chat_template(msgs, tokenize=False)
-    return (f"{msgs[0]['content']}\n\n{msgs[1]['content']}\n\n"
-            f"{msgs[2]['content']}")
+    """Messages → the literal string that gets tokenized.
+
+    ⛔⛔ NO LONGER `apply_chat_template` UNCHECKED. Mistral-7B-v0.3's template
+    DROPS the system message in this exact shape — `(system, user, assistant)` —
+    while carrying it in the read shape, so run 3a trained with no instruction
+    and was then read with one. `train_text` returns a faithful template's
+    output byte-for-byte (Qwen, OLMo: unchanged) and repairs a lossy one so the
+    read prompt is a literal prefix. See tlon/act2/chat_shape.py.
+    """
+    return train_text(tok, row_messages(row))
 
 
 #: ⛔⛔ MEASURED ON REAL RUNS. The first version of `plan()` predicted 4.6 GiB for

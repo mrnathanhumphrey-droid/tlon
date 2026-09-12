@@ -84,7 +84,12 @@ def _safe_errors(proposal) -> list:
 
 
 def _rate(speaker, stimuli, kind: str, histories=None) -> dict:
-    ok, failures, produced = 0, [], []
+    # ⛔⛔ `raws` IS ALIGNED WITH `produced`, INDEX FOR INDEX. The diversity
+    # guard keys on the PARSED proposal, so a run where every parse failed
+    # looks exactly like a constant speaker -- run 3a was reported as
+    # degenerate while emitting 36 distinct scenes. The guard needs the
+    # UNTRANSFORMED value to tell those apart, so it is carried out of here.
+    ok, failures, produced, raws = 0, [], [], []
     for idx, stim in enumerate(stimuli):
         hist = () if histories is None else histories[idx]
         proposal = (speaker.speak(hist, idx + 1) if kind == "speak"
@@ -114,7 +119,9 @@ def _rate(speaker, stimuli, kind: str, histories=None) -> dict:
                     "the backend did not attach a raw generation — this is an "
                     "INSTRUMENT gap, not an empty emission")
             failures.append(row)
+            raws.append(row["raw"])
             continue
+        raws.append(None)
         try:
             PS.validate(proposal)
             ok += 1
@@ -169,6 +176,8 @@ def _rate(speaker, stimuli, kind: str, histories=None) -> dict:
     return {"kind": kind, "n": n, "valid": ok, "rate": ok / n if n else 0.0,
             # the GATE number — wrapper required
             "failures": failures, "produced": produced,
+            # ⛔ index-aligned with `produced`; see the note in _rate
+            "raws": raws,
             # the DIAGNOSTIC number — legal Tlön surface, envelope or not
             "valid_surface": surf,
             "valid_surface_rate": (ok + surf) / n if n else 0.0,
@@ -260,8 +269,15 @@ def main() -> int:
     repeated = _rate(speaker, [None] * min(12, a.n), "speak")   # ONE fixed prompt
     div = None
     try:
+        _k = len(repeated["produced"])
+        # ⛔⛔ THE RAWS GO IN TOO. Without them the guard keys on parsed output
+        # only, and a total parse failure is arithmetically identical to a
+        # constant speaker — which is how run 3a's 36 distinct generations were
+        # reported as "1 distinct output for 12 DIFFERENT inputs".
         div = DV.measure(repeated=repeated["produced"],
-                         varied=speak["produced"][:len(repeated["produced"])])
+                         varied=speak["produced"][:_k],
+                         repeated_raw=repeated["raws"],
+                         varied_raw=speak["raws"][:_k])
         print(f"  diversity  distinct {div.distinct}/{div.n} · "
               f"repeat {div.repeat_rate:.2f} · response {div.response_rate:.2f} "
               f"· dependence {div.dependence:+.2f} ⇒ {div.verdict}")

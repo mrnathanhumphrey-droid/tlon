@@ -231,6 +231,23 @@ step corpus_manifest            # SCOPE: any
 CM=$ROOT/corpus_ct-s$SEED/manifest.json
 [ -f "$CM" ] || { echo "⛔⛔ no corpus manifest at $CM — it carries the corpus lag profile the model is compared against" | tee -a $LOG; exit 1; }
 
+step base_audit            # SCOPE: any
+# ⛔⛔ EVERY POINT WHERE THIS HARNESS TOUCHES A BASE-SPECIFIC BEHAVIOUR, READ OFF
+# THE ACTUAL BASE. Four instances of one class have now cost GPU time, each found
+# only when a non-Qwen base tripped it in silence: the loader assumed a causal LM
+# (Ministral-3), the tokenizer assumed pad != eos (Mistral), the chat template
+# assumed a native ChatML system role (Mistral, and only in the TRAIN shape), and
+# the scope assumed one layer stack (a multimodal base pools two).
+# ⭐ Tokenizer + config only, no weights, no GPU, seconds. FAIL halts the run
+# under `set -e`; WARN is printed and proceeds, because "pad IS eos" is a fact
+# about the base that the position-masking collator already handles.
+# ❔ The tensor-level scope checks report UNKNOWN here — the model directory does
+# not exist until the training leg. That is stated, not passed over, and the
+# per-base tensor audit is run on the hub object after persist.
+$PY tools/act2_base_audit.py --base $MODEL --seq $SEQ \
+    --corpus $ROOT/corpus_ct-s$SEED \
+    --out $ROOT/base_audit.json 2>&1 | tee -a $LOG
+
 step eos_guard            # SCOPE: any
 # ⛔⛔ IS THE MODEL BEING TAUGHT TO STOP? Every preflight above passes without
 # ever touching the tokenizer — `vram` plans from parameter counts, `cell_guard`
