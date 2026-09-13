@@ -165,10 +165,26 @@ the new diagnosis *wrong* instead of *missing*.
 
 1. ❔ **Qwen's tensor-level scope checks never ran.** Needs its weights back on
    disk, or the same audit run against the hub object.
-2. ⚠️ **BOS doubling is recorded, not fixed.** Harmless-looking because train and
-   read agree, but it is a real difference from how the standing findings were
-   produced. Fixing it would change Mistral's training text again; deciding that
-   is a separate call.
+2. ⚠️ **BOS doubling — RECORDED, NOT FIXED. Ratified 2026-09-12.** Train and read
+   both see 2 leading BOS, so it is *malformed-not-mismatched*: consistent, and
+   therefore not the class that destroyed runs 3a and its re-fires. ⭐ THE REASON
+   NOT TO TOUCH IT IS THE RUN ITSELF — a fix would be a **fourth** change to
+   Mistral's training text on the very attempt whose purpose is to be clean, and
+   a run carrying four simultaneous changes cannot attribute its own outcome.
+   ⛔ REOPEN ONLY IF F-LOCAL FAILS AND THE DIAGNOSIS POINTS HERE — a mechanism,
+   not a threshold. The audit already FAILs (not WARNs) if train and read ever
+   disagree, which is the case that would matter.
+
+2b. ⚠️ **Qwen's 399 unreachable embedding rows — RECORDED as a known
+   cross-family difference. Ratified 2026-09-12.** 151,665 reachable against
+   `config.vocab_size` 152,064 = **0.26 %**, and dead rows barely train, so the
+   magnitude is small. ⛔ But it is real and it belongs to the **MAPPING** rung,
+   not the layer rung — so it does not gate Mistral's first datapoint, which
+   comes from the layer rung. ⭐ THE OBLIGATION IT CREATES: **the mapping
+   comparison must explain its own shape**, the way Gemma's tied embeddings and
+   OLMo's non-faithfulness already do. A cross-family mapping result is a claim
+   about the LOCUS, never about a matched parameter budget — and now never about
+   a matched *reachable* vocabulary either.
 3. ⚠️ **The audit checks the paths it knows.** It is an enumeration of the
    *touch points*, so a base-specific behaviour at a touch point nobody has named
    is still unguarded. The generation/decoding path (stop criteria, sampling,
