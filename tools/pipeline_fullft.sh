@@ -418,14 +418,27 @@ print("  vocab coverage = %.6f (%d distinct ids / %d rows)"
 verdict, why = mapping_moved(d, vocab_coverage=cov["coverage"])
 print("  %s" % verdict)
 print("  %s" % why)
+# ⛔⛔ PERSISTED, BECAUSE THE VERDICT NOW READS IT. The per-leaf result used to
+# exist only as a printed line, so the one piece of evidence strong enough to
+# carry the §4.1 precondition could not reach the tool that needed it.
+pathlib.Path("$ROOT/mapping_moved.json").write_text(
+    json.dumps({"verdict": verdict, "why": why,
+                "vocab_coverage": cov["coverage"],
+                "per_module": d.get("per_module")}, indent=2),
+    encoding="utf-8")
 if verdict != MAPPING_MOVED:
     print("  the capacity/floor table may NOT be read (PREREG c2a4f0ca §5/§7).")
     raise SystemExit(1)
 print("  the floor verdict below is READABLE: both mapping halves trained.")
 PYMAP
 
+  # ⛔ SET ONLY INSIDE THE MAPPING BRANCH, AND ONLY AFTER THE STEP SUCCEEDED.
+  # A layer-scope run must reach the verdict with this EMPTY, so the pooled §4.1
+  # precondition keeps gating it exactly as it always has.
+  MAPPING_RECORD=$ROOT/mapping_moved.json
 else
   echo "  (mapping_moved SKIPPED: scope_mode=$SCOPE_MODE freezes the mapping by design)" | tee -a $LOG
+  MAPPING_RECORD=
 fi
 
 step verdict_epoch1            # SCOPE: any
@@ -436,7 +449,20 @@ $PY tools/act2_fullft_verdict.py \
     --delta $OUT/weight_delta.json \
     --lag $ROOT/model_lag_${CELL}_e1.json \
     --ledger runs/act2/ledger.jsonl --prereg $PREREG_PATH \
+    ${MAPPING_RECORD:+--mapping $MAPPING_RECORD} \
     --out $ROOT/verdict_${CELL}_e1.json 2>&1 | tee -a $LOG || E1=$?
+
+# ⛔⛔ PERSIST THE READINGS BEFORE ANY HALT BRANCH. `persist_leg1` runs BEFORE
+# F-LOCAL, the lag profile, the dose and the verdict, and every halt path below
+# `exit`s — so on 2026-09-13 the mapping rung's entire measurement existed only
+# in the run log, and survived only because the WATCHDOG happened to flush that
+# log on its way to terminating the box. A reading nothing persists is a reading
+# one unlucky exit away from never having happened.
+step persist_reads            # SCOPE: any
+$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+    full-weight --cell $CELL \
+    --corpus-manifest $ROOT/corpus_ct-s$SEED/manifest.json \
+    2>&1 | tee -a $LOG || echo "  ⚠️ persist_reads failed — the readings are still in $LOG, which the watchdog flushes" | tee -a $LOG
 
 if [ $E1 -eq 3 ]; then
   # ⛔⛔ §4.1: the weights did not move. No row of the table may be read, and

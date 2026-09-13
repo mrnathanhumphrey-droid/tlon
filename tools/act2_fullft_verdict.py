@@ -33,7 +33,9 @@ for _s in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
-from tlon.act2.weight_delta import INSTRUMENT_FAULT, OK as DELTA_OK
+from tlon.act2.full_weight import MAPPING_MOVED
+from tlon.act2.weight_delta import (INSTRUMENT_FAULT, UNDISCRIMINATING,
+                                    OK as DELTA_OK)
 from tlon.discourse.transient import Z_LAG1_MIN, Z_LAGN_MAX
 
 GO = "GO"
@@ -131,20 +133,65 @@ def readable_stop(out: dict) -> bool:
                 and axes.get("f_local", {}).get("ok"))
 
 
-def decide(delta: dict, lag: dict, flocal: dict, *, prereg: str) -> dict:
+def decide(delta: dict, lag: dict, flocal: dict, *, prereg: str,
+           mapping: dict | None = None) -> dict:
     """§4.2, in the order the table is written."""
     # ── the precondition, before anything else ──────────────────────────────
+    #
+    # ⛔⛔ THE POOLED-FRACTION TEST IS NOT VALID FOR MAPPING SCOPE, AND IT TOOK
+    # A SECOND BASE TO SHOW IT. §4.1 compares the observed fraction against a
+    # WORKING PREDICTION OF 1.0 — every trainable weight moves. That is true of
+    # a layer rung and FALSE of a mapping rung: `embed_tokens` only ever
+    # receives gradient on rows whose tokens appear, so a PERFECTLY HEALTHY
+    # mapping run predicts about `(1.0 + coverage) / 2` ≈ 0.51, not 1.0.
+    #
+    #   Qwen   mapping  observed 0.5024  dead-zone 0.1865  ->  OK
+    #   Mistral mapping observed 0.5122  dead-zone 0.5616  ->  UNDISCRIMINATING
+    #
+    # ⛔ Qwen PASSED BY LUCK. Its crossover sat at sqrt(0.1865) = 0.432 and it
+    # came in at 0.502 — clear by 0.07, on a quantity that was never measuring
+    # what the test thought. Mistral's mapping weights are smaller (69.4 % of
+    # `embed_tokens` under the 2.56e-3 ceiling against Qwen's pooled 18.7 %), so
+    # the same healthy run reads as unmeasurable. And at the pre-registered
+    # 5e-6 dial-back the measured dead-zone prediction is 0.340, whose crossover
+    # is 0.583 — ABOVE the structural 0.512, so the same healthy run would read
+    # as a FAULT. A worse failure than the honest refusal: it would assert the
+    # optimizer did not write.
+    #
+    # ⭐ THE WAIVER IS BY A STRICTLY STRONGER TEST, NEVER A WEAKER ONE.
+    # `mapping_moved` checks EACH declared leaf against ITS OWN computed
+    # prediction — `lm_head` dense ≈ 1.0, `embed_tokens` against the corpus's
+    # measured coverage under THIS base's tokenizer — and refuses if either leaf
+    # is still. That is the per-module read §4.1's own refusal text asks for
+    # ("read the delta norms per module before any verdict"). Nothing here
+    # weakens a gate: a run that fails `mapping_moved` still cannot be read, and
+    # layer-scope runs never reach this branch because they have no mapping
+    # record at all.
     if delta.get("verdict") != DELTA_OK:
-        return {
-            "verdict": FAULT,
-            "why": ("§4.1 precondition did not pass (%s): %s NO ROW OF THE "
-                    "VERDICT TABLE MAY BE READ. This run is not evidence about "
-                    "the substrate."
-                    % (delta.get("verdict"), delta.get("why", ""))),
-            "delta_verdict": delta.get("verdict"),
-            "fraction_changed": delta.get("fraction_changed"),
-            "axes_not_computed": True,
-        }
+        # ⛔⛔ AN EXPLICIT ALLOW-LIST, AND `DIVERGED` IS NOT ON IT. The waiver
+        # answers one question — "can the POOLED FRACTION separate a working
+        # run from a dead one on this parameter population?" — and only these
+        # two states are that question. `DIVERGED` is not: it means the weights
+        # went non-finite, which puts the run off the axis both predictions
+        # describe. ⛔ And `NaN != NaN` is True, so a destroyed leaf COUNTS AS
+        # CHANGED — the per-leaf record is exactly the evidence that cannot be
+        # trusted there. Written as a deny-by-default set because the first
+        # draft of this branch said `!= DELTA_OK` and would have waved a
+        # diverged run straight through to GO. The test caught it.
+        WAIVABLE = (UNDISCRIMINATING, INSTRUMENT_FAULT)
+        moved = (delta.get("verdict") in WAIVABLE
+                 and (mapping or {}).get("verdict") == MAPPING_MOVED)
+        if not moved:
+            return {
+                "verdict": FAULT,
+                "why": ("§4.1 precondition did not pass (%s): %s NO ROW OF THE "
+                        "VERDICT TABLE MAY BE READ. This run is not evidence "
+                        "about the substrate."
+                        % (delta.get("verdict"), delta.get("why", ""))),
+                "delta_verdict": delta.get("verdict"),
+                "fraction_changed": delta.get("fraction_changed"),
+                "axes_not_computed": True,
+            }
 
     z = {int(k): v for k, v in (lag.get("z") or {}).items()}
     if 1 not in z or 2 not in z:
@@ -224,6 +271,14 @@ def decide(delta: dict, lag: dict, flocal: dict, *, prereg: str) -> dict:
 
     return {"verdict": v, "why": why, "axes": axes,
             "delta_verdict": delta.get("verdict"),
+            # ⭐ STAMPED WHENEVER IT IS NOT THE POOLED TEST THAT CARRIED THE
+            # PRECONDITION, so a reader can never mistake a per-leaf pass for a
+            # §4.1 pass. Absent on every run the pooled test cleared on its own.
+            **({"precondition_via": "mapping_moved (per-leaf, stronger than "
+                                    "the pooled §4.1 fraction test, which is "
+                                    "invalid for mapping scope)",
+                "delta_verdict_pooled": delta.get("verdict")}
+               if delta.get("verdict") != DELTA_OK else {}),
             "fraction_changed": delta.get("fraction_changed"),
             "measurement_category": "_w",
             "PREREG": prereg,
@@ -236,6 +291,13 @@ def main() -> int:
     ap.add_argument("--delta", required=True)
     ap.add_argument("--lag", required=True)
     ap.add_argument("--ledger", required=True)
+    # ⛔ OPTIONAL, and absent means "no per-leaf evidence exists", never
+    # "assume it passed". A layer-scope run has no mapping record and must keep
+    # failing the pooled precondition exactly as before.
+    ap.add_argument("--mapping", default=None,
+                    help="mapping_moved.json — mapping scope only. Lets the "
+                         "per-leaf test carry the §4.1 precondition when the "
+                         "pooled fraction test cannot (see decide()).")
     ap.add_argument("--out", required=True)
     ap.add_argument("--prereg", required=True,
                     help="path to the LOCKED prereg this run answers; its "
@@ -262,7 +324,17 @@ def main() -> int:
     # ⛔ Verified BEFORE the axes are computed: a run whose prereg cannot be
     # named or has moved must not produce a verdict at all.
     prereg = verified_prereg_id(a.prereg)
-    out = decide(delta, lag, flocal, prereg=prereg)
+    # ⛔ A named mapping record that cannot be read is a REFUSAL, not an absent
+    # one. Falling back to None here would silently downgrade a run whose
+    # per-leaf evidence was meant to carry the precondition.
+    mapping = None
+    if a.mapping:
+        mp = pathlib.Path(a.mapping)
+        if not mp.exists():
+            raise SystemExit("⛔ --mapping %s does not exist. An unreadable "
+                             "per-leaf record is not a missing one." % mp)
+        mapping = json.loads(mp.read_text(encoding="utf-8"))
+    out = decide(delta, lag, flocal, prereg=prereg, mapping=mapping)
     outp = pathlib.Path(a.out)
     outp.parent.mkdir(parents=True, exist_ok=True)
     outp.write_text(json.dumps(out, indent=2), encoding="utf-8")
