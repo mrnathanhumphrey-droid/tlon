@@ -175,6 +175,34 @@ class LocalBackend:
             self.model = PeftModel.from_pretrained(self.model, adapter)
         self.model.eval()
 
+    @classmethod
+    def adopt(cls, model, tok, *, name: str, max_new_tokens: int = 220,
+              constrained: bool = False, temperature: float = 0.0):
+        """⭐ WRAP A MODEL THAT IS ALREADY IN MEMORY — the dose curve needs it.
+
+        ⛔⛔ FORCED BY STORAGE, NOT PREFERENCE. Reading F-LOCAL at five points
+        across an epoch by the normal path means five checkpoints on disk:
+        5 x 14.5 GB = 72 GB against 46.8 GB of hub headroom. The curve is the
+        READINGS, not the intermediate models, so the model is read where it
+        already is and only the readings are persisted.
+
+        ⛔ THIS DOES NOT PUT THE MODEL IN `eval()` AND DOES NOT TOUCH ITS MODE.
+        `__init__` calls `.eval()` because it owns a freshly loaded model; this
+        one is BORROWING a model the trainer owns, and a backend that silently
+        flipped training mode would disable dropout for the rest of the run.
+        Mode is `dose_curve.isolated_read`'s job, and it restores what it found.
+        """
+        self = cls.__new__(cls)
+        self.model_id = name
+        self.name = "live:%s" % name
+        self.constrained = constrained
+        self.max_new_tokens = max_new_tokens
+        self.temperature = temperature
+        self.calls = []
+        self.tok = tok
+        self.model = model
+        return self
+
     def _prompt(self, system: str, user: str) -> str:
         # ⛔⛔ ONE FOLD WITH THE TRAINER. This construction was spelled here AND
         # (differently) in `row_to_text`, and the two disagreed on Mistral-7B:

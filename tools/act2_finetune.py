@@ -428,6 +428,24 @@ def main() -> int:
     ap.add_argument("--trace-out", default=None,
                     help="JSONL per-step trace: loss, per-module finiteness on "
                          "gradient AND weight AND optimizer moment, in order.")
+    # ── the dose curve (PREREG: the Mistral mapping curve run) ──────────────
+    # ⛔ OFF unless asked for. Every reading costs generations, and a run that
+    # silently paid for five F-LOCAL evaluations would report a wall-clock and
+    # a cost nobody pre-registered.
+    ap.add_argument("--dose-curve-out", default=None,
+                    help="JSONL of (step, rms, speak, render) read DURING the "
+                         "run. Readings only — no intermediate weights, which "
+                         "would need 72 GB against 46.8 GB of headroom.")
+    ap.add_argument("--dose-curve-k", type=int, default=5,
+                    help="how many reads, spaced geometrically toward the low "
+                         "dose end where the hypotheses separate")
+    ap.add_argument("--dose-curve-n", type=int, default=64,
+                    help="probes per read; the gate's own n")
+    ap.add_argument("--dose-curve-target", type=float, default=None,
+                    help="ALSO read when the dose first crosses this rms "
+                         "(3.118e-4 = the layer-rung dose). Training CONTINUES "
+                         "through it — the matched dose is observed, not "
+                         "arranged, so no examples are given up to reach it.")
     ap.add_argument("--delta-snapshot-in", default=None,
                     help="measure against THIS snapshot instead of the weights "
                          "at the start of this leg (leg 2+)")
@@ -669,6 +687,11 @@ def main() -> int:
                             "gate_proj", "up_proj", "down_proj"]))
         model.print_trainable_parameters()
 
+    if a.dose_curve_out and not a.full:
+        raise SystemExit(
+            "⛔ --dose-curve-out is a full-weight reading: it measures rms "
+            "against the §4.1 snapshot, which only the full-weight path takes.")
+
     trainer = Trainer(
         model=model, train_dataset=ds["train"], eval_dataset=ds["eval"],
         # ⛔⛔ BY POSITION, NOT BY TOKEN ID. `DataCollatorForLanguageModeling`
@@ -698,6 +721,85 @@ def main() -> int:
             **({"logging_nan_inf_filter": False} if a.trace_out else {}),
             **({"max_steps": a.max_steps} if a.max_steps else {}),
             **({"optim": a.optim} if a.full else {})))
+    if a.dose_curve_out:
+        import json as _json
+
+        from transformers import TrainerCallback as _TC
+
+        from tlon.act2.dose_curve import (checkpoint_steps, crossed,
+                                          isolated_read, rms_per_param)
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        from act2_backends import LocalBackend as _LB
+        from act2_flocal import read_rates as _read_rates
+
+        from tlon.act2 import probes as _probes
+        from tlon.act2.llm import LLMSpeaker as _Speaker
+
+        _total = len(trainer.get_train_dataloader()) // a.accum * a.epochs
+        _marks = set(checkpoint_steps(int(_total), a.dose_curve_k))
+        _battery = _probes.build(seed=7, n_prod=a.dose_curve_n,
+                                 n_comp=max(a.dose_curve_n, 256))
+        _curve = pathlib.Path(a.dose_curve_out)
+        _curve.parent.mkdir(parents=True, exist_ok=True)
+        print("⭐⭐ DOSE CURVE ARMED — reads at steps %s of ~%d%s"
+              % (sorted(_marks), _total,
+                 ("" if a.dose_curve_target is None
+                  else ", plus the crossing of rms %.4e" % a.dose_curve_target)))
+        print("   ⛔ readings only; no intermediate weights are written")
+
+        class _DoseCurve(_TC):
+            def __init__(self):
+                self.step = 0
+                self.prev_rms = None
+                self.target_done = False
+
+            def on_step_end(self, args_, state, control, **kw):
+                self.step += 1
+                m = kw.get("model")
+                if m is None:
+                    return control
+                # ⛔ The dose is measured EVERY step because it is cheap
+                # (a 4096-value sample per leaf) and because the crossing has to
+                # be caught between reads, not at one.
+                d = _delta_measure(m.named_parameters(), snap, lr=a.lr)
+                rms = rms_per_param(d)
+                hit_target = (a.dose_curve_target is not None
+                              and not self.target_done
+                              and crossed(self.prev_rms, rms,
+                                          a.dose_curve_target))
+                self.prev_rms = rms
+                if not (self.step in _marks or hit_target):
+                    return control
+                self.target_done = self.target_done or hit_target
+                why = ("target" if hit_target else "schedule")
+
+                # ⛔⛔ EVERY GENERATION HERE RUNS INSIDE `isolated_read`, WHICH
+                # RESTORES TRAINING MODE, RNG STATE AND GRADS AND *ASSERTS* IT
+                # DID. A curve measured by perturbing the run it measures is a
+                # curve of a different run, and nothing downstream could tell.
+                with isolated_read(m, torch_mod=torch):
+                    back = _LB.adopt(m, tok, name=pathlib.Path(a.out).name)
+                    spk = _Speaker("native", back, card=False)
+                    speak, render = _read_rates(spk, _battery, a.dose_curve_n)
+
+                row = {"step": self.step, "of": _total, "why": why,
+                       "examples_seen": self.step * a.batch * a.accum,
+                       "rms": rms, "delta_verdict": d.get("verdict"),
+                       "fraction_changed": d.get("fraction_changed"),
+                       "speak": speak["rate"], "render": render["rate"],
+                       "speak_valid": speak["valid"],
+                       "render_valid": render["valid"],
+                       "battery": _battery.digest, "lr": a.lr}
+                with open(_curve, "a", encoding="utf-8") as fh:
+                    fh.write(_json.dumps(row) + "\n")
+                print("⭐ DOSE CURVE step %d/%d (%s)  rms %.4e  "
+                      "speak %.1f%%  render %.1f%%"
+                      % (self.step, _total, why, rms or float("nan"),
+                         100 * speak["rate"], 100 * render["rate"]), flush=True)
+                return control
+
+        trainer.add_callback(_DoseCurve())
+
     trace = None
     if a.trace_out:
         from tlon.act2.step_trace import (ForwardProbe, PreClipGradProbe,

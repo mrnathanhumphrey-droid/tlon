@@ -87,6 +87,15 @@ ATTN_IMPL=eager
 # text model's into a set that can look perfectly contiguous. Empty for a
 # plain causal LM. PREREG 91956dbe §4.1.
 STACK=${STACK:-}
+# ⛔ THE DOSE CURVE IS OPT-IN AND EMPTY BY DEFAULT. PREREG ac255dce: reading
+# F-LOCAL five times during the run costs generations, so a run that paid for
+# them without being asked would report a wall-clock and a cost nobody
+# pre-registered. Set DOSE_CURVE=1 to arm it.
+DOSE_CURVE=${DOSE_CURVE:-}
+DOSE_CURVE_K=${DOSE_CURVE_K:-5}
+# ⭐ The layer-rung dose. Crossing it triggers an EXTRA read and training
+# CONTINUES through it -- the matched dose is observed, not arranged.
+DOSE_CURVE_TARGET=${DOSE_CURVE_TARGET:-}
 
 # ── 1 · WATCHDOG FIRST, BEFORE THE FLOORS ───────────────────────────────────
 # ⛔⛔ THE ORDER IS THE PREREG'S (§8, R5) AND IT IS A CHANGE FROM THE LoRA ARM.
@@ -287,7 +296,11 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --full --scope-mode $SCOPE_MODE --optim $OPTIM $LAYER_ARGS \
     --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
     --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
-    --seed $SEED --delta-snapshot-out $SNAP 2>&1 | tee -a $LOG
+    --seed $SEED --delta-snapshot-out $SNAP \
+    ${DOSE_CURVE:+--dose-curve-out $ROOT/dose_curve_$CELL.jsonl \
+                  --dose-curve-k ${DOSE_CURVE_K:-5} \
+                  ${DOSE_CURVE_TARGET:+--dose-curve-target $DOSE_CURVE_TARGET}} \
+    2>&1 | tee -a $LOG
 
 step factorial_json            # SCOPE: any
 # ⛔⛔ A `_w` OBJECT GETS NO CELL AND NO PAIR KEY. §0/§6: its weights changed, so

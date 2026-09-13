@@ -184,6 +184,26 @@ def _rate(speaker, stimuli, kind: str, histories=None) -> dict:
             "mined": N.mine([f["proposal"] for f in failures if f["proposal"]])}
 
 
+def read_rates(speaker, battery, n: int) -> tuple[dict, dict]:
+    """⭐ THE TWO RATES THE F-LOCAL GATE ACTUALLY READS — ONE FOLD.
+
+    `falsify.f_local` takes `worst = min(render_rate, speak_rate)`; `choose` is
+    not an input to it. So this is the whole of what a mid-run dose-curve read
+    needs, and extracting it means the curve and the CLI cannot drift into two
+    slightly different F-LOCAL measurements — the failure that put a differently
+    shaped prompt on each side of the trainer/reader boundary.
+
+    ⛔ The speak probe VARIES ITS HISTORY. Issuing one byte-identical prompt n
+    times under greedy decoding is one sample repeated n times, and it reported
+    `speak 100 % (64/64)` at an effective sample size of 1.
+    """
+    histories = [tuple(p.surface for p in battery.comprehension[i:i + 1])
+                 for i in range(n)]
+    speak = _rate(speaker, [None] * n, "speak", histories=histories)
+    render = _rate(speaker, [p.stimulus for p in battery.production], "render")
+    return speak, render
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
@@ -222,11 +242,8 @@ def main() -> int:
     # greedy = 1/12 distinct, same prompt at temp 0.8 = 11/12, twelve DIFFERENT
     # inputs greedy = 12/12. The weights were never collapsed; greedy was taking
     # the mode. The probe now varies its history, which is what the arena does.
-    histories = [tuple(p.surface for p in battery.comprehension[i:i + 1])
-                 for i in range(a.n)]
-    speak = _rate(speaker, [None] * a.n, "speak", histories=histories)
+    speak, render = read_rates(speaker, battery, a.n)
     print(f"  speak   {speak['rate']:.1%}  ({speak['valid']}/{a.n})")
-    render = _rate(speaker, [p.stimulus for p in battery.production], "render")
     print(f"  render  {render['rate']:.1%}  ({render['valid']}/{a.n})")
 
     # ⛔⛔ PER-ITEM OUTCOMES ARE RECORDED, NOT JUST THE ACCURACY. The battery is
