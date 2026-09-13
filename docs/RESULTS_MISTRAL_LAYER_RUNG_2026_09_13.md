@@ -94,6 +94,25 @@ readable, not a small-n artifact. And `sampling_stream_seeded: true` makes this 
 
 ## 5 · ⏭ What this opens
 
+⛔⛔ **AND A SHARPER BAR THAN "DOES RELEASE INSTALL", READ OFF QWEN'S MAPPING
+VERDICT ON 2026-09-13.** `fullft_fwmap-s20624/verdict_fwmap-s20624_e1.json`:
+
+```
+verdict    STOP — perceive killed
+release    ok: TRUE    lag2 z = 0.681   (ceiling 3.0)
+perceive   ok: false   z_lag1 = 2.232   (floor 6.0)
+f_local    ok: false   fired: true
+```
+
+⭐ **That is the ONLY "release passed" anywhere in this campaign — and it
+happened exactly where the speaker died.** The campaign's evidence is therefore
+currently consistent with a nastier reading than "release will not install":
+**release appears installable precisely when the model stops being a speaker.**
+
+⛔ So a mapping-rung GO is not "lag2 ≤ 3.0". It is lag2 ≤ 3.0 **while** perceive
+≥ 6.0 **and** f_local clear — release *without* collapse. Any mapping prereg must
+state that, or a GO row can be claimed by a repeat of Qwen's collapse.
+
 1. **Mistral mapping rung (3b)** — now the live question, and the most
    informative cell in the matrix because Mistral is nearest the ceiling.
    ⚠️ Its locus is **4.1× smaller** than Qwen's (268,435,456 vs 1,089,994,752),
