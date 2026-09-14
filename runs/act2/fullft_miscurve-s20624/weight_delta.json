@@ -1,0 +1,46 @@
+{
+  "PRECONDITION": "PREREG a0450b36 \u00a74.1",
+  "lr": 1e-05,
+  "bf16_absorbable_ceiling": 0.00256,
+  "n_trainable_params": 268435456,
+  "n_sampled": 8192,
+  "fraction_changed": 0.51220703125,
+  "fraction_nonfinite": 0.0,
+  "prediction_working_fp32_master": 1.0,
+  "prediction_bf16_dead_zone": 0.5616455078125,
+  "delta_norm_estimated": 9.84987247071479,
+  "verdict": "UNDISCRIMINATING",
+  "why": "the bf16 dead-zone prediction is 0.562, close enough to the working prediction of 1.0 that no observed fraction separates them. This run cannot answer \u00a74.1 by fraction alone; read the delta norms per module before any verdict.",
+  "per_module": {
+    "model.embed_tokens.weight": {
+      "n": 134217728,
+      "sampled": 4096,
+      "changed": 100,
+      "fraction_changed": 0.0244140625,
+      "delta_norm_estimated": 1.3821506392425995,
+      "norm_init_exact": 30.529491424560547,
+      "relative_delta_estimated": 0.04527263884031421,
+      "fraction_under_bf16_ceiling": 0.666748046875,
+      "fraction_nonfinite": 0.0
+    },
+    "lm_head.weight": {
+      "n": 134217728,
+      "sampled": 4096,
+      "changed": 4096,
+      "fraction_changed": 1.0,
+      "delta_norm_estimated": 9.752417510534828,
+      "norm_init_exact": 48.04202651977539,
+      "relative_delta_estimated": 0.20299762972156202,
+      "fraction_under_bf16_ceiling": 0.45654296875,
+      "fraction_nonfinite": 0.0
+    }
+  },
+  "scope": {
+    "scope_mode": "mapping",
+    "n_layers": 32,
+    "unfreeze_top": 0,
+    "cutoff_layer": null,
+    "n_trainable_params": 268435456,
+    "n_frozen_params": 6979588096
+  }
+}
