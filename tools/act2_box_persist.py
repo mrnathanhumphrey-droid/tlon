@@ -565,6 +565,23 @@ def cmd_verify(a):
     return 0
 
 
+#: ⛔⛔ WHAT A DYING BOX MUST NOT TAKE WITH IT. Patterns, never names — the
+#: hardcoded-name class has now bitten this one function five times. Anything a
+#: run MEASURES belongs here; anything it can regenerate does not (the model is
+#: persisted by its own stage and would make the flush a 14.5 GB upload on a box
+#: already being terminated for cost).
+FLUSH_PATTERNS = (
+    "pipeline_*.log",        # the record of WHY
+    "verdict_*.json",        # the verdict, per epoch
+    "model_lag_*.json",      # the lag profile, per epoch
+    "dose_curve_*.jsonl",    # the curve — miscurve-s20624 lost this one
+    "vocab_coverage.json",   # the per-leaf gate's own prediction
+    "mapping_moved.json",    # the per-leaf gate's result
+    "factorial.json",
+    "weight_delta*.json",
+)
+
+
 def cmd_flush(a):
     """⛔⛔ LAST WORDS — called by the watchdog before it terminates.
 
@@ -586,7 +603,22 @@ def cmd_flush(a):
     # of the hardcoded-log-name class; the guard written for the second and third
     # only ever swept `act2_retrain_orchestrate.py`, so it could not see this
     # file. ⭐ The guard now sweeps all of `tools/`.
-    candidates = sorted(root.glob("pipeline_*.log"))
+    # ⛔⛔ FIFTH INSTANCE OF THE SAME CLASS, AND THE ONE ABOVE ONLY FIXED THE
+    # LOGS. This list swept `pipeline_*.log` + manifest + watchdog and NOTHING
+    # ELSE, so the READINGS were never in it: on 2026-09-13 `mismap-s20624` and
+    # 2026-09-14 `miscurve-s20624` both died on a branch that skipped their
+    # persist, and both measurements survived ONLY because the numbers happened
+    # to have been printed into a log that this list did cover. Twice is not
+    # luck, it is a dependency on an accident — and a lost measurement is worse
+    # than a lost model, because the model retrains and the measurement is
+    # simply gone.
+    #
+    # ⭐ So the flush now sweeps what the run was FOR, by pattern rather than by
+    # name, and `tests/test_flush_sweeps_the_measurement.py` asserts each
+    # pattern against a real reading filename from a fired run.
+    candidates = []
+    for pattern in FLUSH_PATTERNS:
+        candidates += sorted(root.glob(pattern))
     candidates += [root / "manifest.json", root / "watchdog.log"]
     for p in candidates:
         if not p.exists():

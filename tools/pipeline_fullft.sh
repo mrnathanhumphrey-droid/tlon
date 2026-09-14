@@ -97,6 +97,38 @@ DOSE_CURVE_K=${DOSE_CURVE_K:-5}
 # CONTINUES through it -- the matched dose is observed, not arranged.
 DOSE_CURVE_TARGET=${DOSE_CURVE_TARGET:-}
 
+# ── 0 · THE MEASUREMENT LEAVES ON EVERY EXIT PATH ───────────────────────────
+# ⛔⛔ TWICE IN TWO DAYS A RUN'S ENTIRE MEASUREMENT SURVIVED ONLY BY ACCIDENT.
+# `mismap-s20624` and `miscurve-s20624` both died on a branch whose `exit` came
+# before any persist, and both were recovered only because their numbers had
+# been printed into a log that the watchdog's flush happened to sweep. Every
+# halt branch below is a place someone has to REMEMBER to persist first, and
+# the remembering failed on the first two branches that were exercised.
+#
+# ⭐ So it is a `trap`, which no branch can forget: success, failure, floor
+# refusal, instrument fault, `set -e` abort — every path runs this. A lost
+# measurement is worse than a lost model; the model retrains and a $12 run's
+# readings are simply gone.
+#
+# ⛔ It calls `flush`, NOT `full-weight`: flush moves the readings, which are
+# kilobytes. `full-weight` would re-upload 14.5 GB of model on every exit,
+# including on a box already being terminated for cost.
+MEASUREMENT_EXISTS=0
+_flush_measurement() {
+  local rc=$?
+  # ⛔ Only once the run has something to lose. Before that this would fire on
+  # every preflight refusal and push an empty directory.
+  if [ "$MEASUREMENT_EXISTS" = "1" ]; then
+    echo "=== [flush_measurement] $(date -u +%H:%M:%S) · exit rc=$rc ===" | tee -a $LOG
+    # ⛔ Best-effort and never fatal: this runs while the script is already
+    # leaving, and a flush that aborted the exit would strand a billing box.
+    $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO flush \
+        2>&1 | tee -a $LOG || echo "  ⛔ flush failed; readings remain on the box" | tee -a $LOG
+  fi
+  return $rc
+}
+trap _flush_measurement EXIT
+
 # ── 1 · WATCHDOG FIRST, BEFORE THE FLOORS ───────────────────────────────────
 # ⛔⛔ THE ORDER IS THE PREREG'S (§8, R5) AND IT IS A CHANGE FROM THE LoRA ARM.
 # The safety net deploys before the risk. A broken tree failing floors AFTER
@@ -290,6 +322,13 @@ fi
 OUT=$ROOT/model_$CELL
 SNAP=$ROOT/delta_snapshot.pt
 
+# ⭐ FROM HERE THE RUN HAS SOMETHING TO LOSE. The dose curve writes readings
+# DURING the next step, so the trap must be live before it STARTS, not after it
+# returns — the run that lost its curve died after training, not before. Armed
+# ahead of the step header rather than inside it so the ordering is unambiguous
+# to the reader and to `tests/test_call_site_coverage.py`.
+MEASUREMENT_EXISTS=1
+
 step train_leg1            # SCOPE: any
 $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --corpus $ROOT/corpus_ct-s$SEED \
@@ -475,7 +514,7 @@ step persist_reads            # SCOPE: any
 $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
     full-weight --cell $CELL \
     --corpus-manifest $ROOT/corpus_ct-s$SEED/manifest.json \
-    2>&1 | tee -a $LOG || echo "  ⚠️ persist_reads failed — the readings are still in $LOG, which the watchdog flushes" | tee -a $LOG
+    2>&1 | tee -a $LOG || echo "  ⚠️ persist_reads failed — the EXIT trap will still flush the readings" | tee -a $LOG
 
 if [ $E1 -eq 3 ]; then
   # ⛔⛔ §4.1: the weights did not move. No row of the table may be read, and
@@ -566,6 +605,7 @@ else
       --delta $OUT/weight_delta.json \
       --lag $ROOT/model_lag_${CELL}_e2.json \
       --ledger runs/act2/ledger.jsonl --prereg $PREREG_PATH \
+      ${MAPPING_RECORD:+--mapping $MAPPING_RECORD} \
       --out $ROOT/verdict_${CELL}_e2.json 2>&1 | tee -a $LOG || E2=$?
   if [ $E2 -eq 3 ]; then
     echo "⛔⛔ INSTRUMENT FAULT at epoch 2 — no row of the verdict table may be read." | tee -a $LOG
