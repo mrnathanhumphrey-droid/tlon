@@ -133,3 +133,37 @@ def test_no_exit_branch_relies_on_having_persisted_first():
              if m.start() < trap_at]
     assert not early, ("%d exit(s) occur before the flush trap is installed"
                        % len(early))
+
+
+# ── defect 3: the declared epoch count that was not binding ────────────────
+
+def test_the_leg_two_branch_is_gated_on_the_declared_epoch_budget():
+    """⛔⛔ PREREG ac255dce §2 declared "epochs: 1, run to completion" AND THE
+    RUN SPENT TWO. `--epochs 1` is passed to each LEG while the number of LEGS
+    was decided from a verdict exit code, so the declared count and the executed
+    one were never connected — a §4.1 change altered the exit code and the run
+    quietly bought an epoch nobody registered.
+
+    ⛔ This is not a claim that the extra epoch was harmful. On that run it moved
+    every axis the good way. It is a claim that a run executes the experiment its
+    locked prereg describes and buys nothing else."""
+    assert "EPOCH_BUDGET" in SRC
+    i = SRC.index('elif [ "$EPOCH_BUDGET" -lt 2 ]')
+    j = SRC.index("step train_leg2")
+    assert i < j, "the budget gate does not precede the second training leg"
+
+
+def test_the_budget_defaults_to_two_so_no_standing_prereg_changes():
+    """⭐ Every prereg before ac255dce was written against a two-epoch pipeline.
+    A default of 1 would silently re-scope all of them."""
+    m = re.search(r"EPOCH_BUDGET=\$\{EPOCH_BUDGET:-(\d+)\}", SRC)
+    assert m and m.group(1) == "2"
+
+
+def test_a_refused_second_epoch_still_names_a_final_verdict():
+    """⛔ The `~/DONE` gate reads FINAL_LAG and FINAL_VERDICT. A branch that
+    halts without setting them would fail at the gate instead of at the halt,
+    which reads as a different fault than the one that occurred."""
+    body = SRC[SRC.index('elif [ "$EPOCH_BUDGET" -lt 2 ]'):SRC.index("step train_leg2")]
+    assert "EPOCHS_RUN=1" in body
+    assert "FINAL_LAG=" in body and "FINAL_VERDICT=" in body

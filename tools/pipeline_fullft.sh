@@ -96,6 +96,13 @@ DOSE_CURVE_K=${DOSE_CURVE_K:-5}
 # ⭐ The layer-rung dose. Crossing it triggers an EXTRA read and training
 # CONTINUES through it -- the matched dose is observed, not arranged.
 DOSE_CURVE_TARGET=${DOSE_CURVE_TARGET:-}
+# ⛔⛔ THE EPOCH COUNT THE PREREG DECLARED, MADE BINDING. `--epochs 1` goes to
+# each LEG; the number of LEGS was decided from a verdict exit code, so a locked
+# prereg could say "one epoch" and the run could spend two without anything
+# noticing. ⭐ Defaults to 2, which is the behaviour every prereg before
+# ac255dce was written against, so no standing run changes. A single-epoch
+# prereg sets EPOCH_BUDGET=1 and the leg-2 branch refuses.
+EPOCH_BUDGET=${EPOCH_BUDGET:-2}
 
 # ── 0 · THE MEASUREMENT LEAVES ON EVERY EXIT PATH ───────────────────────────
 # ⛔⛔ TWICE IN TWO DAYS A RUN'S ENTIRE MEASUREMENT SURVIVED ONLY BY ACCIDENT.
@@ -561,6 +568,26 @@ if [ $E1 -eq 0 ] || [ $E1 -eq 4 ]; then
     4) echo "⭐⭐ EPOCH 1 IS READABLE (floored-but-fluent) — stopping here per PREREG 9ccf98d6 §3." | tee -a $LOG
        echo "   Rung 1a trained past exactly this state and destroyed it. Not repeated." | tee -a $LOG ;;
   esac
+  EPOCHS_RUN=1
+  FINAL_LAG=$ROOT/model_lag_${CELL}_e1.json
+  FINAL_VERDICT=$ROOT/verdict_${CELL}_e1.json
+elif [ "$EPOCH_BUDGET" -lt 2 ]; then
+  # ⛔⛔ THE PREREG DECLARED FEWER EPOCHS THAN THIS BRANCH WOULD SPEND.
+  #
+  # PREREG ac255dce §2 said "epochs: 1, run to completion" and the pipeline ran
+  # TWO, because `--epochs 1` is passed to each LEG while the number of LEGS is
+  # decided here from a verdict exit code -- so the declared epoch count and the
+  # executed one were never connected. A §4.1 change altered the exit code and
+  # the run quietly bought a second epoch nobody registered, for ~$6.
+  #
+  # ⛔ The declaration is binding now. This is NOT a claim that epoch 2 would
+  # have been harmful -- on `miscurve-s20624` it moved every axis the good way
+  # (render 26.6 -> 32.8 %, z=0.78 so call it NOT WORSE; lag2 8.87 -> 7.53;
+  # lag3 3.08 -> 1.23, under the ceiling). It is a claim that a run must execute
+  # the experiment its locked prereg describes, and buy nothing the prereg did
+  # not declare, whichever direction the extra spending happens to move things.
+  echo "  epoch 1 is NOT READABLE, but EPOCH_BUDGET=$EPOCH_BUDGET — the prereg declared a single epoch." | tee -a $LOG
+  echo "  ⛔ Epoch 2 is NOT run. A run may not buy an epoch its pre-registration did not declare." | tee -a $LOG
   EPOCHS_RUN=1
   FINAL_LAG=$ROOT/model_lag_${CELL}_e1.json
   FINAL_VERDICT=$ROOT/verdict_${CELL}_e1.json
