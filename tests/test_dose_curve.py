@@ -201,3 +201,76 @@ def test_a_broken_restore_is_raised_not_warned():
     with pytest.raises(EvalContaminatedTraining):
         with isolated_read(m, torch_mod=torch):
             pass
+
+
+# ── the target ladder: matched pairs by construction ───────────────────────
+
+from tlon.act2.dose_curve import TargetLadder  # noqa: E402
+
+#: ⭐ miscurve-s20624's OWN measured rms values. The second curve reads where
+#: the first one did, so every reading is a matched pair by construction.
+MISCURVE_RMS = [3.1205e-4, 3.7173e-4, 4.1686e-4, 4.6505e-4, 5.1900e-4]
+
+
+def test_a_rung_fires_when_the_dose_crosses_it():
+    lad = TargetLadder(MISCURVE_RMS)
+    assert lad.crossed(3.0e-4, 3.2e-4) == [3.1205e-4]
+
+
+def test_one_step_may_cross_several_rungs_and_all_of_them_fire():
+    """⛔ Early training moves rms fast. A ladder returning only the first
+    crossing would silently drop matched pairs the run actually reached."""
+    lad = TargetLadder(MISCURVE_RMS)
+    hit = lad.crossed(3.0e-4, 4.7e-4)
+    assert hit == [3.1205e-4, 3.7173e-4, 4.1686e-4, 4.6505e-4]
+
+
+def test_a_rung_never_fires_twice():
+    """⛔ Otherwise every later step re-reads the same rms and the curve fills
+    with duplicates of one point."""
+    lad = TargetLadder(MISCURVE_RMS)
+    assert lad.crossed(3.0e-4, 3.2e-4) == [3.1205e-4]
+    assert lad.crossed(3.2e-4, 3.3e-4) == []
+    assert 3.1205e-4 not in lad.remaining
+
+
+def test_the_first_measurement_already_above_a_rung_still_fires_it():
+    lad = TargetLadder(MISCURVE_RMS)
+    assert lad.crossed(None, 3.8e-4) == [3.1205e-4, 3.7173e-4]
+
+
+def test_an_unmeasurable_dose_fires_nothing():
+    """⛔⛔ A run whose delta went non-finite must not fire every rung at once on
+    its way out — that would write a full matched ladder for a diverged run."""
+    lad = TargetLadder(MISCURVE_RMS)
+    assert lad.crossed(3.0e-4, None) == []
+    assert lad.remaining == MISCURVE_RMS
+
+
+def test_rungs_this_run_never_reaches_stay_unfired():
+    """⭐ THE DESIGN'S WHOLE POINT. The fit decides HOW MANY rungs a run reaches,
+    never WHETHER the comparison exists. A short run simply reports fewer
+    matched pairs."""
+    lad = TargetLadder(MISCURVE_RMS)
+    fired = lad.crossed(None, 4.0e-4)
+    assert fired == [3.1205e-4, 3.7173e-4]
+    # 4.1686e-4 is ABOVE 4.0e-4, so this run has not reached it
+    assert lad.remaining == [4.1686e-4, 4.6505e-4, 5.1900e-4]
+
+
+def test_duplicate_rungs_refuse():
+    import pytest as _p
+    with _p.raises(ValueError):
+        TargetLadder([3.1205e-4, 3.1205e-4])
+
+
+def test_an_empty_ladder_refuses():
+    import pytest as _p
+    with _p.raises(ValueError):
+        TargetLadder([])
+
+
+def test_nonpositive_rungs_refuse():
+    import pytest as _p
+    with _p.raises(ValueError):
+        TargetLadder([3.1e-4, 0.0])

@@ -97,8 +97,23 @@ def test_the_target_crossing_does_not_halt_training():
     assert "control.should_training_stop" not in body
 
 
-def test_the_target_is_read_once():
-    """⛔ Without the latch every later step re-reads the crossing and the curve
-    fills with duplicates of one point."""
+def test_the_rms_ladder_owns_the_latching():
+    """⛔ Without latching, every later step re-reads a crossed rung and the
+    curve fills with duplicates of one point.
+
+    ⭐ The callback must NOT keep its own latch flag: two places deciding
+    whether a rung has fired is exactly the partial-wiring shape that cost three
+    defects. `TargetLadder` latches, and `tests/test_dose_curve.py` red-proofs
+    it — the callback just asks."""
     body = _callback_body()
-    assert "self.target_done" in body
+    assert "_ladder.crossed(" in body
+    assert "target_done" not in body, "the callback keeps a second latch"
+
+
+def test_the_matched_rung_is_recorded_on_the_reading():
+    """⭐⭐ THE PAIR HAS TO BE JOINABLE. A matched-rms comparison whose rows only
+    carry their own achieved rms leaves the joining to whoever later eyeballs
+    two columns; recording the TARGET each read fired on makes the pair explicit
+    in the artifact."""
+    body = _callback_body()
+    assert '"matched_rms_targets"' in body

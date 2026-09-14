@@ -103,6 +103,64 @@ def crossed(previous: float | None, current: float | None,
     return previous < target <= current
 
 
+class TargetLadder:
+    """⭐⭐ READ WHERE SOMEONE ELSE ALREADY MEASURED, INSTEAD OF PREDICTING WHERE
+    THIS RUN WILL BE.
+
+    WHY THIS EXISTS. The second curve's whole purpose is to compare render at
+    MATCHED rms with a different number of examples. A step schedule can only
+    reach that comparison by PREDICTING where rms will land — and the prediction
+    depends on an exponent fitted from a two-point Qwen pair whose one member's
+    step count could not be verified. Across plausible values of that exponent
+    the second curve's one-epoch rms range runs from "good overlap" to **no
+    overlap with the first curve at all**, i.e. from a real comparison to no
+    comparison existing. A "degrades to UNDERPOWERED" clause dressed that up as
+    an acceptable outcome; it is not, it is the run being pointless.
+
+    ⭐ So the targets ARE the first curve's own measured rms values, and the run
+    reads when it CROSSES them. Matched pairs then exist BY CONSTRUCTION. The
+    fit no longer decides whether the comparison exists — only how many rungs of
+    the ladder this run reaches before its epoch ends. Same shape as targeting
+    the dose instead of predicting the learning rate: measure and read, never
+    schedule and hope.
+
+    ⛔ Each rung fires AT MOST ONCE, and a single step may cross several — early
+    training moves rms fast, and a ladder that returned only the first would
+    silently drop the rest.
+    """
+
+    def __init__(self, targets):
+        vals = sorted(float(t) for t in targets)
+        if not vals:
+            raise ValueError("a target ladder with no rungs reads nothing")
+        if any(v <= 0 for v in vals):
+            raise ValueError("rms targets must be positive, got %r" % (vals,))
+        if len(set(vals)) != len(vals):
+            raise ValueError(
+                "duplicate rungs %r — the same rms read twice would enter the "
+                "curve as two points that cannot disagree" % (vals,))
+        self.targets = vals
+        self._fired: set[float] = set()
+
+    @property
+    def remaining(self) -> list[float]:
+        return [t for t in self.targets if t not in self._fired]
+
+    def crossed(self, previous, current) -> list[float]:
+        """-> the rungs crossed by this measurement, each at most once ever.
+
+        ⛔ `None` current means the dose could not be measured, which is not a
+        crossing. A run whose delta went non-finite must not fire every rung at
+        once on its way out.
+        """
+        if current is None:
+            return []
+        hit = [t for t in self.remaining
+               if (current >= t if previous is None else previous < t <= current)]
+        self._fired.update(hit)
+        return hit
+
+
 class isolated_read:
     """⛔⛔ A READ THAT PERTURBS THE RUN IT MEASURES INVALIDATES THE WHOLE CURVE.
 

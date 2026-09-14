@@ -441,11 +441,16 @@ def main() -> int:
                          "dose end where the hypotheses separate")
     ap.add_argument("--dose-curve-n", type=int, default=64,
                     help="probes per read; the gate's own n")
-    ap.add_argument("--dose-curve-target", type=float, default=None,
-                    help="ALSO read when the dose first crosses this rms "
-                         "(3.118e-4 = the layer-rung dose). Training CONTINUES "
-                         "through it — the matched dose is observed, not "
-                         "arranged, so no examples are given up to reach it.")
+    # ⛔⛔ A LIST, AND THAT IS THE WHOLE COMPARISON DESIGN. A single target only
+    # answers "what was render at one dose". A LADDER of targets set to ANOTHER
+    # RUN'S measured rms values makes every reading a matched-rms pair BY
+    # CONSTRUCTION — so a fitted exponent no longer decides whether the
+    # comparison exists, only how many rungs this run reaches. Training
+    # CONTINUES through every crossing; nothing is given up to reach them.
+    ap.add_argument("--dose-curve-targets", default=None,
+                    help="comma-separated rms values to read at, e.g. the "
+                         "previous curve's own measured rms. Matched pairs by "
+                         "construction rather than by prediction.")
     ap.add_argument("--delta-snapshot-in", default=None,
                     help="measure against THIS snapshot instead of the weights "
                          "at the start of this leg (leg 2+)")
@@ -726,7 +731,7 @@ def main() -> int:
 
         from transformers import TrainerCallback as _TC
 
-        from tlon.act2.dose_curve import (checkpoint_steps, crossed,
+        from tlon.act2.dose_curve import (TargetLadder, checkpoint_steps,
                                           isolated_read, rms_per_param)
         sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
         from act2_backends import LocalBackend as _LB
@@ -741,17 +746,21 @@ def main() -> int:
                                  n_comp=max(a.dose_curve_n, 256))
         _curve = pathlib.Path(a.dose_curve_out)
         _curve.parent.mkdir(parents=True, exist_ok=True)
+        _ladder = (None if not a.dose_curve_targets else
+                   TargetLadder([t for t in a.dose_curve_targets.split(",")
+                                 if t.strip()]))
         print("⭐⭐ DOSE CURVE ARMED — reads at steps %s of ~%d%s"
               % (sorted(_marks), _total,
-                 ("" if a.dose_curve_target is None
-                  else ", plus the crossing of rms %.4e" % a.dose_curve_target)))
+                 ("" if _ladder is None
+                  else ", plus the rms ladder %s (matched pairs by "
+                       "construction)"
+                       % ["%.4e" % t for t in _ladder.targets])))
         print("   ⛔ readings only; no intermediate weights are written")
 
         class _DoseCurve(_TC):
             def __init__(self):
                 self.step = 0
                 self.prev_rms = None
-                self.target_done = False
 
             def on_step_end(self, args_, state, control, **kw):
                 self.step += 1
@@ -763,15 +772,16 @@ def main() -> int:
                 # be caught between reads, not at one.
                 d = _delta_measure(m.named_parameters(), snap, lr=a.lr)
                 rms = rms_per_param(d)
-                hit_target = (a.dose_curve_target is not None
-                              and not self.target_done
-                              and crossed(self.prev_rms, rms,
-                                          a.dose_curve_target))
+                rungs = ([] if _ladder is None
+                         else _ladder.crossed(self.prev_rms, rms))
                 self.prev_rms = rms
-                if not (self.step in _marks or hit_target):
+                if not (self.step in _marks or rungs):
                     return control
-                self.target_done = self.target_done or hit_target
-                why = ("target" if hit_target else "schedule")
+                # ⭐ The rung is RECORDED, so a matched pair can be joined to the
+                # other run's reading by the value both were taken at, rather
+                # than by whoever later eyeballs two rms columns.
+                why = ("rms=%s" % ",".join("%.4e" % t for t in rungs)
+                       if rungs else "schedule")
 
                 # ⛔⛔ EVERY GENERATION HERE RUNS INSIDE `isolated_read`, WHICH
                 # RESTORES TRAINING MODE, RNG STATE AND GRADS AND *ASSERTS* IT
@@ -783,6 +793,7 @@ def main() -> int:
                     speak, render = _read_rates(spk, _battery, a.dose_curve_n)
 
                 row = {"step": self.step, "of": _total, "why": why,
+                       "matched_rms_targets": rungs,
                        "examples_seen": self.step * a.batch * a.accum,
                        "rms": rms, "delta_verdict": d.get("verdict"),
                        "fraction_changed": d.get("fraction_changed"),

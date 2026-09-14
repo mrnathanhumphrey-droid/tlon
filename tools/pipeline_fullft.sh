@@ -93,9 +93,11 @@ STACK=${STACK:-}
 # pre-registered. Set DOSE_CURVE=1 to arm it.
 DOSE_CURVE=${DOSE_CURVE:-}
 DOSE_CURVE_K=${DOSE_CURVE_K:-5}
-# ⭐ The layer-rung dose. Crossing it triggers an EXTRA read and training
-# CONTINUES through it -- the matched dose is observed, not arranged.
-DOSE_CURVE_TARGET=${DOSE_CURVE_TARGET:-}
+# ⭐⭐ THE RMS LADDER, AND IT IS THE COMPARISON DESIGN. Set to ANOTHER run's
+# measured rms values, every reading becomes a matched-rms pair BY CONSTRUCTION
+# -- so a fitted exponent decides only how many rungs this run reaches, never
+# whether the comparison exists at all. Training continues through every rung.
+DOSE_CURVE_TARGETS=${DOSE_CURVE_TARGETS:-}
 # ⛔⛔ THE EPOCH COUNT THE PREREG DECLARED, MADE BINDING. `--epochs 1` goes to
 # each LEG; the number of LEGS was decided from a verdict exit code, so a locked
 # prereg could say "one epoch" and the run could spend two without anything
@@ -345,7 +347,7 @@ $PY tools/act2_finetune.py --model $MODEL --out $OUT \
     --seed $SEED --delta-snapshot-out $SNAP \
     ${DOSE_CURVE:+--dose-curve-out $ROOT/dose_curve_$CELL.jsonl \
                   --dose-curve-k ${DOSE_CURVE_K:-5} \
-                  ${DOSE_CURVE_TARGET:+--dose-curve-target $DOSE_CURVE_TARGET}} \
+                  ${DOSE_CURVE_TARGETS:+--dose-curve-targets $DOSE_CURVE_TARGETS}} \
     2>&1 | tee -a $LOG
 
 step factorial_json            # SCOPE: any
