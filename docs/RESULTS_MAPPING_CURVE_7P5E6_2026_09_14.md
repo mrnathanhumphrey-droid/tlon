@@ -43,9 +43,15 @@ higher-LR run's 51.6 %**, despite ~1.5× more examples at matched dose.
 
 That is **neither** pre-declared outcome:
 
-- **not DURATION-LIMITED** — more examples did not help at the decisive rung, it
-  hurt;
+- **not DURATION-LIMITED** (one pair; its interval is below) — more examples did
+  not help at the decisive rung, it hurt;
 - **not DOSE-BOUNDED** — render was not *the same* at matched rms, it was *lower*.
+
+⛔ Both rest on **one** matched pair, so the interval belongs on it: at the
+decisive rung `4.6505e-04`, render is **51.6 % ± 12.2 pp** against **14.1 % ±
+8.5 pp** (95 %, n=64 each). Non-overlapping — the *difference* is established.
+**The two-mechanism reading of it is not**: three mechanisms are now in play and
+this design separates none of them.
 
 ⭐ So: **the same weight displacement, reached in smaller steps, produced a
 materially worse speaker.** The *path* to a dose matters, not only the dose or
@@ -80,8 +86,9 @@ LR-derived *threshold* swept past a number that was standing still.
 It is the invalid pooled test again, now in its worse form. At 7.5e-6 the
 absorbable ceiling falls to `1.92e-3`, the dead-zone prediction drops under 0.5,
 the pooled test starts *discriminating* — and lands on FAULT for a healthy
-mapping run. Exactly the false positive predicted from arithmetic before the
-5e-6 dial-back was rejected, now observed live.
+mapping run. This is the false positive that was predicted before the 5e-6
+dial-back was rejected — and it is now **observed** rather than derived: the
+statistic sat at `0.51220703125` while the threshold moved beneath it.
 
 ## 4 · ⛔⛔ The fourth instance of one wiring class
 
