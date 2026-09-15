@@ -1,8 +1,8 @@
 # PREREG — the epochs lever: does REPETITION install release beyond dose, at matched steps?
 
 - **Cell:** `epochlev-s20624` (arm B `epochlevB-s20624`, arm A `epochlevA-s20624`)
-- **LOCK:** `_(unset — run tools/lock_prereg.py --lock before firing)_`
-- **Status:** DRAFT — lock before weights change. Not fired.
+- **LOCK:** `3c56054e` (sha256[:8] of draft body at lock, 2026-09-15T17:08Z)
+- **Status:** LOCKED — pre-registered. Not fired.
 - **Fires on:** two full-weight fine-tunes, layer rung top-half,
   `mistralai/Mistral-7B-Instruct-v0.3`, LR 1e-5, **step counts matched to within
   a pre-declared 0.2 %** (§2.1), differing **only** in corpus repetition. F-LOCAL
