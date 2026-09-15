@@ -90,6 +90,30 @@ mapping run. This is the false positive that was predicted before the 5e-6
 dial-back was rejected — and it is now **observed** rather than derived: the
 statistic sat at `0.51220703125` while the threshold moved beneath it.
 
+⭐ **The committed deltas show exactly why it cannot move.** The pooled number is
+the mean of two per-leaf fractions, each fixed by the scope:
+
+```
+lm_head.weight               changed 4096/4096 = 1.0000000000   <- every row gets gradient
+model.embed_tokens.weight    changed  100/4096 = 0.0244140625   <- only covered rows do
+                                          mean = 0.5122070312   <- the pooled statistic
+```
+
+⛔ So the §4.1 diagnosis is not *"the test mispredicts"*. It is **"the test is
+pinned."** It averages a term that is `1.0` by construction with a term set by
+vocabulary coverage, and reports the average as though it had measured the run.
+**No threshold can rescue a constant** — moving the threshold only chooses
+*which* wrong answer comes back.
+
+⭐⭐ **`mapping_moved` does not share the defect, and that contrast is why it is
+the valid replacement.** It compares **each leaf against its own prediction** —
+`lm_head` against `1.0`, `embed_tokens` against the corpus's *measured*
+`vocab_coverage` — and refuses to certify at all when that measurement is absent.
+Take the failure the pooled test exists to catch, a dead `embed_tokens` while
+`lm_head` trains normally: the per-leaf test returns `MAPPING_FROZEN`, while the
+pooled statistic moves from `0.5122` to `0.5000` — **1.2 parts in a thousand, for
+a mapping that never trained at all.**
+
 ## 4 · ⛔⛔ The fourth instance of one wiring class
 
 The §4.1 fix went into `act2_fullft_verdict.py` (`757c157`), and
@@ -148,6 +172,21 @@ verdict on the *first* attempt per base once the harness was right.
 multivariable system where the layer locus behaved like a one-dimensional one.
 ⛔ Whether that is a fact about the locus or about our instruments is **not
 established**.
+
+⭐⭐ **One instrument-side contributor is now identified rather than speculated.**
+The pooled §4.1 gate was **pinned** for the whole of that history (§3) — a
+scope-constant read as a measurement. It halted `miscurve75` outright and
+mislabelled `miscurve`. That is a named, checkable piece of the confound-proneness
+sitting on the *instrument* side of the ledger, which **sharpens** the caveat
+instead of softening it: the locus question is now open for the *remainder*, not
+for the whole.
+
+⛔ **But it does not explain the four confounds, and this doc must not be read as
+saying it does.** The pinned gate corrupted the *gate*; it did not create the
+inverted U, the dose/duration collinearity, or the LR-path split. Those three
+were found by F-LOCAL readings that never consulted `fraction_changed`. How much
+of the remaining confound-proneness is instrument and how much is locus is
+**still unmeasured**.
 
 Resolving reachability now needs an (LR × dose × examples) sweep — plausibly
 6–10 runs at ~$8, so **$50–80** — against a layer-rung n=2 already in hand
