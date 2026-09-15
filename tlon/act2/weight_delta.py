@@ -70,6 +70,31 @@ UNDISCRIMINATING = "UNDISCRIMINATING"
 #: verdict. A summary field not checked against its own run.
 DIVERGED = "DIVERGED"
 
+#: ⛔⛔ THE POOLED FRACTION TEST IS NOT VALID FOR MAPPING SCOPE, AND THESE ARE
+#: THE TWO STATES THAT SAY SO RATHER THAN SAYING SOMETHING ABOUT THE RUN.
+#:
+#: §4.1 compares the observed fraction against a WORKING PREDICTION OF 1.0 --
+#: every trainable weight moves. True of a layer rung; FALSE of a mapping rung,
+#: where `embed_tokens` receives gradient only on rows whose tokens appear, so a
+#: PERFECTLY HEALTHY mapping run is structurally about `(1.0 + coverage) / 2`.
+#: On Mistral that is ~0.512, and depending on the learning rate it reads as
+#: UNDISCRIMINATING (at 1e-5) or as INSTRUMENT_FAULT (at 7.5e-6) -- the second
+#: being worse, because it asserts the optimizer did not write about a run whose
+#: own dose curve shows rms climbing 3.12e-4 -> 4.96e-4 and speak 15.6% -> 100%.
+#:
+#: ⭐ DEFINED ONCE, HERE, BECAUSE TWO CALLERS ACT ON IT: the verdict tool and
+#: the trainer's own in-process gate. They were fixed separately, four days and
+#: four instances apart, and the trainer's copy was missed -- which halted
+#: `miscurve75-s20624` at rc=3 before any verdict could apply the fix. A shared
+#: constant is the only version of this that cannot drift again.
+#:
+#: ⛔ `DIVERGED` IS DELIBERATELY ABSENT. It does not mean "the pooled test
+#: cannot discriminate"; it means the weights went non-finite, which puts the
+#: run off the axis both predictions describe -- and since `NaN != NaN`, a
+#: destroyed leaf COUNTS AS CHANGED, so the per-leaf evidence is exactly what
+#: cannot be trusted there.
+POOLED_INVALID_FOR_MAPPING = (UNDISCRIMINATING, INSTRUMENT_FAULT)
+
 
 class WeightDeltaError(RuntimeError):
     """⛔ Raised, never warned. A delta that cannot be computed is not a delta

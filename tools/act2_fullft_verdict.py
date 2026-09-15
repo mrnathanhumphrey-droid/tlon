@@ -34,7 +34,7 @@ for _s in (sys.stdout, sys.stderr):
         pass
 
 from tlon.act2.full_weight import MAPPING_MOVED
-from tlon.act2.weight_delta import (INSTRUMENT_FAULT, UNDISCRIMINATING,
+from tlon.act2.weight_delta import (POOLED_INVALID_FOR_MAPPING,
                                     OK as DELTA_OK)
 from tlon.discourse.transient import Z_LAG1_MIN, Z_LAGN_MAX
 
@@ -178,8 +178,11 @@ def decide(delta: dict, lag: dict, flocal: dict, *, prereg: str,
         # trusted there. Written as a deny-by-default set because the first
         # draft of this branch said `!= DELTA_OK` and would have waved a
         # diverged run straight through to GO. The test caught it.
-        WAIVABLE = (UNDISCRIMINATING, INSTRUMENT_FAULT)
-        moved = (delta.get("verdict") in WAIVABLE
+        # ⭐ THE SHARED CONSTANT, not a second copy. This list and the
+        # trainer's in-process gate were written separately and the trainer's
+        # was missed for four days; one definition is the only version that
+        # cannot drift again.
+        moved = (delta.get("verdict") in POOLED_INVALID_FOR_MAPPING
                  and (mapping or {}).get("verdict") == MAPPING_MOVED)
         if not moved:
             return {

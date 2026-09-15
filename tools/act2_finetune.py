@@ -42,6 +42,8 @@ from tlon.act2.collator import PositionMaskedCollator
 from tlon.act2.chat_shape import train_text
 from tlon.act2.weight_delta import INSTRUMENT_FAULT as _FAULT
 from tlon.act2.weight_delta import OK as _DELTA_OK
+from tlon.act2.weight_delta import (POOLED_INVALID_FOR_MAPPING
+                                    as _POOLED_INVALID_FOR_MAPPING)
 from tlon.act2.weight_delta import measure as _delta_measure
 from tlon.act2.weight_delta import snapshot as _delta_snapshot
 from tlon.discourse.provocation import DIRECTION as _PROVOKE
@@ -977,13 +979,38 @@ def main() -> int:
               "zone predicts %.4f" % (rep["fraction_changed"],
                                       rep["prediction_bf16_dead_zone"]))
         print("   " + rep["why"])
-        if rep["verdict"] == _FAULT:
+        # ⛔⛔ THE POOLED TEST DOES NOT GATE A MAPPING RUN, AND MISSING THIS HERE
+        # COST `miscurve75-s20624`. The §4.1 fix went into the verdict tool;
+        # THIS copy of the same gate was never touched, so the identical false
+        # FAULT fired inside the trainer at rc=3 and halted the run before any
+        # verdict could apply the fix. The run's own dose curve refutes it: rms
+        # climbed 3.12e-4 -> 4.96e-4 and speak went 15.6% -> 100%, which a model
+        # whose weights did not move cannot do.
+        #
+        # ⭐ For mapping scope the valid test is PER LEAF (`mapping_moved`
+        # against the corpus's measured coverage), and it runs downstream — so
+        # here the pooled reading is RECORDED AND DEFERRED, never waived: the
+        # run still cannot be read until that gate passes.
+        _deferred = (scope.get("scope_mode") == "mapping"
+                     and rep["verdict"] in _POOLED_INVALID_FOR_MAPPING)
+        if rep["verdict"] == _FAULT and not _deferred:
             # ⛔ NON-ZERO EXIT. The pipeline's `step` wrapper stops on it, so a
             # faulted run cannot walk on to F-LOCAL and the lag read and arrive
             # at a verdict table that §4.1 says may not be read.
             print("⛔⛔ NO ROW OF THE VERDICT TABLE MAY BE READ. The weights "
                   "did not move; this is not evidence about the substrate.")
             return 3
+        if _deferred:
+            rep["pooled_deferred_to_per_leaf"] = (
+                "mapping scope: the pooled fraction test predicts 1.0 where a "
+                "healthy mapping run is structurally ~(1+coverage)/2, so this "
+                "reading does not gate. `mapping_moved` decides downstream.")
+            (out / "weight_delta.json").write_text(
+                json.dumps(rep, indent=2), encoding="utf-8")
+            print("⚠️ MAPPING SCOPE — the pooled §4.1 reading is NOT a gate "
+                  "here and is deferred to the per-leaf `mapping_moved` test.")
+            print("   ⛔ This is a DEFERRAL, not a pass: no row may be read "
+                  "until that gate passes.")
         print(f"\n⭐ full-weight model → {a.out}")
     else:
         print(f"\n⭐ adapter → {a.out}")
