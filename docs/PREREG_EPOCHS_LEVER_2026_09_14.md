@@ -1,7 +1,7 @@
 # PREREG — the epochs lever: does REPETITION install release beyond dose, at matched steps?
 
 - **Cell:** `epochlev-s20624` (arm B `epochlevB-s20624`, arm A `epochlevA-s20624`)
-- **LOCK:** `3c56054e` (sha256[:8] of draft body at lock, 2026-09-15T17:08Z)
+- **LOCK:** `e76ca3a2` (sha256[:8] of draft body at lock, 2026-09-15T18:09Z)
 - **Status:** LOCKED — pre-registered. Not fired.
 - **Fires on:** two full-weight fine-tunes, layer rung top-half,
   `mistralai/Mistral-7B-Instruct-v0.3`, LR 1e-5, **step counts matched to within
@@ -87,6 +87,7 @@ confirms that direction cleanly if true.
 | card | `h100_pcie` | matches the layer-rung hardware; no gratuitous variable |
 | attention | eager, resolved kernel printed | demonstrated clean on Mistral |
 | optimizer | `adamw_bnb_8bit`, fp32 master | unchanged |
+| `PERSIST_WEIGHTS` | **0 &mdash; the arms do NOT persist their weights** (§2.2, amended 2026-09-15) | the result is the in-process readings + end verdict; the weights are a by-product this run never re-reads. ⛔ Forecloses any later re-read, and makes the readings the SOLE record. |
 
 ### 2.1 · ⛔⛔ THE SUBSAMPLE SIZE IS DERIVED AND ASSERTED, NEVER HARDCODED
 
@@ -165,6 +166,55 @@ trainer's own step formula so the run can refuse **before** GPU time is bought;
 authoritative totals are `state.max_steps` on each arm, and the same criterion is
 re-run on those. Re-deriving a total the system already knows is exactly how
 `3,759` (the curve's floor) got mistaken for `3,760` (the trainer's ceil).
+
+### 2.2 · ⛔⛔ AMENDMENT (2026-09-15): THE ARMS DO NOT PERSIST THEIR WEIGHTS
+
+`PERSIST_WEIGHTS=0` for both arms. **Amended after lock `3c56054e`, before firing,
+and re-locked** — this changes standing practice, so it is registered rather than
+decided on the box.
+
+**Why, on the merits and not only on storage.** This run's *result* is the
+in-process curve of F-LOCAL + release across checkpoints, plus the end verdict.
+The weights are a **by-product**, not the deliverable: nothing in §3 or §4 reads
+them after the run. Persisting them would spend **21.7 GB per arm — 43 GB for the
+pair — on an object the experiment never uses.**
+
+**The storage fact that surfaced it.** The hub has `77.51 GB` used against a
+`94.21 GB` proven-accepted ceiling: **16.70 GB of room.** A layer-rung Mistral
+object is `3.49B × 4B + 3.758B × 2B = 21.69 GB`, so the capacity floor refused —
+correctly, at minute zero. ⭐ The alternatives were worse: **freeing ~30 GB** means
+deleting measurements that back standing findings, or rewriting LFS history —
+irreversible destruction to make room for weights this run does not need; and
+**raising the ceiling** assumes headroom the hub exposes no field for, which is
+betting on an unverified number.
+
+**⛔ CONSEQUENCE 1 — these weights cannot be re-read after the run.** Every prior
+run persisted its object, so later questions could be answered by re-reading it.
+These cannot. Any future question requiring these specific weights is
+**foreclosed**. That is the cost, stated rather than discovered.
+
+**⛔⛔ CONSEQUENCE 2 — the readings become the SOLE record.** With no weights there
+is no *re-read-the-weights* fallback: **a lost reading is a lost run.** The flush
+trap (`fb7962f`) was already load-bearing; it is now the only persistence, so its
+coverage is verified rather than assumed:
+
+- `dose_curve_*.jsonl` — both arms' curves (the result)
+- `verdict_*.json`, `model_lag_*.json` — the end verdict and lag profiles
+- `step_match_*.json` — ⛔ **the arms' own identity**: `M`, both step counts, `Δ`,
+  the subsample seed and shas. Without it the run has readings and **no proof the
+  arms matched**, and no weights to re-derive it from. This pattern was **missing**
+  and was added as part of this amendment.
+- `base_audit.json`, `eos_guard.json`, `vocab_coverage.json`, `mapping_moved.json`,
+  `factorial.json`, `manifest.json`, `watchdog.log`, `pipeline_*.log`
+
+⭐ Guarded by a **scan, not a list**: `tests/test_flush_covers_every_artifact.py`
+discovers every artifact the pipeline writes and fails if any matches no flush
+pattern. An artifact added later without a pattern fails there rather than on the
+box. `delta_snapshot.pt` is the sole exclusion, with its reason recorded.
+
+⭐ And the readings are flushed on the **success** path too, not only by the exit
+trap — a run whose entire record depended on one exit path is the shape that
+nearly lost two measurements already.
 
 ---
 

@@ -149,3 +149,35 @@ def test_the_lag_curve_is_off_by_default():
 
 def test_the_repeat_factor_is_off_by_default_so_standing_runs_are_unchanged():
     assert "REPEAT=${REPEAT:-}" in SRC
+
+
+# ── 5 · ⛔⛔ PERSIST_WEIGHTS=0 — the readings become the SOLE record ─────────
+
+def test_persist_weights_defaults_to_ON_so_standing_runs_are_unchanged():
+    """⭐ Every prior run persisted its object. A default of 0 would silently
+    stop keeping the deliverable of runs whose deliverable IS the weights."""
+    assert "PERSIST_WEIGHTS=${PERSIST_WEIGHTS:-1}" in SRC
+
+
+def test_the_capacity_floor_is_skipped_only_when_no_weights_are_written():
+    """⛔ Asking for room for an object the run will never upload refuses a run
+    that cannot fail the way that check exists to prevent — but the check must
+    still run whenever weights ARE written."""
+    i = SRC.index("act2_hub_capacity.py")
+    head = SRC[:i]
+    assert 'if [ "$PERSIST_WEIGHTS" = "1" ]; then' in head[-400:], \
+        "the capacity floor is not gated on PERSIST_WEIGHTS"
+
+
+@pytest.mark.parametrize("n", [1, 2, 3])
+def test_every_persist_site_is_gated_and_falls_back_to_a_FLUSH(n):
+    """⛔⛔ THE READINGS MUST STILL LEAVE. With weights unpersisted the readings
+    are the only record; a persist site that simply did nothing would leave the
+    whole run resting on the exit trap alone."""
+    sites = [m.start() for m in re.finditer(r"full-weight --cell \$CELL", SRC)]
+    assert len(sites) == 3, ("expected 3 persist sites (leg1, reads, leg2), found %d -- a NEW ungated site is the failure this counts for" % len(sites))
+    blk = SRC[max(0, sites[n - 1] - 900): sites[n - 1] + 900]
+    assert 'PERSIST_WEIGHTS' in blk, "persist site %d is not gated" % n
+    assert "flush --cell $CELL" in blk, (
+        "persist site %d has no flush fallback — the readings would not leave "
+        "on the success path" % n)

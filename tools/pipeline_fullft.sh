@@ -118,6 +118,14 @@ EPOCHS_SPENT=0
 REPEAT=${REPEAT:-}
 # ⭐ Release at every dose-curve checkpoint, not only at the end.
 LAG_CURVE=${LAG_CURVE:-}
+# ⭐⭐ THE WEIGHTS ARE A BY-PRODUCT FOR SOME RUNS, NOT THE DELIVERABLE. The
+# epochs-lever arms' RESULT is the in-process curve of F-LOCAL + release plus the
+# end verdict; the weights are never re-read. Persisting them would spend ~21.7 GB
+# per arm -- 43 GB for the pair -- on something the experiment does not use, and
+# the hub has 16.7 GB of room. ⛔ Set 0 ONLY where the prereg declares it
+# (PREREG_EPOCHS_LEVER §2.2): it forecloses any later re-read of these weights,
+# and it makes the READINGS the sole record with no second copy anywhere.
+PERSIST_WEIGHTS=${PERSIST_WEIGHTS:-1}
 
 # ── 0 · THE MEASUREMENT LEAVES ON EVERY EXIT PATH ───────────────────────────
 # ⛔⛔ TWICE IN TWO DAYS A RUN'S ENTIRE MEASUREMENT SURVIVED ONLY BY ACCIDENT.
@@ -244,8 +252,16 @@ step hub_capacity            # SCOPE: any
 # 24 GB one. This asks the question the run actually depends on.
 # ⛔ Sized on the SAME scope the VRAM floor uses, and on the fp32 master §5
 # declares: a `params * 2` projection under-counts a full-weight run by 40%.
-$PY tools/act2_hub_capacity.py --repo $HF_REPO \
-    --trainable-b $TRAINABLE_B --total-b $TOTAL_B 2>&1 | tee -a $LOG
+# ⛔ A RUN THAT WRITES NO WEIGHTS NEEDS NO ROOM FOR THEM. Asking the capacity
+# question about an object this run will never upload would refuse a run that
+# cannot fail the way this check exists to prevent. The readings are kilobytes.
+if [ "$PERSIST_WEIGHTS" = "1" ]; then
+  $PY tools/act2_hub_capacity.py --repo $HF_REPO \
+      --trainable-b $TRAINABLE_B --total-b $TOTAL_B 2>&1 | tee -a $LOG
+else
+  echo "  PERSIST_WEIGHTS=0 — no weights will be uploaded; capacity floor N/A." | tee -a $LOG
+  echo "  ⛔ the READINGS are the sole record: no weights exist to re-derive them from." | tee -a $LOG
+fi
 
 step prereg_id            # SCOPE: any
 # ⛔⛔ THE SAME DEFECT, ONE FILE OVER — CAUGHT BEFORE THIS RUN SHIPPED IT.
@@ -427,8 +443,17 @@ PY
 step persist_leg1            # SCOPE: any
 # ⭐ BEFORE the reads, not after. The object is ~13 GiB that cost H100-hours; a
 # fault in the read should cost the read and not the weights.
-$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-    full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG
+if [ "$PERSIST_WEIGHTS" = "1" ]; then
+  $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+      full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG
+else
+  # ⭐ THE READINGS STILL GO, AND THEY GO HERE TOO — not only from the trap.
+  # The trap is the guarantee on FAILURE paths; a success path that persisted
+  # nothing until the very end would leave the whole run resting on one exit.
+  echo "  PERSIST_WEIGHTS=0 — flushing readings instead of the model." | tee -a $LOG
+  $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+      flush --cell $CELL 2>&1 | tee -a $LOG
+fi
 
 step flocal_epoch1            # SCOPE: any
 $PY tools/act2_flocal.py --model $OUT --n 64 2>&1 | tee -a $LOG
@@ -573,10 +598,22 @@ $PY tools/act2_fullft_verdict.py \
 # log on its way to terminating the box. A reading nothing persists is a reading
 # one unlucky exit away from never having happened.
 step persist_reads            # SCOPE: any
-$PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-    full-weight --cell $CELL \
-    --corpus-manifest $ROOT/corpus_ct-s$SEED/manifest.json \
-    2>&1 | tee -a $LOG || echo "  ⚠️ persist_reads failed — the EXIT trap will still flush the readings" | tee -a $LOG
+# ⛔⛔ THE THIRD PERSIST SITE, AND I MISSED IT. Two were gated on PERSIST_WEIGHTS
+# and this one was not — caught by tests/test_two_arm_pipeline.py, which COUNTS
+# the sites rather than trusting a list. Under PERSIST_WEIGHTS=0 this would have
+# uploaded the 21.7 GB the whole amendment exists to avoid, into a repo with
+# 16.7 GB of room: the run would have trained cleanly and died at the upload.
+# Another instance of correct-at-the-definition, partial-at-the-wiring.
+if [ "$PERSIST_WEIGHTS" = "1" ]; then
+  $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+      full-weight --cell $CELL \
+      --corpus-manifest $ROOT/corpus_ct-s$SEED/manifest.json \
+      2>&1 | tee -a $LOG || echo "  ⚠️ persist_reads failed — the EXIT trap will still flush the readings" | tee -a $LOG
+else
+  $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+      flush --cell $CELL \
+      2>&1 | tee -a $LOG || echo "  ⚠️ persist_reads failed — the EXIT trap will still flush the readings" | tee -a $LOG
+fi
 
 if [ $E1 -eq 3 ]; then
   # ⛔⛔ §4.1: the weights did not move. No row of the table may be read, and
@@ -670,8 +707,13 @@ else
       --seed $SEED --delta-snapshot-in $SNAP 2>&1 | tee -a $LOG
 
   step persist_leg2            # SCOPE: any
-  $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-      full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG
+  if [ "$PERSIST_WEIGHTS" = "1" ]; then
+    $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+        full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG
+  else
+    $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
+        flush --cell $CELL 2>&1 | tee -a $LOG
+  fi
 
   step flocal_epoch2            # SCOPE: any
   $PY tools/act2_flocal.py --model $OUT --n 64 2>&1 | tee -a $LOG

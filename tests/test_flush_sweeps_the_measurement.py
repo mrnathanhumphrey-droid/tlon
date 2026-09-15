@@ -74,11 +74,27 @@ def test_the_patterns_are_patterns_not_names():
     """⛔⛔ THE CLASS ITSELF, five instances deep in this one function. A literal
     name cannot survive a cell rename, and every reading in this arm carries the
     cell name in its filename."""
+    # ⭐ THE ALLOW-LIST IS DERIVED, NOT TYPED. A literal name is acceptable only
+    # for an artifact the pipeline writes WITHOUT the cell in its filename —
+    # those cannot be broken by a rename. Anything cell-specific must be a
+    # pattern. Hardcoding the exemptions meant every new cell-independent
+    # artifact had to edit this test, which is how an allow-list drifts into
+    # the very list-maintenance problem the rule is about.
+    import pathlib
+    import re
+    pipe = (pathlib.Path(__file__).resolve().parents[1] / "tools"
+            / "pipeline_fullft.sh").read_text(encoding="utf-8")
+    # ⛔ NAMED ANYWHERE IN THE PIPELINE, not only as `$ROOT/<name>`: the first
+    # version of this scan matched only that form and flagged `factorial.json`,
+    # which the pipeline writes from an inline Python heredoc. A scan whose
+    # reach is narrower than the thing it polices reports false defects —
+    # the same failure as grepping a rendering instead of parsing the artefact.
     literals = [p for p in _bp().FLUSH_PATTERNS if "*" not in p]
-    assert set(literals) <= {"vocab_coverage.json", "mapping_moved.json",
-                             "factorial.json"}, (
-        "cell-specific artifacts must be matched by pattern, not by name: %s"
-        % literals)
+    bad = [p for p in literals
+           if p not in pipe or "CELL" in p]
+    assert not bad, (
+        "a literal flush pattern must name a CELL-FREE artifact the pipeline "
+        "actually writes; these do not: %s" % bad)
 
 
 def test_flush_is_best_effort_and_says_so(tmp_path):

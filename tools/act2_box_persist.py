@@ -579,6 +579,14 @@ FLUSH_PATTERNS = (
     "mapping_moved.json",    # the per-leaf gate's result
     "factorial.json",
     "weight_delta*.json",
+    # ⛔⛔ THE ARMS' OWN IDENTITY. With the epochs-lever arms NOT persisting their
+    # weights, this manifest is the ONLY record of what the arms were: M, both
+    # step counts, Δ, the subsample seed and shas. Without it the run has
+    # readings and no proof the arms matched — and no weights to re-derive it
+    # from. PREREG_EPOCHS_LEVER §2.2.
+    "step_match_*.json",
+    "base_audit.json",       # which base, verified — provenance, kilobytes
+    "eos_guard.json",
 )
 
 
