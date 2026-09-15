@@ -148,7 +148,13 @@ def test_the_leg_two_branch_is_gated_on_the_declared_epoch_budget():
     every axis the good way. It is a claim that a run executes the experiment its
     locked prereg describes and buys nothing else."""
     assert "EPOCH_BUDGET" in SRC
-    i = SRC.index('elif [ "$EPOCH_BUDGET" -lt 2 ]')
+    # the gate now compares EPOCHS SPENT against the budget, not the LEG count:
+    # arm A of the epochs lever runs four epochs in ONE leg, so `-lt 2` was the
+    # same disconnect one level down. Anchored on EPOCH_BUDGET appearing in the
+    # elif, not on one spelling of the comparison.
+    m = re.search(r'elif \[ .*EPOCH_BUDGET.*\]; then', SRC)
+    assert m, "the leg-2 branch is no longer gated on the declared budget"
+    i = m.start()
     j = SRC.index("step train_leg2")
     assert i < j, "the budget gate does not precede the second training leg"
 
@@ -164,6 +170,8 @@ def test_a_refused_second_epoch_still_names_a_final_verdict():
     """⛔ The `~/DONE` gate reads FINAL_LAG and FINAL_VERDICT. A branch that
     halts without setting them would fail at the gate instead of at the halt,
     which reads as a different fault than the one that occurred."""
-    body = SRC[SRC.index('elif [ "$EPOCH_BUDGET" -lt 2 ]'):SRC.index("step train_leg2")]
+    m = re.search(r'elif \[ .*EPOCH_BUDGET.*\]; then', SRC)
+    assert m, "the leg-2 budget branch has moved or been removed"
+    body = SRC[m.start():SRC.index("step train_leg2")]
     assert "EPOCHS_RUN=1" in body
     assert "FINAL_LAG=" in body and "FINAL_VERDICT=" in body

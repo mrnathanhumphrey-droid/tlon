@@ -105,6 +105,19 @@ DOSE_CURVE_TARGETS=${DOSE_CURVE_TARGETS:-}
 # ac255dce was written against, so no standing run changes. A single-epoch
 # prereg sets EPOCH_BUDGET=1 and the leg-2 branch refuses.
 EPOCH_BUDGET=${EPOCH_BUDGET:-2}
+# ⭐⭐ EPOCHS PER LEG, BECAUSE "BUDGET" MEANT "LEGS" AND THAT IS THE DEFECT-3
+# COLLISION ONE LEVEL DOWN. The epochs-lever arm runs FOUR epochs in ONE leg, so
+# a budget compared against the LEG COUNT would have let `EPOCH_BUDGET=4` fall
+# through to leg 2 and spend EIGHT. The gate below now compares epochs SPENT
+# against the budget, which is what the prereg actually declares.
+EPOCHS_PER_LEG=${EPOCHS_PER_LEG:-1}
+EPOCHS_SPENT=0
+# ⭐ THE REPEAT FACTOR. Empty = the ordinary one-arm pipeline, unchanged. Set to
+# N and the corpus is subsampled so N epochs over it land on arm B's step count,
+# within the PRE-DECLARED tolerance in PREREG_EPOCHS_LEVER §2.1.
+REPEAT=${REPEAT:-}
+# ⭐ Release at every dose-curve checkpoint, not only at the end.
+LAG_CURVE=${LAG_CURVE:-}
 
 # ── 0 · THE MEASUREMENT LEAVES ON EVERY EXIT PATH ───────────────────────────
 # ⛔⛔ TWICE IN TWO DAYS A RUN'S ENTIRE MEASUREMENT SURVIVED ONLY BY ACCIDENT.
@@ -137,6 +150,17 @@ _flush_measurement() {
   return $rc
 }
 trap _flush_measurement EXIT
+
+# ⛔⛔ VALIDATED *AFTER* THE TRAP, NOT BEFORE. This block first sat beside the
+# variables it checks, which put an `exit 1` above the trap installation — and
+# `tests/test_call_site_coverage.py` caught it at byte 7067. Nothing is measured
+# that early, so the exit looked harmless; the guard is absolute precisely so
+# nobody has to re-make that judgement per branch, which is the judgement that
+# already failed twice and cost two runs their measurement.
+if [ $(( EPOCH_BUDGET % EPOCHS_PER_LEG )) -ne 0 ]; then
+  echo "⛔⛔ EPOCH_BUDGET=$EPOCH_BUDGET is not a multiple of EPOCHS_PER_LEG=$EPOCHS_PER_LEG — the declared budget cannot be spent exactly" | tee -a $LOG
+  exit 1
+fi
 
 # ── 1 · WATCHDOG FIRST, BEFORE THE FLOORS ───────────────────────────────────
 # ⛔⛔ THE ORDER IS THE PREREG'S (§8, R5) AND IT IS A CHANGE FROM THE LoRA ARM.
@@ -187,7 +211,7 @@ step optim_probe            # SCOPE: any
 $PY tools/act2_finetune.py --probe-optim --lr $LR 2>&1 | tee -a $LOG
 
 step cell_guard            # SCOPE: any
-# \u26d4\u26d4 WOULD THIS RUN OVERWRITE A FIRED RESULT? Asked against the HUB, not a
+# ⛔⛔ WOULD THIS RUN OVERWRITE A FIRED RESULT? Asked against the HUB, not a
 # list in this file. `CELL` is env-overridable so the campaign can drive four
 # configurations from one prereg, and the old source-level guard could only ever
 # see the default -- blind to exactly the override that would collide.
@@ -277,6 +301,32 @@ if [ "$GOT" != "$CORPUS_SHA" ]; then
 fi
 echo "  ✅ corpus is byte-identical to the one §5 declares" | tee -a $LOG
 
+# ⛔⛔ AFTER corpus_pin, NEVER BEFORE. The subsample size is derived from the
+# corpus that was ACTUALLY sha-verified. Twice a row count was taken from a local
+# file and labelled with the pinned corpus's identity; no copy of the pinned
+# corpus need exist on any developer's disk, and none does.
+CORPUS_DIR=$ROOT/corpus_ct-s$SEED
+step corpus_subsample            # SCOPE: any
+if [ -n "$REPEAT" ]; then
+  $PY tools/act2_step_match.py \
+      --corpus $ROOT/corpus_ct-s$SEED \
+      --out $ROOT/corpus_rep${REPEAT}-s$SEED \
+      --manifest $ROOT/step_match_$CELL.json \
+      --repeat $REPEAT --batch $BATCH --accum $ACCUM --seed $SEED 2>&1 | tee -a $LOG
+  # ⛔⛔ `$?` AFTER A PIPE IS `tee`'s STATUS AND IS ALWAYS 0. A refusal read
+  # through a pipe is a refusal nobody hears — the exact shape that printed `ok`
+  # 17x in a suite structurally unable to report a failure.
+  SM_RC=${PIPESTATUS[0]}
+  if [ "$SM_RC" -ne 0 ]; then
+    echo "⛔⛔ STEP MATCH REFUSED (rc=$SM_RC) — the arms cannot be matched inside the declared tolerance on this corpus. REFUSING TO TRAIN." | tee -a $LOG
+    exit 1
+  fi
+  CORPUS_DIR=$ROOT/corpus_rep${REPEAT}-s$SEED
+  echo "  ✅ arm corpus = $CORPUS_DIR (repeat x$REPEAT)" | tee -a $LOG
+else
+  echo "  (no REPEAT set — full corpus, ordinary single-arm run)" | tee -a $LOG
+fi
+
 step corpus_manifest            # SCOPE: any
 CM=$ROOT/corpus_ct-s$SEED/manifest.json
 [ -f "$CM" ] || { echo "⛔⛔ no corpus manifest at $CM — it carries the corpus lag profile the model is compared against" | tee -a $LOG; exit 1; }
@@ -340,15 +390,18 @@ MEASUREMENT_EXISTS=1
 
 step train_leg1            # SCOPE: any
 $PY tools/act2_finetune.py --model $MODEL --out $OUT \
-    --corpus $ROOT/corpus_ct-s$SEED \
+    --corpus $CORPUS_DIR \
     --full --scope-mode $SCOPE_MODE --optim $OPTIM $LAYER_ARGS \
-    --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
+    --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs $EPOCHS_PER_LEG \
     --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
     --seed $SEED --delta-snapshot-out $SNAP \
     ${DOSE_CURVE:+--dose-curve-out $ROOT/dose_curve_$CELL.jsonl \
                   --dose-curve-k ${DOSE_CURVE_K:-5} \
+                  ${LAG_CURVE:+--lag-curve} \
                   ${DOSE_CURVE_TARGETS:+--dose-curve-targets $DOSE_CURVE_TARGETS}} \
     2>&1 | tee -a $LOG
+
+EPOCHS_SPENT=$(( EPOCHS_SPENT + EPOCHS_PER_LEG ))
 
 step factorial_json            # SCOPE: any
 # ⛔⛔ A `_w` OBJECT GETS NO CELL AND NO PAIR KEY. §0/§6: its weights changed, so
@@ -573,7 +626,7 @@ if [ $E1 -eq 0 ] || [ $E1 -eq 4 ]; then
   EPOCHS_RUN=1
   FINAL_LAG=$ROOT/model_lag_${CELL}_e1.json
   FINAL_VERDICT=$ROOT/verdict_${CELL}_e1.json
-elif [ "$EPOCH_BUDGET" -lt 2 ]; then
+elif [ $(( EPOCHS_SPENT + EPOCHS_PER_LEG )) -gt "$EPOCH_BUDGET" ]; then
   # ⛔⛔ THE PREREG DECLARED FEWER EPOCHS THAN THIS BRANCH WOULD SPEND.
   #
   # PREREG ac255dce §2 said "epochs: 1, run to completion" and the pipeline ran
@@ -588,7 +641,7 @@ elif [ "$EPOCH_BUDGET" -lt 2 ]; then
   # lag3 3.08 -> 1.23, under the ceiling). It is a claim that a run must execute
   # the experiment its locked prereg describes, and buy nothing the prereg did
   # not declare, whichever direction the extra spending happens to move things.
-  echo "  epoch 1 is NOT READABLE, but EPOCH_BUDGET=$EPOCH_BUDGET — the prereg declared a single epoch." | tee -a $LOG
+  echo "  leg 1 spent $EPOCHS_SPENT of EPOCH_BUDGET=$EPOCH_BUDGET epoch(s); another leg would spend $EPOCHS_PER_LEG more. epoch 1 is NOT READABLE, but EPOCH_BUDGET=$EPOCH_BUDGET — the prereg declared a single epoch." | tee -a $LOG
   echo "  ⛔ Epoch 2 is NOT run. A run may not buy an epoch its pre-registration did not declare." | tee -a $LOG
   EPOCHS_RUN=1
   FINAL_LAG=$ROOT/model_lag_${CELL}_e1.json
@@ -610,9 +663,9 @@ else
   # "2 epochs" and this is two epochs of data at the declared LR, but it is not
   # byte-identical to one continuous 2-epoch run. See DEVIATIONS.
   $PY tools/act2_finetune.py --model $OUT --out $OUT \
-      --corpus $ROOT/corpus_ct-s$SEED \
+      --corpus $CORPUS_DIR \
       --full --scope-mode $SCOPE_MODE --optim $OPTIM $LAYER_ARGS \
-      --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs 1 \
+      --lr $LR --seq $SEQ --batch $BATCH --accum $ACCUM --epochs $EPOCHS_PER_LEG \
       --attn-impl $ATTN_IMPL ${STACK:+--stack $STACK} \
       --seed $SEED --delta-snapshot-in $SNAP 2>&1 | tee -a $LOG
 

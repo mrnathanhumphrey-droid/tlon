@@ -1,7 +1,7 @@
 """Derive arm A's subsample from the corpus that was ACTUALLY sha-verified.
 
-    python tools/act2_step_match.py --corpus runs/act2/corpus_ct-s20624/train.jsonl \
-        --out runs/act2/corpus_quarter-s20624/train.jsonl \
+    python tools/act2_step_match.py --corpus runs/act2/corpus_ct-s20624  \
+        --out runs/act2/corpus_quarter-s20624  \
         --manifest runs/act2/epochlev/step_match.json --repeat 4 --seed 20624
 
 ⛔⛔ RUN THIS AFTER `corpus_pin` PASSES, NEVER BEFORE. The whole point is that the
@@ -43,8 +43,9 @@ def _sha16(path: pathlib.Path) -> str:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--corpus", required=True,
-                    help="the SHA-VERIFIED train.jsonl — arm B's corpus")
-    ap.add_argument("--out", required=True, help="arm A's subsample train.jsonl")
+                    help="arm B's SHA-VERIFIED corpus DIRECTORY")
+    ap.add_argument("--out", required=True,
+                    help="arm A's corpus DIRECTORY (created)")
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--repeat", type=int, default=4)
     ap.add_argument("--batch", type=int, default=4)
@@ -53,7 +54,12 @@ def main(argv=None) -> int:
     ap.add_argument("--tol", type=float, default=STEP_MATCH_TOL)
     a = ap.parse_args(argv)
 
-    src = pathlib.Path(a.corpus)
+    src_dir = pathlib.Path(a.corpus)
+    src = src_dir / "train.jsonl"
+    if not src.exists():
+        print("⛔⛔ %s has no train.jsonl — --corpus takes the corpus DIRECTORY"
+              % src_dir)
+        return 2
     rows = src.read_text(encoding="utf-8").splitlines()
     rows = [r for r in rows if r.strip()]
     n = len(rows)
@@ -87,16 +93,36 @@ def main(argv=None) -> int:
     idx = list(range(n))
     rng.shuffle(idx)
     keep = sorted(idx[:r["m"]])
-    outp = pathlib.Path(a.out)
-    outp.parent.mkdir(parents=True, exist_ok=True)
+    out_dir = pathlib.Path(a.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    outp = out_dir / "train.jsonl"
     outp.write_text("\n".join(rows[i] for i in keep) + "\n",
                     encoding="utf-8", newline="")
+
+    # ⛔⛔ THE EVAL SET IS COPIED, NOT SUBSAMPLED. It is held out — it is not part
+    # of the repetition manipulation, and both arms must be scored on the SAME
+    # rows or the comparison is between two different evaluations. ⭐ Emitted by
+    # this tool rather than left to a `cp` in the pipeline: a forgotten copy
+    # would fail at load time on the box, an hour into the run.
+    copied = []
+    for name in ("eval.jsonl", "manifest.json", "token_budget.json"):
+        s = src_dir / name
+        if s.exists():
+            (out_dir / name).write_bytes(s.read_bytes())
+            copied.append(name)
+    if "eval.jsonl" not in copied:
+        print("⛔⛔ %s has no eval.jsonl — arm A would train and then fail to "
+              "evaluate. REFUSING." % src_dir)
+        return 2
+    print("  copied alongside: %s" % ", ".join(copied))
 
     manifest = {
         **r,
         "seed": a.seed, "refused": False,
-        "corpus": str(src), "corpus_rows": n, "corpus_sha16": _sha16(src),
-        "subsample": str(outp), "subsample_rows": len(keep),
+        "corpus_dir": str(src_dir), "corpus": str(src),
+        "corpus_rows": n, "corpus_sha16": _sha16(src),
+        "subsample_dir": str(out_dir), "subsample": str(outp),
+        "subsample_rows": len(keep), "copied_alongside": copied,
         "subsample_sha16": _sha16(outp),
         # ⛔ These are PREDICTIONS from the trainer's own formula. The record is
         # `state.max_steps` on each arm; re-check with `check_match` on those.
