@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import importlib.util
 import pathlib
+import re
 import random
 import sys
 
@@ -435,7 +436,13 @@ def test_the_TOOL_ACTUALLY_APPLIES_the_derived_bar():
     from textguard import code_only
     src = code_only((_ROOT / "tools" / "act2_model_lag.py")
                     .read_text(encoding="utf-8"))
-    assert "resolving_power(chains, lag=k" in src, \
+    # ⛔ NAME-AGNOSTIC. This asserted `resolving_power(chains, lag=k` and broke
+    # on a RENAME when the block moved into the shared `read_lag` fold — while
+    # the property it guards held throughout. A guard that fails on a rename is
+    # noise; worse, a guard satisfied by a surviving dict KEY is a guard that
+    # passes a neutered call (see tests/test_lag_read_is_one_fold.py, where
+    # exactly that let `power = float('inf')` through).
+    assert re.search(r"resolving_power\(\w+, lag=k", src), \
         "the tool never computes the cell's ceiling"
     assert "threshold_for_lag(k)" in src, \
         "the tool never asks what bar the cell is judged against"
@@ -468,8 +475,8 @@ def test_the_sampling_stream_is_SEEDED_and_the_report_says_so():
     the empty cell are the same story told twice.
     """
     src = (_ROOT / "tools" / "act2_model_lag.py").read_text(encoding="utf-8")
-    assert "torch.manual_seed(a.seed)" in src
-    assert "torch.cuda.manual_seed_all(a.seed)" in src
+    assert re.search(r"torch\.manual_seed\(\w+\)", src)
+    assert re.search(r"torch\.cuda\.manual_seed_all\(\w+\)", src)
     # ⛔ And the claim must be the honest one: seeding fixes WHICH draw, it does
     # not promise bit-reproducibility across GPUs or kernel versions.
     assert '"sampling_stream_seeded": torch_seeded' in src
@@ -480,9 +487,11 @@ def test_seeding_happens_BEFORE_any_generation():
     """⛔ A seed set after the first chain is generated seeds nothing that
     matters. Position is the whole guarantee."""
     src = (_ROOT / "tools" / "act2_model_lag.py").read_text(encoding="utf-8")
-    seeded = src.index("torch.manual_seed(a.seed)")
-    first_gen = src.index("raw = model_chain(backend, s, turns=a.turns)")
-    assert seeded < first_gen
+    seeded = re.search(r"torch\.manual_seed\(\w+\)", src).start()
+    first_gen = re.search(r"model_chain\(backend, s, turns=", src).start()
+    assert seeded < first_gen, (
+        "the sampling stream is seeded AFTER the first chain is generated, "
+        "so it seeds nothing that matters")
 
 
 def test_UNSCOREABLE_is_not_filed_as_REFUSED():
@@ -491,6 +500,6 @@ def test_UNSCOREABLE_is_not_filed_as_REFUSED():
     the same verdict as one that emitted the wrong thing."""
     src = (_ROOT / "tools" / "act2_model_lag.py").read_text(encoding="utf-8")
     i = src.index("if unscoreable:")
-    j = src.index("check_transience(chains", i)
+    j = re.search(r"check_transience\(\w+", src[i:]).start() + i
     assert 'verdict = "UNSCOREABLE"' in src[i:j]
     assert '"REFUSED"' not in src[i:j]

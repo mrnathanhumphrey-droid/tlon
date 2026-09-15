@@ -16,6 +16,7 @@ claim about two implementations rather than about the model.
 from __future__ import annotations
 
 import pathlib
+import re
 import random
 import sys
 
@@ -141,5 +142,8 @@ def test_the_GO_thresholds_are_the_SAME_NUMBERS_the_corpus_was_gated_on():
 
 def test_the_verdict_comes_from_check_transience_not_a_local_comparison():
     src = pathlib.Path(ML.__file__).read_text(encoding="utf-8")
-    assert "check_transience(chains" in src, \
+    # ⛔ The CALL, not one spelling of its first argument. This read
+    # `check_transience(chains` and broke on a rename when the block moved into
+    # the shared `read_lag` fold, while the property it guards held throughout.
+    assert re.search(r"check_transience\(\w+", src), \
         "the verdict is computed locally instead of by the shared gate"

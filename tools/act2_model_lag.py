@@ -106,6 +106,151 @@ def seed_surfaces(n: int, *, rng: random.Random) -> list[str]:
     return surfaces[:n]
 
 
+#: ⛔ Chains shorter than this cannot HAVE a lag-2 and are dropped, never
+#: counted. Named so the curve and the CLI cannot disagree about it.
+MIN_USABLE_TURNS = 3
+
+
+def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
+             shuffles: int = 200, seed: int = 20624, verbose: bool = True) -> dict:
+    """⭐ THE WHOLE OF WHAT A RELEASE READ IS — ONE FOLD, CLI AND CURVE SHARE IT.
+
+    The twin of `act2_flocal.read_rates`, and extracted for the same reason: a
+    mid-run read that re-implements the measurement becomes a SECOND, slightly
+    different instrument, and then the checkpoint and the verdict disagree with
+    no way to tell which is the object and which is the wiring. That failure has
+    already cost this campaign four instances of one wiring class.
+
+    ⛔⛔ EVERY GUARD TRAVELS WITH IT, because they are the measurement, not
+    decoration around it:
+
+      * short chains DROPPED, never counted -- a chain that refused at turn 3 is
+        a 3-turn chain, and counting it reweights the profile toward the chains
+        that failed earliest;
+      * the sampling stream SEEDED, and whether that succeeded RECORDED -- an
+        unseeded profile is one undocumented draw sitting beside a field called
+        `seed`;
+      * per-lag scoreability, so one empty cell cannot take the whole read down
+        with it, and `z: None` beside `n_pairs` is the unscoreable state;
+      * `resolving_power` vs `threshold_for_lag` -- ⛔⛔ THE ONE THAT MATTERS
+        MOST AT A CHECKPOINT. A small cell yields a small z NO MATTER WHAT THE
+        SPEAKER DID, which at lag 1 fabricates a perceive collapse and at lag >=2
+        grants a VACUOUS RELEASE PASS. Early checkpoints are exactly where cells
+        are small, so a curve that skipped this would manufacture "release
+        installed" out of short chains.
+
+    -> the measurement dict. Provenance (which object, which adapter) is the
+    caller's to add: this function knows what it measured, not what it was
+    pointed at.
+    """
+    def say(msg):
+        if verbose:
+            print(msg)
+
+    torch_seeded = False
+    try:
+        import torch
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+        torch_seeded = True
+    except Exception as exc:                                   # pragma: no cover
+        say("  ⚠️ could NOT seed the sampling stream (%s) — recording that" % exc)
+
+    rng = random.Random(seed)
+    built, dropped = [], 0
+    for i, s in enumerate(seed_surfaces(chains, rng=rng), 1):
+        good = usable(model_chain(backend, s, turns=turns))
+        if len(good) < MIN_USABLE_TURNS:
+            dropped += 1
+            say("  chain %2d: only %d usable turn(s) — dropped" % (i, len(good)))
+            continue
+        built.append(good)
+        say("  chain %2d: %d turns  %s" % (i, len(good), good[1].surface))
+
+    if not built:
+        # ⛔ NOT an exception at a checkpoint. A curve that raises here loses
+        # every reading taken before it; the CLI can still choose to exit.
+        return {"lag_profile": {}, "z": {}, "null": {}, "n_pairs": {},
+                "resolving_power": {}, "threshold_by_lag": {},
+                "chains_requested": chains, "chains_used": 0,
+                "chains_dropped_too_short": dropped, "turns_total": 0,
+                "turns_requested_per_chain": turns,
+                "seed": seed, "sampling_stream_seeded": torch_seeded,
+                "unscoreable_lags": list(range(1, max_lag + 1)),
+                "unscoreable_why": {k: "no chain survived to turn %d"
+                                    % MIN_USABLE_TURNS
+                                    for k in range(1, max_lag + 1)},
+                "verdict": "UNSCOREABLE",
+                "refusal_reason": (
+                    "every chain refused before turn %d. The model cannot "
+                    "sustain a provoke chain, which is itself an answer -- but "
+                    "it is not a lag profile." % MIN_USABLE_TURNS),
+                "thresholds": {"z_lag1_min": Z_LAG1_MIN,
+                               "z_lagn_max": Z_LAGN_MAX}}
+
+    lex_r = C.load()["classes"]["R"]
+    prof = lag_profile(built, max_lag=max_lag, lex_r=lex_r)
+    nrng = random.Random(seed)
+    zs, nulls, npairs, unscoreable, powers, needs = {}, {}, {}, {}, {}, {}
+    for k in range(1, max_lag + 1):
+        npairs[k] = lag_pairs(built, lag=k)
+        try:
+            mu, sd = permutation_null(built, lag=k, shuffles=shuffles,
+                                      rng=nrng, lex_r=lex_r)
+        except UnscoreableLag as exc:
+            zs[k], nulls[k] = None, None
+            unscoreable[k] = str(exc)
+            say("  ⛔ lag %d UNSCOREABLE — 0 pairs" % k)
+            continue
+        power = resolving_power(built, lag=k, lex_r=lex_r, mu=mu, sd=sd)
+        need = threshold_for_lag(k)
+        powers[k], needs[k] = power, need
+        if power < need:
+            zs[k], nulls[k] = None, {"mean": mu, "sd": sd}
+            unscoreable[k] = (
+                "UNRESOLVABLE AT LAG %d: %d pair(s) give the null sd=%.4f, so "
+                "the highest z this cell can emit is %.3f -- below the %.1f "
+                "threshold it would be judged against. The comparison is "
+                "decided by arithmetic before the speaker is consulted: at lag "
+                "1 that fabricates a perceive collapse, at lag >=2 it grants a "
+                "vacuous release pass. Neither is a measurement."
+                % (k, npairs[k], sd, power, need))
+            say("  ⛔ lag %d UNRESOLVABLE — z_max %.3f < %.1f (n=%d)"
+                % (k, power, need, npairs[k]))
+            continue
+        nulls[k] = {"mean": mu, "sd": sd}
+        zs[k] = (prof[k] - mu) / sd if sd else float("nan")
+
+    if unscoreable:
+        verdict = "UNSCOREABLE"
+        why = ("the speaker produced no exchange long enough to score at lag(s) "
+               "%s: %s" % (sorted(unscoreable),
+                           " | ".join(unscoreable[k]
+                                      for k in sorted(unscoreable))))
+    else:
+        try:
+            check_transience(built, lex_r=lex_r, max_lag=max_lag,
+                             shuffles=shuffles, seed=seed)
+            verdict, why = "content-transient", ""
+        except MultiturnError as exc:
+            verdict, why = "REFUSED", str(exc)
+
+    return {
+        "chains_requested": chains, "chains_used": len(built),
+        "chains_dropped_too_short": dropped,
+        "turns_total": sum(len(c) for c in built),
+        "turns_requested_per_chain": turns,
+        "lag_profile": prof, "z": zs, "null": nulls, "n_pairs": npairs,
+        "resolving_power": powers, "threshold_by_lag": needs,
+        "seed": seed, "sampling_stream_seeded": torch_seeded,
+        "unscoreable_lags": sorted(unscoreable),
+        "unscoreable_why": {k: unscoreable[k] for k in sorted(unscoreable)},
+        "verdict": verdict, "refusal_reason": why,
+        "thresholds": {"z_lag1_min": Z_LAG1_MIN, "z_lagn_max": Z_LAGN_MAX},
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="Qwen/Qwen2.5-7B-Instruct")
@@ -159,133 +304,23 @@ def main() -> int:
                            temperature=a.temperature)
     print("  ready in %.1fs" % (time.perf_counter() - t0))
 
-    # ⛔⛔ THE SAMPLING STREAM WAS NEVER SEEDED, AND `--seed` NAMED A SEED THAT
-    # DID NOT CONTROL IT. `do_sample=True` at temperature 0.70 draws from the
-    # TORCH global RNG; `--seed` reached only the seed surfaces and the
-    # permutation null. So every lag profile in this arc is ONE UNSEEDED DRAW
-    # sitting next to a field called `seed`, and re-reading the same weights
-    # gave a different profile with no record that it could.
-    #
-    # ⭐ This matters most for the campaign, where cross-base comparison is
-    # verdict-vs-verdict: a verdict that is partly a DRAW is not purely a
-    # property of the object. It matters immediately for Run 0, whose chains
-    # collapsed below the length its longer lags needed -- chain length is
-    # exactly what this randomness moves.
-    #
-    # ⛔ Seeding fixes WHICH draw, not the distribution, so it neither biases
-    # this read nor invalidates comparison with the unseeded ones. It does NOT
-    # promise bit-reproducibility across different GPUs or kernel versions, so
-    # the report says `sampling_stream_seeded`, never "reproducible".
-    torch_seeded = False
-    try:
-        import torch
-        torch.manual_seed(a.seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed_all(a.seed)
-        torch_seeded = True
-    except Exception as exc:                                   # pragma: no cover
-        print("  ⚠️ could NOT seed the sampling stream (%s) — recording that"
-              % exc)
+    # ⛔⛔ THE MEASUREMENT IS `read_lag`, NOT A SECOND COPY OF IT HERE.
+    # The CLI's job is to say WHICH OBJECT was read; what a lag read *is* lives
+    # in one function, which the mid-run curve calls too. Two spellings of one
+    # measurement is the wiring class that has already cost this campaign four
+    # instances and one halted run.
+    m = read_lag(backend, chains=a.chains, turns=a.turns, max_lag=a.max_lag,
+                 shuffles=a.shuffles, seed=a.seed)
+    if m["chains_used"] == 0:
+        raise SystemExit("⛔⛔ " + m["refusal_reason"])
 
-    rng = random.Random(a.seed)
-    seeds = seed_surfaces(a.chains, rng=rng)
-    chains, dropped = [], 0
-    for i, s in enumerate(seeds, 1):
-        raw = model_chain(backend, s, turns=a.turns)
-        good = usable(raw)
-        if len(good) < 3:
-            # ⛔ A chain too short to HAVE a lag-2 cannot contribute to the
-            # measurement, and counting it would silently reweight the profile
-            # toward chains that refused early.
-            dropped += 1
-            print("  chain %2d: only %d usable turn(s) — dropped" % (i, len(good)))
-            continue
-        chains.append(good)
-        print("  chain %2d: %d turns  %s" % (i, len(good), good[1].surface))
+    prof, zs, npairs = m["lag_profile"], m["z"], m["n_pairs"]
+    verdict, why = m["verdict"], m["refusal_reason"]
 
-    if not chains:
-        raise SystemExit("⛔⛔ every chain refused before turn 3. The model "
-                         "cannot sustain a provoke chain, which is itself the "
-                         "answer — but it is not a lag profile.")
-
-    lex_r = C.load()["classes"]["R"]
-    prof = lag_profile(chains, max_lag=a.max_lag, lex_r=lex_r)
-    nrng = random.Random(a.seed)
-    # ⭐⭐ PER-LAG, SO A DEGENERATE SPEAKER STILL LEAVES A RECORD. Run 0 lost its
-    # whole read to one empty cell: lag 1 and lag 2 were scoreable and died with
-    # the lag that was not. A lag that cannot be scored is recorded as
-    # `z = None` beside its pair count, never as a number.
-    #
-    # ⛔ The RNG stream is unharmed by a skip: `permutation_null` refuses BEFORE
-    # it draws, so the lags that ARE scoreable consume exactly what they would
-    # have consumed. A skip that shifted the stream would silently change the
-    # numbers this report is compared against.
-    zs, nulls, npairs, unscoreable, powers, needs = {}, {}, {}, {}, {}, {}
-    for k in range(1, a.max_lag + 1):
-        npairs[k] = lag_pairs(chains, lag=k)
-        try:
-            mu, sd = permutation_null(chains, lag=k, shuffles=a.shuffles,
-                                      rng=nrng, lex_r=lex_r)
-        except UnscoreableLag as exc:
-            zs[k], nulls[k] = None, None
-            unscoreable[k] = str(exc)
-            print("  ⛔ lag %d UNSCOREABLE — 0 pairs" % k)
-            continue
-        # ⛔⛔ CAN THIS CELL REACH ITS THRESHOLD AT ALL? The null's sd is the
-        # spread of a MEAN over n pairs, so it falls like sigma/sqrt(n) and a
-        # small cell yields a small z NO MATTER WHAT THE SPEAKER DID. That is
-        # not noise, it is a fixed direction: lag 1 can then never clear 6.0
-        # (fabricated "perceive collapsed") and lag >=2 can never exceed 3.0
-        # (vacuous "release passed"). Both wrong, and together they spell the
-        # (d) row.
-        #
-        # ⭐ Derived, never picked: the bar is the LOCKED threshold, and the
-        # quantity compared against it is this run's own maximum attainable z.
-        # Closing the n=0 hole moved the probability onto n=1, and `n_pairs > 0`
-        # was the same too-weak threshold `changed > 0` had been.
-        power = resolving_power(chains, lag=k, lex_r=lex_r, mu=mu, sd=sd)
-        need = threshold_for_lag(k)
-        powers[k], needs[k] = power, need
-        if power < need:
-            zs[k], nulls[k] = None, {"mean": mu, "sd": sd}
-            unscoreable[k] = (
-                "UNRESOLVABLE AT LAG %d: %d pair(s) give the null sd=%.4f, so "
-                "the highest z this cell can emit is %.3f -- below the %.1f "
-                "threshold it would be judged against. The comparison is "
-                "decided by arithmetic before the speaker is consulted: at lag "
-                "1 that fabricates a perceive collapse, at lag >=2 it grants a "
-                "vacuous release pass. Neither is a measurement."
-                % (k, npairs[k], sd, power, need))
-            print("  ⛔ lag %d UNRESOLVABLE — z_max %.3f < %.1f (n=%d)"
-                  % (k, power, need, npairs[k]))
-            continue
-        nulls[k] = {"mean": mu, "sd": sd}
-        zs[k] = (prof[k] - mu) / sd if sd else float("nan")
-
-    if unscoreable:
-        # ⛔⛔ NOT `REFUSED`. A refusal is the gate saying the corpus failed a
-        # criterion it could measure; this is the instrument saying it could not
-        # measure at all. Collapsing them would file a speaker that emitted
-        # nothing under the same verdict as one that emitted the wrong thing,
-        # and `check_transience` below would only raise the same diagnosis while
-        # wearing the failed-a-criterion name.
-        verdict = "UNSCOREABLE"
-        why = ("the speaker produced no exchange long enough to score at lag(s) "
-               "%s: %s" % (sorted(unscoreable),
-                           " | ".join(unscoreable[k]
-                                      for k in sorted(unscoreable))))
-    else:
-        # ⭐ THE GATE ITSELF, RUN BY THE CORPUS-SIDE FUNCTION. Not a
-        # re-implementation of its logic with model-shaped variable names.
-        try:
-            check_transience(chains, lex_r=lex_r, max_lag=a.max_lag,
-                             shuffles=a.shuffles, seed=a.seed)
-            verdict, why = "content-transient", ""
-        except MultiturnError as exc:
-            verdict, why = "REFUSED", str(exc)
-
-    n_turns = sum(len(c) for c in chains)
-    report = {
+    # ⭐ PROVENANCE IS THE CALLER'S TO ADD. `read_lag` knows what it measured;
+    # only main() knows what it was pointed at.
+    report = dict(m)
+    report.update({
         "adapter": a.adapter,
         # ⭐ THE CAVEAT IN THE FIELD. `adapter: null` alone cannot say whether
         # this was a `_w` object or the bare base model; these two can.
@@ -293,48 +328,22 @@ def main() -> int:
         "measurement_category": "_w" if kind == "full_weight" else "_ctx",
         "four_bit": a.four_bit,
         "temperature": a.temperature, "max_new_tokens": a.max_new_tokens,
-        "chains_requested": a.chains, "chains_used": len(chains),
-        "chains_dropped_too_short": dropped, "turns_total": n_turns,
-        "turns_requested_per_chain": a.turns,
-        "lag_profile": prof, "z": zs, "null": nulls,
-        # ⭐⭐ THE CAVEAT IN THE FIELD, NOT IN PROSE. A z is only as good as the
-        # cell it came from, and a long lag on short chains rests on very few
-        # pairs -- rung 2's lag-4 z=-0.48 came off roughly EIGHT pairs, carried
-        # by whichever two chains happened to run long. Nothing recorded that.
-        # `n_pairs` travels with every z from here on, and `z: null` beside
-        # `n_pairs: 0` is the unscoreable state, which is not a zero.
-        "n_pairs": npairs,
-        # ⭐ The cell's CEILING beside its reading. `resolving_power`
-        # below `threshold` means the verdict was decided by arithmetic.
-        "resolving_power": powers,
-        "threshold_by_lag": needs,
-        # ⛔ The honest name. `seed` alone implied it controlled the whole read;
-        # it did not, and for every profile recorded before this run it did not
-        # touch the sampling at all. False here means the numbers above are one
-        # undocumented draw.
-        "seed": a.seed,
-        "sampling_stream_seeded": torch_seeded,
-        "unscoreable_lags": sorted(unscoreable),
-        "unscoreable_why": {k: unscoreable[k] for k in sorted(unscoreable)},
-        "verdict": verdict, "refusal_reason": why,
-        "thresholds": {"z_lag1_min": Z_LAG1_MIN, "z_lagn_max": Z_LAGN_MAX},
         "INSTRUMENT": "tlon.discourse.transient — the same functions the corpus "
                       "was gated on, imported not re-spelt",
-    }
+    })
     outp = pathlib.Path(a.out)
     outp.parent.mkdir(parents=True, exist_ok=True)
     outp.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     print("\n  MODEL LAG PROFILE — %s [%s]" % (obj, kind))
-    print("    " + "  ".join("lag%d %.4f" % (k, prof[k])
-                             for k in sorted(prof)))
+    print("    " + "  ".join("lag%d %.4f" % (k, prof[k]) for k in sorted(prof)))
     print("    " + "  ".join(
         "lag%d UNSCOREABLE" % k if zs[k] is None else "lag%d z=%+.2f" % (k, zs[k])
         for k in sorted(zs)))
     print("    " + "  ".join("lag%d n=%d" % (k, npairs[k])
                              for k in sorted(npairs)))
     print("    chains %d used / %d dropped · %d turns"
-          % (len(chains), dropped, n_turns))
+          % (m["chains_used"], m["chains_dropped_too_short"], m["turns_total"]))
     print("    VERDICT: %s" % verdict)
     if why:
         print("    %s" % why)

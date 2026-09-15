@@ -443,6 +443,19 @@ def main() -> int:
                          "dose end where the hypotheses separate")
     ap.add_argument("--dose-curve-n", type=int, default=64,
                     help="probes per read; the gate's own n")
+    # ⭐⭐ RELEASE AT THE CHECKPOINT, NOT ONLY AT THE END. The epochs-lever arm
+    # needs lag where the rms rungs are, and the read costs about what an
+    # F-LOCAL read costs: 120 generations x 256 tokens against F-LOCAL's
+    # 128 x 220 — ratio 1.09. ⛔ Priced from the CODE, not from the shape of the
+    # loop: an assumption that the sequential chains made this 5-10x dearer
+    # nearly bought a thinner, worse experiment.
+    ap.add_argument("--lag-curve", action="store_true",
+                    help="also read the release/lag profile at each dose-curve "
+                         "checkpoint (skipped where the speaker has floored)")
+    ap.add_argument("--lag-chains", type=int, default=12,
+                    help="chains per mid-run lag read; the CLI's own default")
+    ap.add_argument("--lag-turns", type=int, default=10,
+                    help="turns per chain; shorter chains starve the long lags")
     # ⛔⛔ A LIST, AND THAT IS THE WHOLE COMPARISON DESIGN. A single target only
     # answers "what was render at one dose". A LADDER of targets set to ANOTHER
     # RUN'S measured rms values makes every reading a matched-rms pair BY
@@ -738,6 +751,11 @@ def main() -> int:
         sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
         from act2_backends import LocalBackend as _LB
         from act2_flocal import read_rates as _read_rates
+        # ⛔ THE SAME FOLD THE CLI USES. Importing it is the point: a mid-run
+        # release read that re-spelt the measurement would be a second
+        # instrument, and a checkpoint disagreeing with the verdict would be
+        # unattributable to object or wiring.
+        from act2_model_lag import read_lag as _read_lag
 
         from tlon.act2 import probes as _probes
         from tlon.act2.llm import LLMSpeaker as _Speaker
@@ -789,10 +807,22 @@ def main() -> int:
                 # RESTORES TRAINING MODE, RNG STATE AND GRADS AND *ASSERTS* IT
                 # DID. A curve measured by perturbing the run it measures is a
                 # curve of a different run, and nothing downstream could tell.
+                lag = None
                 with isolated_read(m, torch_mod=torch):
                     back = _LB.adopt(m, tok, name=pathlib.Path(a.out).name)
                     spk = _Speaker("native", back, card=False)
                     speak, render = _read_rates(spk, _battery, a.dose_curve_n)
+                    # ⛔⛔ RELEASE IS READ ONLY WHERE THE SPEAKER IS STILL THERE.
+                    # A lag profile off a cratered speaker is not a low reading,
+                    # it is no reading: the chains collapse below the length the
+                    # longer lags need, `resolving_power` falls under the
+                    # threshold, and lag>=2 is handed a VACUOUS PASS by
+                    # arithmetic. `read_lag` catches that and says UNSCOREABLE —
+                    # this gate just avoids paying for a read that cannot speak.
+                    if a.lag_curve and min(speak["rate"], render["rate"]) > 0.0:
+                        lag = _read_lag(back, chains=a.lag_chains,
+                                        turns=a.lag_turns, seed=a.seed,
+                                        verbose=False)
 
                 row = {"step": self.step, "of": _total, "why": why,
                        "matched_rms_targets": rungs,
@@ -803,12 +833,30 @@ def main() -> int:
                        "speak_valid": speak["valid"],
                        "render_valid": render["valid"],
                        "battery": _battery.digest, "lr": a.lr}
+                if lag is not None:
+                    # ⭐ THE WHOLE MEASUREMENT TRAVELS, NOT JUST THE z. `z: null`
+                    # beside `n_pairs` and `resolving_power` is the unscoreable
+                    # state, and it is NOT a zero — a row that carried only the
+                    # numbers would read an unresolvable cell as a passing one.
+                    row["lag"] = {k: lag[k] for k in (
+                        "lag_profile", "z", "n_pairs", "resolving_power",
+                        "threshold_by_lag", "chains_used",
+                        "chains_dropped_too_short", "turns_total",
+                        "sampling_stream_seeded", "unscoreable_lags",
+                        "verdict")}
+                elif a.lag_curve:
+                    row["lag"] = {"verdict": "NOT_READ",
+                                  "why": "speaker floored; release unreadable"}
                 with open(_curve, "a", encoding="utf-8") as fh:
                     fh.write(_json.dumps(row) + "\n")
+                _z2 = (lag or {}).get("z", {}).get(2) if lag else None
                 print("⭐ DOSE CURVE step %d/%d (%s)  rms %.4e  "
-                      "speak %.1f%%  render %.1f%%"
+                      "speak %.1f%%  render %.1f%%%s"
                       % (self.step, _total, why, rms or float("nan"),
-                         100 * speak["rate"], 100 * render["rate"]), flush=True)
+                         100 * speak["rate"], 100 * render["rate"],
+                         "" if lag is None else
+                         ("  lag2 %s" % ("UNSCOREABLE" if _z2 is None
+                                         else "%+.3f" % _z2))), flush=True)
                 return control
 
         trainer.add_callback(_DoseCurve())
