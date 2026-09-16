@@ -845,12 +845,23 @@ def main() -> int:
                     # beside `n_pairs` and `resolving_power` is the unscoreable
                     # state, and it is NOT a zero — a row that carried only the
                     # numbers would read an unresolvable cell as a passing one.
-                    row["lag"] = {k: lag[k] for k in (
-                        "lag_profile", "z", "n_pairs", "resolving_power",
-                        "threshold_by_lag", "chains_used",
-                        "chains_dropped_too_short", "turns_total",
-                        "sampling_stream_seeded", "unscoreable_lags",
-                        "verdict")}
+                    #
+                    # ⛔⛔ AND IT SAID THAT WHILE COPYING A HAND-WRITTEN LIST OF
+                    # ELEVEN KEYS. `read_lag` was fixed on 2026-09-16 to record
+                    # the decoder it was taken with — `temperature`,
+                    # `max_new_tokens`, `decoder_sampled` — and NONE of them was
+                    # in the list, so the fix was correct at the measurement and
+                    # dropped at the serialisation. The re-run would have written
+                    # 11 h of rows carrying no decoder, and the §2.3 audit gate
+                    # would have refused the run at the very end: the gate
+                    # working, at maximum cost.
+                    #
+                    # ⭐ So: the WHOLE dict, which is what the comment always
+                    # claimed. A list of fields is a list, and the standing
+                    # lesson of this repo is to sweep by scan rather than by
+                    # list — a field added to `read_lag` now travels on its own
+                    # instead of waiting for someone to remember this line.
+                    row["lag"] = dict(lag)
                 elif a.lag_curve:
                     row["lag"] = {"verdict": "NOT_READ",
                                   "why": "speaker floored; release unreadable"}

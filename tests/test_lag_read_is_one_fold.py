@@ -224,18 +224,55 @@ def test_the_fold_records_the_cell_beside_every_z():
             "not in prose" % field)
 
 
-def test_the_curve_row_carries_the_cell_not_just_the_number():
+def test_the_curve_row_carries_the_cell_not_just_the_number(monkeypatch):
     """⛔⛔ A curve row holding only `z` would read an UNRESOLVABLE cell as a
-    passing one. The unscoreable state must be reconstructable from the row."""
-    src = io.open(FT_SRC, encoding="utf-8").read()
-    i = src.find('row["lag"] = {k: lag[k]')
-    assert i > 0, "the curve no longer copies the lag measurement into the row"
-    block = src[i:i + 600]
+    passing one. The unscoreable state must be reconstructable from the row.
+
+    ⛔ THIS GUARD USED TO SEARCH FOR `row["lag"] = {k: lag[k]` — it pinned the
+    IMPLEMENTATION'S SPELLING, an eleven-key whitelist, and so it failed the
+    moment that whitelist was replaced by something strictly better (the whole
+    dict), while it would have passed happily on a whitelist that silently
+    dropped the DECODER fields — which is exactly what it did for as long as
+    that bug existed. Third guard in this campaign written by copying the code
+    it guards. [[a-guard-that-copies-the-bug-certifies-it]]
+
+    ⭐ So it now asserts the REQUIREMENT behaviourally: whatever the row is built
+    from, every field needed to reconstruct an unscoreable cell — and the
+    decoder the reading was taken with — must survive into it.
+    """
+    import act2_model_lag as _ML
+
+    monkeypatch.setattr(_ML, "_read_lag_inner", lambda backend, **kw: {
+        "lag_profile": {"1": 0.9}, "z": {"2": None}, "n_pairs": {"2": 3},
+        "resolving_power": {"2": 1.2}, "threshold_by_lag": {"2": 3.0},
+        "unscoreable_lags": [2], "unscoreable_why": {"2": "cell too small"},
+        "chains_used": 12, "chains_dropped_too_short": 0, "turns_total": 118,
+        "sampling_stream_seeded": True, "verdict": "UNSCOREABLE"})
+
+    class _B:
+        temperature, max_new_tokens = 0.0, 220
+
+    lag = _ML.read_lag(_B(), verbose=False)
+    row_lag = dict(lag)          # ⭐ what act2_finetune writes, verbatim
+
     for field in ("n_pairs", "resolving_power", "threshold_by_lag",
                   "unscoreable_lags", "verdict"):
-        assert field in block, (
+        assert field in row_lag, (
             "the curve row drops %r — an unresolvable cell would then be "
             "indistinguishable from a real reading" % field)
+    for field in ("temperature", "max_new_tokens"):
+        assert field in row_lag, (
+            "the curve row drops %r — the reading could not be checked against "
+            "the decoder a lag read requires, which is how a whole curve was "
+            "voided on 2026-09-16" % field)
+
+    # ⛔ And the row must not be a hand-picked subset in the source either: a
+    # behavioural check passes on any shape that happens to include these
+    # fields today, so the structural rule is asserted alongside it.
+    src = io.open(FT_SRC, encoding="utf-8").read()
+    assert 'row["lag"] = dict(lag)' in src, (
+        "row['lag'] is no longer the whole measurement; a hand-written key "
+        "list drops whatever nobody remembered to add")
 
 
 def test_release_is_not_read_off_a_floored_speaker():

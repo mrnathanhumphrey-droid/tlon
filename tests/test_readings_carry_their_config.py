@@ -251,3 +251,62 @@ def test_the_audit_sweep_uses_THE_SAME_recursion_as_the_flush():
     acalls = {n.func.attr for n in ast.walk(audit)
               if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)}
     assert "rglob" in acalls and "glob" not in acalls
+
+
+# ── the row must carry what the fold recorded ──────────────────────────────
+
+def test_the_curve_ROW_carries_every_field_read_lag_RECORDS():
+    """⛔⛔ THE FIX WAS CORRECT AT THE MEASUREMENT AND LOST AT THE SERIALISATION.
+
+    `read_lag` was fixed to record its decoder. `act2_finetune` then copied a
+    HAND-WRITTEN LIST of eleven keys into the dose-curve row — and
+    `temperature`, `max_new_tokens` and `decoder_sampled` were not among them.
+    Every row of the re-run would have carried no decoder, and the §2.3 audit
+    gate would have refused the run after eleven hours of training: the gate
+    working, at maximum cost. Caught before firing only because the question
+    'does the fixed path actually reach the artefact?' was asked out loud.
+
+    ⭐ Asserted structurally: the row must take the WHOLE dict, never a subset.
+    A list of fields is a list, and this repo's standing lesson is to sweep by
+    scan rather than by list — so a field added to `read_lag` travels on its own
+    rather than waiting for someone to remember one line in another file.
+    """
+    import ast
+    import io as _io
+    src = _io.open(ROOT / "tools" / "act2_finetune.py", encoding="utf-8").read()
+    tree = ast.parse(src)
+
+    assigns = []
+    for n in ast.walk(tree):
+        if not isinstance(n, ast.Assign):
+            continue
+        for t in n.targets:
+            if (isinstance(t, ast.Subscript)
+                    and isinstance(t.value, ast.Name) and t.value.id == "row"
+                    and isinstance(t.slice, ast.Constant)
+                    and t.slice.value == "lag"):
+                assigns.append(n.value)
+    assert assigns, "nothing assigns row['lag'] — this guard would be vacuous"
+
+    for v in assigns:
+        # ⛔ A DictComp over a literal tuple of names is the defect: it is a
+        # hand-written whitelist, and whatever is not on it is silently dropped.
+        assert not isinstance(v, ast.DictComp), (
+            "row['lag'] is built from a hand-written key list; a field "
+            "read_lag records (the DECODER, among others) would be dropped "
+            "silently — take the whole dict")
+
+
+def test_the_decoder_REACHES_the_row_not_only_the_fold(monkeypatch):
+    """⭐ The behavioural twin of the structural check above: what `read_lag`
+    returns is what a consumer must be able to read back."""
+    b = _Backend()
+    monkeypatch.setattr(ML, "_read_lag_inner",
+                        lambda backend, **kw: {"verdict": "REFUSED", "z": {}})
+    out = ML.read_lag(b)
+    row_lag = dict(out)          # exactly what act2_finetune now writes
+    for k in ("temperature", "max_new_tokens", "decoder_sampled"):
+        assert k in row_lag, (
+            "%r does not survive into the dose-curve row; the audit gate would "
+            "read NO DECODER RECORDED and refuse the run" % k)
+    assert row_lag["temperature"] == ML.LAG_TEMPERATURE
