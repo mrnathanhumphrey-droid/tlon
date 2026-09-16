@@ -28,7 +28,12 @@ FT_SRC = ROOT / "tools" / "act2_finetune.py"
 
 
 def _tree(p):
-    return ast.parse(io.open(p, encoding="utf-8").read())
+    # ⛔ `utf-8-sig`, not `utf-8`. Ten files in this repo carry a BOM (every
+    # package `__init__.py` among them), and `ast.parse` rejects U+FEFF with a
+    # SyntaxError. A repo-wide scan that reads plain utf-8 dies on the first
+    # such file — and a scan that swallowed that error would silently stop
+    # looking, which is how a whole-repo guard quietly becomes a partial one.
+    return ast.parse(io.open(p, encoding="utf-8-sig").read())
 
 
 def _func(tree, name):
@@ -36,6 +41,62 @@ def _func(tree, name):
         if isinstance(n, ast.FunctionDef) and n.name == name:
             return n
     return None
+
+
+#: ⛔⛔ THE FOLD IS TWO FUNCTIONS NOW, AND THE GUARDS MOVED. On 2026-09-16
+#: `read_lag` gained a wrapper: it installs the SAMPLED decoder a lag read
+#: requires onto whatever backend it is handed, runs the measurement, and
+#: restores what it found — because the in-training curve borrows an F-LOCAL
+#: backend (220 tokens, GREEDY) and reading lag through it voided the entire
+#: release-vs-dose curve. The measurement itself moved to `_read_lag_inner` so
+#: the decoder is guaranteed to be restored on every exit path.
+#:
+#: ⭐ THIS IS NOT A LOOSENING. "One fold" was never "one function" — it is "one
+#: implementation, reachable one way". So the guards are sought across BOTH
+#: halves, and `test_the_inner_half_is_not_a_second_entry_point` asserts that
+#: `_read_lag_inner` is called from exactly one place, which is what stops the
+#: split from becoming the second instrument this file exists to prevent.
+FOLD = ("read_lag", "_read_lag_inner")
+
+
+def _fold(tree):
+    """-> the fold's functions. ⛔ Refuses if a half is missing, rather than
+    scanning a smaller surface and passing."""
+    fns = [_func(tree, n) for n in FOLD]
+    missing = [n for n, f in zip(FOLD, fns) if f is None]
+    assert not missing, (
+        "the lag fold is missing %s — every guard below would now scan a "
+        "smaller function and pass vacuously" % ", ".join(missing))
+    return fns
+
+
+def _fold_nodes(tree):
+    for fn in _fold(tree):
+        yield from ast.walk(fn)
+
+
+def test_the_inner_half_is_not_a_second_entry_point():
+    """⛔⛔ THE SPLIT'S OWN GUARD. `read_lag` is where the decoder gets installed
+    and recorded; a caller that reached `_read_lag_inner` directly would skip
+    both and produce exactly the unlabelled, wrongly-decoded rows that voided
+    the curve. So the inner half must be called from ONE place in the repo, and
+    that place must be `read_lag`."""
+    callers = []
+    for src in sorted((ROOT / "tools").glob("*.py")) + \
+            sorted((ROOT / "tlon").rglob("*.py")):
+        tree = _tree(src)
+        for fn in ast.walk(tree):
+            if not isinstance(fn, ast.FunctionDef):
+                continue
+            for n in ast.walk(fn):
+                if (isinstance(n, ast.Call)
+                        and isinstance(n.func, ast.Name)
+                        and n.func.id == "_read_lag_inner"):
+                    callers.append("%s:%s" % (src.name, fn.name))
+    assert callers == ["act2_model_lag.py:read_lag"], (
+        "_read_lag_inner is reached from %r — it must be called ONLY by "
+        "read_lag, or the decoder install and the decoder record can be "
+        "bypassed" % (callers,))
 
 
 def test_read_lag_exists_and_is_importable():
@@ -99,8 +160,10 @@ def test_every_scoreability_guard_lives_inside_the_shared_fold():
     silently loses it — and the one it would lose is the one that FABRICATES A
     RELEASE PASS at an early checkpoint, confirming the hypothesis the run
     exists to test."""
-    fn = _func(_tree(LAG_SRC), "read_lag")
-    called = _called_names(fn)
+    tree = _tree(LAG_SRC)
+    called = set()
+    for fn in _fold(tree):
+        called |= _called_names(fn)
     for guard, why in (
         ("resolving_power", "a small cell grants lag>=2 a vacuous pass"),
         ("threshold_for_lag", "the bar must be the LOCKED threshold, not a pick"),
@@ -111,10 +174,14 @@ def test_every_scoreability_guard_lives_inside_the_shared_fold():
         assert guard in called, (
             "read_lag never CALLS %r — %s" % (guard, why))
 
-    assert "UnscoreableLag" in _caught_exceptions(fn), (
+    caught, loaded = set(), set()
+    for fn in _fold(tree):
+        caught |= _caught_exceptions(fn)
+        loaded |= _loaded_names(fn)
+    assert "UnscoreableLag" in caught, (
         "read_lag does not catch UnscoreableLag — an empty cell would abort the "
         "whole read instead of recording z=None beside its pair count")
-    assert "MIN_USABLE_TURNS" in _loaded_names(fn), (
+    assert "MIN_USABLE_TURNS" in loaded, (
         "read_lag no longer consults MIN_USABLE_TURNS — short chains would be "
         "counted, reweighting the profile toward the chains that failed first")
 
@@ -123,9 +190,8 @@ def test_the_power_check_actually_gates_the_z():
     """⛔⛔ CALLING `resolving_power` IS NOT USING IT. The value must be COMPARED
     against the threshold and must suppress the z when it falls short — a call
     whose result is only reported is a number in a field, not a guard."""
-    fn = _func(_tree(LAG_SRC), "read_lag")
     gated = False
-    for node in ast.walk(fn):
+    for node in _fold_nodes(_tree(LAG_SRC)):
         if not isinstance(node, ast.If):
             continue
         names = _loaded_names(node.test)
@@ -146,9 +212,8 @@ def test_the_fold_records_the_cell_beside_every_z():
     """⛔ `z` alone is not a reading. A z is only as good as the cell it came
     from, and an unscoreable cell is `None` beside its pair count — never a
     zero, which would read as a passing release."""
-    fn = _func(_tree(LAG_SRC), "read_lag")
     returned = set()
-    for n in ast.walk(fn):
+    for n in _fold_nodes(_tree(LAG_SRC)):
         if isinstance(n, ast.Return) and isinstance(n.value, ast.Dict):
             returned |= {k.value for k in n.value.keys
                          if isinstance(k, ast.Constant)}

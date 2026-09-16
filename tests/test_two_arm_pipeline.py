@@ -31,6 +31,24 @@ def _block(start, end):
     return SRC[i:j]
 
 
+def _code_only(text):
+    """⛔⛔ DROP THE COMMENTS BEFORE ASSERTING ON THE COMMANDS.
+
+    A scan of raw source cannot tell a call from a sentence ABOUT a call — and
+    this file learned that the embarrassing way: the moment the pipeline grew a
+    comment explaining the `flush --cell` bug, the guard against `flush --cell`
+    began failing on the explanation. Same class as `grep_a_rendering`: don't
+    grep prose for values, read the artefact. Full-line shell comments only,
+    which is what the pipeline's commentary is.
+    """
+    return "\n".join(ln for ln in text.splitlines()
+                     if not ln.lstrip().startswith("#"))
+
+
+#: The pipeline with its commentary removed — what actually RUNS.
+CODE = _code_only(SRC)
+
+
 # ── 1 · the refusal must HALT ──────────────────────────────────────────────
 
 def test_the_step_match_refusal_is_read_from_PIPESTATUS_not_dollar_question():
@@ -174,10 +192,96 @@ def test_every_persist_site_is_gated_and_falls_back_to_a_FLUSH(n):
     """⛔⛔ THE READINGS MUST STILL LEAVE. With weights unpersisted the readings
     are the only record; a persist site that simply did nothing would leave the
     whole run resting on the exit trap alone."""
-    sites = [m.start() for m in re.finditer(r"full-weight --cell \$CELL", SRC)]
+    sites = [m.start() for m in re.finditer(r"full-weight --cell \$CELL", CODE)]
     assert len(sites) == 3, ("expected 3 persist sites (leg1, reads, leg2), found %d -- a NEW ungated site is the failure this counts for" % len(sites))
-    blk = SRC[max(0, sites[n - 1] - 900): sites[n - 1] + 900]
+    blk = CODE[max(0, sites[n - 1] - 900): sites[n - 1] + 900]
     assert 'PERSIST_WEIGHTS' in blk, "persist site %d is not gated" % n
-    assert "flush --cell $CELL" in blk, (
+    # ⛔⛔ THIS ASSERTION USED TO READ `"flush --cell $CELL" in blk` — IT PINNED
+    # THE BUG AS THE SPECIFICATION. `flush` takes no `--cell`; argparse exits 2;
+    # on 2026-09-16 that killed `epochlevB-s20624` after 3,760 clean training
+    # steps and cost the run every end-of-run read. The test could never have
+    # caught it, because the test REQUIRED it: a guard written by copying the
+    # call it was guarding, which then certified the copy forever.
+    #
+    # ⭐ So the check is no longer "does this string appear" but "is this call
+    # one the tool would ACCEPT" — asserted against the real argparse below, in
+    # test_every_flush_invocation_is_one_argparse_ACCEPTS.
+    assert re.search(r"\bflush\b(?!\s+--cell)", blk), (
         "persist site %d has no flush fallback — the readings would not leave "
         "on the success path" % n)
+    assert "flush --cell" not in blk, (
+        "persist site %d passes --cell to `flush`, which does not accept it: "
+        "argparse exits 2 and takes the run's reads with it" % n)
+
+
+def test_every_flush_invocation_is_one_argparse_ACCEPTS():
+    """⭐⭐ THE GENERALISATION, AND THE ONE THAT ACTUALLY CLOSES THE CLASS.
+
+    ⛔⛔ Checking that a call site contains the right SUBSTRING is checking a
+    copy against a copy. On 2026-09-16 three sites in this pipeline spelled
+    `act2_box_persist.py ... flush --cell $CELL`, the test above asserted that
+    exact string, and `flush` has never accepted `--cell`. argparse exited 2,
+    `pipefail` carried it through `tee`, `set -e` aborted, and a run with 3,760
+    clean training steps produced no F-LOCAL, no lag profile, no dose check and
+    no verdict. The guard was a photocopy of the bug.
+
+    ⭐ So every invocation in the pipeline is tokenised and fed to the REAL
+    parser. A call the tool would reject fails here, in CI, in milliseconds —
+    instead of eleven hours into an H100 run.
+    """
+    import contextlib
+    import io as _io
+    import shlex
+    import sys as _sys
+    _sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
+    import act2_box_persist as BP
+
+    # Join the shell's backslash continuations, then find each invocation.
+    joined = re.sub(r"\\s*\n\s*", " ", CODE)
+    calls = re.findall(r"act2_box_persist\.py\s+([^\n|]*)", joined)
+    assert calls, "no act2_box_persist.py invocations found — this test is vacuous"
+
+    checked = 0
+    for raw in calls:
+        # ⛔ Drop the shell's redirections; keep every argument.
+        raw = re.sub(r"2>&1.*$", "", raw).strip()
+        if not raw:
+            continue
+        # Substitute shell variables with a placeholder — the SHAPE of the call
+        # is what argparse judges, not the values.
+        argv = [re.sub(r"\$\{?\w+\}?", "X", tok) for tok in shlex.split(raw)]
+        if not argv:
+            continue
+        err = _io.StringIO()
+        try:
+            with contextlib.redirect_stderr(err):
+                BP.build_parser().parse_args(argv)
+        except SystemExit as e:
+            raise AssertionError(
+                "pipeline_fullft.sh calls act2_box_persist.py with arguments "
+                "the tool REFUSES (exit %s):\n    %s\n  argparse said: %s"
+                % (e.code, " ".join(argv), err.getvalue().strip().splitlines()[-1]
+                   if err.getvalue().strip() else "(nothing)"))
+        checked += 1
+    assert checked >= 4, (
+        "only %d invocation(s) were checked; the pipeline has a persist site "
+        "per leg plus the trap, so a smaller number means the scan is missing "
+        "call sites and passing on the ones it found" % checked)
+
+
+def test_the_readings_audit_is_actually_CALLED_by_the_pipeline():
+    """⛔⛔ A GATE NOBODY CALLS IS A PRINTED OPINION. `act2_audit_readings.py` is
+    the structural fix for the four bugs of 2026-09-16 — and a fix that exists
+    in `tools/` and is never invoked is the `cold_pin` failure: a check that
+    reports instead of acting, which reads as a passing guard.
+
+    ⛔ It must also run AFTER the readings exist. An audit placed before
+    `persist_reads` would find the verdict and the lag file missing on every
+    run and be trained-away as noise within a week.
+    """
+    assert "act2_audit_readings.py" in CODE, (
+        "the pipeline never invokes the readings audit — it is a tool nobody "
+        "runs, which is worth less than no tool at all")
+    assert CODE.index("step persist_reads") < CODE.index("act2_audit_readings.py"), (
+        "the readings audit runs BEFORE the readings are persisted; it would "
+        "fail on every healthy run and stop being read")

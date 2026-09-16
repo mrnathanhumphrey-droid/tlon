@@ -189,9 +189,9 @@ def test_persist_records_the_delta_verdict_in_the_ledger(tmp_path):
     (tmp_path / "corpus_manifest.json").write_text("{}")
     seen = []
 
-    def fake_push(name, path, repo, private=True, subdir=None):
+    def fake_push(name, path, repo, private=True, subdir=None, dest_name=None):
         seen.append(pathlib.Path(path).name)
-        return "hub://%s/%s" % (subdir, pathlib.Path(path).name)
+        return "hub://%s/%s" % (subdir, dest_name or pathlib.Path(path).name)
 
     e = bp.persist_full_weight(tmp_path, "fw-s20624", "repo",
                                corpus_manifest=tmp_path / "corpus_manifest.json",

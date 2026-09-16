@@ -319,19 +319,28 @@ def sha256_local(path) -> str:
     return h.hexdigest()
 
 
-def push_durable(name, local_path, repo, *, private=True, subdir=None):
+def push_durable(name, local_path, repo, *, private=True, subdir=None,
+                 dest_name=None):
     """Upload one adapter and VERIFY IT ARRIVED INTACT.
 
     ⛔⛔ AN UPLOAD THAT RETURNS 200 IS NOT A VERIFIED UPLOAD. The hub reports the
     LFS sha256 of what it actually stored; this compares that against the sha256
     of the bytes on disk. Without the comparison, "persisted" means "the call did
     not raise", which is the same standard that lost s20620.
+
+    ⛔ `name` DOES NOT NAME THE DESTINATION — it never has. The stored path is
+    `subdir/src.name`, and `name` only labels the commit and stands in for a
+    missing subdir. That is a trap for exactly the kind of caller that needs it:
+    the recursive flush sweep passes a path-qualified name so two files a
+    directory apart cannot overwrite each other, and would have silently kept
+    colliding. ⭐ `dest_name` is the parameter that actually moves the file —
+    pass a relative path (`model_x/weight_delta.json`) to nest it.
     """
     from huggingface_hub import HfApi
     api = HfApi(token=_hf_token())
     api.create_repo(repo, private=private, exist_ok=True)
     src = pathlib.Path(local_path)
-    dest = "%s/%s" % (subdir or name, src.name)
+    dest = "%s/%s" % (subdir or name, dest_name or src.name)
     if already_persisted(api, repo, dest, sha256_local(src)):
         return "hf://%s/%s" % (repo, dest)
     api.upload_file(path_or_fileobj=str(src), path_in_repo=dest,

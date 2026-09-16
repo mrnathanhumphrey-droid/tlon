@@ -819,6 +819,13 @@ def main() -> int:
                     # threshold, and lag>=2 is handed a VACUOUS PASS by
                     # arithmetic. `read_lag` catches that and says UNSCOREABLE —
                     # this gate just avoids paying for a read that cannot speak.
+                    # ⛔⛔ THE DECODER IS DELIBERATELY NOT NAMED HERE. `back` is
+                    # an F-LOCAL backend (220 tokens, GREEDY) and reading lag
+                    # through it is what voided this curve once already —
+                    # `read_lag` now installs the sampled decoder a lag read
+                    # requires, records it in the row, and puts F-LOCAL's back.
+                    # Naming a temperature at this call site would recreate the
+                    # two-spellings-of-one-instrument bug one level out.
                     if a.lag_curve and min(speak["rate"], render["rate"]) > 0.0:
                         lag = _read_lag(back, chains=a.lag_chains,
                                         turns=a.lag_turns, seed=a.seed,

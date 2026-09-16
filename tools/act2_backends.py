@@ -180,6 +180,24 @@ class LocalBackend:
               constrained: bool = False, temperature: float = 0.0):
         """⭐ WRAP A MODEL THAT IS ALREADY IN MEMORY — the dose curve needs it.
 
+        ⛔⛔ THESE DECODE DEFAULTS ARE **F-LOCAL'S**, AND THEY ARE NOT UNIVERSAL.
+        220 tokens and temperature 0.0 (i.e. `do_sample=False`, GREEDY) are right
+        for a rate read, where the modal answer is exactly what you want to
+        score. They are CATASTROPHIC for a lag read, which measures whether
+        content persists across turns: a deterministic speaker repeats content
+        because the same context yields the same continuation, so greedy
+        inflates persistence at every lag and the profile becomes a reading of
+        the decoder.
+
+        That is not hypothetical. Every in-training lag read in this campaign
+        was taken through this constructor and voided by it (2026-09-16,
+        `epochlevB-s20624`: lag2 z=23.858 in-run vs 4.343 on the same weights
+        sampled). ⭐ `act2_model_lag.read_lag` now installs and restores its own
+        decoder rather than trusting whatever the borrowed backend carries — any
+        NEW measurement that borrows this backend must do the same, or state its
+        decode settings here explicitly. A default nobody printed is a decision
+        nobody made.
+
         ⛔⛔ FORCED BY STORAGE, NOT PREFERENCE. Reading F-LOCAL at five points
         across an epoch by the normal path means five checkpoints on disk:
         5 x 14.5 GB = 72 GB against 46.8 GB of hub headroom. The curve is the

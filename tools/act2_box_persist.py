@@ -473,16 +473,29 @@ def required_for(entry) -> tuple:
     return REQUIRED_PERSISTED
 
 
-def persist_file(root, path, repo, *, subdir, push=push_durable) -> str:
-    """Push one run-level file (the pipeline log, the manifest)."""
+def persist_file(root, path, repo, *, subdir, push=push_durable,
+                 as_name: str | None = None) -> str:
+    """Push one run-level file (the pipeline log, the manifest).
+
+    ⭐ `as_name` is the name the file takes in the repo AND its ledger key.
+    It exists because the flush sweep now recurses: two files one directory
+    apart can share a basename, and `p.name` alone would silently overwrite one
+    with the other in both places. Nested files pass their path relative to the
+    run root, so `model_x/weight_delta.json` stays distinct from
+    `weight_delta.json` and says where it came from.
+    """
     p = pathlib.Path(path)
     if not p.exists():
         raise TransferError("%s does not exist — nothing to persist" % p)
-    uri = push(p.name, p, repo, private=True, subdir=subdir)
+    name = as_name or p.name
+    # ⛔ `dest_name` is what actually places the file; `name` only labels the
+    # commit. See push_durable's docstring — passing only `name` here was a
+    # silent no-op that would have left the collision in place.
+    uri = push(name, p, repo, private=True, subdir=subdir, dest_name=name)
     if not uri:
-        raise TransferError("%s reported no durable URI after upload" % p.name)
+        raise TransferError("%s reported no durable URI after upload" % name)
     led = read_ledger(root)
-    led.setdefault("_run_files", {})[p.name] = {
+    led.setdefault("_run_files", {})[name] = {
         "sha256": sha256_local(p), "bytes": p.stat().st_size, "uri": uri}
     write_ledger(root, led)
     return uri
@@ -624,19 +637,52 @@ def cmd_flush(a):
     # ⭐ So the flush now sweeps what the run was FOR, by pattern rather than by
     # name, and `tests/test_flush_sweeps_the_measurement.py` asserts each
     # pattern against a real reading filename from a fired run.
-    candidates = []
+    # ⛔⛔ SIXTH INSTANCE, AND THIS ONE MATCHED NOTHING AT ALL. `glob` is ONE
+    # LEVEL. `weight_delta*.json` and `factorial.json` are both in the list
+    # above and both are written by the trainer into `$ROOT/model_<cell>/`, one
+    # directory DOWN — so for every full-weight run in this campaign those two
+    # patterns swept zero files and said nothing about it. With
+    # `PERSIST_WEIGHTS=0` the model directory dies with the box, which made the
+    # §4.1 weight-delta evidence and the ENTIRE dose measure
+    # (`delta_norm_estimated`, `n_trainable_params`) one termination away from
+    # never having existed. Caught 2026-09-16 only because the box outlived the
+    # run by five hours on a separate bug.
+    #
+    # ⭐ `rglob` is the fix, and the nested name carries its directory so a
+    # basename shared across levels cannot overwrite itself in the repo or in
+    # the ledger. ⭐ And an empty pattern is now REPORTED — a sweep that matches
+    # nothing is the failure this function keeps having, so it may not be
+    # silent. `tests/test_readings_carry_their_config.py` asserts it against a
+    # real run tree.
+    seen, candidates, empty = set(), [], []
     for pattern in FLUSH_PATTERNS:
-        candidates += sorted(root.glob(pattern))
-    candidates += [root / "manifest.json", root / "watchdog.log"]
+        hits = sorted(p for p in root.rglob(pattern) if p.is_file())
+        if not hits:
+            empty.append(pattern)
+        for p in hits:
+            if p not in seen:
+                seen.add(p)
+                candidates.append(p)
+    for extra in (root / "manifest.json", root / "watchdog.log"):
+        if extra not in seen:
+            seen.add(extra)
+            candidates.append(extra)
+    if empty:
+        # ⛔ Not a failure — a run legitimately has no `mapping_moved.json` at
+        # layer scope. But it is never nothing, so it is said out loud.
+        print("  ⓘ flush: %d pattern(s) matched no file under %s: %s"
+              % (len(empty), root, ", ".join(empty)))
     for p in candidates:
         if not p.exists():
             continue
+        rel = p.relative_to(root).as_posix()
         try:
             print("  flushed %s -> %s"
-                  % (p.name, persist_file(root, p, a.repo, subdir=root.name)))
+                  % (rel, persist_file(root, p, a.repo, subdir=root.name,
+                                       as_name=rel)))
         except Exception as e:                                  # noqa: BLE001
             print("  ⛔ flush FAILED for %s: %s: %s"
-                  % (p.name, type(e).__name__, e), file=sys.stderr)
+                  % (rel, type(e).__name__, e), file=sys.stderr)
     return 0
 
 
@@ -750,7 +796,19 @@ def cmd_probe(a):
     return 0
 
 
-def main() -> int:
+def build_parser():
+    """⭐ THE PARSER, BUILT SEPARATELY SO IT CAN BE ASKED QUESTIONS.
+
+    ⛔⛔ It was inline in `main()`, which meant the only way to find out whether
+    an invocation was well-formed was to RUN it — on a box, mid-pipeline, after
+    the training had already been paid for. That is how `flush --cell $CELL`
+    reached production: three call sites spelled it, a test asserted that exact
+    string, and argparse got the first word on 2026-09-16 by exiting 2 and
+    taking the run's end-of-run reads with it.
+
+    `tests/test_two_arm_pipeline.py` now parses every invocation in the pipeline
+    through this, so a malformed call fails in CI instead of on an H100.
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default="keyzersoze04/tlon-act2-adapters")
     ap.add_argument("--root", required=True)
@@ -792,6 +850,11 @@ def main() -> int:
                    help="e.g. 'ct-s20624/*' to restore one cell")
     q = sub.add_parser("flush"); q.set_defaults(fn=cmd_flush)
     q = sub.add_parser("probe"); q.set_defaults(fn=cmd_probe)
+    return ap
+
+
+def main() -> int:
+    ap = build_parser()
     a = ap.parse_args()
     return a.fn(a)
 

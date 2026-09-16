@@ -37,10 +37,16 @@ CELL = "ct-s20624"
 SOLO_N = 14
 
 
-def fake_push(name, path, repo, *, private=True, subdir=None):
+def fake_push(name, path, repo, *, private=True, subdir=None, dest_name=None):
     """A push that succeeds. ⛔ Returns a URI, because the code under test is
-    supposed to check for one."""
-    return "hf://%s/%s/%s" % (repo, subdir or name, pathlib.Path(path).name)
+    supposed to check for one.
+
+    ⛔ It MIRRORS `push_durable`'s destination rule exactly — `subdir/dest_name`
+    falling back to the SOURCE filename, never to `name`. A fake that placed
+    files by `name` would make the collision bug untestable here by being
+    kinder than the real thing."""
+    return "hf://%s/%s/%s" % (repo, subdir or name,
+                              dest_name or pathlib.Path(path).name)
 
 
 def build(tmp_path, *, cell=CELL, files=CELL_FILES, n_solo=SOLO_N):

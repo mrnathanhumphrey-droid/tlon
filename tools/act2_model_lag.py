@@ -110,9 +110,37 @@ def seed_surfaces(n: int, *, rng: random.Random) -> list[str]:
 #: counted. Named so the curve and the CLI cannot disagree about it.
 MIN_USABLE_TURNS = 3
 
+#: ⛔⛔ THE DECODER IS PART OF THE MEASUREMENT, NOT A SETTING AROUND IT.
+#: 2026-09-16, `epochlevB-s20624`: every in-training lag read in this campaign
+#: was taken at temperature 0.0 / 220 tokens, because the curve hands `read_lag`
+#: a backend built by `LocalBackend.adopt()`, whose defaults are **F-LOCAL's**
+#: (220, greedy — correct THERE, where the modal answer is what you want). The
+#: fold was shared; the instrument the fold ran on was not.
+#:
+#: A greedy decoder repeats content across turns because the same context yields
+#: the same continuation, so it inflates persistence at EVERY lag uniformly.
+#: Same weights, same step, two decoders:
+#:
+#:     in-training (T=0.0)  prof 2.213 1.823 1.595 1.417   lag2 z=23.858
+#:     standalone  (T=0.7)  prof 0.915 0.266 0.085 0.014   lag2 z= 4.343
+#:
+#: The first is not a weak reading of persistence, it is a reading of the
+#: decoder. It voided the entire release-vs-dose curve, and it puts the one
+#: signal that motivated the epochs lever (miscurve's epoch 2 — also an
+#: in-training read) under the same suspicion.
+#:
+#: ⭐ So the values live HERE, `read_lag` applies them to whatever backend it is
+#: handed, and it RECORDS them in its own result. A caller can override, but a
+#: caller that says nothing now gets the decoder a lag read requires rather than
+#: whatever the backend happened to be carrying.
+LAG_TEMPERATURE = 0.7
+LAG_MAX_NEW_TOKENS = 256
+
 
 def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
-             shuffles: int = 200, seed: int = 20624, verbose: bool = True) -> dict:
+             shuffles: int = 200, seed: int = 20624, verbose: bool = True,
+             temperature: float = LAG_TEMPERATURE,
+             max_new_tokens: int = LAG_MAX_NEW_TOKENS) -> dict:
     """⭐ THE WHOLE OF WHAT A RELEASE READ IS — ONE FOLD, CLI AND CURVE SHARE IT.
 
     The twin of `act2_flocal.read_rates`, and extracted for the same reason: a
@@ -147,6 +175,57 @@ def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
         if verbose:
             print(msg)
 
+    # ⛔⛔ GREEDY IS NOT A LOW TEMPERATURE, IT IS A DIFFERENT MEASUREMENT.
+    # `do_sample = temperature > 0` in every backend here, so temperature 0
+    # makes the speaker deterministic and the profile measures the decoder.
+    # This is the only setting the read cannot survive, so it is refused
+    # outright rather than recorded and regretted.
+    if not temperature or temperature <= 0:
+        raise ValueError(
+            "⛔⛔ read_lag(temperature=%r) is GREEDY decoding. A lag profile "
+            "measures whether CONTENT persists across turns; a deterministic "
+            "speaker repeats content because the same context yields the same "
+            "continuation, which inflates every lag uniformly and measures the "
+            "decoder instead. This exact call voided the release-vs-dose curve "
+            "on 2026-09-16. Pass temperature > 0 (the lag read's own default "
+            "is %.2f)." % (temperature, LAG_TEMPERATURE))
+
+    # ⭐ THE FOLD OWNS THE INSTRUMENT FOR THE DURATION, AND PUTS IT BACK.
+    # The mid-run curve BORROWS a live backend (`LocalBackend.adopt`) that the
+    # trainer owns and that F-LOCAL reads through at its own settings, so this
+    # must restore exactly what it found — the same discipline `isolated_read`
+    # applies to training mode and RNG state, for the same reason.
+    prior_t = getattr(backend, "temperature", None)
+    prior_n = getattr(backend, "max_new_tokens", None)
+    backend.temperature = temperature
+    backend.max_new_tokens = max_new_tokens
+    try:
+        m = _read_lag_inner(backend, chains=chains, turns=turns,
+                            max_lag=max_lag, shuffles=shuffles, seed=seed,
+                            say=say)
+    finally:
+        if prior_t is not None:
+            backend.temperature = prior_t
+        if prior_n is not None:
+            backend.max_new_tokens = prior_n
+
+    # ⛔⛔ RECORDED BY THE FOLD, NOT BY THE CALLER. `main()` used to add these as
+    # provenance, which meant the CLI's readings carried their decoder and the
+    # curve's readings carried nothing — so the rows that were WRONG were also
+    # the rows with no evidence of being wrong. Now every lag row from every
+    # caller states the decoder it was taken with, and
+    # `tests/test_readings_carry_their_config.py` asserts it against what a lag
+    # read requires.
+    m["temperature"] = temperature
+    m["max_new_tokens"] = max_new_tokens
+    m["decoder_sampled"] = True
+    return m
+
+
+def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say):
+    """The body of `read_lag`. Split out only so the decoder that `read_lag`
+    installs is guaranteed to be restored on every exit path, including the
+    refusals and the early `UNSCOREABLE` return."""
     torch_seeded = False
     try:
         import torch
@@ -310,7 +389,8 @@ def main() -> int:
     # measurement is the wiring class that has already cost this campaign four
     # instances and one halted run.
     m = read_lag(backend, chains=a.chains, turns=a.turns, max_lag=a.max_lag,
-                 shuffles=a.shuffles, seed=a.seed)
+                 shuffles=a.shuffles, seed=a.seed,
+                 temperature=a.temperature, max_new_tokens=a.max_new_tokens)
     if m["chains_used"] == 0:
         raise SystemExit("⛔⛔ " + m["refusal_reason"])
 
@@ -327,7 +407,10 @@ def main() -> int:
         "object": obj, "object_kind": kind,
         "measurement_category": "_w" if kind == "full_weight" else "_ctx",
         "four_bit": a.four_bit,
-        "temperature": a.temperature, "max_new_tokens": a.max_new_tokens,
+        # ⛔ `temperature` / `max_new_tokens` are NOT set here any more. They are
+        # the measurement's, and `read_lag` records them — a caller that also
+        # wrote them could disagree with the decoder actually used, which is the
+        # precise failure this arc is fixing.
         "INSTRUMENT": "tlon.discourse.transient — the same functions the corpus "
                       "was gated on, imported not re-spelt",
     })

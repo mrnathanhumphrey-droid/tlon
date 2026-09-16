@@ -443,16 +443,32 @@ PY
 step persist_leg1            # SCOPE: any
 # ⭐ BEFORE the reads, not after. The object is ~13 GiB that cost H100-hours; a
 # fault in the read should cost the read and not the weights.
+#
+# ⛔⛔ AND A FAULT IN *THIS* STEP MUST NOT COST THE READS EITHER — WHICH IS
+# EXACTLY WHAT IT DID. 2026-09-16, `epochlevB-s20624`: the `flush` branch below
+# was written `flush --cell $CELL`, and `flush` takes no `--cell`. argparse
+# exited 2, `pipefail` carried it through `tee`, `set -e` aborted the run — and
+# 3,760 clean training steps ended with NO F-LOCAL, NO lag profile, NO dose
+# check and NO verdict, all of which then had to be recovered by hand from a
+# box that should already have been terminated.
+#
+# Two changes, because either alone would have left the hole:
+#   1. the `--cell` is gone (it was never a flush argument);
+#   2. BOTH branches are now non-fatal, like `persist_reads` below already was.
+#      A bookkeeping step standing upstream of the measurement must never be
+#      able to take the measurement down with it. The EXIT trap still flushes.
 if [ "$PERSIST_WEIGHTS" = "1" ]; then
   $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-      full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG
+      full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG \
+      || echo "  ⚠️ persist_leg1 failed — the reads continue; the EXIT trap will flush" | tee -a $LOG
 else
   # ⭐ THE READINGS STILL GO, AND THEY GO HERE TOO — not only from the trap.
   # The trap is the guarantee on FAILURE paths; a success path that persisted
   # nothing until the very end would leave the whole run resting on one exit.
   echo "  PERSIST_WEIGHTS=0 — flushing readings instead of the model." | tee -a $LOG
   $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-      flush --cell $CELL 2>&1 | tee -a $LOG
+      flush 2>&1 | tee -a $LOG \
+      || echo "  ⚠️ persist_leg1 flush failed — the reads continue; the EXIT trap will flush" | tee -a $LOG
 fi
 
 step flocal_epoch1            # SCOPE: any
@@ -610,10 +626,29 @@ if [ "$PERSIST_WEIGHTS" = "1" ]; then
       --corpus-manifest $ROOT/corpus_ct-s$SEED/manifest.json \
       2>&1 | tee -a $LOG || echo "  ⚠️ persist_reads failed — the EXIT trap will still flush the readings" | tee -a $LOG
 else
+  # ⛔ `flush` takes no `--cell`; the subdir comes from --root's basename.
   $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-      flush --cell $CELL \
+      flush \
       2>&1 | tee -a $LOG || echo "  ⚠️ persist_reads failed — the EXIT trap will still flush the readings" | tee -a $LOG
 fi
+
+step readings_audit            # SCOPE: any
+# ⭐⭐ ASSERT WHAT THE RUN WROTE, NOT WHAT IT WAS CONFIGURED TO WRITE.
+# Four bugs shipped on `epochlevB-s20624` (2026-09-16) past 1,988 green tests,
+# because every one of them was correct at the DECLARATION and wrong at the
+# WIRING: a persist call the tool rejects, a flush glob that matched nothing, a
+# terminator that could not name its box, and an entire lag curve read through a
+# GREEDY decoder. The only question that separates a right declaration from a
+# right result is this one, and it can only be asked of the artefacts.
+#
+# ⛔ REPORTING, NOT HALTING — DELIBERATELY, AND THIS IS A DECISION TO REVISIT.
+# `report≠gate` is a standing rule here and this step breaks it on purpose: the
+# prereg is LOCKED, the readings are already persisted by the step above, and
+# turning a new check into a new halt path mid-campaign changes what a locked
+# run does. So it is loud and it is recorded, and promoting it to a hard gate is
+# a decision to take deliberately rather than by default.
+$PY tools/act2_audit_readings.py --root $ROOT 2>&1 | tee -a $LOG \
+  || echo "  ⛔⛔ READINGS AUDIT FAILED — this run's record is incomplete or was taken with the wrong instrument. READ THE LINES ABOVE BEFORE USING ANY NUMBER FROM IT." | tee -a $LOG
 
 if [ $E1 -eq 3 ]; then
   # ⛔⛔ §4.1: the weights did not move. No row of the table may be read, and
@@ -711,8 +746,11 @@ else
     $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
         full-weight --cell $CELL --corpus-manifest $CM 2>&1 | tee -a $LOG
   else
+    # ⛔ `flush` takes no `--cell` — see persist_leg1. Non-fatal for the same
+    # reason: the epoch-2 reads must not die with a bookkeeping step.
     $PY tools/act2_box_persist.py --root $ROOT --repo $HF_REPO \
-        flush --cell $CELL 2>&1 | tee -a $LOG
+        flush 2>&1 | tee -a $LOG \
+        || echo "  ⚠️ persist_leg2 flush failed — the reads continue" | tee -a $LOG
   fi
 
   step flocal_epoch2            # SCOPE: any

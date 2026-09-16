@@ -215,6 +215,69 @@ def proc_cmdline(pid: int) -> str | None:
     return raw.replace(b"\0", b" ").decode("utf-8", "replace").strip()
 
 
+def _lambda_get(path: str, key: str):
+    """One read-only Lambda API call. ⛔ The key is never logged."""
+    import json
+    import urllib.request
+    req = urllib.request.Request(
+        "https://cloud.lambdalabs.com/api/v1/" + path,
+        headers={"Authorization": "Bearer %s" % key,
+                 "Accept": "application/json",
+                 "User-Agent": LAMBDA_UA})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.load(r)["data"]
+
+
+def resolve_instance_id(key: str) -> str:
+    """-> this box's Lambda instance id, by whatever route still works.
+
+    ⛔⛔ THIS IS WHERE THE WATCHDOG DIED. 2026-09-16, `epochlevB-s20624`: the id
+    was read as `LAMBDA_INSTANCE_ID or Path("/etc/lambda-instance-id").read_text()`,
+    the env var was unset and that file does not exist on the Lambda image, so
+    `lambda_terminate` raised `FileNotFoundError` **after** flushing and the box
+    ran on, idle, for 4 h 49 m at $3.29/h. The run had finished. The one job the
+    watchdog exists for is the one job it had never actually performed — every
+    earlier run in this campaign was terminated by hand, so this path had never
+    executed successfully even once.
+
+    ⭐ Three routes, because the first two depend on provisioning having gone
+    right and the third does not: the API knows which instance has this box's
+    address, and that is true even when the box has been told nothing about
+    itself.
+    """
+    iid = os.environ.get("LAMBDA_INSTANCE_ID")
+    if iid:
+        return iid.strip()
+    try:
+        return pathlib.Path("/etc/lambda-instance-id").read_text().strip()
+    except OSError:
+        pass
+    # ⭐ THE ROUTE THAT NEEDS NOTHING LOCAL. Match the instance whose public IP
+    # is one of ours. `hostname -I` lists private addresses too, so the public
+    # one is found by intersection rather than by picking the first.
+    import socket
+    import subprocess
+    mine = set()
+    try:
+        out = subprocess.run(["hostname", "-I"], capture_output=True,
+                             text=True, timeout=20)
+        mine |= {x for x in out.stdout.split() if x}
+    except Exception:                                          # noqa: BLE001
+        pass
+    try:
+        mine.add(socket.gethostbyname(socket.gethostname()))
+    except Exception:                                          # noqa: BLE001
+        pass
+    for inst in _lambda_get("instances", key):
+        if inst.get("ip") in mine or inst.get("private_ip") in mine:
+            return inst["id"]
+    raise RuntimeError(
+        "⛔⛔ CANNOT RESOLVE THIS INSTANCE'S ID. LAMBDA_INSTANCE_ID unset, "
+        "/etc/lambda-instance-id absent, and no running instance matches this "
+        "box's addresses (%s). The watchdog cannot terminate what it cannot "
+        "name — terminate from the hub." % (", ".join(sorted(mine)) or "none"))
+
+
 def lambda_terminate(reason: str) -> None:
     """⛔⛔ ON LAMBDA, HALTING IS NOT TERMINATING — `shutdown -h` stops the OS and
     the instance KEEPS BILLING. Only the API call ends the charge, so that is
@@ -230,8 +293,7 @@ def lambda_terminate(reason: str) -> None:
         raise RuntimeError(
             "LAMBDA_API_KEY is not set — this watchdog cannot terminate the "
             "instance, and an unterminatable watchdog is not a safety device")
-    iid = (os.environ.get("LAMBDA_INSTANCE_ID")
-           or pathlib.Path("/etc/lambda-instance-id").read_text().strip())
+    iid = resolve_instance_id(key)
     # ⛔⛔ THE USER-AGENT IS WHAT MAKES THIS WORK AT ALL. Cloudflare fronts the
     # API and 403s `Python-urllib/3.x` (error code 1010) — a browser-signature
     # block indistinguishable from an auth failure. Without it this watchdog
@@ -262,27 +324,41 @@ def terminate_reachable() -> tuple[bool, str]:
     User-Agent, which Cloudflare 403s with error code 1010 — a block that reads
     exactly like an auth failure. Every call would have failed, including the
     only one that matters.
+
+    ⛔⛔ AND IT WAS FOUND THE HARD WAY A SECOND TIME, BECAUSE THIS CHECK DID NOT
+    TRAVEL THE PATH IT CERTIFIED. It exercised the credential, the network and
+    the Cloudflare signature — and never resolved the INSTANCE ID, which is the
+    other input `lambda_terminate` needs. On 2026-09-16 it printed
+    "terminate path verified", armed, and then the terminate died on
+    `FileNotFoundError: /etc/lambda-instance-id` with the run finished and the
+    box billing for another 4 h 49 m. A green preflight for the adjacent thing.
+
+    ⭐ So it now does everything the real call does except the final POST:
+    resolves the id by the same function `lambda_terminate` uses, and confirms
+    that id is actually in the running list — so "verified" means the terminate
+    has an id, an authenticated route, and a live target.
     """
-    import urllib.error
-    import urllib.request
     key = os.environ.get("LAMBDA_API_KEY")
     if not key:
         return False, "LAMBDA_API_KEY is not set"
-    req = urllib.request.Request(
-        "https://cloud.lambdalabs.com/api/v1/instances",
-        headers={"Authorization": "Bearer %s" % key,
-                 "Accept": "application/json", "User-Agent": LAMBDA_UA},
-        method="GET")
     try:
-        with urllib.request.urlopen(req, timeout=30) as r:
-            if r.status != 200:
-                return False, "terminate API returned HTTP %s" % r.status
-    except urllib.error.HTTPError as e:
-        return False, ("terminate API unreachable: HTTP %s (1010 means the "
-                       "User-Agent was rejected, not the key)" % e.code)
+        live = {i["id"] for i in _lambda_get("instances", key)}
     except Exception as e:                                     # noqa: BLE001
-        return False, "terminate API unreachable: %s" % type(e).__name__
-    return True, "terminate path verified"
+        code = getattr(e, "code", None)
+        return False, ("terminate API unreachable: %s%s (1010 means the "
+                       "User-Agent was rejected, not the key)"
+                       % (type(e).__name__,
+                          "" if code is None else " HTTP %s" % code))
+    # ⛔ THE INPUT THE OLD CHECK NEVER TOUCHED. Same resolver as the real call,
+    # so a box that cannot name itself is refused here rather than at 3 a.m.
+    try:
+        iid = resolve_instance_id(key)
+    except Exception as e:                                     # noqa: BLE001
+        return False, "cannot resolve this instance's id: %s" % e
+    if iid not in live:
+        return False, ("resolved id %s is not in the running-instance list, so "
+                       "terminate would be a silent no-op" % iid)
+    return True, "terminate path verified — id %s resolved and live" % iid
 
 
 def observe(pid, log, done, started) -> Observation:
