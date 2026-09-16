@@ -14,6 +14,17 @@ import pathlib
 import re
 import sys
 
+# ⛔⛔ THE REFUSAL MUST BE READABLE ON THE PLATFORM IT REFUSES ON. Windows'
+# console defaults to cp1252, which cannot encode `⛔` — so the TAMPERED branch
+# raised UnicodeEncodeError while printing, and the only visible output was a
+# traceback that looks like a broken tool rather than a caught tamper. The exit
+# code was right (1, fails closed); the message a human reads was not.
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
+
 LOCK_RE = re.compile(r"^- \*\*LOCK:\*\* .*$", re.M)
 STATUS_RE = re.compile(r"^- \*\*Status:\*\* .*$", re.M)
 

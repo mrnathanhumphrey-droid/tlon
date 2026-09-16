@@ -285,3 +285,41 @@ def test_the_readings_audit_is_actually_CALLED_by_the_pipeline():
     assert CODE.index("step persist_reads") < CODE.index("act2_audit_readings.py"), (
         "the readings audit runs BEFORE the readings are persisted; it would "
         "fail on every healthy run and stop being read")
+
+
+def test_the_readings_audit_HALTS_and_does_not_merely_report():
+    """⛔⛔ PREREG_EPOCHS_LEVER §2.3 — DECLARED, HASHED, RE-LOCKED 2026-09-16.
+
+    A REPORTING gate would have printed arm B's void curve and let the run write
+    the verdict anyway. `report≠gate` is the standing rule and this is the case
+    that proves it: the gate's value is REFUSING to produce a verdict off
+    readings that do not carry their instrument.
+
+    ⛔ And the refusal must be reachable. Through `tee`, `$?` is tee's status and
+    is always 0 — the same defect that would have let a step-match refusal train
+    anyway. So the exit code must come from PIPESTATUS.
+    """
+    i = CODE.index("act2_audit_readings.py")
+    blk = CODE[i:i + 900]
+    assert "PIPESTATUS[0]" in blk, (
+        "the audit's exit code is not read from PIPESTATUS — through `tee` it "
+        "would always be 0 and the halt would be unreachable")
+    assert not re.search(r"AUDIT_RC=\$\?", blk), "reads `$?` after a pipe"
+    assert re.search(r'if \[ "\$AUDIT_RC" -ne 0 \];', blk), (
+        "nothing branches on the readings audit's exit code")
+    tail = blk[blk.index("AUDIT_RC"):]
+    assert "exit 1" in tail, (
+        "the readings audit reports and does not halt — PREREG §2.3 declares it "
+        "a hard refusal, and a report lets a void curve become a verdict")
+
+
+def test_the_audit_halt_sits_BELOW_the_flush_trap():
+    """⛔⛔ AN `exit` ABOVE THE TRAP TAKES THE RECORD WITH IT. This exact mistake
+    was made once already in this pipeline (the budget validation, byte 7067):
+    a refusal placed before `trap _flush_measurement EXIT` halts a run whose
+    readings then never leave the box. The halt must cost the verdict, never the
+    record."""
+    assert SRC.index("trap _flush_measurement EXIT") < SRC.index(
+        "act2_audit_readings.py"), (
+        "the readings audit can halt before the flush trap is armed — a refusal "
+        "would destroy the very readings it exists to protect")

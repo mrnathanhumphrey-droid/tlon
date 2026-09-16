@@ -1,8 +1,8 @@
 # PREREG — the epochs lever: does REPETITION install release beyond dose, at matched steps?
 
 - **Cell:** `epochlev-s20624` (arm B `epochlevB-s20624`, arm A `epochlevA-s20624`)
-- **LOCK:** `e76ca3a2` (sha256[:8] of draft body at lock, 2026-09-15T18:09Z)
-- **Status:** LOCKED — pre-registered. Not fired.
+- **LOCK:** `c01a2b89` (sha256[:8] of draft body at lock, 2026-09-16T21:53Z)
+- **Status:** LOCKED (re-locked `c01a2b89`, 2026-09-16, amendment §2.3). ⛔ **ARM B HAS FIRED** — trained 3,760/3,760 steps under lock `e76ca3a2`, end verdict `STOP — floored` (release FAIL lag2 `+4.343`, perceive PASS, f_local PASS), and its in-training release curve is **VOID** (§2.3). **ARM A NOT FIRED.** ⛔ `lock_prereg.py --lock` stamps "Not fired" unconditionally; that was corrected by hand here, because a re-lock during a campaign must not overwrite the record of what has already run.
 - **Fires on:** two full-weight fine-tunes, layer rung top-half,
   `mistralai/Mistral-7B-Instruct-v0.3`, LR 1e-5, **step counts matched to within
   a pre-declared 0.2 %** (§2.1), differing **only** in corpus repetition. F-LOCAL
@@ -215,6 +215,77 @@ box. `delta_snapshot.pt` is the sole exclusion, with its reason recorded.
 ⭐ And the readings are flushed on the **success** path too, not only by the exit
 trap — a run whose entire record depended on one exit path is the shape that
 nearly lost two measurements already.
+
+### 2.3 · ⛔⛔ AMENDMENT (2026-09-16): THE READINGS AUDIT IS A HARD HALT
+
+**Amended after lock `e76ca3a2`, after arm B fired and before arm A, and
+re-locked.** A run under this prereg now **REFUSES to produce a verdict** when
+either condition fails:
+
+1. **every `FLUSH_PATTERN` matched at least one real file** under the run root
+   (the scope-conditional set — `vocab_coverage.json`, `mapping_moved.json`,
+   `step_match_*.json` — is declared in `tools/act2_audit_readings.py` and may
+   be absent);
+2. **every lag reading carries the decoder it was taken with**, and that decoder
+   is `temperature = 0.7` / `max_new_tokens = 256` — the sampled decoder every
+   lag reading in this campaign was taken at.
+
+Enforced by `step readings_audit` in `tools/pipeline_fullft.sh`, which runs after
+`persist_reads` and halts the run on a non-zero exit.
+
+**⛔⛔ WHY A HALT AND NOT A REPORT, STATED AS THE FAILURE IT IS ANSWERING.** Arm B
+(`epochlevB-s20624`, 2026-09-16) trained 3,760 clean steps and wrote a
+release-vs-dose curve of five checkpoints that is **void**: every in-training lag
+read was taken through an F-LOCAL backend at **temperature 0.0 — greedy**,
+because `LocalBackend.adopt()`'s defaults are F-LOCAL's and `read_lag` inherited
+whatever backend it was handed. A deterministic speaker repeats content across
+turns *because the same context yields the same continuation*, so the profile
+measures the decoder. Same weights, same step, two decoders:
+
+```
+in-training (T=0.0)   prof 2.213 1.823 1.595 1.417   lag2 z = 23.858
+standalone  (T=0.7)   prof 0.915 0.266 0.085 0.014   lag2 z =  4.343
+```
+
+⭐ **A reporting gate would have printed that and let the run proceed to write the
+verdict anyway.** The gate's entire value is *refusing to produce a verdict off
+readings that do not carry their instrument* — a report does not refuse, only a
+halt does. Reporting-only is a smoke detector with no alarm.
+
+**⛔ AND §2.2's OWN COVERAGE CLAIM WAS TRUE AND STILL MISSED IT.** The paragraph
+above says the flush is "guarded by a **scan, not a list**" via
+`tests/test_flush_covers_every_artifact.py`. That is accurate — and the scan
+compares **names against patterns** (`fnmatch(name, pattern)`) without ever
+touching the filesystem. `weight_delta*.json` and `factorial.json` both match a
+pattern *by name* and are both written into `$ROOT/model_<cell>/`, one directory
+below where `cmd_flush` swept. **Name-matching is not path-matching**, so those
+two patterns swept zero files on every full-weight run and said nothing — which
+under `PERSIST_WEIGHTS=0` put the §4.1 evidence and the entire dose measure one
+termination away from never having existed. A scan of the declaration cannot
+substitute for a check of the artefact.
+
+**⛔ THE COST OF THIS AMENDMENT, PRE-DECLARED.** A halt here can end a run that
+has already paid for its training. That is accepted: at this point the readings
+are already persisted by `persist_reads` and by the exit trap, so a halt costs
+the *verdict*, never the *record* — and a verdict computed off readings that
+cannot be checked is worth less than no verdict, because it travels.
+
+**⛔ WHY REGISTERED RATHER THAN FLIPPED.** Adding a halt path means a locked run
+can stop for a reason its lock did not declare — the same class as the
+`EPOCH_BUDGET`-meant-LEGS collision this document already carries. So it is
+declared, hashed and re-locked rather than changed in the pipeline and
+discovered in a log.
+
+**⛔⛔ AND IT MEANS THE EPOCHS LEVER IS UNANSWERED.** §3 reads release *across
+checkpoints*, and those are exactly the reads the decoder defect voided. Arm B's
+**end-of-run** reading stands (standalone, `T=0.7`, comparable to the whole
+campaign: lag1 `+23.508`, lag2 `+4.343`, lag3 `−0.297`, lag4 `−1.799`, REFUSED)
+and **replicates** the prior Mistral layer rung at a dose 0.43 % apart
+(`3.1047e-04` vs `3.0915e-04`, lag2 `+3.972`). The rms ladder is unaffected — it
+derives from weight deltas, not the decoder — so arm A's `DOSE_CURVE_TARGETS`
+stand. But the **lever question** requires a re-run on the corrected instrument,
+and the signal that motivated this arm (miscurve's epoch 2) was *also* an
+in-training read and is now under the same suspicion.
 
 ---
 

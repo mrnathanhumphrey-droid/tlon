@@ -641,14 +641,29 @@ step readings_audit            # SCOPE: any
 # GREEDY decoder. The only question that separates a right declaration from a
 # right result is this one, and it can only be asked of the artefacts.
 #
-# ⛔ REPORTING, NOT HALTING — DELIBERATELY, AND THIS IS A DECISION TO REVISIT.
-# `report≠gate` is a standing rule here and this step breaks it on purpose: the
-# prereg is LOCKED, the readings are already persisted by the step above, and
-# turning a new check into a new halt path mid-campaign changes what a locked
-# run does. So it is loud and it is recorded, and promoting it to a hard gate is
-# a decision to take deliberately rather than by default.
-$PY tools/act2_audit_readings.py --root $ROOT 2>&1 | tee -a $LOG \
-  || echo "  ⛔⛔ READINGS AUDIT FAILED — this run's record is incomplete or was taken with the wrong instrument. READ THE LINES ABOVE BEFORE USING ANY NUMBER FROM IT." | tee -a $LOG
+# ⛔⛔ A HARD HALT, DECLARED — PREREG_EPOCHS_LEVER §2.3, re-locked 2026-09-16.
+# It reported and did not halt for exactly one commit, which was the wrong shape:
+# a REPORTING gate would have printed arm B's void curve and let the run write
+# the verdict anyway. The gate's whole value is refusing to produce a verdict off
+# readings that do not carry their instrument, and a report does not refuse.
+#
+# ⭐ THE HALT COSTS THE VERDICT, NEVER THE RECORD. `persist_reads` ran above and
+# the EXIT trap flushes regardless, so everything measured is already durable
+# before this line. What a refusal prevents is a verdict travelling on readings
+# nobody can check — which is worth less than no verdict, because it travels.
+#
+# ⛔ `${PIPESTATUS[0]}`, NOT `$?`. Through `tee` the status is tee's and is always
+# 0; that is the bug that let a step-match refusal train anyway, and it would
+# make this halt unreachable in exactly the same way.
+$PY tools/act2_audit_readings.py --root $ROOT 2>&1 | tee -a $LOG
+AUDIT_RC=${PIPESTATUS[0]}
+if [ "$AUDIT_RC" -ne 0 ]; then
+  echo "⛔⛔ READINGS AUDIT REFUSED (rc=$AUDIT_RC) — PREREG §2.3." | tee -a $LOG
+  echo "   This run's record is incomplete, or a reading was taken with the wrong" | tee -a $LOG
+  echo "   instrument. NO VERDICT IS WRITTEN. The readings above are persisted;" | tee -a $LOG
+  echo "   read the audit lines before using any number from this run." | tee -a $LOG
+  exit 1
+fi
 
 if [ $E1 -eq 3 ]; then
   # ⛔⛔ §4.1: the weights did not move. No row of the table may be read, and
