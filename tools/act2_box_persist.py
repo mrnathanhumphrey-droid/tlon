@@ -555,12 +555,100 @@ def cmd_file(a):
     return 0
 
 
+def flush_candidates(root):
+    """-> ([files the flush must push], [patterns that matched nothing]).
+
+    ⭐⭐ THE ONE SWEEP, AND IT HAS THREE CONSUMERS: the flush that pushes these
+    files, the `verify --readings` gate that certifies they arrived, and
+    `tools/act2_audit_readings.py` which asserts the run wrote them. Three
+    separate spellings of "what a run measures" is precisely the drift that has
+    already cost this campaign a voided curve — the fold was shared and the
+    instrument was not. So it is one function, and the other two call it.
+    """
+    root = pathlib.Path(root)
+    seen, candidates, empty = set(), [], []
+    for pattern in FLUSH_PATTERNS:
+        hits = sorted(p for p in root.rglob(pattern) if p.is_file())
+        if not hits:
+            empty.append(pattern)
+        for p in hits:
+            if p not in seen:
+                seen.add(p)
+                candidates.append(p)
+    # ⛔⛔ EXISTENCE-FILTERED, AND THAT IS NOT COSMETIC. These two were appended
+    # unconditionally, so an EMPTY run directory still returned two candidates —
+    # and `verify --readings`, whose emptiness check is the thing standing
+    # between a measured-nothing run and a `~/DONE`, saw a non-empty list and
+    # certified it. A vacuous pass introduced by the very function written to
+    # close vacuous passes; caught by
+    # `test_an_EMPTY_run_cannot_certify_itself`. The flush already skipped
+    # absent files, so filtering here costs nothing and removes the trap at its
+    # source rather than in one caller that happened to notice.
+    for extra in (root / "manifest.json", root / "watchdog.log"):
+        if extra not in seen and extra.exists():
+            seen.add(extra)
+            candidates.append(extra)
+    return candidates, empty
+
+
+def unpersisted_readings(root) -> list:
+    """-> the measured files that are NOT recorded as durable in the ledger.
+
+    ⛔⛔ THE GATE FOR A RUN WHOSE DELIVERABLE IS ITS READINGS. Under
+    `PERSIST_WEIGHTS=0` (PREREG_EPOCHS_LEVER §2.2) no cell is ever persisted —
+    deliberately, because the weights are a by-product this experiment never
+    re-reads. `unpersisted()` asks whether the CELL's adapter files arrived, so
+    it refused every such run: `epochlevB2` and `epochlevA` both trained
+    cleanly, passed the readings audit, flushed everything, and still recorded
+    as NOT PERSISTED with no `~/DONE`, so the watchdog killed them instead of
+    seeing a clean finish. A guard checking for an artifact the config
+    deliberately never writes — the fifth instance of that class in one arc, and
+    the second caused by §2.2 specifically.
+
+    ⛔ THE FIX IS NOT TO SKIP THE CHECK. `~/DONE` means PERSISTED, never
+    COMPUTED — that distinction is the whole reason this module exists, and
+    `retrain12` lost 84 transcripts to the other meaning. So the check is not
+    weakened, it is REPOINTED: the deliverable is the readings, therefore the
+    readings are what must be durable.
+    """
+    root = pathlib.Path(root)
+    have = (read_ledger(root).get("_run_files") or {})
+    missing = []
+    for p in flush_candidates(root)[0]:
+        if not p.exists():
+            continue
+        rel = p.relative_to(root).as_posix()
+        # ⛔ Accept either spelling: nested files are ledgered under their
+        # relative path, older top-level entries under the bare name.
+        if not ((have.get(rel) or {}).get("uri")
+                or (have.get(p.name) or {}).get("uri")):
+            missing.append(rel)
+    return missing
+
+
 def cmd_verify(a):
     """⛔⛔ THE GATE THE PIPELINE RUNS BEFORE `touch ~/DONE`.
 
     This is the whole point of the module. `~/DONE` is a claim that the run's
     output is safe, and until this exits 0 that claim is false.
     """
+    if a.readings:
+        # ⛔ An empty sweep must REFUSE, for the same reason an empty cell list
+        # does: `all([])` is True, and a run that measured nothing would
+        # certify itself.
+        found, _ = flush_candidates(a.root)
+        if not found:
+            print("⛔⛔ no readings found under %s — refusing to certify a run "
+                  "with no output" % a.root, file=sys.stderr)
+            return 1
+        bad = unpersisted_readings(a.root)
+        if bad:
+            print("⛔⛔ READINGS NOT PERSISTED: %s — refusing to mark the run "
+                  "done" % ", ".join(bad), file=sys.stderr)
+            return 1
+        print("  ✅ all %d readings verified in durable storage" % len(found))
+        return 0
+
     cells = a.cells.split()
     if not cells:
         # ⛔ `all([])` is True. An empty cell list must REFUSE, or a pipeline
@@ -654,19 +742,7 @@ def cmd_flush(a):
     # nothing is the failure this function keeps having, so it may not be
     # silent. `tests/test_readings_carry_their_config.py` asserts it against a
     # real run tree.
-    seen, candidates, empty = set(), [], []
-    for pattern in FLUSH_PATTERNS:
-        hits = sorted(p for p in root.rglob(pattern) if p.is_file())
-        if not hits:
-            empty.append(pattern)
-        for p in hits:
-            if p not in seen:
-                seen.add(p)
-                candidates.append(p)
-    for extra in (root / "manifest.json", root / "watchdog.log"):
-        if extra not in seen:
-            seen.add(extra)
-            candidates.append(extra)
+    candidates, empty = flush_candidates(root)
     if empty:
         # ⛔ Not a failure — a run legitimately has no `mapping_moved.json` at
         # layer scope. But it is never nothing, so it is said out loud.
@@ -834,8 +910,17 @@ def build_parser():
     q.add_argument("--path", required=True)
     q.add_argument("--subdir", required=True)
     q = sub.add_parser("verify"); q.set_defaults(fn=cmd_verify)
-    q.add_argument("--cells", required=True,
+    # ⛔ `--cells` was `required=True`, which is why a PERSIST_WEIGHTS=0 run had
+    # no way to certify itself except by naming a cell it deliberately never
+    # persisted. Exactly one of the two modes is required, so neither can be
+    # forgotten and the run cannot certify itself by naming nothing.
+    g = q.add_mutually_exclusive_group(required=True)
+    g.add_argument("--cells",
                    help="space-separated cell labels, e.g. 'ct-s20624'")
+    g.add_argument("--readings", action="store_true",
+                   help="certify the READINGS are durable instead of the "
+                        "cells — for runs whose deliverable is the "
+                        "measurement (PERSIST_WEIGHTS=0)")
     q = sub.add_parser("tree"); q.set_defaults(fn=cmd_tree)
     q.add_argument("--dir", default=None, help="subdirectory of --root")
     q.add_argument("--name", required=True, help="archive basename")

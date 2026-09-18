@@ -234,23 +234,53 @@ def test_the_decoder_is_restored_even_when_the_read_RAISES(monkeypatch):
     assert (b.temperature, b.max_new_tokens) == (0.0, 220)
 
 
-def test_the_audit_sweep_uses_THE_SAME_recursion_as_the_flush():
-    """⛔⛔ If this tool's sweep and the real flush ever disagree, the tool
-    certifies a sweep that does not happen — which is precisely the class of
-    bug it exists to catch, one level out. Asserted on the SOURCE, because a
-    behavioural check would need a live hub."""
+def test_the_sweep_has_exactly_ONE_definition_and_three_callers():
+    """⛔⛔ THERE MUST NOT BE A SECOND SPELLING OF 'WHAT A RUN MEASURES'.
+
+    This test used to assert that `cmd_flush` and the audit's `sweep` BOTH
+    called `rglob` — i.e. it kept two copies honest instead of there being one
+    copy. That is the weaker arrangement: the copies can agree on recursion and
+    still diverge on anything else, and a source-level assertion only catches
+    the one dimension it names. It is the same shape as
+    `test_lag_read_is_one_fold` proving the fold was shared while the INSTRUMENT
+    the fold ran on drifted.
+
+    ⭐ `flush_candidates` is now the single definition, with three consumers:
+    the flush that pushes the files, the `verify --readings` gate that certifies
+    they arrived, and this audit. Asserted structurally — each caller must
+    DELEGATE, and none may re-implement the walk.
+    """
     import ast
     import inspect
     import act2_box_persist as BP
-    flush = ast.parse(inspect.getsource(BP.cmd_flush))
-    calls = {n.func.attr for n in ast.walk(flush)
-             if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)}
-    assert "rglob" in calls, "cmd_flush no longer recurses"
-    assert "glob" not in calls, "cmd_flush is sweeping ONE LEVEL again"
-    audit = ast.parse(inspect.getsource(A.sweep))
-    acalls = {n.func.attr for n in ast.walk(audit)
-              if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)}
-    assert "rglob" in acalls and "glob" not in acalls
+
+    def calls_of(fn):
+        t = ast.parse(inspect.getsource(fn))
+        out = set()
+        for n in ast.walk(t):
+            if isinstance(n, ast.Call):
+                f = n.func
+                out.add(f.id if isinstance(f, ast.Name) else
+                        f.attr if isinstance(f, ast.Attribute) else "")
+        return out
+
+    # the one definition still recurses
+    assert "rglob" in calls_of(BP.flush_candidates), \
+        "flush_candidates no longer recurses — nested readings sweep nothing"
+    assert "glob" not in calls_of(BP.flush_candidates), \
+        "flush_candidates is sweeping ONE LEVEL again"
+
+    # and every consumer delegates rather than re-walking
+    for fn, who in ((BP.cmd_flush, "cmd_flush"),
+                    (BP.unpersisted_readings, "unpersisted_readings"),
+                    (A.sweep, "the audit's sweep")):
+        c = calls_of(fn)
+        assert "flush_candidates" in c, (
+            "%s does not call flush_candidates — a second spelling of what a "
+            "run measures is how the flush and the audit come to disagree"
+            % who)
+        assert "rglob" not in c and "glob" not in c, (
+            "%s walks the tree itself instead of delegating" % who)
 
 
 # ── the row must carry what the fold recorded ──────────────────────────────
@@ -310,3 +340,157 @@ def test_the_decoder_REACHES_the_row_not_only_the_fold(monkeypatch):
             "%r does not survive into the dose-curve row; the audit gate would "
             "read NO DECODER RECORDED and refuse the run" % k)
     assert row_lag["temperature"] == ML.LAG_TEMPERATURE
+
+
+# ── BUG 5 · a guard demanding an artifact the config never writes ───────────
+
+def _ledger(root, entries):
+    (root / "persist_ledger.json").write_text(
+        json.dumps({"_run_files": entries}), encoding="utf-8")
+
+
+def test_a_PERSIST_WEIGHTS_0_run_can_CERTIFY_ITSELF(tmp_path):
+    """⛔⛔ THE FIFTH BUG, AND BOTH ARMS HIT IT. `verify --cells` asks whether
+    the CELL's adapter files arrived; under PERSIST_WEIGHTS=0 no cell is ever
+    persisted, deliberately (PREREG §2.2). So `epochlevB2` and `epochlevA` each
+    trained cleanly, passed the readings audit, flushed everything — and still
+    recorded NOT PERSISTED with no `~/DONE`, so the watchdog killed a finished
+    run rather than seeing it finish. A guard checking for an artifact the
+    configuration deliberately never writes.
+
+    ⭐ Repointed, not skipped: the deliverable is the readings, so the readings
+    are what must be durable.
+    """
+    import act2_box_persist as BP
+    root = build_run(tmp_path)
+    found, _ = BP.flush_candidates(root)
+    _ledger(root, {p.relative_to(root).as_posix(): {"uri": "hf://x/y"}
+                   for p in found})
+    assert BP.unpersisted_readings(root) == []
+
+
+def test_a_MISSING_reading_still_REFUSES(tmp_path):
+    """⛔ The gate must not have become a rubber stamp. `~/DONE` means
+    PERSISTED, never COMPUTED — `retrain12` lost 84 transcripts to the other
+    meaning, which is the entire reason this module exists."""
+    import act2_box_persist as BP
+    root = build_run(tmp_path)
+    found, _ = BP.flush_candidates(root)
+    entries = {p.relative_to(root).as_posix(): {"uri": "hf://x/y"}
+               for p in found}
+    victim = next(k for k in entries if k.startswith("dose_curve"))
+    del entries[victim]                      # the curve never made it off the box
+    _ledger(root, entries)
+    assert victim in BP.unpersisted_readings(root)
+
+
+def test_a_reading_ledgered_WITHOUT_a_uri_is_NOT_persisted(tmp_path):
+    """⛔⛔ MEMBERSHIP IS NOT PERSISTENCE — the same reasoning `unpersisted()`
+    already applied to cells: a half-written entry must not certify itself."""
+    import act2_box_persist as BP
+    root = build_run(tmp_path)
+    found, _ = BP.flush_candidates(root)
+    entries = {p.relative_to(root).as_posix(): {"uri": "hf://x/y"}
+               for p in found}
+    victim = next(k for k in entries if k.startswith("verdict_"))
+    entries[victim] = {"sha256": "abc", "bytes": 12}      # present, no uri
+    _ledger(root, entries)
+    assert victim in BP.unpersisted_readings(root)
+
+
+def test_a_NESTED_reading_is_certified_under_its_relative_path(tmp_path):
+    """⛔ `model_<cell>/weight_delta.json` is ledgered by relative path since the
+    recursion fix. A verify that looked only at bare names would certify a run
+    whose nested readings never left the box."""
+    import act2_box_persist as BP
+    root = build_run(tmp_path, nest_weight_delta=True)
+    found, _ = BP.flush_candidates(root)
+    nested = [p.relative_to(root).as_posix() for p in found if "/" in
+              p.relative_to(root).as_posix()]
+    assert nested, "the fixture no longer nests anything — test is vacuous"
+    entries = {p.relative_to(root).as_posix(): {"uri": "hf://x/y"}
+               for p in found}
+    del entries[nested[0]]
+    _ledger(root, entries)
+    assert nested[0] in BP.unpersisted_readings(root)
+
+
+def test_an_EMPTY_run_cannot_certify_itself(tmp_path):
+    """⛔⛔ `all([])` IS TRUE. A run that measured nothing must refuse, exactly
+    as the empty cell list does — otherwise the vacuous pass moves from one
+    branch of this gate to the other."""
+    import act2_box_persist as BP
+    empty = tmp_path / "fullft_nothing"
+    empty.mkdir()
+    ns = type("A", (), {"root": str(empty), "repo": "r/x",
+                        "readings": True, "cells": None})()
+    assert BP.cmd_verify(ns) == 1
+
+
+def test_the_pipeline_uses_the_READINGS_gate_when_no_weights_are_written():
+    """⛔ A fix in the tool that the pipeline never calls is not a fix."""
+    import pathlib as _pl
+    src = _pl.Path(ROOT / "tools" / "pipeline_fullft.sh").read_text(
+        encoding="utf-8")
+    code = "\n".join(ln for ln in src.splitlines()
+                     if not ln.lstrip().startswith("#"))
+    assert "verify --readings" in code, (
+        "the pipeline never certifies its readings; a PERSIST_WEIGHTS=0 run "
+        "still cannot mark itself done")
+    assert "tlon_gate_done" in code, (
+        "the PERSIST_WEIGHTS=1 path lost its cell verification")
+    i = code.index("verify --readings")
+    assert "PERSIST_WEIGHTS" in code[max(0, i - 700):i], (
+        "the readings gate is not behind the PERSIST_WEIGHTS branch")
+
+
+# ── the GATE, not the helper ───────────────────────────────────────────────
+# ⛔⛔ THE TESTS ABOVE CALL `unpersisted_readings`. THE PIPELINE CALLS
+# `cmd_verify`. A mutant that rubber-stamped the gate — `bad = []` inside
+# cmd_verify — passed all twenty of them, because none of them travelled the
+# path the run travels. That is the same gap that let four bugs through this
+# campaign: exercise the helper, ship the caller.
+
+def _ns(root, *, readings=True, cells=None):
+    return type("A", (), {"root": str(root), "repo": "r/x",
+                          "readings": readings, "cells": cells})()
+
+
+def test_the_GATE_passes_a_fully_persisted_readings_run(tmp_path):
+    """⛔ The control: a guard that cannot pass is an outage."""
+    import act2_box_persist as BP
+    root = build_run(tmp_path)
+    found, _ = BP.flush_candidates(root)
+    _ledger(root, {p.relative_to(root).as_posix(): {"uri": "hf://x/y"}
+                   for p in found})
+    assert BP.cmd_verify(_ns(root)) == 0
+
+
+def test_the_GATE_itself_REFUSES_a_reading_that_never_left_the_box(tmp_path):
+    """⛔⛔ THE MUTATION THAT SURVIVED. `bad = []` inside cmd_verify makes the
+    gate certify anything, and `~/DONE` then means COMPUTED again — the meaning
+    that cost `retrain12` 84 transcripts. The refusal must be asserted THROUGH
+    the entry point the pipeline uses."""
+    import act2_box_persist as BP
+    root = build_run(tmp_path)
+    found, _ = BP.flush_candidates(root)
+    entries = {p.relative_to(root).as_posix(): {"uri": "hf://x/y"}
+               for p in found}
+    del entries[next(k for k in entries if k.startswith("dose_curve"))]
+    _ledger(root, entries)
+    assert BP.cmd_verify(_ns(root)) == 1
+
+
+def test_the_GATE_REFUSES_when_the_ledger_is_missing_entirely(tmp_path):
+    """⛔ No ledger at all is the state a run is in when its persist step never
+    ran — which is exactly how `epochlevB` lost its reads."""
+    import act2_box_persist as BP
+    root = build_run(tmp_path)
+    assert BP.cmd_verify(_ns(root)) == 1
+
+
+def test_the_GATE_still_REFUSES_an_empty_cell_list(tmp_path):
+    """⭐ The pre-existing branch must be untouched by the new one."""
+    import act2_box_persist as BP
+    root = build_run(tmp_path)
+    assert BP.cmd_verify(_ns(root, readings=False, cells="")) == 1

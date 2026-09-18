@@ -795,5 +795,31 @@ fi
 
 # ── 6 · THE GATE ON ~/DONE ──────────────────────────────────────────────────
 TLON_SUMMARY="⭐ ALL STAGES PASSED — 1 \`_w\` object over $EPOCHS_RUN epoch(s), PERSISTED"
-tlon_gate_done "$PY" "$ROOT" "$HF_REPO" "$CELL" \
-    "$FINAL_LAG" "$FINAL_VERDICT" "$ROOT/verdict_${CELL}_e1.json"
+if [ "$PERSIST_WEIGHTS" = "1" ]; then
+  tlon_gate_done "$PY" "$ROOT" "$HF_REPO" "$CELL" \
+      "$FINAL_LAG" "$FINAL_VERDICT" "$ROOT/verdict_${CELL}_e1.json"
+else
+  # ⛔⛔ THE DELIVERABLE IS THE READINGS, SO THE READINGS ARE WHAT MUST BE
+  # DURABLE. `tlon_gate_done` verifies CELLS, and under PERSIST_WEIGHTS=0 no
+  # cell is ever persisted — deliberately (PREREG_EPOCHS_LEVER §2.2). So it
+  # refused BOTH arms of the epochs lever: each trained cleanly, passed the
+  # readings audit, flushed everything, and still recorded NOT PERSISTED with
+  # no `~/DONE`, so the watchdog killed a finished run instead of seeing it
+  # finish. A guard demanding an artifact the config deliberately never writes.
+  #
+  # ⛔ NOT SKIPPED — REPOINTED. `~/DONE` means PERSISTED, never COMPUTED; that
+  # distinction is why this module exists and `retrain12` lost 84 transcripts
+  # to the other meaning. `verify --readings` certifies every swept reading has
+  # a durable URI in the ledger, using the SAME sweep the flush uses.
+  tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" \
+      "$FINAL_LAG" "$FINAL_VERDICT" "$ROOT/verdict_${CELL}_e1.json"
+  step verify_persisted            # SCOPE: any
+  $PY tools/act2_box_persist.py --root "$ROOT" --repo "$HF_REPO" \
+      verify --readings 2>&1 | tee -a "$LOG"
+  VR_RC=${PIPESTATUS[0]}
+  if [ "$VR_RC" -ne 0 ]; then
+    echo "⛔⛔ READINGS NOT DURABLE (rc=$VR_RC) — refusing to mark the run done." | tee -a "$LOG"
+    exit 1
+  fi
+  tlon_mark_done "$HF_REPO" "the READINGS (PERSIST_WEIGHTS=0; no cell is written)"
+fi

@@ -39,6 +39,7 @@ exit 1 = something is missing or was measured with the wrong instrument
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import pathlib
 import sys
@@ -50,7 +51,8 @@ ROOT = HERE.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from act2_box_persist import FLUSH_PATTERNS                    # noqa: E402
+from act2_box_persist import (FLUSH_PATTERNS,                  # noqa: E402
+                              flush_candidates)
 from act2_model_lag import (LAG_MAX_NEW_TOKENS,                # noqa: E402
                             LAG_TEMPERATURE)
 
@@ -67,15 +69,25 @@ SCOPE_CONDITIONAL = {
 
 
 def sweep(root: pathlib.Path) -> dict:
-    """-> {pattern: [relative paths]} using the SAME recursion the flush uses.
+    """-> {pattern: [relative paths]}, from the flush's OWN sweep.
 
-    ⛔ `rglob`, not `glob`, and that is the whole point: the non-recursive
-    version is what silently swept nothing. If this ever disagrees with
-    `cmd_flush`, this tool is certifying a sweep that does not happen.
+    ⛔⛔ THIS USED TO RE-SPELL THE SWEEP, and a re-spelling is the bug this
+    whole arc is about: the audit would then certify a sweep that is not the
+    one that runs. It had `rglob` because the flush had `rglob`, held in step
+    by a source-level assertion — a guard keeping two copies honest instead of
+    there being one copy.
+
+    ⭐ Now it delegates. `flush_candidates` is the single definition of "what a
+    run measures", shared by the flush that pushes the files, the
+    `verify --readings` gate that certifies they arrived, and this audit.
     """
-    return {p: sorted(x.relative_to(root).as_posix()
-                      for x in root.rglob(p) if x.is_file())
-            for p in FLUSH_PATTERNS}
+    found, _ = flush_candidates(root)
+    rels = [p.relative_to(root).as_posix() for p in found if p.exists()]
+    out = {}
+    for pat in FLUSH_PATTERNS:
+        out[pat] = sorted(r for r in rels
+                          if fnmatch.fnmatch(pathlib.PurePosixPath(r).name, pat))
+    return out
 
 
 def lag_rows(root: pathlib.Path) -> list[tuple[str, dict]]:
