@@ -48,7 +48,22 @@ COOKIE = "tlon_bench"
 app = FastAPI(title="Tlön", docs_url=None, redoc_url=None, openapi_url=None)
 store = ConversationStore(DB_PATH)
 speaker = Speaker()
-limiter = G.Guard()
+# ⛔⛔ THE PUBLIC DEFAULTS ARE THE DEFAULTS, and they are deliberately tight: a
+# link mailed to strangers where every request runs a 7B model. But they are not
+# right for every context, and discovering that by having the limiter silently
+# eat a local measurement is how the first acceptance run was voided — 22 turns
+# attempted, 12 admitted, two conversations empty, and the numbers looked like a
+# result rather than a rate limit.
+#
+# ⭐ OVERRIDABLE BY ENV, NOT BY EDITING THE CONSTANTS. A local harness raises
+# them for its own run; nothing about the deployed app changes, because the
+# deployed app sets none of these.
+limiter = G.Guard(
+    ip_turns=int(os.environ.get("TLON_IP_TURNS", G.IP_TURNS)),
+    ip_window_s=int(os.environ.get("TLON_IP_WINDOW_S", G.IP_WINDOW_S)),
+    global_per_day=int(os.environ.get("TLON_GLOBAL_PER_DAY",
+                                      G.GLOBAL_TURNS_PER_DAY)),
+)
 
 
 @app.on_event("startup")

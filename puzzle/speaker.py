@@ -90,11 +90,15 @@ FOUR_BIT = os.environ.get("TLON_4BIT", "1") not in ("0", "", "false", "no")
 SHAPE = "trained"
 
 #: How many past exchanges the model is shown. ⭐ THE TIME-OUT, IN TURNS.
-#: ⚠️ 8 IS A STARTING VALUE AND NOT A MEASURED ONE. Too few and convention
-#: never forms, so nothing recurs and nothing is decodable; too many and the
-#: prompt grows until the turn is slow and the oldest exchanges dominate. The
-#: right number is a reading decision — try it and move it.
-CONTEXT_TURNS = int(os.environ.get("TLON_CONTEXT_TURNS", "8"))
+#:
+#: ⛔⛔ 4, BECAUSE THAT IS THE DEPTH THE CORPUS WAS BUILT AT. This was 8 — a
+#: guess made before there was a corpus — and `runs/act2/corpus_bench` carries
+#: context at depth ≤ 4. Serving 8 would show the model a history deeper than
+#: any training row ever had, which is the ORIGINAL BUG in a new costume: the
+#: whole reason context-ON came back worse than context-OFF was a served shape
+#: the model had never seen. Train depth and serve depth are one number.
+#: `test_puzzle_context.py` asserts no built row exceeds this.
+CONTEXT_TURNS = int(os.environ.get("TLON_CONTEXT_TURNS", "4"))
 
 #: ⭐ THE OTHER HALF OF THE TIME-OUT. A bench that has gone quiet this long is
 #: over; the next thing said starts a new moment. Without it a reader returning
