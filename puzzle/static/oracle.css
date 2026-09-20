@@ -1,0 +1,592 @@
+/* resolve oracle — body elements on the apex/sportshome design system (chrome.css tokens).
+   Chrome (.bar/.ticker/.menu/.foot/.wordmark/.btn/.container) is sportshome verbatim; these
+   oracle-* classes are the ask→answer UI, prefixed so nothing collides with the chrome. */
+
+/* ⛔ REMOVED 2026-08-25: a second :root here redeclared --inset, --line,
+   --line-soft and --line-dashed as hardcoded CHARCOAL. chrome.css already owns
+   those four and theme.css now answers all four for light mode, so a local copy
+   could only drift back out of the theme. It also carried --oracle: #6E45B0, a
+   violet that is not in the palette; the accent token is the accent. */
+
+.oracle {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 72px 0 96px;
+}
+.oracle .wordmark { font-size: clamp(44px, 8vw, 80px); }
+.oracle-tagline {
+  color: var(--text-2);
+  font-size: clamp(18px, 2vw, 21px);
+  margin: 26px 0 42px;
+}
+
+/* ⛔ REMOVED 2026-08-25: the two prompts that floated in the page gutters,
+   rotated 45°. They were decoration that could cross an answer, they vanished
+   entirely below 1200px, and the questions they carried are now real rows in
+   the example ledger under the ask field, where they can be read and tapped.
+   The <a class="runner"> elements went with them; app.js now wires anything
+   carrying [data-q] to the composer. */
+
+/* ── runner background videos: mirror the detector's side-strip treatment
+   (fixed 20vw strips, fade-masked edges, right one mirrored). Opacity 60% per spec
+   (detector uses 0.4). Text + all content sit above (z-index below). ── */
+.oracle-runner {
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  /* ⛔ was a flat 26vw, which at 1440 put 100px of video UNDER each side of the
+     900px reading column: the head, the question heading and the row keys all
+     sat on a lit patch of grass. Never wider than the gutter, less 20px. */
+  width: min(26vw, calc((100vw - 940px) / 2));
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  /* .4 next to a filled panel; .22 now that the page itself is the thread and
+     text sits over the strips rather than inside a box above them */
+  opacity: 0.22;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+}
+.oracle-runner.left  { left: 0; }
+.oracle-runner.right { right: 0; transform: scaleX(-1); }
+/* below this the gutter is too narrow to hold anything but a smudge */
+@media (max-width: 1240px) { .oracle-runner { display: none; } }
+/* keep all real content (and the angled text runners) above the videos */
+main, .foot { position: relative; z-index: 1; }
+.ticker { position: relative; z-index: 2; }
+
+/* ── ask box ── */
+.oracle-ask {
+  display: flex;
+  gap: 10px;
+  text-align: left;
+}
+.oracle-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  padding: 14px 16px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.oracle-input::placeholder { color: var(--text-3); }
+.oracle-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(122, 173, 142, .18);
+}
+.oracle-ask .btn.primary { padding: 13px 22px; }
+
+/* ── the 7.5-million-year progress bar (plays on every ask) ── */
+.oracle-compute { margin: 64px auto 0; }
+.oracle-compute-label {
+  font-family: var(--mono);
+  letter-spacing: .42em;
+  font-size: 13px;
+  color: var(--accent);
+  opacity: .85;
+  margin-bottom: 18px;
+}
+.oracle-bar {
+  height: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+/* ⛔ INDETERMINATE, NOT A PERCENTAGE. /ask is a single non-streaming call, so the
+   client cannot know how far along an answer is — measured 2026-08-19, the Claude
+   call is 87-100% of wall clock and total time varies 2x question to question. The
+   previous fill was driven by a stopwatch and clamped at 98.5%, so it froze solid
+   partway through every real answer. Give this a width again only when the server
+   actually streams progress. */
+.oracle-bar-fill {
+  height: 100%;
+  width: 38%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cta-bg), var(--accent));
+  /* ⛔ was a 12px halo. The house rule is borders, not shadows, and the
+     auditor only catches text-shadow, so this one survived the first pass. */
+  animation: oracle-shuttle 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes oracle-shuttle {
+  0%   { transform: translateX(-105%); }
+  100% { transform: translateX(268%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* still moving — a frozen bar is the bug we are fixing — just calmer */
+  .oracle-bar-fill { animation-duration: 3.4s; animation-timing-function: linear; }
+}
+.oracle-years {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LAYOUT PASS 2026-08-25. Billy chose, per screen:
+     the ask       → B, "the page is the thread"
+     the answer    → B, "the briefing"
+     the front door→ C, "the one-liner"
+     the dashboard → A, "the cards" (already shipped; nothing here)
+   The three chosen screens share one surface, so they are built as one:
+   no panel, one 900px measure, and a composer stuck to the foot of the
+   SCREEN rather than the foot of a box.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── the answer body ───────────────────────────────────────────────────
+   Screen 2, option B: a short written answer set as a document, not a chat
+   bubble. Shared by the thread and the legacy answer card. */
+.oracle-answer {
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 28px 30px;
+  margin-top: 32px;
+}
+.oracle-answer-q {
+  color: var(--text-2);
+  font-size: 14px;
+  border-bottom: 1px dashed var(--line-dashed);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+.oracle-answer-q::before { content: "Q  "; color: var(--accent); font-weight: 600; }
+
+.oracle-answer-body {
+  color: var(--text); font-size: 16.5px; line-height: 1.68; text-align: left;
+}
+/* ⛔ the headings were 600-weight accent-green. They are the display face at
+   400 now, like every other heading in the family, and they carry the reading
+   colour: a whole answer of green subheads reads as a warning, not a document. */
+.oracle-answer-body h1,
+.oracle-answer-body h2,
+.oracle-answer-body h3 {
+  font-family: var(--display); font-weight: 400; color: var(--text);
+  letter-spacing: -.01em; line-height: 1.15; margin: 1.5em 0 .4em;
+}
+.oracle-answer-body h1 { font-size: 32px; }
+.oracle-answer-body h2 { font-size: 27px; }
+.oracle-answer-body h3 { font-size: 21px; }
+.oracle-answer-body > :first-child { margin-top: 0; }
+.oracle-answer-body p { margin: .8em 0; }
+.oracle-answer-body ul, .oracle-answer-body ol { margin: .6em 0; padding-left: 1.3em; }
+.oracle-answer-body li { margin: .3em 0; }
+.oracle-answer-body code {
+  font-family: var(--mono); background: var(--inset);
+  padding: 1px 5px; border-radius: 4px; font-size: .9em;
+}
+/* ⛔ was a 3px bar. Emphasis is carried in colour and rule, never in slant. */
+.oracle-answer-body blockquote {
+  border-left: 2px solid var(--accent); color: var(--text-2);
+  padding: 2px 0 2px 18px; margin: 22px 0;
+}
+
+/* A table in an answer is a table, not a boxed grid: a rule under each row,
+   digits that line up, and the header in the meta face like every other table
+   on the site. ⚠️ app.js wraps each one in .tbl-scroll — the answer column is
+   no longer a clipped box, so an unwrapped table would take the whole page
+   sideways on a phone. */
+.oracle-answer-body .tbl-scroll { overflow-x: auto; margin: 24px 0; }
+.oracle-answer-body table {
+  border-collapse: collapse; width: 100%; margin: 24px 0;
+  font-size: 14.5px; font-variant-numeric: tabular-nums;
+}
+.oracle-answer-body .tbl-scroll > table { margin: 0; min-width: 460px; }
+.oracle-answer-body th {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .13em; text-transform: lowercase; color: var(--text-3);
+  background: none; border: 0; border-bottom: 1px solid var(--line);
+  padding: 8px 12px; text-align: left; white-space: nowrap;
+}
+.oracle-answer-body td {
+  border: 0; border-bottom: 1px solid var(--line-soft);
+  padding: 11px 12px; text-align: left;
+}
+.oracle-answer-body tbody tr:last-child td { border-bottom: 0; }
+.oracle-answer-body th:not(:first-child),
+.oracle-answer-body td:not(:first-child) { text-align: right; }
+
+/* ── the bar, on a phone ───────────────────────────────────────────────
+   ⚠️ Oracle carries FOUR controls where the rest of the family carries three
+   (theme, log in, sign up, menu). At 390 the flex row squeezed them all to
+   44px and "log in" broke across two lines inside its own button.
+   The quiet log-in leaves the bar and the CTA gets its word back: nothing is
+   lost, because the drawer's foot carries log in, sign up AND account, and
+   this page's own body is a full-width "log in to use oracle" button. The
+   filled sign-up stays, because that is the one that converts.
+   ⛔ Scoped here rather than in bar.css so the shared copy of apex's bar can
+   still be diffed against the original. */
+@media (max-width: 560px) {
+  /* ⚠️ bar.css carries `.bar-tools > a:not(.bar-cta) { display: inline-flex }`
+     for the sign-in pages, which is (0,4,1) and outranks a plain class chain.
+     The attribute is what wins this outright rather than on load order. */
+  .bar.bar-v2 .bar-tools > a.bar-quiet[data-auth-out] { display: none; }
+  /* ⛔ The CTA does NOT get its word back with the room this frees. "account"
+     is wider than "sign up" and put the signed-in bar 7px over a 390 screen;
+     measured, not guessed. The icon stays, as it does everywhere else. */
+}
+
+/* ── the surface ───────────────────────────────────────────────────────
+   ⛔ This was a fixed-height panel floating on the page, with the log
+   scrolling INSIDE it: a box, inside a box, inside a page. The page is the
+   thread now. It scrolls, everything sits in one measure, and the composer
+   sticks to the bottom of the viewport. */
+main > .container { max-width: none; padding: 0; }
+
+.oracle.oracle-chat {
+  display: flex; flex-direction: column;
+  height: auto; min-height: calc(100vh - 62px);
+  max-width: none; margin: 0; padding: 0;
+  background: none; border: 0; border-radius: 0; overflow: visible;
+  text-align: left;                  /* .oracle centres everything by default */
+}
+
+/* one measure for the whole surface, so nothing steps out of line as it scrolls */
+.oracle-chat-head,
+.oracle-chat-log { width: 100%; max-width: 900px; margin: 0 auto; }
+
+.oracle-chat-head {
+  position: relative; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 20px 26px 16px;
+  background: none; border: 0;
+}
+/* the rule under the head lines up with the text, not with the column edge */
+.oracle-chat-head::after {
+  content: ""; position: absolute; left: 26px; right: 26px; bottom: 0;
+  height: 1px; background: var(--line);
+}
+.oracle-chat-head .wordmark { font-size: 21px; margin: 0; }
+/* ⛔ CONTROLS TAKE THE BODY FACE. This carried the typewriter one, which is
+   for eyebrows, keys and numbers. And `hidden` did nothing against a class
+   that sets display, so it read "new conversation" on a page with none. */
+.oracle-newthread[hidden] { display: none; }
+.oracle-newthread {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--sans); font-size: 13.5px; font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-2); background: transparent; border: 1px solid var(--line);
+  border-radius: var(--r-pill); padding: 6px 14px; cursor: pointer;
+  min-height: 44px;                  /* the tap floor; it stood 27px */
+  transition: color .15s, border-color .15s;
+}
+.oracle-newthread:hover { color: var(--accent); border-color: var(--accent); }
+
+.oracle-chat-log {
+  flex: 1 1 auto; overflow: visible;
+  display: flex; flex-direction: column; gap: 0;
+  padding: 0 26px 48px;
+}
+
+/* ── screen 1, option B: the page is the thread ────────────────────────
+   An empty log IS the ask screen. The name and the field sit in the middle of
+   the page the way a search field does, and the questions that used to float
+   in the gutters become a ledger you can read and tap.
+   ⚠️ :has() is the state signal on purpose: app.js removes #chat-empty on the
+   first question and re-inserts it on "New conversation", so the head switches
+   back and forth on its own. Where :has() is unsupported the briefing head
+   simply shows in both states, which is the safe way round. */
+.oracle-chat-empty { color: var(--text); }
+.oracle-chat:has(#chat-empty) .oracle-chat-head::after { display: none; }
+.oracle-chat:has(#chat-empty) .oracle-chat-head::before {
+  content: "the oracle";
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .17em; text-transform: lowercase; color: var(--text-3);
+}
+/* the giant mark below carries the name, so the head's heading is taken off
+   screen rather than out of the document: display:none would drop the page's
+   only <h1> out of the outline with it. */
+.oracle-chat:has(#chat-empty) .oracle-chat-head .wordmark {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+#chat-empty {
+  align-self: center; width: 100%; max-width: 780px;
+  margin: auto 0;                    /* auto margins centre it in the free space */
+  padding: 0 0 40px; text-align: center;
+}
+.ex-mark {
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(46px, 7vw, 78px); line-height: 1; letter-spacing: -.025em;
+  color: var(--text); margin: 0;
+}
+.ex-mark .s { color: var(--accent); }
+#chat-empty .oracle-tagline {
+  font-size: 17px; line-height: 1.5; color: var(--text-2); margin: 14px 0 34px;
+}
+
+.ex-label {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .17em; text-transform: lowercase; color: var(--accent);
+  display: flex; align-items: center; gap: 16px; margin: 0 0 2px;
+}
+.ex-label::before, .ex-label::after {
+  content: ""; flex: 1 1 auto; height: 1px; background: var(--line);
+}
+.ex-list { list-style: none; margin: 0; padding: 0; text-align: left; }
+.ex-list button {
+  display: flex; align-items: baseline; gap: 16px;
+  width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 0; border-bottom: 1px solid var(--line-soft);
+  padding: 15px 4px; min-height: 44px;
+  font: inherit; color: var(--text);
+  transition: background .13s, padding .13s;
+}
+.ex-list button:hover { background: var(--surface); padding-left: 10px; }
+.ex-list button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ex-list .q { flex: 1 1 auto; font-size: 16px; line-height: 1.35; }
+.ex-list .k {
+  flex: none; font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: .1em; text-transform: lowercase; color: var(--text-3);
+}
+
+/* ── screen 2, option B: the briefing ──────────────────────────────────
+   Your question is the heading; the answer is the document under it. */
+.msg { max-width: none; width: 100%; display: flex; flex-direction: column; gap: 0; }
+.msg-label { display: none; }       /* "YOU" / "ORACLE" — the layout says it now */
+
+.msg-you { align-self: stretch; align-items: stretch; margin: 46px 0 0; }
+.msg-you::before {
+  content: "you asked";
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .17em; text-transform: lowercase; color: var(--accent);
+  margin-bottom: 10px;
+}
+.msg-you .msg-text {
+  background: none; color: var(--text); padding: 0; border-radius: 0;
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(28px, 3.6vw, 40px); line-height: 1.1; letter-spacing: -.018em;
+  max-width: 24ch;
+}
+.msg-oracle { align-self: stretch; width: 100%; margin-top: 24px; }
+.msg-oracle .oracle-answer-body {
+  background: none; border: 0; border-top: 1px solid var(--line);
+  border-radius: 0; padding: 26px 0 0; max-width: 70ch;
+}
+.msg-oracle .oracle-sources { margin-top: 14px; }
+.msg.pending .oracle-compute { margin: 0; }
+.msg.pending .oracle-answer-body { padding: 26px 0 0; }
+
+/* citation refs in the body */
+.fn-ref {
+  font-size: .68em; font-weight: 500; color: var(--accent);
+  padding: 0 1px; vertical-align: super; line-height: 0;
+}
+
+/* ── the receipts, as a ledger ─────────────────────────────────────────
+   The strongest thing this product does is show its work, so the sources read
+   as a real bibliography: a number, a name you can tap, the sport it came
+   from. They stood as a 12.5px typewriter list with 15px tap targets. */
+.oracle-footnotes-wrap { margin-top: 44px; padding-top: 0; border-top: 0; max-width: 70ch; }
+.sources-title {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .17em; text-transform: lowercase; color: var(--accent);
+  display: flex; align-items: center; gap: 16px; margin: 0 0 2px;
+}
+.sources-title::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line); }
+.oracle-footnotes {
+  margin: 0; padding: 0; list-style: none; counter-reset: src;
+  font-family: var(--sans); font-size: 14px; color: var(--text-2); line-height: 1.5;
+  border-top: 1px solid var(--line);
+}
+.oracle-footnotes li {
+  counter-increment: src;
+  display: flex; align-items: baseline; gap: 16px;
+  border-bottom: 1px solid var(--line-soft); padding: 0; margin: 0;
+}
+.oracle-footnotes li::before {
+  content: counter(src); flex: none; width: 20px; text-align: right;
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.oracle-footnotes a {
+  flex: 1 1 auto; min-height: 46px; display: inline-flex; align-items: center;
+  color: var(--text-2); text-decoration: none;
+}
+.oracle-footnotes a:hover { color: var(--accent); }
+.fn-sport {
+  flex: none; font-family: var(--mono); font-size: 10px;
+  letter-spacing: .13em; text-transform: lowercase; color: var(--text-3);
+}
+
+/* per-conversation cost warning */
+.msg-warn {
+  align-self: flex-start; max-width: 70ch; margin-top: 20px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: .02em;
+  color: var(--warning-text); background: none;
+  border: 1px solid var(--warning-text); border-radius: var(--r-sm);
+  padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px;
+}
+
+/* ── the composer, at the foot of the screen ───────────────────────────
+   The field and its button travel together in one centred row that lines up
+   with the reading column, rather than the button drifting to the far edge of
+   a full-width bar. */
+.oracle-composer {
+  position: sticky; bottom: 0; z-index: 3; flex: 0 0 auto;
+  display: flex; gap: 10px; align-items: center; justify-content: center;
+  padding: 14px 26px calc(14px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+}
+.oracle-composer-input {
+  flex: 0 1 794px;                   /* 794 + 10 gap + 44 button = the 848px measure */
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 13px 18px; font-size: 16px; outline: none;
+}
+.oracle-composer-input::placeholder { color: var(--text-3); }
+.oracle-composer-input:focus { border-color: var(--accent); }
+.oracle-send {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: var(--r-sm); border: none;
+  background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 18px;
+  transition: filter .15s;
+}
+.oracle-send:hover { filter: brightness(1.1); }
+.oracle-send:disabled { opacity: .5; cursor: default; }
+
+/* ── sources (the legacy non-chat answer card) ── */
+.oracle-sources { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); }
+.source-row {
+  display: flex; align-items: baseline; gap: 10px;
+  font-family: var(--sans); font-size: 14px; color: var(--text-2); padding: 3px 0;
+}
+.src-ref { font-family: var(--mono); color: var(--accent); min-width: 36px; }
+.src-sport {
+  margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
+  text-transform: lowercase; color: var(--text-3);
+}
+/* ⛔ was italic. Emphasis is carried in colour, never in slant. */
+.src-note {
+  color: var(--text-3); font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: .08em; margin-top: 14px; text-align: left;
+}
+.answer-error { color: var(--danger-text); }
+/* the upsell is the one link that matters on this screen; it stood 20px tall */
+.answer-upsell { margin-top: 14px; }
+.answer-upsell a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+  background: var(--accent); color: var(--accent-ink);
+  border: 1px solid var(--accent); border-radius: var(--r-sm);
+  font-weight: 600; text-decoration: none;
+}
+.answer-upsell a:hover { opacity: .9; }
+
+/* ── auth state ────────────────────────────────────────────────────────
+   The oracle went public 2026-08-02. The page previously had NO logged-in
+   state at all — a hardcoded "log in" link that said "log in" forever, which
+   is why a signed-in user still looked signed out. The server stamps
+   data-auth="in"/"out" on <body> and these rules pick the right nav and the
+   right centre block. Server-rendered, so the live composer never flashes in
+   front of an anonymous visitor. */
+body[data-auth="out"] [data-auth-in] { display: none !important; }
+body[data-auth="in"]  [data-auth-out] { display: none !important; }
+/* Before the server marks the page (local dev / direct file open), show the
+   signed-out chrome — the safe default is "you are not signed in". */
+body:not([data-auth]) [data-auth-in] { display: none !important; }
+
+/* signed-out: composer and its affordances go away entirely */
+body[data-auth="out"] .oracle-composer,
+body[data-auth="out"] #new-thread,
+body[data-auth="out"] #chat-empty { display: none; }
+
+/* ── screen 3, option C: the front door ────────────────────────────────
+   No box and no demo: the same lectern the signed-in page uses, with the
+   log-in where the field would be, and the questions people ask underneath so
+   a visitor can see the range before handing over an email. The side videos
+   go: they were the only thing on this page that moved, and they were pulling
+   the eye away from the one decision it asks for. */
+body[data-auth="out"] .oracle-runner,
+body:not([data-auth]) .oracle-runner { display: none; }
+
+.oracle-chat-empty[data-auth-out] {
+  align-self: stretch; width: 100%; max-width: none;
+  margin: 0; padding: 46px 0 56px; text-align: left;
+}
+.lock-mark {
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(48px, 8vw, 86px); line-height: .98; letter-spacing: -.03em;
+  color: var(--text); margin: 0;
+}
+.lock-mark .s { color: var(--accent); }
+.oracle-chat-empty[data-auth-out] .oracle-tagline {
+  font-size: 19px; line-height: 1.5; color: var(--text-2);
+  margin: 16px 0 0; max-width: 46ch;
+}
+/* Reuses .oracle-tagline above it for the headline, so type + spacing stay
+   canon; only the supporting paragraph and CTA are new. */
+.oracle-locked-body {
+  color: var(--text-2); font-size: 16px; line-height: 1.65;
+  margin: 18px 0 28px; max-width: 58ch;
+}
+.oracle-locked-cta {
+  text-decoration: none; min-height: 50px; padding: 0 24px; font-size: 15.5px;
+}
+.oracle-locked-note { color: var(--text-3); font-size: 13.5px; margin: 18px 0 50px; }
+/* an inline link is still a tap target */
+.oracle-locked-note a {
+  color: var(--accent); text-decoration: underline; text-underline-offset: 2px;
+  display: inline-flex; align-items: center; min-height: 44px;
+}
+
+/* the question ledger is the page's second act, so its rows are set in the
+   display face rather than the body one */
+.oracle-chat-empty[data-auth-out] .ex-label::before { display: none; }
+/* ⚠️ :has(#chat-empty) borrows the ID's specificity, so the override has to
+   repeat the whole selector — an attribute on <body> alone loses to it. */
+body[data-auth="out"] .oracle-chat:has(#chat-empty) .oracle-chat-head::before,
+body:not([data-auth]) .oracle-chat:has(#chat-empty) .oracle-chat-head::before { content: none; }
+.ex-list-lg { margin: 0; border-top: 1px solid var(--line); }
+.ex-list-lg li {
+  display: flex; align-items: baseline; gap: 20px;
+  border-bottom: 1px solid var(--line-soft); padding: 19px 6px;
+}
+.ex-list-lg .q {
+  flex: 1 1 auto; font-family: var(--display); font-weight: 400;
+  font-size: 25px; line-height: 1.15; letter-spacing: -.01em; color: var(--text);
+}
+.ex-list-lg .k {
+  flex: none; font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .13em; text-transform: lowercase; color: var(--text-3);
+}
+
+@media (max-width: 780px) {
+  .ex-list button { flex-wrap: wrap; gap: 4px 16px; }
+  .ex-list .k { flex: 1 1 100%; }
+  .ex-list-lg li { flex-wrap: wrap; gap: 5px 16px; padding: 16px 4px; }
+  .ex-list-lg .q { font-size: 22px; }
+  .ex-list-lg .k { flex: 1 1 100%; }
+}
+
+@media (max-width: 620px) {
+  .oracle { padding: 44px 0 64px; }
+  .oracle-ask { flex-direction: column; }
+  .oracle-ask .btn.primary { justify-content: center; }
+  .oracle-answer { padding: 20px 18px; }
+  /* 100dvh tracks the mobile browser bar and keyboard; 62px clears the bar. */
+  .oracle.oracle-chat { min-height: calc(100dvh - 62px); }
+  .oracle-chat-head { padding: 16px 16px 14px; }
+  .oracle-chat-head::after { left: 16px; right: 16px; }
+  .oracle-chat-log { padding: 0 16px 40px; }
+  .oracle-composer { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .oracle-answer-body { font-size: 16px; }
+  .msg-you { margin-top: 36px; }
+  .msg-you .msg-text { max-width: none; }
+  .oracle-chat-empty[data-auth-out] { padding: 34px 0 44px; }
+}

@@ -1,0 +1,20 @@
+# The puzzle's serving deps. ⛔ PINNED TO WHAT WAS VERIFIED ON THE BOX THAT RAN
+# IT (2026-09-19, RTX 5070 Ti, 4-bit, 7.21 GiB peak). A float here is a
+# different model on a different day.
+#
+# ⛔ torch is NOT listed. It ships in the CUDA base image with the right CUDA
+# build baked in; a pip line here would pull a second copy against the wrong
+# runtime and the failure is an import-time CUDA error three layers down.
+transformers==5.8.1
+peft==0.19.1
+bitsandbytes==0.50.1
+accelerate==1.13.0
+safetensors>=0.4
+huggingface_hub>=0.34
+
+fastapi==0.136.1
+uvicorn[standard]==0.44.0
+pydantic>=2.7
+
+# tlon.grammar loads lexicon.yaml — the language's identity, blake2b-checked.
+PyYAML>=6.0

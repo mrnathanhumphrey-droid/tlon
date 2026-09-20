@@ -39,7 +39,7 @@ CORPUS = _DEFAULT_CORPUS
 from tlon.act2.full_weight import apply_scope as _apply_scope
 from tlon.act2.full_weight import apply_mapping_scope as _apply_mapping_scope
 from tlon.act2.collator import PositionMaskedCollator
-from tlon.act2.chat_shape import train_text
+from tlon.act2.chat_shape import bench_train_text, train_text
 from tlon.act2.weight_delta import INSTRUMENT_FAULT as _FAULT
 from tlon.act2.weight_delta import OK as _DELTA_OK
 from tlon.act2.weight_delta import (POOLED_INVALID_FOR_MAPPING
@@ -98,8 +98,33 @@ def row_to_text(row, tok) -> str:
     and was then read with one. `train_text` returns a faithful template's
     output byte-for-byte (Qwen, OLMo: unchanged) and repairs a lossy one so the
     read prompt is a literal prefix. See tlon/act2/chat_shape.py.
+
+    ⭐ A ROW CARRYING `context` IS A BENCH ROW and renders through
+    `bench_train_text`, which builds `bench_prompt(...) + answer + eos` — the
+    same `bench_prompt` the puzzle's backend serves through. That identity is
+    what makes train-shape equal serve-shape rather than merely resemble it.
+
+    ⛔ A ROW WITHOUT `context` IS UNCHANGED, BYTE FOR BYTE. Every standing run
+    in the campaign was trained through the branch below and none of them may
+    move because a product needed a new one; `test_bench_shape.py` asserts the
+    two are identical when the context is empty.
     """
-    return train_text(tok, row_messages(row))
+    ctx = row.get("context")
+    if not ctx:
+        return train_text(tok, row_messages(row))
+
+    system, user, answer = (m["content"] for m in row_messages(row))
+    direction = row.get("direction") or "write"
+    # ⛔ THE CONTEXT GOES THROUGH `row_messages` TOO. Hand-building the prior
+    # assistant turns is how the bench shipped bare surfaces where the trainer
+    # writes a JSON scene — the model stopped emitting JSON from turn two and
+    # every test stayed green.
+    pairs = []
+    for c in ctx:
+        prior = row_messages({"direction": direction, "prompt": c["prompt"],
+                              "english": c["prompt"], "scene": c["scene"]})
+        pairs.append((prior[1]["content"], prior[2]["content"]))
+    return bench_train_text(tok, system, pairs, user, answer)
 
 
 #: ⛔⛔ MEASURED ON REAL RUNS. The first version of `plan()` predicted 4.6 GiB for

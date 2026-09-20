@@ -1,0 +1,221 @@
+/* Light/dark theme — light palette + perpetual toggle.
+   Dark is the default (existing :root vars). Light kicks in when the
+   <html> element carries data-theme="light".
+   Toggle UI lives in the ticker bar on every page. */
+
+/* ─── Light-mode palette ─────────────────────────────────────────
+   Lilac bg → olive accent. Sage-palette migration 2026-06-25: was
+   orange (#e19951) before, now dark olive (#3a4722) to pair with
+   the new dark-mode sage (#c2c7b7). Body + meta purples stay —
+   dark-purple-on-lilac is highly readable. Accent-ink uses lilac
+   for high-contrast white-on-olive button text. */
+html[data-theme="light"] {
+  /* ⛔ EVERY token chrome.css declares must be answered here. --inset and
+     --line-dashed were not, so they kept their charcoal values on a lilac
+     page: the answer bubble stayed dark and its (light-themed) text scored
+     1.09:1 against it. That is the whole reason light mode was unreadable.
+
+     The ground is the old #E7D0F4 lilac diluted 50% toward white, and the
+     accent is PINE, not the retired olive #22321a. The olive was not too
+     dark (8.4:1) — it was YELLOW-green at hue 81, and the colour-wheel
+     opposite of this lilac IS yellow-green, so the two fought wherever they
+     touched. Pine is the same family rotated to hue 149, away from yellow. */
+  --bg:        #F3E8FA;
+  --surface:   #E8D7F1;
+  --surface-2: #E1CCEC;
+  --inset:     #E1CCEC;
+  --line:      #C4A5D7;
+  --line-soft: #DCCCE5;
+  --line-dashed:#B28DC9;
+
+  /* Tuned against the DARKEST surface these can land on (#E4CEED), not the
+     page, so each ratio below is the worst case rather than the best. */
+  --text:      #1F2E26;   /* 9.51:1 on inset */
+  --text-2:    #3F4C44;   /* 7.62:1 */
+  --text-3:    #4D5952;   /* 6.19:1 */
+  --text-4:    #525C56;   /* 5.86:1 */
+
+  --accent:    #28593F;   /* pine */
+  --accent-ink:#F3E8FA;
+
+  --success-text: #2B5F39;
+  --danger-text:  #854040;
+  --warning-text: #6B5110;
+}
+
+/* ─── Light-mode header chrome — lighter grey bar + ticker.
+   Each page's inline `.bar { background: rgba(26,17,36,.7) }` and
+   `.ticker { background: rgba(26,17,36,.95) }` would otherwise render as
+   a dark gray tint on the lavender page. We lighten the page bg with
+   white to put the bar/ticker ABOVE the page (lighter grey), keeping
+   the existing nav text + button styles which all read fine on this
+   tone. color-mix means an A/B palette swap auto-tracks. */
+
+html[data-theme="light"] .bar {
+  background: color-mix(in srgb, var(--bg) 55%, white 45%);
+}
+html[data-theme="light"] .ticker {
+  background: color-mix(in srgb, var(--bg) 65%, white 35%);
+}
+
+/* The ticker is positioned so the toggle can anchor inside it. */
+.ticker { position: relative; }
+
+.theme-toggle {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: .55;
+  transition: opacity .15s, background .15s, color .15s;
+}
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  opacity: 1;
+  outline: none;
+  background: rgba(0, 0, 0, .12);
+}
+html[data-theme="light"] .theme-toggle:hover,
+html[data-theme="light"] .theme-toggle:focus-visible {
+  background: rgba(0, 0, 0, .08);
+}
+.theme-toggle i { font-size: 14px; }
+
+@media (max-width: 480px) {
+  .theme-toggle { left: 6px; padding: 3px 5px; }
+  .theme-toggle i { font-size: 13px; }
+}
+
+/* ─── Skip-to-content link (injected by theme.js as first body child) ─── */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 1000;
+  padding: 12px 18px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  /* ⛔ was the platform typewriter face. This is a control, and the house
+     style puts controls in the body face; a typewriter face is for eyebrows,
+     keys and numbers. */
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  text-decoration: none;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  transition: top .2s;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+
+/* ─── Mobile toggle ──────────────────────────────────────────
+   theme.js injects a second .theme-toggle.theme-toggle-mobile
+   next to .bar .brand so phones get a comfortable tap target
+   instead of the cramped marquee one. Hidden on desktop.
+   44×44 minimum touch target. */
+.theme-toggle-mobile {
+  position: static;
+  transform: none;
+  margin-left: 8px;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  font-size: 14px;
+  display: none;          /* hidden by default; shown at mobile breakpoint */
+  opacity: .75;
+}
+.theme-toggle-mobile i { font-size: 20px; }
+
+@media (max-width: 720px) {
+  .ticker .theme-toggle { display: none; }
+  .theme-toggle-mobile  { display: inline-flex; }
+}
+
+/* ─── Video controls overlay (injected by theme.js) ──────────
+   theme.js wraps every <video> in a .video-wrap, then appends
+   .video-controls + a centered .video-bigplay button. Pause-by-
+   default — user clicks to play. At most ONE video can be unmuted
+   at a time across the page (talking-head videos share audio
+   space). */
+.video-wrap{ position: relative; width: 100%; display: block; }
+.video-wrap > video{ display: block; width: 100%; }
+
+.video-controls{
+  position: absolute; right: 8px; bottom: 8px;
+  display: flex; gap: 6px;
+  padding: 4px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .42);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity .15s;
+  pointer-events: auto;
+}
+.video-wrap:hover .video-controls,
+.video-wrap:focus-within .video-controls{ opacity: 1; }
+@media (hover: none){ .video-controls{ opacity: .85; } }
+
+.video-ctrl{
+  appearance: none; -webkit-appearance: none;
+  background: transparent; border: 0;
+  color: #fff;
+  cursor: pointer;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  transition: background .15s, color .15s;
+}
+/* Touch devices need ≥44px tap targets. */
+@media (hover: none) {
+  .video-ctrl{ width: 44px; height: 44px; }
+  .video-ctrl i{ font-size: 22px; }
+}
+.video-ctrl:hover,
+.video-ctrl:focus-visible{
+  background: rgba(255, 255, 255, .18);
+  outline: none;
+}
+.video-ctrl i{ font-size: 18px; line-height: 1; }
+
+/* Pause overlay — centered round play button when video is paused. */
+.video-wrap.is-paused::after{
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, .30), transparent 60%);
+  pointer-events: none;
+}
+.video-bigplay{
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .55);
+  color: var(--accent);
+  border: 0; cursor: pointer;
+  display: none;
+  align-items: center; justify-content: center;
+  transition: background .15s, transform .15s;
+  z-index: 2;
+}
+.video-wrap.is-paused .video-bigplay{ display: inline-flex; }
+.video-bigplay:hover{
+  background: rgba(0, 0, 0, .75);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.video-bigplay i{ font-size: 34px; line-height: 1; margin-left: 3px; }

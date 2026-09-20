@@ -295,6 +295,16 @@ def cmd_env(a):
 #: persist. A launcher nobody can use is a launcher that gets bypassed.
 PIPELINES = ("pipeline_retrain.sh", "pipeline_solo_regen.sh",
              "pipeline_positive_control.sh", "pipeline_fullft.sh",
+             # ⭐ THE PUZZLE'S BUILD, AND IT IS NOT A RESEARCH RUN. No release
+             # read, no lag curve, no dose curve, no audit gate — it trains the
+             # product's speaker on natural English and bench context and reads
+             # F-LOCAL to confirm it still speaks. It is named here rather than
+             # waved through because this list is what stops an arbitrary
+             # script running on a billing box.
+             # ⛔ It speaks the EXPANDED lexicon (218 roots), so its adapter is
+             # not comparable to the frozen-lexicon population and its
+             # `factorial.json` deliberately carries no pair key.
+             "pipeline_puzzle.sh",
              # ⭐ Re-reads a PERSISTED `_w` object: no training leg, no
              # re-persist of the weights, no epoch-2 branch. It exists because
              # Run 0 lost only its READ, and the alternative -- re-running

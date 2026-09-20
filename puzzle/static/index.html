@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ⛔ FIRST, AND INLINE. The theme must be stamped before the first paint or
+     a light-mode reader gets a dark flash. Same key as the rest of the family
+     (`rr_theme`), so a reader who chose light on resolveresearcher.com arrives
+     here already in light. -->
+<script>(function(){try{if(localStorage.getItem('rr_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
+<link rel="stylesheet" href="/assets/theme.css?v=4">
+<script src="/assets/theme.js" defer></script>
+<title>tlön — the bench</title>
+<meta name="description" content="Say anything in English. Something answers in a language with no nouns.">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- ⛔ THE HOUSE STACK, COPIED NOT CHOSEN. Didot 400-only display, Avenir Next
+     sans, Chivo Mono for eyebrows and keys — the same three faces and the same
+     fallbacks as every other surface in the family. -->
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Mulish:wght@400;500;600&family=Chivo+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/chrome.css?v=2">
+<link rel="stylesheet" href="/static/oracle.css?v=19">
+<link rel="stylesheet" href="/static/puzzle.css?v=1">
+<script src="/static/app.js?v=1" defer></script>
+</head>
+<body>
+
+<!-- ═══ PLACEHOLDER ═══ the bar. Wordmark copy and the logo are Nate's. ═══ -->
+<header class="bar">
+  <a class="brand" href="/">
+    <span class="brand-tlon" data-placeholder>tlön</span>
+  </a>
+  <nav class="nav"><!-- theme.js injects the light/dark toggle here --></nav>
+</header>
+
+<div class="container">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       THE BENCH. Class names are the Oracle's so the chat window renders
+       identically; only the copy inside differs.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="oracle oracle-chat">
+    <!-- ⛔ PLACEHOLDER VIDEO SLOTS. Two side runners, exactly the Oracle's
+         treatment. They stay hidden until a file exists at these paths, so a
+         missing asset is an absence, never a broken black rectangle.
+         Drop files at: static/assets/videos/tlon-left.mp4  (and -right.mp4) -->
+    <video class="oracle-runner left" autoplay muted loop playsinline
+           preload="auto" aria-hidden="true" tabindex="-1" data-placeholder-video>
+      <source src="/assets/videos/tlon-left.mp4" type="video/mp4"></video>
+    <video class="oracle-runner right" autoplay muted loop playsinline
+           preload="auto" aria-hidden="true" tabindex="-1" data-placeholder-video>
+      <source src="/assets/videos/tlon-right.mp4" type="video/mp4"></video>
+
+    <header class="oracle-chat-head">
+      <h1 class="wordmark" data-placeholder>tlön <span class="suffix">the bench</span></h1>
+      <button id="new-thread" class="oracle-newthread" type="button" hidden>
+        <i class="ph ph-plus"></i> New conversation</button>
+    </header>
+
+    <div id="chat-log" class="oracle-chat-log" aria-live="polite">
+      <div id="chat-empty" class="oracle-chat-empty">
+        <p class="ex-mark" aria-hidden="true" data-placeholder>tlön <span class="s">the bench</span></p>
+        <p class="oracle-tagline" data-placeholder>
+          [PLACEHOLDER — tagline] Say anything, in English.<br>
+          It will not answer what you said; it is provoked by it.
+        </p>
+
+        <!-- ═══ PLACEHOLDER — THE ONSET ═══════════════════════════════════════
+             ⛔⛔ THIS ONE IS NATE AND WILSON'S, AND IT IS THE MOST LOAD-BEARING
+             COPY ON THE PAGE. It is the crib: the opening seed that gives a
+             reader the toehold they need to start decoding. Too much and the
+             puzzle is over; too little and it reads as static.
+             Leave the markup, replace the words. ════════════════════════════ -->
+        <div class="onset" data-placeholder>
+          <p class="ex-label">the onset</p>
+          <p class="onset-body">
+            [PLACEHOLDER — the onset / the crib. The opening seed text that
+            gives the decoder a toehold. Ours to write.]
+          </p>
+        </div>
+
+        <p class="ex-label">try one of these</p>
+        <ul class="ex-list" data-placeholder>
+          <li><button type="button" data-q="I walked to the shop this morning and it started raining before I got back.">
+            <span class="q">I walked to the shop this morning and it started raining before I got back.</span>
+            <span class="k">[PLACEHOLDER — a plain day</span></button></li>
+          <li><button type="button" data-q="My sister called and we talked for an hour about nothing in particular.">
+            <span class="q">My sister called and we talked for an hour about nothing in particular.</span>
+            <span class="k">[PLACEHOLDER — a person, which it has no word for</span></button></li>
+          <li><button type="button" data-q="I could not sleep, so I sat by the window until it got light.">
+            <span class="q">I could not sleep, so I sat by the window until it got light.</span>
+            <span class="k">[PLACEHOLDER — a long slow thing</span></button></li>
+        </ul>
+      </div>
+    </div>
+
+    <form class="oracle-ask" id="ask-form" autocomplete="off">
+      <input class="oracle-input" id="ask-input" name="english" type="text"
+             maxlength="2000" placeholder="say something about your day…"
+             aria-label="Say something in English">
+      <button class="btn primary" id="ask-send" type="submit">Say it</button>
+    </form>
+    <p class="ask-note" id="ask-note" role="status"></p>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       THE COPY. Every block below is a stub. ⛔ Nate and Wilson write these —
+       the Borges frame is a voice question, not an engineering one.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="copy-deck">
+
+    <article class="copy-block" id="what" data-placeholder>
+      <p class="ex-label">what this is</p>
+      <h2 class="copy-h">[PLACEHOLDER — heading: what Tlön is]</h2>
+      <p class="copy-p">
+        [PLACEHOLDER — the Borges frame. The story, the southern hemisphere,
+        the language with no nouns. Ours to write.]
+      </p>
+      <!-- PLACEHOLDER VIDEO SLOT — drop a file at assets/videos/tlon-what.mp4 -->
+      <figure class="copy-video" data-placeholder-video>
+        <video controls playsinline preload="metadata" poster="">
+          <source src="/assets/videos/tlon-what.mp4" type="video/mp4"></video>
+        <figcaption>[PLACEHOLDER — video caption]</figcaption>
+      </figure>
+    </article>
+
+    <article class="copy-block" id="how" data-placeholder>
+      <p class="ex-label">how to use it</p>
+      <h2 class="copy-h">[PLACEHOLDER — heading: how to use it]</h2>
+      <p class="copy-p">
+        [PLACEHOLDER — type English, get Tlön back, and there is a translate
+        button on every line that will solve it for you and spoil it. Ours to
+        write.]
+      </p>
+      <figure class="copy-video" data-placeholder-video>
+        <video controls playsinline preload="metadata" poster="">
+          <source src="/assets/videos/tlon-how.mp4" type="video/mp4"></video>
+        <figcaption>[PLACEHOLDER — video caption]</figcaption>
+      </figure>
+    </article>
+
+    <article class="copy-block" id="why" data-placeholder>
+      <p class="ex-label">why</p>
+      <h2 class="copy-h">[PLACEHOLDER — heading: why this exists]</h2>
+      <p class="copy-p">
+        [PLACEHOLDER — what the puzzle is and why it exists. Ours to write.]
+      </p>
+    </article>
+
+  </section>
+</div>
+
+<footer class="puzzle-foot">
+  <p data-placeholder>[PLACEHOLDER — footer / credit / licence line]</p>
+</footer>
+
+<!-- ⛔ The reply template. Cloned by app.js rather than built from a string,
+     so nothing the model produced ever passes through innerHTML. -->
+<template id="tpl-msg">
+  <div class="msg">
+    <!-- ⛔⛔ THERE IS NO ENGLISH ELEMENT HERE AND THERE MUST NEVER BE ONE.
+         An earlier build showed the reader's own English beside its Tlön
+         rendering. That is a PARALLEL TEXT: one aligned pair per turn, handed
+         over free, and after a few turns it is a word-list. It makes the onset
+         redundant, makes the translate button pointless, and turns the puzzle
+         into a chatbot with subtitles. The ONLY sanctioned ways meaning
+         crosses into English are the onset (a controlled crib we write) and a
+         deliberate press of translate. -->
+    <div class="msg-text"></div>
+    <!-- ⛔ No "it let go" element either. It named, in English, the nouns the
+         language could not carry — free English beside a Tlön line, every
+         turn, unasked. Same leak, different name. -->
+    <div class="reveal-wrap">
+      <button class="reveal-btn" type="button">
+        <i class="ph ph-eye"></i> <span class="reveal-label">translate</span></button>
+      <div class="reveal-body" hidden>
+        <p class="reveal-line reveal-literary"></p>
+        <p class="reveal-line reveal-gloss"></p>
+        <p class="reveal-note">[PLACEHOLDER — the line that admits this spoils it]</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+</body>
+</html>

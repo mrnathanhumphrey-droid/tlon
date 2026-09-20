@@ -88,6 +88,90 @@ def read_prompt(tok, system: str, user: str) -> str:
     return "%s\n\n%s\n\n" % (system, user)
 
 
+def bench_messages(system: str, pairs, user: str) -> list[dict]:
+    """`[system] + alternating prior turns + the live user turn`.
+
+    ⭐⭐ THE BENCH IS A CONVERSATION, SO ITS CONTEXT IS CHAT TURNS AND NOT A
+    TRANSCRIPT GLUED INTO ONE MESSAGE. Flattening a history into a single user
+    message is a shape no corpus row has ever had; the alternation is what an
+    instruct base natively expects, and it leaves every individual message in
+    exactly the bare shape a training row contains.
+
+    ⛔ ONE SYSTEM MESSAGE, SO ONE DIRECTION PER THREAD. `write` and `provoke`
+    run under different system prompts and a chat template carries a single
+    system role, so mixing both into one thread would put half the exchanges
+    under a framing that does not govern them. Callers pass a
+    direction-homogeneous `pairs`.
+
+    `pairs` is `[(user_content, assistant_content), ...]` already in trained
+    form — the assistant half is a JSON scene, not a bare surface.
+    """
+    msgs = [{"role": "system", "content": system}]
+    for prior_user, prior_assistant in pairs:
+        msgs.append({"role": "user", "content": prior_user})
+        msgs.append({"role": "assistant", "content": prior_assistant})
+    msgs.append({"role": "user", "content": user})
+    return msgs
+
+
+def bench_prompt(tok, system: str, pairs, user: str) -> str:
+    """The string the BENCH sends to the model, before its answer.
+
+    ⛔⛔ THIS IS THE SERVE PATH AND THE TRAIN PATH, AND THAT IS THE WHOLE POINT.
+    The puzzle's backend calls it to build a prompt; the corpus builder calls it
+    (through `bench_train_text`) to build the training text. A second copy of
+    this construction anywhere is the bug this module was written to end — the
+    reader and the trainer drifted apart once already and cost two runs.
+
+    ⭐ AN EMPTY BENCH IS BYTE-IDENTICAL TO `read_prompt`. The first turn of every
+    conversation takes that branch, so if it differed even by a newline every
+    opening turn would be read under a prompt no measurement has ever used.
+    """
+    if not pairs:
+        return read_prompt(tok, system, user)
+    msgs = bench_messages(system, pairs, user)
+    if getattr(tok, "chat_template", None):
+        return tok.apply_chat_template(msgs, tokenize=False,
+                                       add_generation_prompt=True)
+    return "\n\n".join(m["content"] for m in msgs) + "\n\n"
+
+
+def bench_train_text(tok, system: str, pairs, user: str, answer: str) -> str:
+    """The literal string a MULTI-TURN training row becomes.
+
+    ⛔⛔ BUILT AS `bench_prompt(...) + answer + eos`, NOT by handing the full
+    message list to the template. That ordering is what makes
+    prefix-compatibility hold BY CONSTRUCTION: the text the model trains on
+    literally begins with the text the bench will send. Letting the template
+    render the assistant turn itself would reintroduce exactly the
+    shape-dependent loss that `train_text` exists to repair — Mistral's template
+    is faithful when the last message is the user's and lossy when an assistant
+    turn follows, which is the difference between these two calls.
+
+    ⛔ AND IT STILL REFUSES A TEMPLATE THAT LOSES CONTENT. Training on what
+    survived is how run 3a was lost twice.
+    """
+    prompt = bench_prompt(tok, system, pairs, user)
+    text = prompt + answer + (getattr(tok, "eos_token", "") or "")
+    lost = _missing(text, bench_messages(system, pairs, user)
+                    + [{"role": "assistant", "content": answer}])
+    if lost:
+        raise PromptShapeRefused(
+            "⛔⛔ THIS TOKENIZER'S CHAT TEMPLATE DROPS %s FROM THE BENCH SHAPE. "
+            "The model would learn a prompt the bench never sends. Fix the "
+            "template or give this base an explicit formatter — do not train."
+            % ", ".join(sorted(set(lost))))
+    return text
+
+
+def bench_prefix_compatible(tok, system: str, pairs, user: str,
+                            answer: str) -> bool:
+    """⭐ The deep invariant, extended to the bench: does training see, as a
+    LITERAL PREFIX, what the serving path will send?"""
+    return bench_train_text(tok, system, pairs, user, answer).startswith(
+        bench_prompt(tok, system, pairs, user))
+
+
 def train_text(tok, msgs) -> str:
     """The literal string a training row becomes. Loss-free or it raises.
 

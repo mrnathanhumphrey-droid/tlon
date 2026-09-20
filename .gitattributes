@@ -19,6 +19,16 @@
 # checkout from silently redefining the language.
 tlon/grammar/lexicon.yaml -text
 
+# ⛔⛔ THE EXPANDED LEXICON HAS THE SAME IDENTITY PROBLEM AND IT IS ALREADY LIVE.
+# `pipeline_puzzle.sh` refuses to train unless the loaded hash equals
+# 08c03b0a81330e4ba42883fa8b08c873, and the box clones this repo. Without this
+# line a Windows checkout rewrites its 400+ line endings, the hash moves, and
+# the preflight halts a run that is otherwise correct — or, worse on some other
+# path, a run trains against a language whose identity nobody can reproduce.
+# ⭐ Added the moment `git add` warned "LF will be replaced by CRLF" on it;
+# that warning is the only signal this failure gives before the box.
+tlon/grammar/lexicon_expanded.yaml -text
+
 # Shell pipelines are executed on Linux boxes. Never let a checkout give them
 # CRLF: `bash -n` tolerates it, and then a line like `for B in $BUILDS; do\r`
 # fails at run time on a machine that bills by the hour.

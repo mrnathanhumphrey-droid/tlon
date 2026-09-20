@@ -1,0 +1,74 @@
+# ⛔⛔ THE ORACLE'S fly.toml HAS NO [http_service] AND NO PUBLIC IP. It is
+# reachable only through a Cloudflare Tunnel, which is right for something
+# behind Access and wrong for this. Copying it would produce an app that
+# deploys clean, passes its own health check and answers nobody. Both halves of
+# the fix are below and `tests/test_puzzle_public_ingress.py` fails if either
+# disappears.
+#
+# ⛔ NOT DEPLOYED YET. `app`, the region, the GPU SKU and the volume must all be
+# settled before `fly deploy` — see puzzle/README.md §deploy. The GPU line in
+# particular is a COST decision and is Nate's, not a default.
+
+app = "tlon-bench"                 # ⛔ PLACEHOLDER — confirm before first deploy
+primary_region = "sjc"             # ⛔ PLACEHOLDER — pick for GPU availability
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  TLON_HOST = "0.0.0.0"
+  TLON_TRUST_PROXY = "1"
+  TLON_HTTPS = "1"
+  TLON_DB = "/data/bench.sqlite3"
+  HF_HOME = "/data/hf"
+  TLON_PRELOAD = "1"
+
+# ── the public door ─────────────────────────────────────────────────────────
+[http_service]
+  internal_port = 8080
+  force_https = true
+
+  # ⭐ SCALE TO ZERO. The whole point of a link mailed to a short list is that it
+  # is idle nearly all the time. A GPU machine left running is the single
+  # largest cost in this project and it is billed whether or not anyone types.
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # ⛔ ONE. Two machines means two copies of the weights and two benches that do
+  # not share a SQLite file, so a reader's conversation would vanish whenever
+  # the load balancer moved them.
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 12
+    soft_limit = 6
+
+# ⛔ A generation takes ~5-8s on the box it was measured on, and a cold start
+# adds the model load on top. The default grace is far too short for that: the
+# health check fails, Fly restarts the machine, and it never finishes loading.
+[[http_service.checks]]
+  grace_period = "180s"
+  interval = "30s"
+  method = "GET"
+  timeout = "10s"
+  path = "/healthz"
+
+# ── the weights and the bench live here ─────────────────────────────────────
+# ⛔ The base model is ~14 GB and is NOT in the image. It is pulled to this
+# volume on first boot, so an image rebuild does not re-push it. The SQLite
+# bench also lives here, which is the other reason there is exactly one machine.
+[[mounts]]
+  source = "tlon_data"
+  destination = "/data"
+  initial_size = "40gb"
+
+# ── the machine ─────────────────────────────────────────────────────────────
+# ⛔⛔ GPU SKU AND SIZE ARE UNSET ON PURPOSE. Measured need is 7.21 GiB of VRAM
+# at 4-bit plus KV cache, so the smallest available card is very likely enough —
+# but the SKU names, their VRAM and their hourly rates must be READ FROM FLY AT
+# DECISION TIME, never recalled. Fill this in with Nate after that check.
+[[vm]]
+  # gpu_kind = "<confirm at deploy time>"
+  # gpus = 1
+  memory = "8gb"
+  cpus = 4

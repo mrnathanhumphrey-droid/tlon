@@ -1,0 +1,281 @@
+/* THE PUZZLE'S OWN LAYER — everything the Oracle's chat window does not have.
+ *
+ * ⛔⛔ EVERY COLOUR HERE RESOLVES A TOKEN chrome.css ALREADY DEFINES, AND NOT
+ * ONE LITERAL HEX. That is not tidiness. chrome.css carries a ⛔ saying every
+ * token in its :root MUST have a light counterpart in theme.css, because
+ * --inset and --line-dashed once did not and the answer bubble stayed charcoal
+ * on a lilac page at 1.09:1. A literal hex in this file is that bug by another
+ * route: it cannot follow the toggle, so it is correct in exactly one theme.
+ * If this file ever needs a colour the house palette lacks, define it in BOTH
+ * places first and resolve it here second.
+ *
+ * Load order is chrome.css -> oracle.css -> theme.css -> this. Everything below
+ * either adds a class the Oracle never had, or overrides Oracle copy that names
+ * the wrong product. */
+
+/* ── the bar ─────────────────────────────────────────────────────────────── */
+.brand-tlon {
+  font-family: var(--display);
+  font-weight: 400;                 /* ⛔ Didot at 400 ONLY — never bold it. */
+  font-size: 30px;
+  letter-spacing: -.01em;
+  color: var(--text);
+  line-height: 1;
+}
+
+/* ── the chat head ───────────────────────────────────────────────────────── */
+.oracle-chat-head .wordmark .suffix { color: var(--accent); }
+
+/* ⛔ OVERRIDE, NOT EDIT-IN-PLACE. oracle.css sets this to "you asked", which
+   is the Oracle's verb and the wrong one here: you are not asking, and it is
+   not answering. Overriding leaves oracle.css byte-identical to the file it
+   was copied from, so a future diff against the site shows nothing drifted. */
+.msg-you::before { content: "you said"; }
+.msg-tlon::before {
+  content: "it answered";
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .17em;
+  text-transform: lowercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+/* ── a message ───────────────────────────────────────────────────────────── */
+.msg-tlon {
+  align-self: stretch;
+  width: 100%;
+  margin: 34px 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ⛔⛔ THERE IS NO `.msg-english` RULE AND THERE MUST NOT BE ONE. Styling for a
+   reader's-English element was the visible half of a parallel-text leak: an
+   aligned English/Tlön pair on every turn, which is a word-list after a few
+   and makes both the onset and the translate button pointless. */
+
+/* ⭐ The Tlön itself is the object on the page, so it gets the display face at
+   the size the Oracle gives its questions. This is the thing to look at. */
+.msg-tlon .msg-text,
+.msg-you .msg-text {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(26px, 3.2vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -.015em;
+  color: var(--text);
+  max-width: 22ch;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+.msg-tlon .msg-text { color: var(--accent); }
+
+.msg-refused .msg-text {
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--danger-text);
+  max-width: 62ch;
+}
+
+/* ⛔ No `.msg-let-go` rule. It styled a line of English nouns printed beside
+   every Tlön utterance, unasked — the same leak as the reader's-English
+   element above, under a friendlier name. */
+
+/* ── the translate button — the puzzle mechanic ──────────────────────────── */
+/* ⭐ Sincere and always available. It is not gated, not scored, not counted and
+   never nagged about; it costs nothing and spoils everything, and which of
+   those matters more is the reader's call, not the app's. */
+.reveal-wrap { margin-top: 16px; }
+
+.reveal-btn {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .15em;
+  text-transform: lowercase;
+  color: var(--text-3);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 7px 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: color .15s, border-color .15s;
+}
+.reveal-btn:hover:not(:disabled),
+.reveal-btn:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+  outline: none;
+}
+.reveal-btn:disabled { opacity: .5; cursor: default; }
+.reveal-btn i { font-size: 13px; }
+
+.reveal-body {
+  margin-top: 14px;
+  padding-left: 16px;
+  border-left: 2px solid var(--accent);
+  max-width: 62ch;
+}
+.reveal-line { font-family: var(--sans); margin: 0 0 6px; }
+.reveal-literary { font-size: 17px; line-height: 1.5; color: var(--text); }
+.reveal-gloss {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-3);
+}
+.reveal-note {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  color: var(--text-4);
+  margin-top: 10px;
+}
+
+/* ── the composer's status line ──────────────────────────────────────────── */
+.ask-note {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .06em;
+  color: var(--text-3);
+  min-height: 1.4em;
+  margin-top: 10px;
+}
+.ask-note.bad { color: var(--danger-text); }
+.ask-note.wait { color: var(--accent); }
+
+/* ── the onset ───────────────────────────────────────────────────────────── */
+.onset {
+  max-width: 58ch;
+  margin: 0 auto 38px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+.onset-body {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--text-2);
+  margin-top: 10px;
+}
+
+/* ── the copy deck ───────────────────────────────────────────────────────── */
+.copy-deck {
+  max-width: 70ch;
+  margin: 0 auto;
+  padding: 72px 0 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+.copy-h {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(26px, 3.4vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -.018em;
+  color: var(--text);
+  margin: 10px 0 18px;
+}
+.copy-p {
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+
+.copy-video { margin-top: 26px; }
+.copy-video video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--r);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  aspect-ratio: 16 / 9;
+}
+.copy-video figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: var(--text-4);
+  margin-top: 10px;
+}
+
+/* ⛔ A media path with nothing behind it renders as an EMPTY SLOT that says so,
+   never as a broken player. app.js adds .is-missing on a load error. */
+.copy-video.is-missing video { display: none; }
+.copy-video.is-missing::before {
+  content: "[PLACEHOLDER — video slot, asset not supplied yet]";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  border: 1px dashed var(--line-dashed);
+  border-radius: var(--r);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .08em;
+  color: var(--text-4);
+  text-align: center;
+  padding: 0 20px;
+}
+.oracle-runner.is-missing { display: none; }
+
+.puzzle-foot {
+  border-top: 1px solid var(--line);
+  padding: 26px 28px 40px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: var(--text-4);
+  text-align: center;
+}
+
+/* ── the placeholder marker ──────────────────────────────────────────────── */
+/* ⛔⛔ EVERY STUB IS VISIBLY A STUB. Unmarked placeholder copy is how lorem
+   ships: it reads as a finished sentence nobody re-read. Deleting the
+   `data-placeholder` attribute removes the treatment, so the marker disappears
+   exactly when the real words land — there is no second place to remember. */
+[data-placeholder] {
+  position: relative;
+  outline: 1px dashed var(--line-dashed);
+  outline-offset: 6px;
+  border-radius: 3px;
+}
+[data-placeholder]::after {
+  content: "placeholder";
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  transform: translateY(-100%);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: 3px;
+  padding: 2px 6px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@media (max-width: 720px) {
+  .copy-deck { padding: 48px 20px 72px; gap: 48px; }
+  .onset { margin-inline: 16px; }
+  .msg-tlon .msg-text,
+  .msg-you .msg-text { max-width: none; }
+  [data-placeholder] { outline-offset: 3px; }
+}

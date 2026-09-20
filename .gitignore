@@ -16,6 +16,14 @@ runs/act2/adapter/
 optimizer.pt
 scheduler.pt
 
+# ── THE PUZZLE'S BENCH ───────────────────────────────────────────────────
+# ⛔⛔ THIS IS OTHER PEOPLE'S CONVERSATIONS. The puzzle is a public, anonymous
+# app and `puzzle/data/*.sqlite3` is what strangers typed into it. It is not an
+# artifact, it has no scientific value, and committing it would publish it —
+# the repo is MIT and deliberately open, which makes this the one directory
+# here where "publish everything" is the wrong default.
+puzzle/data/
+
 # ── THE CORPUS ───────────────────────────────────────────────────────────
 # ⭐ 80,000 rows / ~36 MB, and FULLY REGENERABLE:
 #     python tools/act2_build_corpus.py --n 40000

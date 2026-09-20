@@ -6,12 +6,26 @@ parser, tokenizer manifest, enumeration) derives from it and from its hash.
 from __future__ import annotations
 import functools
 import hashlib
+import os
 import pathlib
 import re
 
 import yaml
 
 LEXICON_PATH = pathlib.Path(__file__).with_name("lexicon.yaml")
+
+#: ⛔⛔ THE FROZEN LEXICON IS THE DEFAULT AND STAYS THE DEFAULT. Every number in
+#: the research campaign was measured against `lexicon.yaml`
+#: (blake2b-16 e2b8527010231a81fd31b6eeb9de3d8c) and every artifact records that
+#: hash. With `TLON_LEXICON` unset this module behaves byte-for-byte as it
+#: always has — `test_lexicon_expanded.py` asserts exactly that, because an
+#: override that leaked into the default path would re-point the instrument
+#: under every standing verdict without changing a single line of their prose.
+#:
+#: ⭐ The override exists so the PUZZLE can speak a larger language without the
+#: research having to agree. Set it to a filename beside this module, or to an
+#: absolute path.
+LEXICON_ENV = "TLON_LEXICON"
 
 # Class labels, in the order they must appear in a predication (spec §4.1).
 SLOT_ORDER = ("Q", "T", "M", "O", "CLAUSE")
@@ -22,9 +36,32 @@ class LexiconError(RuntimeError):
     pass
 
 
+def lexicon_path() -> pathlib.Path:
+    """Which lexicon this process speaks.
+
+    ⛔ A MISSING OVERRIDE RAISES; IT DOES NOT FALL BACK. Silently reverting to
+    the frozen lexicon because a path was mistyped would run the puzzle on 156
+    roots while every log line said "expanded" — the run would look healthy and
+    be measuring a different language.
+    """
+    override = os.environ.get(LEXICON_ENV)
+    if not override:
+        return LEXICON_PATH
+    p = pathlib.Path(override)
+    if not p.is_absolute():
+        p = pathlib.Path(__file__).with_name(override)
+    if not p.exists():
+        raise LexiconError(
+            "%s=%r does not exist (resolved to %s). Refusing to fall back to "
+            "the frozen lexicon: a run that quietly speaks a different "
+            "language than it reports is worse than one that stops."
+            % (LEXICON_ENV, override, p))
+    return p
+
+
 @functools.lru_cache(maxsize=1)
 def load() -> dict:
-    body = LEXICON_PATH.read_bytes()
+    body = lexicon_path().read_bytes()
     lex = yaml.safe_load(body)
     lex["_hash"] = hashlib.blake2b(body, digest_size=16).hexdigest()
     _validate(lex)

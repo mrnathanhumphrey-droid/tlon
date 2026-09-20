@@ -125,13 +125,32 @@ class AnthropicProposer:
             # being corrected by the grammar, not by a paraphrase of it.
             user += (f"\n\nYour previous proposal was REFUSED by the Tlön "
                      f"parser:\n  {feedback}\nPropose a legal Scene.")
+        # ⭐⭐ THE PREFIX IS CACHED, AND IT IS MOST OF THE BILL. `SYSTEM` + the
+        # lexicon card + the tool schema measured 7,491 input tokens on a
+        # 50-seed pilot — byte-identical on every call, and $1.37 of that run's
+        # $1.54. A cache breakpoint on the system block covers everything before
+        # it (tools and system both), so a corpus build pays the prefix once per
+        # cache lifetime instead of once per seed.
+        # ⛔ CACHING CANNOT CHANGE WHAT THE MODEL RETURNS — it changes billing
+        # and latency only. The gate still decides; nothing about the proposal
+        # path moves.
         msg = self._client.messages.create(
             model=self.model, max_tokens=self.max_tokens,
-            system=SYSTEM + "\n\n" + self._card,
+            system=[{"type": "text", "text": SYSTEM + "\n\n" + self._card,
+                     "cache_control": {"type": "ephemeral"}}],
             tools=[tool], tool_choice={"type": "tool", "name": "render_scene"},
             messages=[{"role": "user", "content": user}])
-        self.usage.append({"input": msg.usage.input_tokens,
-                           "output": msg.usage.output_tokens})
+        u = msg.usage
+        self.usage.append({
+            "input": u.input_tokens,
+            "output": u.output_tokens,
+            # ⛔ These two are billed at DIFFERENT RATES from plain input and
+            # from each other, so they are recorded separately. Folding them
+            # into `input` would make the bill look ~10x larger than it is and
+            # the saving invisible.
+            "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0,
+            "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0,
+        })
         for block in msg.content:
             if getattr(block, "type", None) == "tool_use":
                 return dict(block.input)
@@ -142,12 +161,24 @@ class AnthropicProposer:
         a wrong figure is visible rather than buried in a spreadsheet."""
         inp = sum(u["input"] for u in self.usage)
         out = sum(u["output"] for u in self.usage)
+        cw = sum(u.get("cache_write", 0) for u in self.usage)
+        cr = sum(u.get("cache_read", 0) for u in self.usage)
+        # ⛔ DECLARED HERE SO A WRONG FIGURE IS VISIBLE RATHER THAN BURIED.
+        # Cache writes bill above base input and cache reads far below it; a
+        # report that priced all three the same would be wrong in both
+        # directions at once.
         price_in, price_out = 3.00, 15.00
-        usd = inp / 1e6 * price_in + out / 1e6 * price_out
+        price_cache_write, price_cache_read = 3.75, 0.30
+        usd = (inp / 1e6 * price_in + out / 1e6 * price_out
+               + cw / 1e6 * price_cache_write + cr / 1e6 * price_cache_read)
         n = max(1, len(self.usage))
         return {"calls": len(self.usage), "input_tokens": inp,
-                "output_tokens": out, "usd_total": usd, "usd_per_message": usd / n,
-                "prices_per_mtok": {"input": price_in, "output": price_out}}
+                "output_tokens": out, "cache_write_tokens": cw,
+                "cache_read_tokens": cr,
+                "usd_total": usd, "usd_per_message": usd / n,
+                "prices_per_mtok": {"input": price_in, "output": price_out,
+                                    "cache_write": price_cache_write,
+                                    "cache_read": price_cache_read}}
 
 
 class ScriptedProposer:
