@@ -30,7 +30,13 @@ source "$(dirname "$0")/pipeline_lib.sh"
 tlon_trap_init
 set -euo pipefail
 
-PY="${PY:-python}"
+# ⛔⛔ THE VENV, NOT `python`. `pipeline_retrain.sh` and `pipeline_fullft.sh`
+# both spell it this way and this file did not — so the preflight ran under the
+# box's system interpreter and died on `No module named 'transformers'` after
+# the clone, the credential write and the corpus pull had all succeeded. It
+# failed in the right place (before the watchdog, before any GPU) but for a
+# reason that had nothing to do with the run. Copy the convention that works.
+PY="${PY:-$HOME/venv/bin/python}"
 ROOT="${ROOT:-runs/act2/puzzle}"
 HF_REPO="${HF_REPO:-keyzersoze04/tlon-act2-adapters}"
 # ⛔⛔ EXPORTED, BECAUSE THE PREFLIGHT IS A CHILD PROCESS. The preflight below
