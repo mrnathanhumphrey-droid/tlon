@@ -17,9 +17,26 @@
 #      speaker was trained that context is noise, so feeding it context made
 #      replies connect LESS (0 of 3, against 3 of 4 with context off).
 #
-# The corpus now runs 8,181 natural-English pairs, 599 bench conversations at
-# 68% content carry, and 2,466 contrastive pairs for the class boundaries the
-# gate actually refused.
+# ⛔⛤ THE FIRST FIX FOR (2) DID NOT WORK AND THIS HEADER ONCE SAID IT DID.
+# It claimed "599 bench conversations at 68% content carry". RETRACTED: that
+# 68% was WORD overlap and three quarters of it was degree, tense and relator
+# particles — forms every utterance needs, so they collide by necessity. At
+# ROOT level, which is what a player decodes against, it was 9%; WITHIN a
+# conversation it ran BELOW chance (5.3% vs a 7.5% shuffled null, p=0.000).
+# The retrain bought on that number moved nothing, and the cause was one word
+# in the dialogue prompt asking for a "FRESH impression" — a different
+# happening every turn, in a language whose roots ARE happenings.
+#
+# The corpus now runs 8,181 natural-English pairs, 679 bench conversations at
+# **97.1% ROOT-carry [96.3, 97.7], root-led (R 57.7% of what carries)**, and
+# 2,466 contrastive pairs for the class boundaries the gate actually refused.
+# Carry is FORCED at build time: the reply's proposal is given the prior
+# turn's roots and must reuse one and add one.
+#
+# ⛔⛔ THAT FORCED CARRY IS PUZZLE-ONLY. It is the crib that makes the cipher
+# solvable and it is exactly the persistence the research's drift measurement
+# must not contain. Every conversation row is stamped `forced_root_carry`.
+# Never point a research pipeline at this corpus.
 #
 # ⛔⛔ THE SAFETY SCAFFOLDING IS SOURCED, NEVER COPIED. The trap, the log
 # rotation, the watchdog arming and the `~/DONE` gate were the site of both
@@ -44,7 +61,12 @@ HF_REPO="${HF_REPO:-keyzersoze04/tlon-act2-adapters}"
 # is not in a child's environment — python would `KeyError` on the FIRST line of
 # the one check standing between a mis-lexiconed corpus and eight hours of GPU.
 export MODEL="${MODEL:-Qwen/Qwen2.5-7B-Instruct}"
-export CORPUS="${CORPUS:-runs/act2/corpus_bench}"
+# ⛔⛔ THE STEERED BUILD, AND THE DIRECTORY NAME IS THE ONLY THING THAT SAYS SO.
+# Rows from the two builds are schema-identical — `source: conversation` and
+# nothing else — so a run pointed at the old path would train the 9.3%-carry
+# speaker and every number downstream would look healthy. `corpus_bench` is the
+# pre-steer build, kept as the control the seq figures below reproduce.
+export CORPUS="${CORPUS:-runs/act2/corpus_bench_steered}"
 export CELL="${CELL:-bench-s20624}"
 export SEED="${SEED:-20624}"
 export ROOT
@@ -57,11 +79,26 @@ export TLON_LEXICON="${TLON_LEXICON:-lexicon_expanded.yaml}"
 export EXPECT_LEXICON="${EXPECT_LEXICON:-08c03b0a81330e4ba42883fa8b08c873}"
 
 # ⛔⛔ seq 1024 IS A REQUIREMENT, NOT A PREFERENCE, AND THE DEFAULT WOULD VOID
-# THE RUN. Measured on this corpus: at the trainer's default seq 256, 3,698 of
-# the 4,010 context rows truncate — 92% of the multi-turn lesson cut off at the
-# END, which is where the answer is. The loss would look healthy throughout.
-#   seq  256 -> 4,292 rows truncated (27.6%)
-#   seq 1024 ->     4 rows truncated ( 0.0%)
+# THE RUN. Truncation lands at the END, where the answer is, and the loss looks
+# healthy throughout.
+#
+# ⛔⛤ RE-MEASURED 2026-09-21 ON THE STEERED CORPUS, BECAUSE THE FIGURES THAT
+# STOOD HERE WERE TAKEN ON THE PRE-STEER BUILD — 3,926 context rows against
+# this corpus's 3,149. Reading a number measured on one distribution against
+# another is the mistake this arc made four separate times. (The old line also
+# divided a train-only numerator, 3,698, by a train+eval denominator, 4,010.)
+# Measured through `act2_finetune.row_to_text` — the trainer's own composer, so
+# the string counted is the string tokenized — over train.jsonl, 14,921 rows of
+# which 3,149 carry context:
+#
+#   seq  256 -> 3,550 truncated (23.8%) · 2,878 of 3,149 context rows (91.4%)
+#   seq  512 -> 1,183 truncated ( 7.9%) · 1,183 of 3,149 context rows (37.6%)
+#   seq 1024 ->     4 truncated ( 0.0%) ·     4 of 3,149 context rows ( 0.1%)
+#
+# ⭐ The same script re-read the pre-steer corpus and reproduced its published
+# 4,292 / 27.6% / 3,698 exactly — the instrument is certified, not assumed.
+# ⚠️ The longest row is 1,081 tokens, so 4 rows still clip at 1024. seq 1536
+# clears them and costs memory the 40 GiB card does not have.
 export SEQ="${SEQ:-1024}"
 
 # ⛔ batch 2, NOT 4, ON A 40 GiB CARD. `act2_finetune.MEASURED` records run 4 as
