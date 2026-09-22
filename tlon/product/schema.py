@@ -216,6 +216,16 @@ def _node(d: dict, depth: int = 1) -> EventNode:
         raise ProposalError(
             f"{len(orient)} orientations, cap is {k['MAX_ORIENT_PER_PRED']}")
     for o in orient:
+        # ⛔⛔ NULL IS "SLOT ABSENT", AND A LIST ELEMENT HAS NO SLOT TO BE
+        # ABSENT FROM. `check` returns None early for a None value — right for
+        # `degree` or `tense`, which are optional — so `orient: [null]` passed
+        # validation with the None still in the list, and `sorted(orient)`
+        # below then raised TypeError comparing None to str. That is not a
+        # refusal, it is a crash: it killed 6 conversations mid-build and the
+        # traceback was being swallowed by a future nobody read. Same family
+        # as the two guards above, third occurrence.
+        if o is None:
+            raise ProposalError("an orientation is null; omit the slot instead")
         check("orient", "O", o)
     if len(set(orient)) != len(orient):
         raise ProposalError("an orientation is repeated on one predication")

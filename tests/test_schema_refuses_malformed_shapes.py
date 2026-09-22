@@ -87,6 +87,18 @@ DEFORMED = [
      "force": "ka"},
     {"node": {"root": "klung"}, "force": ["ka"]},
     {"node": None, "force": "ka"},
+    # ⛔⛤ THESE TWO ESCAPED THIS VERY TEST AND CRASHED A PAID BUILD.
+    # `check` returns None early for a None value — correct for an optional
+    # SLOT, meaningless for a LIST ELEMENT — so the None survived into
+    # `orient` and `sorted(orient)` raised TypeError comparing None to str.
+    # 6 conversations died mid-run. The property below was right; the corpus
+    # of shapes was one case short.
+    {"node": {"root": "klung", "orient": [None]}, "force": "ka"},
+    {"node": {"root": "klung", "orient": ["fen", None]}, "force": "ka"},
+    {"node": {"root": "klung",
+              "edges": [{"relator": "hul",
+                         "node": {"root": "klung", "orient": [None]}}]},
+     "force": "ka"},
     [], "not a proposal", 42,
 ]
 
