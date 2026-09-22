@@ -414,6 +414,74 @@ def test_the_corpus_bytes_do_not_depend_on_the_machine(tmp_path, monkeypatch):
             "so it cannot be pinned against the box that trains on it" % name)
 
 
+def test_row_matching_is_deterministic_and_keeps_whole_conversations():
+    """⭐ THE ATTRIBUTION ARM RESTS ON THE ROW COUNT ACTUALLY MATCHING.
+
+    The steered retrain changed the conversation recipe AND the row count at
+    once, so neither can be blamed. Holding the count fixed is what makes the
+    recipe the only live variable — and a selector that missed the target, or
+    that returned a different subset per run, would put the count back in the
+    frame without saying so.
+
+    ⛔ Whole conversations only. Truncating one to hit the number would invent
+    an exchange that exists in neither corpus.
+    """
+    import act2_build_multiturn_rows as M
+
+    convs = []
+    for i in range(40):
+        c = _conversation(forced_root_carry=True, recipe="puzzle_steered")
+        c["id"] = "c%d" % i
+        convs.append(c)
+    per = len(M.rows_from_conversation(convs[0], 4))
+    target = per * 7
+
+    a = M.select_to_row_target(convs, 4, target, 20624)
+    b = M.select_to_row_target(convs, 4, target, 20624)
+    assert [c["id"] for c in a] == [c["id"] for c in b], "not deterministic"
+    assert sum(len(M.rows_from_conversation(c, 4)) for c in a) == target
+    assert len(a) == 7
+
+    ids = {c["id"] for c in convs}
+    assert all(c["id"] in ids for c in a), "returned a conversation it invented"
+    for c in a:
+        assert len(M.rows_from_conversation(c, 4)) == per, (
+            "a kept conversation was truncated to fit the target")
+
+    # ⛔ A different seed must be able to pick a different subset, or "seeded"
+    # is decoration and the arm cannot be re-rolled.
+    assert [c["id"] for c in M.select_to_row_target(convs, 4, target, 999)] \
+        != [c["id"] for c in a]
+
+
+def test_omitting_the_row_target_changes_nothing(tmp_path, monkeypatch):
+    """⛔ THE FLAG MUST NOT TOUCH THE ARM THAT DOES NOT PASS IT.
+
+    The steered corpus is sha-pinned in `pipeline_puzzle.sh`. If adding this
+    option perturbed the default path by even one row, the pin would fail on the
+    box and the failure would look like corruption rather than like a new flag.
+    """
+    import act2_build_multiturn_rows as M
+
+    convs = tmp_path / "c.jsonl"
+    convs.write_text("".join(
+        json.dumps(dict(_conversation(forced_root_carry=True,
+                                      recipe="puzzle_steered"), id="c%d" % i))
+        + "\n" for i in range(5)), encoding="utf-8")
+
+    outs = []
+    for tag in ("a", "b"):
+        out = tmp_path / tag
+        monkeypatch.setattr(sys, "argv", [
+            "act2_build_multiturn_rows.py", "--conversations", str(convs),
+            "--natural", str(tmp_path / "none1.jsonl"),
+            "--contrastive", str(tmp_path / "none2.jsonl"),
+            "--out", str(out), "--eval-frac", "0"])
+        assert M.main() == 0
+        outs.append((out / "train.jsonl").read_bytes())
+    assert outs[0] == outs[1], "the default path is not reproducible"
+
+
 def test_no_verdict_may_be_printed_below_the_deciding_n():
     """⛔⛤ THE ACCEPTED THAT A RERUN REVERSED.
 

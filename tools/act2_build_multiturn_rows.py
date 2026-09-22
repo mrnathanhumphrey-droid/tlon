@@ -146,6 +146,49 @@ def rows_from_conversation(conv: dict, depth: int) -> list[dict]:
     return out
 
 
+def select_to_row_target(convs: list[dict], depth: int, target: int,
+                         seed: int) -> list[dict]:
+    """A deterministic subset of `convs` whose rows total `target`.
+
+    ⭐ THIS EXISTS TO HOLD ROW COUNT FIXED ACROSS AN ATTRIBUTION ARM. The
+    steered retrain dropped render 98.4% -> 85.9%, and two things had changed at
+    once: the conversation recipe AND the conversation-row count (5,208 ->
+    4,578). Matching the count lets the OLD recipe be retrained at the NEW size,
+    so the recipe becomes the only live variable and the comparison is worth
+    what it costs.
+
+    ⛔ SELECTION IS ON ROWS, NOT ON CONVERSATIONS, because conversations differ
+    in length — the old recipe averages 8.70 rows each and the steered one 6.74.
+    Matching conversation COUNT would leave the row count unmatched, which is
+    the confound this is built to remove.
+
+    ⛔ A conversation that would overshoot is SKIPPED, not truncated, and the
+    walk continues so a later shorter one can close the gap. Truncating would
+    silently manufacture conversations that never existed in either corpus.
+    The actual total is returned to the caller's report rather than assumed to
+    equal the target: it may land short, and a run must say so.
+    """
+    rng = random.Random(seed)
+    order = list(convs)
+    rng.shuffle(order)
+    kept: list[dict] = []
+    total = 0
+    for c in order:
+        n = len(rows_from_conversation(c, depth))
+        if total + n > target:
+            continue
+        kept.append(c)
+        total += n
+        if total == target:
+            break
+    print("row-match: kept %d of %d conversations -> %d conversation rows "
+          "(target %d)" % (len(kept), len(convs), total, target))
+    if total != target:
+        print("  ⚠ landed %d short of the target — report this, do not round it"
+              % (target - total))
+    return kept
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--natural", default="runs/act2/corpus_natural/pairs.jsonl")
@@ -159,11 +202,19 @@ def main() -> int:
     ap.add_argument("--depth", type=int, default=CONTEXT_TURNS)
     ap.add_argument("--eval-frac", type=float, default=0.02)
     ap.add_argument("--seed", type=int, default=20624)
+    ap.add_argument("--conversation-rows", type=int, default=None,
+                    help="⭐ hold the conversation-row count fixed at this "
+                         "number by taking a deterministic subset (seeded). "
+                         "For attribution arms that must match another "
+                         "corpus's size. Omitted = use every conversation.")
     args = ap.parse_args()
 
     natural = read_jsonl(pathlib.Path(args.natural))
     convs = read_jsonl(pathlib.Path(args.conversations))
     print("natural pairs %d · conversations %d" % (len(natural), len(convs)))
+    if args.conversation_rows is not None:
+        convs = select_to_row_target(convs, args.depth,
+                                     args.conversation_rows, args.seed)
 
     rows: list[dict] = []
     # ⭐ The single-turn natural pairs carry an EMPTY context on purpose. The

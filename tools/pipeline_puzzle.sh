@@ -70,6 +70,19 @@ export MODEL="${MODEL:-Qwen/Qwen2.5-7B-Instruct}"
 # conversation` and nothing else. `corpus_bench` is the pre-steer build, kept
 # as the control the seq figures below reproduce.
 export CORPUS="${CORPUS:-runs/act2/corpus_bench_steered}"
+
+# ⭐ THE CONVERSATION SOURCE IS AN ARGUMENT, BECAUSE THE ARMS DIFFER ONLY HERE.
+# The steered retrain dropped render 98.4% -> 85.9% and TWO things had changed:
+# the conversation recipe and the conversation-row count (5,208 -> 4,578). This
+# variable plus `CONV_ROWS` is what lets the OLD recipe be retrained at the NEW
+# size, so the recipe is the only live variable.
+# ⛔ `CONV_ROWS` holds the conversation-row count fixed by taking a seeded
+# subset. Unset = every conversation, which is the steered arm's behaviour and
+# is byte-identical to before this flag existed.
+export CONV="${CONV:-runs/act2/corpus_conv_steered/conversations.jsonl}"
+CONV_ROWS="${CONV_ROWS:-}"
+ROWS_ARG=""
+[ -n "$CONV_ROWS" ] && ROWS_ARG="--conversation-rows $CONV_ROWS"
 export CELL="${CELL:-bench-s20624}"
 export SEED="${SEED:-20624}"
 export ROOT
@@ -123,6 +136,10 @@ tlon_log_init "$ROOT" "pipeline_puzzle.log"
 echo "  cell     $CELL"            | tee -a "$LOG"
 echo "  model    $MODEL"           | tee -a "$LOG"
 echo "  corpus   $CORPUS"          | tee -a "$LOG"
+# ⛔ THE ARM GOES IN THE LOG. Two runs that differ only in their conversation
+# source produce logs that are otherwise identical, and the one thing a reader
+# needs to tell them apart is the one thing that was never printed.
+echo "  conv     $CONV${CONV_ROWS:+  (row-matched to $CONV_ROWS)}" | tee -a "$LOG"
 echo "  lexicon  $TLON_LEXICON"    | tee -a "$LOG"
 echo "  shape    seq $SEQ · batch $BATCH x $ACCUM · $EPOCHS epochs · rank $RANK" \
      | tee -a "$LOG"
@@ -161,10 +178,10 @@ tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_puzzle.sh \
 # builder plus the pin below is the stronger artifact.
 step corpus
 $PY tools/act2_build_multiturn_rows.py \
-    --conversations runs/act2/corpus_conv_steered/conversations.jsonl \
+    --conversations "$CONV" \
     --natural runs/act2/corpus_natural/pairs.jsonl \
     --contrastive runs/act2/corpus_contrastive/pairs.jsonl \
-    --out "$CORPUS" --seed "$SEED" 2>&1 | tee -a "$LOG"
+    --out "$CORPUS" --seed "$SEED" $ROWS_ARG 2>&1 | tee -a "$LOG"
 CORPUS_RC=${PIPESTATUS[0]}
 [ "$CORPUS_RC" -eq 0 ] || { echo "⛔ corpus build rc=$CORPUS_RC" | tee -a "$LOG"; exit 1; }
 
