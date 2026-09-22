@@ -248,7 +248,7 @@ def _train_args(**kw):
     import types
     base = dict(host="1.2.3.4", root="solo_regen",
                 pipeline="pipeline_solo_regen.sh", recipe=None, seeds=None,
-                builds=None)
+                builds=None, env=None)
     base.update(kw)
     return types.SimpleNamespace(**base)
 
@@ -277,6 +277,42 @@ def test_the_corpus_building_pipeline_still_DEMANDS_a_recipe():
     from act2_retrain_orchestrate import cmd_train
     with pytest.raises(TransferError, match="recipe"):
         cmd_train(_train_args(pipeline="pipeline_retrain.sh", root="x"))
+
+
+@pytest.mark.parametrize("bad", [
+    "CONV=a;rm -rf ~",              # command separator
+    "CONV=$(cat /etc/passwd)",      # substitution
+    "CONV=`id`",                    # backtick substitution
+    "CONV=a b",                     # word split into a second argument
+    "CONV=a|tee /tmp/x",            # pipe
+    "CONV=a&",                      # background
+    "conv=lower",                   # lower-case key
+    "NOEQUALS",                     # not a pair
+    "CONV='quoted'",                # quote
+])
+def test_env_passthrough_REFUSES_anything_a_shell_would_act_on(bad):
+    """⛔⛔ `--env` IS INTERPOLATED INTO A REMOTE SHELL COMMAND ON A BILLING BOX.
+
+    It exists because the alternative is a hand-rolled ssh, and this file
+    already records what that costs — two rungs launched that way forgot
+    `. ~/.tlon_env`, so the watchdog they spawned had no credential to persist
+    with. But a passthrough that accepts arbitrary text is a worse failure than
+    the one it prevents: the shape is enforced, not trusted.
+    """
+    from act2_retrain_orchestrate import cmd_train
+    with pytest.raises(TransferError, match="KEY=VALUE"):
+        cmd_train(_train_args(pipeline="pipeline_puzzle.sh", root="x",
+                              env=[bad]))
+
+
+def test_env_passthrough_ACCEPTS_the_values_the_arms_actually_need():
+    """⛔ Non-vacuity: a validator that refuses everything would pass the tests
+    above and make the control arm unlaunchable."""
+    import act2_retrain_orchestrate as O
+    for good in ("CONV=runs/act2/corpus_conversations/conversations.jsonl",
+                 "CONV_ROWS=4578", "CELL=rowmatch-s20624",
+                 "EXPECT_TRAIN_SHA=7f26244f28439752782479c559ef1098862570b2"):
+        assert O.ENV_PASSTHROUGH.match(good), good
 
 
 def test_poll_does_not_hardcode_ONE_pipelines_log_name():

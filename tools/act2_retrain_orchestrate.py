@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -317,10 +318,29 @@ PIPELINES = ("pipeline_retrain.sh", "pipeline_solo_regen.sh",
 NEEDS_RECIPE = ("pipeline_retrain.sh",)
 
 
+#: ⛔⛔ A VALUE HERE IS INTERPOLATED INTO A REMOTE SHELL COMMAND, so the shape
+#: is enforced rather than trusted: an upper-case key, and a value limited to
+#: the characters a path, a sha or a count actually needs. Everything a shell
+#: would act on — quotes, `$`, backticks, `;`, `&`, `|`, whitespace — is
+#: refused. The alternative to a passthrough is a hand-rolled ssh, and this
+#: file already records what that costs: two rungs launched that way forgot
+#: `. ~/.tlon_env`, so the watchdog they spawned had no credential to persist
+#: with. A launcher that cannot express the run is a launcher that gets bypassed.
+ENV_PASSTHROUGH = re.compile(r"^[A-Z][A-Z0-9_]*=[A-Za-z0-9_./:-]*$")
+
+
 def cmd_train(a):
     if a.pipeline not in PIPELINES:
         raise TransferError("unknown --pipeline %r" % (a.pipeline,))
     env = "ROOT=runs/act2/%s" % a.root
+    for kv in (a.env or []):
+        if not ENV_PASSTHROUGH.match(kv):
+            raise TransferError(
+                "--env %r is not an upper-case KEY=VALUE limited to "
+                "[A-Za-z0-9_./:-]. It is interpolated into a remote shell "
+                "command on a billing box; the shape is enforced, not trusted."
+                % (kv,))
+        env += " " + kv
     if a.pipeline in NEEDS_RECIPE:
         # ⛔⛔ THE RECIPE IS PASSED EXPLICITLY AND THE PIPELINE REQUIRES IT.
         # There is no default on either side: a batch filed into an arm nobody
@@ -513,6 +533,12 @@ def main() -> int:
             # to infer: the last box to be handed a defaulted answer trained the
             # right thing and then died at a stage that could not describe it.
             q.add_argument("--pipeline", required=True, choices=PIPELINES)
+            q.add_argument("--env", action="append", metavar="KEY=VALUE",
+                           help="extra environment for the pipeline, "
+                                "repeatable — e.g. CONV=..., CONV_ROWS=4578, "
+                                "CELL=..., EXPECT_TRAIN_SHA=... . ⛔ Shape is "
+                                "enforced (see ENV_PASSTHROUGH): it is "
+                                "interpolated into a remote shell command.")
             # ⛔⛔ THE FACTORIAL'S CORPUS AXIS. No default: a defaulted recipe
             # files a whole batch in an arm nobody chose. Required in practice
             # by `cmd_train` for the pipelines that build corpora, and REFUSED
