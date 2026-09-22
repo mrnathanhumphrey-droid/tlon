@@ -66,6 +66,24 @@ def test_the_softened_gate_still_REFUSES_a_synonym_ECHO():
     assert not v.ok and "echo" in v.reason
 
 
+def test_the_softened_gate_is_NOT_strictly_more_permissive():
+    """⛔⛤ A CLAIM OF MINE THAT THE CONTROL RUN REFUTED, PINNED SO IT STAYS
+    REFUTED. The softened gate reads as "the exact gate but looser", and on the
+    exactly steered sample it scored BELOW it — 95.1% against 97.0%.
+
+    It widens CARRIED and narrows NEW, because `added` is measured against the
+    expanded family. Here the reply carries `flöx` and its only other root is
+    `pön`, a sibling — so it restated one happening twice and said nothing
+    further. The exact gate cannot see that echo and accepts it.
+
+    ⛔ Anyone "fixing" the softened rate up to meet the exact one would be
+    deleting the synonym-echo guard, which is the reason the gate exists.
+    """
+    prior, reply = ["flöx"], ["flöx", "pön"]
+    assert scene_carry(prior, reply).ok
+    assert not scene_carry_soft(prior, reply).ok
+
+
 def test_the_softened_gate_REFUSES_an_unrelated_root():
     v = scene_carry_soft(["flöx"], ["hlun", "mim"])
     assert not v.ok and "naming the prior turn" in v.reason
