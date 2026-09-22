@@ -61,11 +61,14 @@ HF_REPO="${HF_REPO:-keyzersoze04/tlon-act2-adapters}"
 # is not in a child's environment — python would `KeyError` on the FIRST line of
 # the one check standing between a mis-lexiconed corpus and eight hours of GPU.
 export MODEL="${MODEL:-Qwen/Qwen2.5-7B-Instruct}"
-# ⛔⛔ THE STEERED BUILD, AND THE DIRECTORY NAME IS THE ONLY THING THAT SAYS SO.
-# Rows from the two builds are schema-identical — `source: conversation` and
-# nothing else — so a run pointed at the old path would train the 9.3%-carry
-# speaker and every number downstream would look healthy. `corpus_bench` is the
-# pre-steer build, kept as the control the seq figures below reproduce.
+# ⛔⛔ THE STEERED BUILD. Pointed at the old path, a run would train the
+# 9.3%-carry speaker and every number downstream would look healthy.
+# ⭐ As of 2026-09-21 the directory name is no longer the only thing that says
+# which build this is: every conversation row carries `forced_root_carry` and
+# `recipe`, and `meta.json` — which ships as `--corpus-manifest` — carries the
+# counts. Until then the two builds were schema-identical, `source:
+# conversation` and nothing else. `corpus_bench` is the pre-steer build, kept
+# as the control the seq figures below reproduce.
 export CORPUS="${CORPUS:-runs/act2/corpus_bench_steered}"
 export CELL="${CELL:-bench-s20624}"
 export SEED="${SEED:-20624}"

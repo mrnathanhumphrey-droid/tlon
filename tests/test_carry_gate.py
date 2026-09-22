@@ -296,6 +296,92 @@ def test_forced_carry_is_stamped_on_the_corpus_not_just_documented():
     assert '"recipe": "puzzle_steered"' in src
 
 
+def _conversation(**stamp) -> dict:
+    """One four-turn bench, stamped however the caller asks."""
+    def turn(voice, english, root):
+        return {"voice": voice, "english": english, "surface": "%s ka" % root,
+                "scene": {"R": root, "D": "mid"}}
+    return dict({"id": "c1",
+                 "turns": [turn("P", "I dropped my cup", "nur"),
+                           turn("T", "it falls and spreads", "nur"),
+                           turn("P", "the floor soaked it up", "mor"),
+                           turn("T", "it soaks, darkly", "mor")]},
+                **stamp)
+
+
+def test_the_stamp_survives_the_row_build():
+    """⛔⛔ THE STAMP DIED ONE SCRIPT DOWNSTREAM OF THE TEST THAT PINNED IT.
+
+    `test_forced_carry_is_stamped_on_the_corpus_not_just_documented` proves the
+    CONVERSATIONS carry the marker. It does not reach the rows the trainer
+    actually eats: `act2_build_multiturn_rows.py` rebuilt them as
+    `source: conversation` and dropped the stamp, and `source: conversation` is
+    exactly what the unsteered build emits too. The poisoned corpus and the
+    clean one were distinguishable only by directory name — the failure the
+    stamp exists to prevent, reproduced one layer down.
+    """
+    import act2_build_multiturn_rows as M
+
+    rows = M.rows_from_conversation(
+        _conversation(forced_root_carry=True, recipe="puzzle_steered"), 4)
+    assert rows, "the fixture produced no rows"
+    for r in rows:
+        assert r["forced_root_carry"] is True, (
+            "a row reached the trainer without the puzzle-only marker: %r" % r)
+        assert r["recipe"] == "puzzle_steered"
+
+
+def test_an_unsteered_conversation_is_not_relabelled_as_forced():
+    """⛔ THE MARKER IS READ FROM THE CORPUS, NOT ASSERTED BY THE SCRIPT.
+
+    Hard-coding the stamp would make every corpus claim forced carry, including
+    the research one — the same error mirrored, and a marker that is always true
+    carries no information. An unstamped conversation must SAY it is unstamped:
+    a missing key cannot be told apart from a row built before this existed.
+    """
+    import act2_build_multiturn_rows as M
+
+    rows = M.rows_from_conversation(_conversation(), 4)
+    assert rows
+    for r in rows:
+        assert r["forced_root_carry"] is False
+        assert r["recipe"] == "unstamped"
+        assert "forced_root_carry" in r, "absence is not a reading"
+
+
+def test_the_built_bench_corpus_carries_the_stamp_on_disk():
+    """⛔⛔ THE ARTEFACT, NOT THE FUNCTION — THIS IS WHAT THE GPU READS.
+
+    The two tests above hold the code. This one holds the file that was
+    actually built, because the row builder can be correct and the corpus on
+    disk still predate it, which is precisely the state this was found in.
+    """
+    corpus = _ROOT / "runs" / "act2" / "corpus_bench_steered"
+    if not (corpus / "train.jsonl").exists():
+        pytest.skip("the steered bench corpus is not on this checkout")
+
+    meta = json.loads((corpus / "meta.json").read_text(encoding="utf-8"))
+    assert meta.get("forced_root_carry_rows"), (
+        "the manifest shipped to the run does not record the forced carry")
+    assert meta.get("conversation_recipes", {}).get("puzzle_steered")
+
+    seen = unstamped = 0
+    with (corpus / "train.jsonl").open(encoding="utf-8") as fh:
+        for line in fh:
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            if r.get("source") != "conversation":
+                continue
+            seen += 1
+            if not r.get("forced_root_carry"):
+                unstamped += 1
+    assert seen > 1000, "expected the full corpus, got %d rows" % seen
+    assert unstamped == 0, (
+        "%d of %d conversation rows reached the trainer unstamped"
+        % (unstamped, seen))
+
+
 def test_no_verdict_may_be_printed_below_the_deciding_n():
     """⛔⛤ THE ACCEPTED THAT A RERUN REVERSED.
 

@@ -25,7 +25,10 @@ IS JUDGED BY.
 root-carry: **97.0% [93.7, 98.6] on n=203**, root-led (R 56.0% of what carries,
 against 9.3% before). Pass `--conversations` that path. ⛔ Its rows are stamped
 `forced_root_carry` / `recipe: puzzle_steered` — PUZZLE ONLY, never pooled into
-the research factorial.
+the research factorial. ⭐ That stamp is PROPAGATED onto every row this script
+emits and onto `meta.json`, because until 2026-09-21 it was not: the rows said
+`source: conversation` and no more, which the unsteered build says too. See
+`provenance()`.
 
 ⛔ CONTEXT IS STORED AS ROWS, NOT AS RENDERED TEXT. The prompt string depends on
 the tokenizer, so rendering it here would freeze one base's template into the
@@ -80,6 +83,28 @@ def _ctx(items, i, depth):
     return [{"prompt": p, "scene": s} for p, s in items[max(0, i - depth):i]]
 
 
+def provenance(conv: dict) -> dict:
+    """The conversation's build recipe, carried onto every row it produces.
+
+    ⛔⛔ THE STAMP DIED HERE, AND A STAMP THAT DOES NOT SURVIVE THE ROW BUILD
+    PROTECTS NOTHING. `corpus_conv_steered` stamps all 679 conversations
+    `forced_root_carry` / `recipe: puzzle_steered` exactly so a research pooling
+    script can refuse them — and this function did not exist, so the rows that
+    reached `train.jsonl` said `source: conversation` and nothing else. That is
+    byte-identical to what the unsteered build emits: the two corpora were
+    distinguishable only by directory name. The prohibition was written in a
+    docstring, and a docstring does not survive a pooling script.
+
+    ⛔ READ FROM THE CONVERSATION, NEVER ASSUMED. Hard-coding `True` here would
+    relabel an unsteered corpus as poisoned the first time anyone passed one,
+    which is the same class of error one step to the left. An unstamped
+    conversation says so in the row rather than going quiet, because a missing
+    key cannot be told apart from a row built before this stamp existed.
+    """
+    return {"forced_root_carry": bool(conv.get("forced_root_carry", False)),
+            "recipe": conv.get("recipe", "unstamped")}
+
+
 def rows_from_conversation(conv: dict, depth: int) -> list[dict]:
     """Both threads of one bench, each direction-homogeneous.
 
@@ -93,6 +118,7 @@ def rows_from_conversation(conv: dict, depth: int) -> list[dict]:
     """
     turns = conv["turns"]
     p_turns = [t for t in turns if t["voice"] == "P"]
+    prov = provenance(conv)
     out: list[dict] = []
 
     # ── the write thread ────────────────────────────────────────────────
@@ -101,7 +127,8 @@ def rows_from_conversation(conv: dict, depth: int) -> list[dict]:
         out.append({"direction": WRITE, "prompt": english, "english": english,
                     "scene": scene, "surface": p_turns[i]["surface"],
                     "context": _ctx(w_items, i, depth),
-                    "source": "conversation", "conversation": conv["id"]})
+                    "source": "conversation", "conversation": conv["id"],
+                    **prov})
 
     # ── the provoke thread ──────────────────────────────────────────────
     # ⛔ Pairs are taken by ADJACENCY in the rendered turn list, so a truncated
@@ -114,7 +141,8 @@ def rows_from_conversation(conv: dict, depth: int) -> list[dict]:
         out.append({"direction": PROVOKE, "prompt": provoking,
                     "english": provoking, "scene": scene,
                     "context": _ctx(pv_items, i, depth),
-                    "source": "conversation", "conversation": conv["id"]})
+                    "source": "conversation", "conversation": conv["id"],
+                    **prov})
     return out
 
 
@@ -183,15 +211,37 @@ def main() -> int:
         by_src[r["source"]] = by_src.get(r["source"], 0) + 1
         if r["context"]:
             with_ctx += 1
+    # ⛔⛔ THE RECIPE GOES IN THE MANIFEST TOO. `pipeline_puzzle.sh` ships
+    # `meta.json` as `--corpus-manifest`, so this is the one place the run's own
+    # record can say what it trained on. Rows carry it for a pooling script;
+    # this carries it for a human reading the verdict months from now.
+    by_recipe: dict[str, int] = {}
+    forced_rows = 0
+    for r in rows:
+        if r["source"] != "conversation":
+            continue
+        by_recipe[r["recipe"]] = by_recipe.get(r["recipe"], 0) + 1
+        forced_rows += bool(r["forced_root_carry"])
     meta = {"rows": len(rows), "train": len(trn), "eval": len(evl),
             "by_direction": by_dir, "by_source": by_src,
-            "with_context": with_ctx, "depth": args.depth, "seed": args.seed}
+            "with_context": with_ctx, "depth": args.depth, "seed": args.seed,
+            "conversation_recipes": by_recipe,
+            "forced_root_carry_rows": forced_rows}
+    if forced_rows:
+        meta["puzzle_only"] = (
+            "%d conversation rows carry FORCED root-carry. This corpus is the "
+            "puzzle's crib and the research's poison — never pool it into the "
+            "factorial." % forced_rows)
     (out_dir / "meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
 
     print("rows %d (train %d · eval %d)" % (len(rows), len(trn), len(evl)))
     print("  by direction:", by_dir)
     print("  by source   :", by_src)
+    print("  recipes     :", by_recipe or "(no conversation rows)")
+    if forced_rows:
+        print("  ⛔ FORCED root-carry on %d rows — PUZZLE ONLY, never pooled"
+              % forced_rows)
     print("  with context: %d (%.0f%%)" % (with_ctx, 100 * with_ctx / len(rows)))
     print("wrote %s" % out_dir)
     return 0
