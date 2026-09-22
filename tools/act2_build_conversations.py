@@ -14,11 +14,53 @@ conversation no matter how perfectly the serve shape matches — which is exactl
 what the live run showed (context-ON connected on 0 of 3 turns, context-OFF on
 3 of 4).
 
-⭐ SO THE CONTINUITY IS INHERITED, NOT IMPOSED. A rule of mine ("the reply must
-reuse a root") would teach the model my tic and it would surface as repetitive
-collapse. Here the model writes a real bench exchange in English — where the
-second thing a person says genuinely follows the first — and BOTH voices go
-through Route-A. The Tlön inherits whatever relation the English had.
+⛔⛤ RETRACTED 2026-09-21 — THIS FILE ONCE ARGUED THE OPPOSITE AND WAS WRONG.
+It said: "SO THE CONTINUITY IS INHERITED, NOT IMPOSED. A rule of mine ('the
+reply must reuse a root') would teach the model my tic and it would surface as
+repetitive collapse. The Tlön inherits whatever relation the English had."
+
+The reasoning was sound and its premise was false. The English relation that
+got inherited was ANTI-continuity: root recurrence within a conversation
+measured **5.3% against a 7.5% shuffled null, p=0.000 over 500 shuffles —
+BELOW CHANCE**. The cause was one word in DIALOGUE_SYSTEM below, which asked
+for "a FRESH impression ... answering an image with an image". In a language
+whose roots ARE happenings, a fresh impression is by construction a DIFFERENT
+happening, so the instruction that reads as connection produces anti-connection
+once translated. Measured on the corpus it built: of 2,604 P->T pairs, **3 —
+0.1% — share a happening-word in English**, and P->T content-word Jaccard is
+0.003.
+
+⭐ The old worry was right about one thing and it is why `tlon/act2/carry.py`
+enforces a BAND rather than a maximum: forcing maximum reuse would give the
+repetitive collapse that decision feared, and the highest-overlap English
+measured as near-paraphrase, which breaks the puzzle from the other side. The
+gate demands a happening carried AND a happening new.
+
+⛔⛔ THE GATE IS AT STAGE 1 (the English dialogue), AND STAGE 2 MAY ONLY
+RESAMPLE WHEN IT IS STEERED. Unsteered, `render_turn` passes only its own
+English line to the proposer — it cannot see the prior turn — so the scene is
+a faithful, context-free function of that line and no resample can conjure a
+happening the English does not name. An unsteered scene gate would reject
+~99.9% of turns, exhaust `--retries`, truncate, and drop nearly every
+conversation. ⛔ THAT PROHIBITION STANDS AND `test_carry_gate.py` HOLDS IT.
+
+⭐ `--steer` changes the premise rather than the rule. The P line is rendered
+first and its roots are passed to the reply's proposal as `require_roots`, so
+the reply is TOLD which root to carry. The requirement is then satisfiable and
+a resample is doing work instead of rolling the same dice. WHY it was needed:
+the writer complied on the happening and the proposer still chose a different
+near-synonym root for it — `from` (it drips), `fum` (it floods), `nur` (it
+falls) all encode a spill, and `spilled`->`from` while `spilling`->`plung`.
+The happening carried; the ROOT, which is what a player decodes against, did
+not. Unsteered carry: **40.9% [26.4, 55.4]**.
+
+⛔⛔ FORCED CARRY IS A PUZZLE-ONLY DEVIATION AND THE CORPUS SAYS SO ON EVERY
+ROW (`forced_root_carry`, `recipe`). It is the puzzle's crib — a reply that
+dependably carries one thing you said is the traction that makes the cipher
+solvable — and the RESEARCH's poison, because it is exactly the persistence
+the drift measurement must not contain. Never pool a steered conversation into
+the research factorial; a docstring would not survive a pooling script, the
+stamped field has to be stripped deliberately.
 
 ⛔ THE TLÖNIAN'S ENGLISH IS AN INTERMEDIATE AND NEVER SHIPS. It exists only so
 Route-A can produce a scene that answers the previous one. Nothing downstream
@@ -27,6 +69,7 @@ reads it; the puzzle serves Tlön.
 from __future__ import annotations
 
 import argparse
+import collections
 import concurrent.futures as cf
 import json
 import os
@@ -34,6 +77,7 @@ import pathlib
 import sys
 import threading
 import time
+import traceback
 import uuid
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -50,15 +94,23 @@ for _s in (sys.stdout, sys.stderr):
 # drift and the second one is always the one nobody checks.
 from act2_build_natural_corpus import (Budget, BudgetExceeded,   # noqa: E402
                                        _jsonl_append, _read_jsonl)
+from tlon.act2.carry import (ACCEPTANCE, decide, gate_dialogue,  # noqa: E402
+                             scene_carry, scene_roots, wilson)
 
 DEFAULT_LEXICON = "lexicon_expanded.yaml"
+
+# ⛔ Written by the dialogue stage, read by the report. A module-level
+# accumulator rather than a return value only because `generate_dialogues`
+# already returns the dialogues themselves and threading a second value
+# through `build` would be the kind of churn that loses one of them.
+_gate_report: collections.Counter = collections.Counter()
 
 DIALOGUE_SYSTEM = """You write short bench conversations for a translation corpus.
 
 The setting: a person sits on a bench and talks quietly about their day. \
 Something is sitting beside them. It does not speak a human language and it \
-does not answer in words - it responds by painting a fresh impression connected \
-to what was just said. Think of it as answering an image with an image.
+does not answer in words - it answers by naming what is happening. It takes up \
+the very happening the person just named and carries it somewhere of its own.
 
 Write the exchange as alternating lines:
 
@@ -69,8 +121,18 @@ sentence, present tense, describing something occurring or being perceived>
 RULES
 - The conversation is ONE moment. Each P line follows from the one before - the \
 person is continuing a thought, not starting over.
-- Each T line must CONNECT to the P line just above it: it answers, echoes, \
-turns or deepens what was said. Never a non-sequitur.
+- Each T line must TAKE UP A HAPPENING THE P LINE JUST NAMED - the same \
+occurring, in the same words where the words fit. If the person says they \
+WAITED, the T line is about a waiting; if they say the light DIMMED, the T \
+line is about a dimming. Use that word itself, not a synonym for it.
+- This is the one rule that matters most, and the tempting mistake is to \
+answer with an evocative image that stands for what was said. Do not. An \
+image that merely suggests the moment names a DIFFERENT happening, and a \
+different happening is a non-sequitur here however beautiful it reads.
+- Having taken the happening up, the T line must then ADD at least one further \
+happening of its own. It carries one thing across and brings something new \
+with it. A T line that only restates the P line is as wrong as one that \
+changes the subject.
 - T lines describe HAPPENINGS and IMPRESSIONS only. No nouns that name people, \
 places, brands or objects-as-things; no numbers; no proper names. Prefer \
 weather, light, motion, texture, feeling, time passing.
@@ -121,7 +183,9 @@ def parse_dialogue(text: str) -> list[tuple[str, str]]:
 
 def generate_dialogues(client, model, want: int, out: pathlib.Path,
                        budget: Budget, lock: threading.Lock, *,
-                       exchanges: int, workers: int, seed: int) -> list[dict]:
+                       exchanges: int, workers: int, seed: int,
+                       carry_attempts: int = 3) -> list[dict]:
+    rejected_p = out.with_name("dialogues_rejected.jsonl")
     have = _read_jsonl(out)
     if len(have) >= want:
         print("dialogues: %d already on disk, reusing" % len(have))
@@ -136,37 +200,85 @@ def generate_dialogues(client, model, want: int, out: pathlib.Path,
     print("dialogues: have %d, want %d -> %d calls" % (len(have), want, len(jobs)))
 
     def one(theme):
-        budget.reserve()
-        msg = client.messages.create(
-            model=model, max_tokens=1200, temperature=1.0,
-            system=[{"type": "text", "text": DIALOGUE_SYSTEM,
-                     "cache_control": {"type": "ephemeral"}}],
-            messages=[{"role": "user",
-                       "content": "Write one conversation of %d exchanges. "
-                                  "Theme: %s." % (exchanges, theme)}])
-        u = msg.usage
-        cost = (u.input_tokens / 1e6 * 3.0 + u.output_tokens / 1e6 * 15.0
-                + (getattr(u, "cache_creation_input_tokens", 0) or 0) / 1e6 * 3.75
-                + (getattr(u, "cache_read_input_tokens", 0) or 0) / 1e6 * 0.30)
-        text = "".join(b.text for b in msg.content
-                       if getattr(b, "type", "") == "text")
-        turns = parse_dialogue(text)
-        if len(turns) >= 4:
-            _jsonl_append(out, {"id": uuid.uuid4().hex[:12], "theme": theme,
-                                "turns": turns}, lock)
-        return cost
+        """⭐ THE CARRY GATE LIVES HERE, WHERE REJECTING IS AFFORDABLE.
+
+        One call writes a whole conversation, so a rejection costs one call —
+        and a regenerated conversation can genuinely differ, which is not true
+        of a re-proposed scene downstream. Truncation is preferred to
+        rejection: the early exchanges of a drifting dialogue are usually
+        sound and were already paid for.
+        """
+        cost = 0.0
+        stats = collections.Counter()
+        for attempt in range(carry_attempts):
+            # ⛔⛤ THE CAP STOPS THE NEXT CALL; IT MUST NOT ERASE THE LAST ONE.
+            # Letting BudgetExceeded propagate out of this loop would discard
+            # `cost` already incurred on earlier attempts — money spent and not
+            # recorded, which is precisely the shape of the `settle()` bug the
+            # Budget docstring exists to prevent.
+            try:
+                budget.reserve()
+            except BudgetExceeded:
+                stats["stopped_on_budget"] += 1
+                return cost, stats
+            msg = client.messages.create(
+                model=model, max_tokens=1200, temperature=1.0,
+                system=[{"type": "text", "text": DIALOGUE_SYSTEM,
+                         "cache_control": {"type": "ephemeral"}}],
+                messages=[{"role": "user",
+                           "content": "Write one conversation of %d exchanges. "
+                                      "Theme: %s." % (exchanges, theme)}])
+            u = msg.usage
+            cost += (u.input_tokens / 1e6 * 3.0 + u.output_tokens / 1e6 * 15.0
+                     + (getattr(u, "cache_creation_input_tokens", 0) or 0)
+                     / 1e6 * 3.75
+                     + (getattr(u, "cache_read_input_tokens", 0) or 0)
+                     / 1e6 * 0.30)
+            stats["calls"] += 1
+            text = "".join(b.text for b in msg.content
+                           if getattr(b, "type", "") == "text")
+            turns = parse_dialogue(text)
+            kept, verdicts = gate_dialogue(turns)
+            stats["pairs_seen"] += len(verdicts)
+            stats["pairs_passed"] += sum(1 for v in verdicts if v.ok)
+            for v in verdicts:
+                if not v.ok:
+                    stats["reason: " + v.reason.split(":")[0]] += 1
+            if len(kept) >= 4:
+                if len(kept) < len(turns):
+                    stats["truncated_by_gate"] += 1
+                stats["accepted"] += 1
+                stats["accepted_on_attempt_%d" % (attempt + 1)] += 1
+                _jsonl_append(out, {"id": uuid.uuid4().hex[:12],
+                                    "theme": theme, "turns": kept}, lock)
+                return cost, stats
+            # ⛔⛤ KEEP WHAT THE GATE THREW AWAY. The first sample rejected 19
+            # of 20 conversations and kept none of them, so the only way to see
+            # WHY was to pay for another run. A rejection is the diagnostic —
+            # it is the thing the prompt has to be rewritten against.
+            _jsonl_append(rejected_p, {"theme": theme, "attempt": attempt + 1,
+                                       "turns": turns,
+                                       "verdicts": [{"ok": v.ok,
+                                                     "reason": v.reason,
+                                                     "carried": sorted(v.carried)}
+                                                    for v in verdicts]}, lock)
+            stats["regenerated"] += 1
+        stats["abandoned"] += 1
+        return cost, stats
 
     spent = 0.0
+    gate_stats = collections.Counter()
     with cf.ThreadPoolExecutor(max_workers=workers) as ex:
         futs = [ex.submit(one, j) for j in jobs]
         for f in cf.as_completed(futs):
             try:
-                cost = f.result()
+                cost, stats = f.result()
             except BudgetExceeded:
                 continue
             except Exception as exc:                       # noqa: BLE001
                 print("  dialogue call failed: %s" % exc)
                 continue
+            gate_stats.update(stats)
             spent += cost
             # ⛔⛔ THIS LINE WAS `budget.settle(budget.spent + spent)` AND
             # `spent` IS THE RUNNING TOTAL, so it re-added everything already
@@ -175,7 +287,23 @@ def generate_dialogues(client, model, want: int, out: pathlib.Path,
             # overrun was fiction. A DELTA, always.
             budget.add(cost)
     have = _read_jsonl(out)
+    pairs = gate_stats["pairs_seen"] or 1
     print("dialogues: %d on disk (~$%.2f this stage)" % (len(have), spent))
+    print("  CARRY GATE (stage 1, English): pairs %d · passed %d = %.1f%%"
+          % (gate_stats["pairs_seen"], gate_stats["pairs_passed"],
+             100 * gate_stats["pairs_passed"] / pairs))
+    # ⭐ Calls-per-accepted IS the cost model for the full build. It is printed
+    # here rather than derived later because the number that prices a build
+    # should come out of the build that measured it.
+    print("  calls %d · accepted %d · regenerated %d · abandoned %d"
+          % (gate_stats["calls"], gate_stats["accepted"],
+             gate_stats["regenerated"], gate_stats["abandoned"]))
+    if gate_stats["accepted"]:
+        print("  calls per accepted conversation: %.2f"
+              % (gate_stats["calls"] / gate_stats["accepted"]))
+    for key in sorted(k for k in gate_stats if k.startswith("reason: ")):
+        print("    %-46s %d" % (key, gate_stats[key]))
+    _gate_report.update(gate_stats)
     return have[:want]
 
 
@@ -185,8 +313,9 @@ def build(args) -> int:
 
     C.load.cache_clear()
     lex = C.load()
+    roots = frozenset(lex["classes"]["R"])
     print("lexicon %s  %s  %d roots"
-          % (args.lexicon, lex["_hash"], len(lex["classes"]["R"])))
+          % (args.lexicon, lex["_hash"], len(roots)))
 
     import anthropic
 
@@ -199,7 +328,20 @@ def build(args) -> int:
     dlg_p = out_dir / "dialogues.jsonl"
     conv_p = out_dir / "conversations.jsonl"
     refus_p = out_dir / "refusals.jsonl"
+    missed_p = out_dir / "scene_gate_missed.jsonl"
     lock = threading.Lock()
+
+    # ⛔⛔ PUZZLE-ONLY, AND THE CORPUS SAYS SO ON EVERY ROW. Forced root-carry
+    # is the puzzle's crib and the research's poison: it is exactly the
+    # persistence the drift measurement must not have smuggled in. A docstring
+    # note would not survive a pooling script, so `forced_root_carry` is
+    # stamped on each conversation and in the build report — a research
+    # pooling step has to strip it deliberately rather than inherit it by
+    # accident. Same discipline as `factorial.json` carrying no pair key.
+    steer = args.steer
+    print("root-steer: %s%s"
+          % ("ON — FORCED CARRY, PUZZLE CORPUS ONLY" if steer else "OFF",
+             "" if steer else "  (the control arm)"))
 
     budget = Budget(args.budget_usd)
     prop = AnthropicProposer(args.model)
@@ -207,23 +349,30 @@ def build(args) -> int:
 
     dialogues = generate_dialogues(client, args.model, args.dialogues, dlg_p,
                                    budget, lock, exchanges=args.exchanges,
-                                   workers=args.workers, seed=args.seed)
+                                   workers=args.workers, seed=args.seed,
+                                   carry_attempts=args.carry_attempts)
 
     done = {r["id"] for r in _read_jsonl(conv_p)}
     todo = [d for d in dialogues if d["id"] not in done]
     print("conversations: %d done, %d to do, budget left $%.2f"
           % (len(done), len(todo), budget.limit - budget.spent))
 
-    counts = {"full": 0, "truncated": 0, "dropped": 0, "turns": 0}
+    # ⛔ A Counter, not a dict literal. The acceptance block reads keys that the
+    # scene stage only creates when it runs, and a build whose dialogue stage
+    # accepted nothing reached that block and died on KeyError — losing the
+    # verdict for a run that had already been paid for.
+    counts: collections.Counter = collections.Counter(
+        {"full": 0, "truncated": 0, "dropped": 0, "turns": 0})
     stop = threading.Event()
 
-    def render_turn(english):
+    def render_turn(english, require_roots=None):
         """English -> legal Tlön, or None. ⛔ Raises BudgetExceeded upward."""
         feedback = None
         for attempt in range(args.retries + 1):
             budget.reserve()
             try:
-                proposal = prop.propose(english, feedback=feedback)
+                proposal = prop.propose(english, feedback=feedback,
+                                        require_roots=require_roots)
             except Exception as exc:                        # noqa: BLE001
                 budget.settle_proposer(prop.cost_report()["usd_total"])
                 return None, "proposer: %s" % str(exc)[:200]
@@ -238,25 +387,98 @@ def build(args) -> int:
     def one(d):
         if stop.is_set():
             return
+        # ⛔⛤ RENDER AND VERIFY ONE EXCHANGE AT A TIME, NOT WHOLE-THEN-CHECK.
+        # The first version translated all ten turns, verified afterwards, and
+        # truncated at the first failing pair — so a conversation that broke at
+        # exchange 1 had already been paid for in full. Measured: 12 of 18
+        # conversations were dropped that way, at $0.43 per surviving
+        # conversation against roughly $0.10 before the gate existed. Stopping
+        # at the break pays for the break and nothing after it.
         rendered = []
+        turns = list(d["turns"])
         try:
-            for voice, english in d["turns"]:
-                got, why = render_turn(english)
+            for i in range(0, len(turns) - 1, 2):
+                (pv, p_en), (tv, t_en) = turns[i], turns[i + 1]
+                if pv != "P" or tv != "T":
+                    break
+                # ⛔⛤ THE P LINE IS RENDERED FIRST AND ITS ROOTS STEER THE
+                # REPLY. Unsteered, the writer complied on the HAPPENING and
+                # the proposer still picked a different near-synonym root for
+                # it — `from` (it drips) / `fum` (it floods) / `nur` (it falls)
+                # all encode a spill, and `spilled`->`from` while
+                # `spilling`->`plung`. The happening carried; the ROOT, which
+                # is what a player decodes against, did not. Carry sat at
+                # 40.9% [26.4, 55.4]. Naming P's root removes that degree of
+                # freedom.
+                got, why = render_turn(p_en)
                 if got is None:
-                    # ⛔ TRUNCATE AT THE BREAK, DO NOT SKIP THE TURN. Skipping
-                    # would splice turn 1 to turn 3 and teach a jump that never
-                    # happened — a manufactured non-sequitur in data whose whole
-                    # purpose is that each turn follows the last.
-                    _jsonl_append(refus_p, {"id": d["id"], "voice": voice,
-                                            "english": english,
+                    _jsonl_append(refus_p, {"id": d["id"], "voice": pv,
+                                            "english": p_en,
                                             "detail": str(why)[:300]}, lock)
                     break
-                surface, proposal = got
-                rendered.append({"voice": voice, "english": english,
-                                 "surface": surface, "scene": proposal})
+                p_surface, p_proposal = got
+                p_turn = {"voice": pv, "english": p_en, "surface": p_surface,
+                          "scene": p_proposal,
+                          "roots": sorted(scene_roots(p_proposal, roots))}
+
+                # ⛔⛔ RESAMPLING HERE IS LEGITIMATE ONLY BECAUSE OF THE STEER,
+                # and the earlier prohibition was right about the unsteered
+                # case. Without `require_roots` the proposer sees only its own
+                # English line, so a carry failure is a fact about English
+                # already written and a retry cannot repair it — that is why
+                # 99.9% of unsteered turns would reject forever. With the root
+                # NAMED, the requirement is satisfiable, so the retry is doing
+                # work rather than rolling the same dice. ⛔ A resample without
+                # a steer remains forbidden; `test_carry_gate.py` holds that.
+                exchange, verdict = None, None
+                want = p_turn["roots"] if steer else None
+                for _try in range(args.steer_attempts if steer else 1):
+                    got, why = render_turn(t_en, require_roots=want)
+                    if got is None:
+                        _jsonl_append(refus_p, {"id": d["id"], "voice": tv,
+                                                "english": t_en,
+                                                "detail": str(why)[:300]}, lock)
+                        break
+                    t_surface, t_proposal = got
+                    t_turn = {"voice": tv, "english": t_en,
+                              "surface": t_surface, "scene": t_proposal,
+                              "roots": sorted(scene_roots(t_proposal, roots))}
+                    counts["steer_attempts"] += 1
+                    verdict = scene_carry(p_turn["roots"], t_turn["roots"])
+                    exchange = [p_turn, t_turn]
+                    if verdict.ok:
+                        counts["steer_landed_on_try_%d" % (_try + 1)] += 1
+                        break
+                if exchange is None:
+                    break
+                # ── stage 2: VERIFY the band on roots. ⛔ NEVER RESAMPLE ────
+                # `render_turn` showed the proposer only this line's English,
+                # so a failure is a fact about English already written and a
+                # retry cannot touch it. This stops and records; it never pays
+                # for the same line twice.
+                counts["scene_pairs"] += 1
+                if not verdict.ok:
+                    counts["scene_failed"] += 1
+                    if verdict.echo:
+                        counts["scene_echo"] += 1
+                    counts["turns_saved_by_early_stop"] += len(turns) - i - 2
+                    # ⭐ Keep the losing exchange: it is the only evidence that
+                    # says which stage-1 passes are false, and without it the
+                    # gate can only be tuned by paying for another run.
+                    _jsonl_append(missed_p,
+                                  {"id": d["id"], "theme": d["theme"],
+                                   "exchange": i // 2 + 1,
+                                   "reason": verdict.reason,
+                                   "turns": exchange}, lock)
+                    break
+                counts["scene_passed"] += 1
+                rendered.extend(exchange)
         except BudgetExceeded:
             stop.set()
             return
+
+        if len(rendered) < len(turns):
+            counts["truncated_by_scene_gate"] += 1
 
         # ⛔ A conversation must end on the Tlönian, or its last exchange has a
         # provocation with no reply.
@@ -268,12 +490,35 @@ def build(args) -> int:
         counts["full" if len(rendered) == len(d["turns"]) else "truncated"] += 1
         counts["turns"] += len(rendered)
         _jsonl_append(conv_p, {"id": d["id"], "theme": d["theme"],
-                               "lexicon": lex["_hash"], "turns": rendered}, lock)
+                               "lexicon": lex["_hash"],
+                               "forced_root_carry": steer,
+                               "recipe": "puzzle_steered" if steer
+                                         else "puzzle_unsteered",
+                               "turns": rendered}, lock)
 
     t0 = time.perf_counter()
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = [ex.submit(one, d) for d in todo]
         for i, _f in enumerate(cf.as_completed(futs), 1):
+            # ⛔⛤ THE RESULT MUST BE RETRIEVED OR THE EXCEPTION IS SWALLOWED.
+            # This loop never called `.result()`, so any error inside `one()`
+            # vanished with the future: the conversation simply did not appear
+            # and the report said "dropped 0" — not even a drop, an absence.
+            # A smoke run showed 4 scene pairs passing and 0 conversations
+            # written, and the traceback that explained it had been discarded.
+            try:
+                _f.result()
+            except BudgetExceeded:
+                stop.set()
+            except Exception as exc:                        # noqa: BLE001
+                counts["crashed"] += 1
+                # ⛔ THE TRACEBACK, NOT THE MESSAGE. "'<' not supported between
+                # NoneType and str" names neither the file nor the line, and
+                # reproducing it costs another paid run.
+                print("  ⛔ conversation raised %s: %s\n%s"
+                      % (type(exc).__name__, str(exc)[:200],
+                         "".join(traceback.format_exception(
+                             type(exc), exc, exc.__traceback__))[-900:]))
             if i % 50 == 0:
                 print("  %4d/%d  full %d  trunc %d  drop %d  $%.2f"
                       % (i, len(todo), counts["full"], counts["truncated"],
@@ -290,13 +535,93 @@ def build(args) -> int:
     cost = prop.cost_report()
     print("calls %d · $%.2f of $%.2f · %.0f min wall"
           % (cost["calls"], budget.spent, budget.limit, wall / 60))
+
+    # ── the acceptance check, against thresholds registered in carry.py ─────
+    # ⛔ COMPUTED HERE, ABOVE THE VERDICT, from the run's own counters. A
+    # threshold quoted in prose after the fact is a threshold chosen after
+    # seeing the number.
+    seen = _gate_report["pairs_seen"] or 1
+    spairs = counts["scene_pairs"] or 1
+    measured = {
+        "english_carry": _gate_report["pairs_passed"] / seen,
+        "scene_band": counts["scene_passed"] / spairs,
+        "echo": counts["scene_echo"] / spairs,
+    }
+    lo, hi = wilson(counts["scene_passed"], counts["scene_pairs"])
+    print("\nACCEPTANCE (pre-registered in tlon/act2/carry.py):")
+    print("  english_carry  %6.1f%%   min %5.1f%%   %s"
+          % (100 * measured["english_carry"],
+             100 * ACCEPTANCE["english_carry_min"],
+             "PASS" if measured["english_carry"]
+             >= ACCEPTANCE["english_carry_min"] else "⛔ FAIL"))
+    print("  echo           %6.1f%%   max %5.1f%%   %s"
+          % (100 * measured["echo"], 100 * ACCEPTANCE["echo_max"],
+             "PASS" if measured["echo"] <= ACCEPTANCE["echo_max"]
+             else "⛔ FAIL"))
+    print("  scene_band     %6.1f%%   [%.1f, %.1f] 95%% CI on n=%d pairs"
+          % (100 * measured["scene_band"], 100 * lo, 100 * hi,
+             counts["scene_pairs"]))
+    print("                 target %.0f%% · CI floor %.0f%% · needs n>=%d"
+          % (100 * ACCEPTANCE["scene_band_target"],
+             100 * ACCEPTANCE["scene_band_ci_floor"],
+             ACCEPTANCE["min_pairs_to_decide"]))
+    verdict, detail = decide(counts["scene_passed"], counts["scene_pairs"])
+    per_conv = (_gate_report["calls"] / _gate_report["accepted"]
+                if _gate_report["accepted"] else float("nan"))
+    print("  dialogue calls per accepted conversation: %.2f  "
+          "⭐ this is the cost model for the full build" % per_conv)
+    print("VERDICT: %s — %s" % (verdict, detail))
+    if verdict != "ACCEPTED":
+        print("⛔ DO NOT FUND THE FULL BUILD ON THIS.")
+    passed = verdict == "ACCEPTED"
+
+    # ⛔⛤ APPEND THE RUN BEFORE OVERWRITING THE REPORT. `build_report.json` is
+    # rewritten every time, so a RESUMED build silently discarded the earlier
+    # run's spend — the steered sample cost $3.02 + $2.23 and the file on disk
+    # said $1.83. Summing these reports across a corpus therefore UNDERCOUNTS,
+    # which is the same failure the Budget class was fixed for: a cost record
+    # that quietly loses history reads exactly like a cheap build. The full
+    # build is long and resumable, so this is where it would have mattered.
+    # ⭐ Append-only ledger, cumulative total derived from it.
+    runs_p = out_dir / "build_runs.jsonl"
+    _jsonl_append(runs_p, {"finished": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                           "usd": budget.spent, "calls": cost["calls"],
+                           "conversations_after": len(convs),
+                           "scene_pairs": counts["scene_pairs"],
+                           "scene_passed": counts["scene_passed"],
+                           "recipe": "puzzle_steered" if steer
+                                     else "puzzle_unsteered"}, lock)
+    ledger = _read_jsonl(runs_p)
+    cumulative = sum(r.get("usd", 0.0) for r in ledger)
+    pooled_pairs = sum(r.get("scene_pairs", 0) for r in ledger)
+    pooled_pass = sum(r.get("scene_passed", 0) for r in ledger)
+    print("\nLEDGER (%d run%s on this corpus): $%.2f cumulative · "
+          "pooled band %d/%d = %.1f%%"
+          % (len(ledger), "" if len(ledger) == 1 else "s", cumulative,
+             pooled_pass, pooled_pairs,
+             100 * pooled_pass / max(1, pooled_pairs)))
+
     (out_dir / "build_report.json").write_text(
         json.dumps({"counts": counts, "cost": cost,
+                    "usd_this_run": budget.spent,
+                    "usd_cumulative": cumulative,
+                    "runs_on_this_corpus": len(ledger),
+                    "pooled_scene_pairs": pooled_pairs,
+                    "pooled_scene_passed": pooled_pass,
                     "conversations": len(convs), "lexicon": lex["_hash"],
                     "wall_seconds": round(wall, 1),
-                    "stopped_on_budget": stop.is_set()},
+                    "stopped_on_budget": stop.is_set(),
+                    "carry_gate": dict(_gate_report),
+                    "forced_root_carry": steer,
+                    "recipe": "puzzle_steered" if steer else "puzzle_unsteered",
+                    "scene_band_ci95": wilson(counts["scene_passed"],
+                                              counts["scene_pairs"]),
+                    "acceptance": {"thresholds": ACCEPTANCE,
+                                   "measured": measured,
+                                   "calls_per_conversation": per_conv,
+                                   "passed": passed}},
                    ensure_ascii=False, indent=1), encoding="utf-8")
-    return 0
+    return 0 if passed else 3
 
 
 def main() -> int:
@@ -307,7 +632,22 @@ def main() -> int:
     ap.add_argument("--budget-usd", type=float, required=True,
                     help="⛔ HARD CAP, no default.")
     ap.add_argument("--workers", type=int, default=10)
-    ap.add_argument("--retries", type=int, default=1)
+    ap.add_argument("--retries", type=int, default=1,
+                    help="⛔ GRAMMAR retries inside the proposer only. This is "
+                         "NOT a carry retry — see the module docstring.")
+    ap.add_argument("--carry-attempts", type=int, default=3,
+                    help="stage-1 regenerations of a dialogue that fails the "
+                         "carry gate. Each costs ONE call.")
+    ap.add_argument("--no-steer", dest="steer", action="store_false",
+                    help="⛔ render the reply WITHOUT naming the prior turn's "
+                         "root. Unsteered carry measured 40.9%% [26.4, 55.4]. "
+                         "Kept so the steer can be measured against its own "
+                         "control rather than against a remembered number.")
+    ap.add_argument("--steer-attempts", type=int, default=2,
+                    help="resamples of a STEERED reply that still misses the "
+                         "band. ⛔ Meaningless without the steer, and forbidden "
+                         "— see the module docstring.")
+    ap.set_defaults(steer=True)
     ap.add_argument("--model", default="claude-sonnet-5")
     ap.add_argument("--lexicon", default=DEFAULT_LEXICON)
     ap.add_argument("--lexicon-env", default="TLON_LEXICON")

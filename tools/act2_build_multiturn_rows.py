@@ -7,11 +7,25 @@
                           `gloss(scene)`, so the model had never seen a sentence
                           a person would type and collapsed to two words.
 
-  `corpus_conversations`  599 exchanges, 5,208 turns, 68% content continuity
-                          against the old corpus's 27.1% (chance). Fixes
-                          CONTINUITY: `multiturn.py` carries "ONLY the prior
-                          turn's force ... no content relation", so the speaker
-                          was trained that context is noise.
+  `corpus_conversations`  the bench exchanges. Fixes CONTINUITY:
+                          `multiturn.py` carries "ONLY the prior turn's force
+                          ... no content relation", so the speaker was trained
+                          that context is noise.
+
+⛔⛤ THIS DOCSTRING ONCE CLAIMED THAT CORPUS HAD "68% content continuity against
+the old corpus's 27.1% (chance)". RETRACTED — that was WORD overlap, and three
+quarters of it was degree, tense and relator particles, forms every utterance
+needs. At ROOT level, which is what a player decodes against and what the
+acceptance check measures, it was 9%; within a conversation it ran BELOW chance
+(5.3% against a 7.5% shuffled null, p=0.000). The retrain bought on that number
+did not move continuity. ⭐ MEASURE THE CORPUS WITH THE INSTRUMENT THE PRODUCT
+IS JUDGED BY.
+
+⭐ The replacement is `runs/act2/corpus_conv_steered`, built with forced
+root-carry: **97.0% [93.7, 98.6] on n=203**, root-led (R 56.0% of what carries,
+against 9.3% before). Pass `--conversations` that path. ⛔ Its rows are stamped
+`forced_root_carry` / `recipe: puzzle_steered` — PUZZLE ONLY, never pooled into
+the research factorial.
 
 ⛔ CONTEXT IS STORED AS ROWS, NOT AS RENDERED TEXT. The prompt string depends on
 the tokenizer, so rendering it here would freeze one base's template into the

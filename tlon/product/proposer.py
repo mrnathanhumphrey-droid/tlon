@@ -31,7 +31,8 @@ class ProposerError(RuntimeError):
 class Proposer(Protocol):
     name: str
 
-    def propose(self, english: str, *, feedback: str | None = None) -> dict:
+    def propose(self, english: str, *, feedback: str | None = None,
+                require_roots: "list[str] | None" = None) -> dict:
         ...
 
 
@@ -115,11 +116,34 @@ class AnthropicProposer:
         self.usage: list[dict] = []
         self._card = lexicon_card()
 
-    def propose(self, english: str, *, feedback: str | None = None) -> dict:
+    def propose(self, english: str, *, feedback: str | None = None,
+                require_roots: "list[str] | None" = None) -> dict:
         tool = {"name": "render_scene",
                 "description": "Render the impression underneath the English.",
                 "input_schema": PS.json_schema()}
         user = f"Render this into Tlön:\n\n{english}"
+        if require_roots:
+            # ⛔⛔ PUZZLE-ONLY. This forces the reply to carry a specific root
+            # so a player has a dependable crib; it is exactly what the
+            # RESEARCH corpus must not contain, because forced carry
+            # contaminates the drift measurement. Never set on a research path.
+            #
+            # ⛔ SEPARATE FROM `feedback` ON PURPOSE. That parameter carries the
+            # PARSER'S REFUSAL VERBATIM — "the model is being corrected by the
+            # grammar, not by a paraphrase of it" — and a requirement is not a
+            # refusal. Folding this in would make a steer indistinguishable
+            # from a grammar correction in every log that reads `feedback`.
+            lex = C.load()["classes"]["R"]
+            named = ", ".join("`%s` (%s)" % (r, lex.get(r, "?"))
+                              for r in require_roots)
+            user += (
+                "\n\nCARRY REQUIREMENT. The line before this one rendered to "
+                "%s. This line names the SAME happening, so render that "
+                "happening with the SAME ROOT — do not choose a near-synonym "
+                "for it. Your scene MUST contain at least one of those roots, "
+                "and MUST ALSO contain at least one further root of its own, "
+                "so that it carries something across and still says something "
+                "new." % named)
         if feedback:
             # ⛔ The retry carries the PARSER's refusal verbatim. The model is
             # being corrected by the grammar, not by a paraphrase of it.
@@ -190,7 +214,8 @@ class ScriptedProposer:
         self._q = list(proposals)
         self.usage: list[dict] = []
 
-    def propose(self, english: str, *, feedback: str | None = None) -> dict:
+    def propose(self, english: str, *, feedback: str | None = None,
+                require_roots: "list[str] | None" = None) -> dict:
         if not self._q:
             raise ProposerError("scripted proposer exhausted")
         return self._q.pop(0)

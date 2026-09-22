@@ -56,6 +56,16 @@ venv/
 .idea/
 *.swp
 
+# ⛔⛔ THE STEERED PUZZLE CORPUS IS **NOT** IGNORED, AND THE REASON IS THE
+# REASON THE OTHERS ARE. Every exclusion above is justified by REGENERABILITY —
+# "deterministic at seed 20620 ... anyone can rebuild it and check they got the
+# identical bytes", which makes the builder plus a sha a stronger artifact than
+# the file. `runs/act2/corpus_conv_steered/` breaks that premise: it came from a
+# hosted model at temperature 1.0 and cost $62.97, so no seed reproduces it and
+# the builder is NOT a substitute for the bytes. It is 3.6 MB, it is the only
+# copy, and its 97.1% root-carry claim is only auditable if the rows are here.
+# ⭐ So it is committed on purpose. Do not "tidy" it into this file.
+
 # ── KEPT ON PURPOSE (documenting the exceptions, so they are not "missed") ──
 # !runs/act2/**/logs/          the measured output of every run
 # !runs/act2/**/ledger.jsonl   the spend + result ledger
