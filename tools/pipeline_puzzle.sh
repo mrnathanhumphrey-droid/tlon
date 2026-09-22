@@ -83,7 +83,20 @@ export CONV="${CONV:-runs/act2/corpus_conv_steered/conversations.jsonl}"
 CONV_ROWS="${CONV_ROWS:-}"
 ROWS_ARG=""
 [ -n "$CONV_ROWS" ] && ROWS_ARG="--conversation-rows $CONV_ROWS"
-export CELL="${CELL:-bench-s20624}"
+# ⛔⛔ NO DEFAULT, AND THE REASON IS A LOSS. This read `${CELL:-bench-s20624}`.
+# The steered run on 2026-09-22 took that default and its persist OVERWROTE the
+# adapter of the run that scored render 98.4% — a different model, at the same
+# name, in durable storage. It was recoverable (a local pull, and HF keeps the
+# prior revision) but only by luck, and nothing in the run said it had happened.
+# ⭐ A FIXED DEFAULT CELL NAME IS A DATA-LOSS TRAP THAT FIRES EVERY RUN: the
+# only thing standing between two runs and one overwritten adapter was somebody
+# remembering to pass `CELL=`, and "somebody remembers" is an instruction, not
+# a guard. Empty here, REQUIRED by `cell_guard` below, and checked against the
+# hub — so the failure is loud, before any GPU, instead of silent and durable.
+export CELL="${CELL:-}"
+#: ⛔ The only way past a collision. Deliberate re-runs of a cell exist; they
+#: must be SAID, not defaulted into.
+ALLOW_CELL_OVERWRITE="${ALLOW_CELL_OVERWRITE:-}"
 export SEED="${SEED:-20624}"
 export ROOT
 
@@ -129,7 +142,8 @@ RANK="${RANK:-32}"          # alpha = rank*2 = 64, matching ct-s20624 exactly
 DEADLINE_H="${DEADLINE_H:-8}"
 STALL_MIN="${STALL_MIN:-45}"
 
-A="$ROOT/adapter_$CELL"
+# ⛔ `A` IS SET AFTER `cell_guard`, NOT HERE. It is derived from `$CELL`, and
+# `$CELL` is not trustworthy until the guard has accepted it.
 mkdir -p "$ROOT/logs"
 tlon_log_init "$ROOT" "pipeline_puzzle.log"
 
@@ -160,7 +174,35 @@ step watchdog
 tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_puzzle.sh \
     "$DEADLINE_H" "$STALL_MIN" $$
 
-# ── 2 · THE CORPUS, REBUILT HERE FROM COMMITTED INPUTS ──────────────────────
+# ── 2 · THE CELL NAME, CHECKED AGAINST THE HUB BEFORE ANY GPU ───────────────
+# ⛔⛔ THIS GUARD EXISTS BECAUSE ITS ABSENCE COST AN ADAPTER. `CELL` defaulted to
+# a fixed name; the second run to take that default overwrote the first run's
+# weights in durable storage, silently. Recovery was luck, not design.
+# ⭐ DENY BY DEFAULT, like every other guard here: a cell that already exists on
+# the hub is REFUSED unless `ALLOW_CELL_OVERWRITE=1` says the overwrite is
+# intended. The check is a listing, it costs nothing, and it runs after the
+# watchdog so a refusal takes the box down with it.
+step cell_guard
+# ⛔⛔ EXPORTED BEFORE THE HEREDOC, BECAUSE THE PREFLIGHT ALREADY TAUGHT THIS:
+# the check below is a CHILD PROCESS and reads these through `os.environ`. A
+# variable merely assigned is not in a child's environment, and the guard would
+# `KeyError` on its first line — a guard that crashes is a guard that is absent.
+export HF_REPO ALLOW_CELL_OVERWRITE
+if [ -z "$CELL" ]; then
+  echo "⛔⛔ CELL IS REQUIRED AND HAS NO DEFAULT. Name the cell this run "\
+"persists to — a fixed default is what overwrote bench-s20624." | tee -a "$LOG"
+  exit 1
+fi
+# ⛔ A TOOL, NOT A HEREDOC. The decision is a pure function in
+# `act2_cell_guard.py` so it can be red-proofed on all three faces — refuse,
+# allow-on-purpose, free — without a hub or a network. Logic that lives only
+# inside a shell heredoc is logic no test can reach.
+$PY tools/act2_cell_guard.py 2>&1 | tee -a "$LOG"
+GUARD_RC=${PIPESTATUS[0]}
+[ "$GUARD_RC" -eq 0 ] || { echo "⛔ cell_guard rc=$GUARD_RC" | tee -a "$LOG"; exit 1; }
+A="$ROOT/adapter_$CELL"
+
+# ── 3 · THE CORPUS, REBUILT HERE FROM COMMITTED INPUTS ──────────────────────
 # ⛔⛔ THE ROWS WERE NEVER IN THE CLONE, AND NOBODY WROTE THAT DOWN. Provisioning
 # does `rm -rf ~/tlon && git clone`, and `corpus_bench_steered/` was untracked —
 # so every previous run of this pipeline trained on a corpus put on the box by
@@ -204,7 +246,7 @@ if [ "$GOT_TRAIN_SHA" != "$EXPECT_TRAIN_SHA" ]; then
 fi
 echo "  ✅ corpus rebuilt on the box and sha-verified" | tee -a "$LOG"
 
-# ── 3 · PREFLIGHT, BEFORE ANY GPU TIME ──────────────────────────────────────
+# ── 4 · PREFLIGHT, BEFORE ANY GPU TIME ──────────────────────────────────────
 # ⛔⛔ EVERY PREFLIGHT THIS PROJECT HAS WRITTEN PASSED BEFORE RUN 3a DIED,
 # BECAUSE NONE OF THEM LOADED ANYTHING. These check the two inputs that would
 # each silently void the run: the wrong lexicon, and a corpus whose rows do not
@@ -252,7 +294,7 @@ if over > len(rows) * 0.02:
                      "at the END, where the answer is." % (over, len(rows), seq))
 PYEOF
 
-# ── 4 · TRAIN ───────────────────────────────────────────────────────────────
+# ── 5 · TRAIN ───────────────────────────────────────────────────────────────
 step train
 $PY tools/act2_finetune.py --model "$MODEL" --out "$A" \
     --corpus "$CORPUS" --seq "$SEQ" --batch "$BATCH" --accum "$ACCUM" \
@@ -261,7 +303,7 @@ $PY tools/act2_finetune.py --model "$MODEL" --out "$A" \
 TRAIN_RC=${PIPESTATUS[0]}
 [ "$TRAIN_RC" -eq 0 ] || { echo "⛔ train rc=$TRAIN_RC" | tee -a "$LOG"; exit 1; }
 
-# ── 5 · IS IT STILL A SPEAKER? ──────────────────────────────────────────────
+# ── 6 · IS IT STILL A SPEAKER? ──────────────────────────────────────────────
 # ⛔ F-LOCAL is the only read here, and it is a HEALTH CHECK, not a verdict:
 # cardless and unconstrained, it asks whether the thing still produces legal
 # Tlön on demand. Expanding the lexicon and adding context should not break
@@ -274,7 +316,7 @@ FLOCAL_RC=${PIPESTATUS[0]}
 the adapter is still persisted below; a read that failed must not destroy the \
 thing it was reading)" | tee -a "$LOG"
 
-# ── 6 · PERSIST BEFORE THE BOX CAN END ITSELF ───────────────────────────────
+# ── 7 · PERSIST BEFORE THE BOX CAN END ITSELF ───────────────────────────────
 # ⛔⛔ THE ADAPTER IS THE ONE ARTIFACT RE-RUNNING CANNOT REGENERATE CHEAPLY, and
 # a Lambda box takes its disk with it on terminate.
 # ⛔⛔ `CELL_FILES` DEMANDS `factorial.json` AND `persist_cell` REFUSES AN
