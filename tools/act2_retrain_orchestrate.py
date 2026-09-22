@@ -311,7 +311,14 @@ PIPELINES = ("pipeline_retrain.sh", "pipeline_solo_regen.sh",
              # Run 0 lost only its READ, and the alternative -- re-running
              # `pipeline_fullft.sh` at the same cell -- would have overwritten
              # the object whose verdict is missing.
-             "pipeline_fullft_read.sh")
+             "pipeline_fullft_read.sh",
+             # ⭐ A MEASUREMENT, NOT A BUILD. Re-reads adapters already in
+             # durable storage at higher n — no training, no corpus, no new
+             # cell. It exists because at n=64 every pairwise CI between the
+             # puzzle adapters overlaps, so the binding constraint stopped
+             # being corpora and became the battery.
+             # ⛔ It writes NO cell, so it marks done on its READ artifacts.
+             "pipeline_battery.sh")
 #: ⛔ The recipe is the FACTORIAL'S CORPUS AXIS, so it belongs to the pipeline
 #: that builds corpora and to no other. Requiring it everywhere would file a
 #: transcript re-run into an arm it is not in.
