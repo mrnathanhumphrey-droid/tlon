@@ -315,6 +315,72 @@ def test_env_passthrough_ACCEPTS_the_values_the_arms_actually_need():
         assert O.ENV_PASSTHROUGH.match(good), good
 
 
+def _term_args(**kw):
+    import types
+    base = dict(instance="i-abc", root="battery", never_provisioned=False)
+    base.update(kw)
+    return types.SimpleNamespace(**base)
+
+
+def test_terminate_still_REFUSES_an_empty_ledger_by_default():
+    """⛔⛔ THE s20620 GATE IS UNCHANGED. The escape added below must not have
+    loosened the default path."""
+    from act2_retrain_orchestrate import cmd_terminate
+    with pytest.raises(TransferError, match="no collection ledger"):
+        cmd_terminate(_term_args())
+
+
+def test_never_provisioned_REFUSES_while_the_box_is_STILL_ACTIVE(monkeypatch):
+    """⛔⛔ THE FLAG DEMANDS EVIDENCE OF ABSENCE, NOT ABSENCE OF EVIDENCE.
+
+    An ACTIVE box may hold work that was never collected — which is the exact
+    state the ledger gate exists for. "I didn't provision it" is a claim, and
+    an active instance contradicts it.
+    """
+    import act2_retrain_orchestrate as O
+    monkeypatch.setattr(O, "instances",
+                        lambda: {"data": [{"id": "i-abc", "status": "active"}]})
+    with pytest.raises(TransferError, match="ACTIVE"):
+        O.cmd_terminate(_term_args(never_provisioned=True))
+
+
+def test_never_provisioned_REFUSES_when_a_COLLECTION_LEDGER_EXISTS(
+        tmp_path, monkeypatch):
+    """⛔ If anything was ever collected, this is not the never-provisioned
+    case and the normal gate applies. The flag must not become a way around
+    it for a box that did real work."""
+    import act2_retrain_orchestrate as O
+    root = tmp_path / "runs" / "act2" / "battery"
+    root.mkdir(parents=True)
+    (root / "collect_ledger.json").write_text("[]", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(O, "instances",
+                        lambda: {"data": [{"id": "i-abc",
+                                           "status": "unhealthy"}]})
+    with pytest.raises(TransferError, match="never-provisioned refused"):
+        O.cmd_terminate(_term_args(never_provisioned=True))
+
+
+def test_never_provisioned_PROCEEDS_on_an_unhealthy_box_with_no_ledger(
+        tmp_path, monkeypatch):
+    """⛔ Non-vacuity: a flag that refused every case would pass the two tests
+    above and leave an unhealthy box billing forever, which is the hole it was
+    written to close."""
+    import act2_retrain_orchestrate as O
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(O, "instances",
+                        lambda: {"data": [{"id": "i-abc",
+                                           "status": "unhealthy"}]})
+    called = {}
+    import act2_provision as P
+    monkeypatch.setattr(P, "_api",
+                        lambda path, body=None: called.setdefault(
+                            "hit", (path, body)) or {"ok": True})
+    assert O.cmd_terminate(_term_args(never_provisioned=True)) == 0
+    assert called["hit"][0] == "instance-operations/terminate"
+    assert called["hit"][1] == {"instance_ids": ["i-abc"]}
+
+
 def test_poll_does_not_hardcode_ONE_pipelines_log_name():
     """⛔⛔ SAME CLASS AS THE BATCH SIZE AND THE `adapter_s*` GLOB — correct for
     exactly one run and silently empty for the next. An empty tail reads as

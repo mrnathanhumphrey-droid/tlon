@@ -492,9 +492,50 @@ def cmd_persist(a):
 def cmd_terminate(a):
     _remote, local_root = _roots(a.root)
     led = local_root / "collect_ledger.json"
+    if a.never_provisioned:
+        # ⛔⛔ THE ONE CASE THE LEDGER GUARD CANNOT EXPRESS, AND IT COSTS MONEY.
+        # `may_terminate` refuses an empty ledger on purpose: absence of tracked
+        # artifacts is indistinguishable from a run whose outputs were never
+        # collected — the state s20620 was lost in. Correct. But a box that
+        # never BECAME a box is a different thing, and with no escape it bills
+        # until someone reaches for the console: a `gpu_1x_a100_sxm4` went
+        # `unhealthy` on 2026-09-22 without ever accepting an ssh connection,
+        # and the sanctioned path could not kill it.
+        #
+        # ⭐ SO THIS DEMANDS EVIDENCE OF ABSENCE, NOT ABSENCE OF EVIDENCE. The
+        # hub is asked whether the instance ever left a non-active state, and a
+        # collection ledger existing at all vetoes the flag — if anything was
+        # ever collected, this is not that case and the normal gate applies.
+        if led.exists():
+            raise TransferError(
+                "--never-provisioned refused: %s exists, so this box DID "
+                "produce collected artifacts. Use the normal gated path." % led)
+        live = [i for i in instances().get("data", [])
+                if i.get("id") == a.instance]
+        if not live:
+            print("  instance %s is already gone" % a.instance)
+            return 0
+        status = live[0].get("status")
+        if status == "active":
+            raise TransferError(
+                "--never-provisioned refused: instance %s is ACTIVE (status "
+                "%r). An active box may hold work that was never collected, "
+                "which is exactly what the ledger gate is for. Collect it, or "
+                "terminate it from the console deliberately."
+                % (a.instance, status))
+        print("  ⚠ TERMINATING UNPROVISIONED BOX %s — status %r, no collection "
+              "ledger at %s. Nothing was ever collected from it because "
+              "nothing was ever put on it." % (a.instance, status, led))
+        from act2_provision import _api
+        print(json.dumps(_api("instance-operations/terminate",
+                              {"instance_ids": [a.instance]}), indent=2))
+        return 0
     if not led.exists():
         raise TransferError("no collection ledger — nothing has been verified, "
-                            "so nothing may be terminated")
+                            "so nothing may be terminated. If this box never "
+                            "provisioned at all (it never went active, nothing "
+                            "was ever put on it), say so with "
+                            "--never-provisioned, which checks that claim.")
     records = json.loads(led.read_text(encoding="utf-8"))
     print(json.dumps(terminate(a.instance, records), indent=2))
     print("  ✅ terminated after every adapter was verified local AND persisted")
@@ -586,6 +627,11 @@ def main() -> int:
     q = sub.add_parser("terminate"); q.set_defaults(fn=cmd_terminate)
     q.add_argument("--instance", required=True)
     q.add_argument("--root", default="retrain12")
+    q.add_argument("--never-provisioned", action="store_true",
+                   help="⛔ for a box that never went active and never had "
+                        "anything put on it. REFUSED if the instance is still "
+                        "active or if a collection ledger exists — it demands "
+                        "evidence of absence, not absence of evidence.")
     a = ap.parse_args()
     return a.fn(a)
 
