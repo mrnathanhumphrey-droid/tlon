@@ -90,6 +90,92 @@ def read_rows(path: pathlib.Path):
                 yield row.get("english"), row.get("scene")
 
 
+def load_turns(paths, roots):
+    """`([(words, roots)], sources)` for every scorable turn in `paths`.
+
+    ⛔⛔ EXTRACTED SO THERE IS EXACTLY ONE PATH. `tlon/act2/synonyms.py` derives
+    the synonym-sets from the same word->root distribution this file scores,
+    and a second hand-rolled reader would put the treatment and the gate's own
+    vocabulary on different populations — the two would then disagree for
+    reasons no one could attribute. Same rows, same tokenizer, same filter.
+    """
+    turns, sources = [], []
+    for name in paths:
+        path = pathlib.Path(name)
+        if not path.exists():
+            raise SystemExit("⛔ no such corpus: %s" % path)
+        before = len(turns)
+        for english, scene in read_rows(path):
+            if not english or scene is None:
+                continue
+            rts = scene_roots_of(scene, roots)
+            if not rts:
+                continue
+            words = {w for w in WORD.findall(english.lower())
+                     if w not in STOP and len(w) > 2}
+            turns.append((words, rts))
+        got = len(turns) - before
+        if not got:
+            raise SystemExit(
+                "⛔⛔ %s contributed 0 scorable turns. It must pair `english` "
+                "with `scene` on the same row; a surface-only corpus cannot "
+                "support this measurement." % path)
+        sources.append({"path": str(path), "turns": got})
+    return turns, sources
+
+
+def tally(turns):
+    """`(hits, seen)` — the full word->root distribution and word frequency.
+
+    ⭐⭐ `hits[word][root]` IS THE SYNONYM SIGNAL, and `main()` below throws all
+    but the modal entry away. Two roots are candidate alternatives when ONE
+    English word lands on BOTH with support; that is a measured co-occurrence,
+    not a guess from spelling. Returned whole so the derivation can read it.
+    """
+    hits = collections.defaultdict(collections.Counter)
+    seen = collections.Counter()
+    for words, rts in turns:
+        for w in words:
+            seen[w] += 1
+            for r in rts:
+                hits[w][r] += 1
+    return hits, seen
+
+
+def modal_root(counts):
+    """`(root, count)` — the word's dominant root, DETERMINISTICALLY.
+
+    ⛔⛔ TIES ARE BROKEN BY NAME, NOT BY INSERTION ORDER, AND THE FIRST VERSION
+    OF THIS FILE USED `counts.most_common(1)`. That returns whichever tied root
+    was counted first, and the counting order comes from iterating a `set` of
+    roots — so it followed PYTHONHASHSEED. Two runs of this file over the same
+    corpus disagreed on 10 of 1110 words, every one an exact tie, and THREE of
+    them sat above the 0.70 gate and so inside the vocabulary
+    `tlon.act2.carry` actually reads. An artifact the carry gate depends on
+    must not depend on the interpreter's hash seed.
+
+    ⛔ The name is the TIE-BREAK ONLY. Count still decides first; a root that
+    sorts late still wins outright when it is the most common.
+    """
+    return min(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+
+#: Bound by `main()` (and by any caller) once the lexicon env var is set, since
+#: `tlon.act2.carry` reads `TLON_LEXICON` at import.
+scene_roots_of = None
+
+
+def bind_lexicon(lexicon: str, env: str = "TLON_LEXICON"):
+    """Set the lexicon, bind `scene_roots_of`, return the loaded lexicon."""
+    global scene_roots_of
+    os.environ[env] = lexicon
+    from tlon.act2.carry import scene_roots
+    from tlon.grammar import classes as C
+    C.load.cache_clear()
+    scene_roots_of = scene_roots
+    return C.load()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--corpus", nargs="+", required=True,
@@ -106,38 +192,14 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=20260921)
     args = ap.parse_args()
 
-    os.environ[args.lexicon_env] = args.lexicon
-    from tlon.act2.carry import scene_roots
-    from tlon.grammar import classes as C
-
-    C.load.cache_clear()
-    lex = C.load()
+    lex = bind_lexicon(args.lexicon, args.lexicon_env)
     roots = frozenset(lex["classes"]["R"])
     print("lexicon %s  %s  %d roots" % (args.lexicon, lex["_hash"], len(roots)))
 
-    turns, sources = [], []
-    for name in args.corpus:
-        path = pathlib.Path(name)
-        if not path.exists():
-            raise SystemExit("⛔ no such corpus: %s" % path)
-        before = len(turns)
-        for english, scene in read_rows(path):
-            if not english or scene is None:
-                continue
-            rts = scene_roots(scene, roots)
-            if not rts:
-                continue
-            words = {w for w in WORD.findall(english.lower())
-                     if w not in STOP and len(w) > 2}
-            turns.append((words, rts))
-        got = len(turns) - before
-        if not got:
-            raise SystemExit(
-                "⛔⛔ %s contributed 0 scorable turns. It must pair `english` "
-                "with `scene` on the same row; a surface-only corpus cannot "
-                "support this measurement." % path)
-        sources.append({"path": str(path), "turns": got})
-        print("  %-58s %6d turns" % (path.name, got))
+    turns, sources = load_turns(args.corpus, roots)
+    for src in sources:
+        print("  %-58s %6d turns"
+              % (pathlib.Path(src["path"]).name, src["turns"]))
 
     # ── the random-pair baseline: same rows, same estimator, no word filter ──
     rng = random.Random(args.seed)
@@ -152,19 +214,13 @@ def main() -> int:
     print("random-pair baseline %.3f  (n=%d)" % (baseline, trials))
 
     # ── each word's dominant root, and how reliably it holds ───────────────
-    hits = collections.defaultdict(collections.Counter)
-    seen = collections.Counter()
-    for words, rts in turns:
-        for w in words:
-            seen[w] += 1
-            for r in rts:
-                hits[w][r] += 1
+    hits, seen = tally(turns)
 
     scored = {}
     for w, n in seen.items():
         if n < args.min_turns or not hits[w]:
             continue
-        root, k = hits[w].most_common(1)[0]
+        root, k = modal_root(hits[w])
         scored[w] = {"root": root, "purity": round(k / n, 4), "turns": n}
 
     kept = {w: s for w, s in scored.items() if s["purity"] >= args.threshold}
