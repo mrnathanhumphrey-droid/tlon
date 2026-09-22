@@ -64,6 +64,8 @@ from tlon.grammar.parse import ParseError, parse            # noqa: E402
 from tlon.product.chat import MAX_ENGLISH_CHARS             # noqa: E402
 from tlon.product.literary import literary                  # noqa: E402
 
+from . import bench_prompt                                  # noqa: E402
+
 #: ⛔ Defaults match the configuration the speaker was READ in
 #: (`runs/act2/retrain12_ct/model_lag_ct-s20624.json`: temperature 0.7,
 #: max_new_tokens 256) so the thing on screen is the thing that was measured.
@@ -251,7 +253,11 @@ class Speaker:
         reply = None
         if yours.ok:
             backend.conversation = _bench(PROVOKE, provoke_pairs)
-            reply = generate(backend, PROVOKE, yours.surface, [], shape=SHAPE)
+            # ⭐ The bench's own framing, when it is turned on. Off by default:
+            # it is a hypothesis under test, not yet a finding. See
+            # `puzzle/bench_prompt.py` for what it overturns and why.
+            reply = generate(backend, PROVOKE, yours.surface, [], shape=SHAPE,
+                             system=bench_prompt.system_for(PROVOKE))
 
         # ⛔ Clear it. A stale bench left on a process-wide object would be
         # handed to the NEXT reader's first turn — one person's conversation

@@ -149,19 +149,34 @@ class Turn:
 
 
 def generate(backend, direction: str, payload: str, history, *,
-             shape: str = TRAINED, history_limit: int = 60) -> Turn:
+             shape: str = TRAINED, history_limit: int = 60,
+             system: str | None = None) -> Turn:
     """One direction, one generation, through the product's own gate.
 
     ⛔ The gate is `PS.validate`, which proves `parse(render(scene)) == scene`
     against the frozen lexicon. Nothing here renders; validation does. So no
     generation, however adversarial the English that provoked it, can put an
     illegal utterance on screen.
+
+    ⛔⛔ `system` DEFAULTS TO THE TRAINER'S AND EVERY EXISTING CALLER LEAVES IT
+    ALONE — this path is byte-identical for the research. It exists because the
+    PUZZLE needs a different framing than the research does: `SYSTEM["provoke"]`
+    instructs the speaker that "it need not be about what you were shown ...
+    only the force carries across", which is right for a campaign asking whether
+    content persists and is an explicit instruction against the one thing a
+    decodable bench conversation requires.
+
+    ⛔ AN OVERRIDE IS OFF-DISTRIBUTION BY CONSTRUCTION. Run 3 was trained on one
+    framing and prompted under another, and nothing caught it. Anything passing
+    this argument owes the reader a measurement of legality, not just of the
+    effect it was hoping for.
     """
     sent = user_message(direction, payload, history, shape=shape,
                         history_limit=history_limit)
     t0 = time.perf_counter()
     try:
-        proposal = backend.call(system=TRAINED_SYSTEM[direction], user=sent,
+        proposal = backend.call(system=system or TRAINED_SYSTEM[direction],
+                                user=sent,
                                 schema=SB.scene_schema(), kind=direction)
     except BackendError as exc:
         return Turn(direction, shape, seconds=time.perf_counter() - t0,
