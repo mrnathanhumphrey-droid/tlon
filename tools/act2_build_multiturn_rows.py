@@ -198,7 +198,14 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     for name, part in (("train.jsonl", trn), ("eval.jsonl", evl)):
         tmp = out_dir / (name + ".tmp")
-        with tmp.open("w", encoding="utf-8") as fh:
+        # ⛔⛔ `newline="\n"` OR THE BYTES DEPEND ON WHO BUILT THEM. Python text
+        # mode translates "\n" to "\r\n" on Windows, so the same builder, same
+        # inputs and same seed produce a DIFFERENT FILE on a laptop than on the
+        # Linux box that trains on it — different length, different hash, and no
+        # way to pin one. This corpus is an audited artifact whose row counts and
+        # truncation figures are published; they must not be a function of the
+        # machine. Same reason `.gitattributes` pins the lexicon with `-text`.
+        with tmp.open("w", encoding="utf-8", newline="\n") as fh:
             for r in part:
                 fh.write(json.dumps(r, ensure_ascii=False) + "\n")
         tmp.replace(out_dir / name)
@@ -232,8 +239,12 @@ def main() -> int:
             "%d conversation rows carry FORCED root-carry. This corpus is the "
             "puzzle's crib and the research's poison — never pool it into the "
             "factorial." % forced_rows)
+    # ⛔ `newline="\n"` here too — this is the file that ships to the run as
+    # `--corpus-manifest`, so it is provenance, and provenance that changes
+    # shape by platform is provenance nobody can check.
     (out_dir / "meta.json").write_text(
-        json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+        json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8",
+        newline="\n")
 
     print("rows %d (train %d · eval %d)" % (len(rows), len(trn), len(evl)))
     print("  by direction:", by_dir)

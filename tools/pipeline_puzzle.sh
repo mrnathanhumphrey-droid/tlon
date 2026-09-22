@@ -127,7 +127,67 @@ echo "  lexicon  $TLON_LEXICON"    | tee -a "$LOG"
 echo "  shape    seq $SEQ · batch $BATCH x $ACCUM · $EPOCHS epochs · rank $RANK" \
      | tee -a "$LOG"
 
-# ── 1 · PREFLIGHT, BEFORE ANY GPU TIME ──────────────────────────────────────
+# ── 1 · WATCHDOG, BEFORE ANYTHING THAT CAN FAIL ─────────────────────────────
+# ⛔⛔ HARD RULE, NO EXCEPTION. A box billing unguarded cost ~$16 of idle time
+# once and 35 minutes of unguarded billing another time to save a $9 re-fire.
+#
+# ⛔⛤ IT USED TO ARM *AFTER* THE PREFLIGHT, AND THAT WAS A HOLE. The preflight's
+# whole job is to REFUSE — wrong lexicon, unrenderable rows — and `set -e` means
+# a refusal exits the script. Exiting before this line left a freshly
+# provisioned box running with nothing watching it, so the stricter the
+# preflight got, the likelier it was to strand a box on the meter. Armed first,
+# the watchdog sees the watched pid die and terminates within one 300 s poll:
+# `decide()` returns KILL for "process is gone and the run did not complete".
+# A guard that only covers the paths that succeed is not a guard.
+step watchdog
+tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_puzzle.sh \
+    "$DEADLINE_H" "$STALL_MIN" $$
+
+# ── 2 · THE CORPUS, REBUILT HERE FROM COMMITTED INPUTS ──────────────────────
+# ⛔⛔ THE ROWS WERE NEVER IN THE CLONE, AND NOBODY WROTE THAT DOWN. Provisioning
+# does `rm -rf ~/tlon && git clone`, and `corpus_bench_steered/` was untracked —
+# so every previous run of this pipeline trained on a corpus put on the box by
+# hand, by a step that existed only in somebody's scrollback. The run log opens
+# at the preflight with the data already present and no record of where it came
+# from. A pipeline that cannot say where its training data came from is not
+# reproducible, whatever its logs say.
+#
+# ⭐ THE INPUTS ARE COMMITTED, THE ROWS ARE NOT, AND THE SPLIT IS THE EXISTING
+# RULE. `.gitignore` excludes what is regenerable and keeps what is not:
+# `corpus_conv_steered` cost $62.97 of hosted sampling at temperature 1.0 and
+# `corpus_natural` is part of the ~$130 Route-A build, so no seed reproduces
+# either and both are in the repo. These rows ARE an exact function of those
+# inputs at a fixed seed — verified byte-identical on a clean rebuild — so the
+# builder plus the pin below is the stronger artifact.
+step corpus
+$PY tools/act2_build_multiturn_rows.py \
+    --conversations runs/act2/corpus_conv_steered/conversations.jsonl \
+    --natural runs/act2/corpus_natural/pairs.jsonl \
+    --contrastive runs/act2/corpus_contrastive/pairs.jsonl \
+    --out "$CORPUS" --seed "$SEED" 2>&1 | tee -a "$LOG"
+CORPUS_RC=${PIPESTATUS[0]}
+[ "$CORPUS_RC" -eq 0 ] || { echo "⛔ corpus build rc=$CORPUS_RC" | tee -a "$LOG"; exit 1; }
+
+# ⛔⛔ PINNED, BECAUSE "DETERMINISTIC" IS A CLAIM UNTIL SOMETHING CHECKS IT.
+# This is the sha of the rows whose 97.1% root-carry and whose seq-1024
+# truncation figures are published in the header above. If the box builds
+# anything else — a changed input, a changed builder, a changed seed — those
+# numbers stop being about the thing being trained, which is the failure this
+# whole arc is a record of. Refuse rather than train.
+# ⛔ The builder writes `newline="\n"` explicitly. Without that the bytes differ
+# between a Windows laptop and this box and no pin can exist at all.
+EXPECT_TRAIN_SHA="${EXPECT_TRAIN_SHA:-62170ac2d87d0ea2251ca009d59aa041302cb09913d7d96ab5f18f1ab1296cb5}"
+GOT_TRAIN_SHA=$(sha256sum < "$CORPUS/train.jsonl" | cut -d' ' -f1)
+if [ "$GOT_TRAIN_SHA" != "$EXPECT_TRAIN_SHA" ]; then
+  echo "⛔⛔ CORPUS SHA MISMATCH — refusing to train on rows nobody measured" \
+       | tee -a "$LOG"
+  echo "   expected $EXPECT_TRAIN_SHA" | tee -a "$LOG"
+  echo "   got      $GOT_TRAIN_SHA" | tee -a "$LOG"
+  exit 1
+fi
+echo "  ✅ corpus rebuilt on the box and sha-verified" | tee -a "$LOG"
+
+# ── 3 · PREFLIGHT, BEFORE ANY GPU TIME ──────────────────────────────────────
 # ⛔⛔ EVERY PREFLIGHT THIS PROJECT HAS WRITTEN PASSED BEFORE RUN 3a DIED,
 # BECAUSE NONE OF THEM LOADED ANYTHING. These check the two inputs that would
 # each silently void the run: the wrong lexicon, and a corpus whose rows do not
@@ -175,14 +235,7 @@ if over > len(rows) * 0.02:
                      "at the END, where the answer is." % (over, len(rows), seq))
 PYEOF
 
-# ── 2 · WATCHDOG, BEFORE ANY GPU TIME ───────────────────────────────────────
-# ⛔⛔ HARD RULE, NO EXCEPTION. A box billing unguarded cost ~$16 of idle time
-# once and 35 minutes of unguarded billing another time to save a $9 re-fire.
-step watchdog
-tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_puzzle.sh \
-    "$DEADLINE_H" "$STALL_MIN" $$
-
-# ── 3 · TRAIN ───────────────────────────────────────────────────────────────
+# ── 4 · TRAIN ───────────────────────────────────────────────────────────────
 step train
 $PY tools/act2_finetune.py --model "$MODEL" --out "$A" \
     --corpus "$CORPUS" --seq "$SEQ" --batch "$BATCH" --accum "$ACCUM" \
@@ -191,7 +244,7 @@ $PY tools/act2_finetune.py --model "$MODEL" --out "$A" \
 TRAIN_RC=${PIPESTATUS[0]}
 [ "$TRAIN_RC" -eq 0 ] || { echo "⛔ train rc=$TRAIN_RC" | tee -a "$LOG"; exit 1; }
 
-# ── 4 · IS IT STILL A SPEAKER? ──────────────────────────────────────────────
+# ── 5 · IS IT STILL A SPEAKER? ──────────────────────────────────────────────
 # ⛔ F-LOCAL is the only read here, and it is a HEALTH CHECK, not a verdict:
 # cardless and unconstrained, it asks whether the thing still produces legal
 # Tlön on demand. Expanding the lexicon and adding context should not break
@@ -204,7 +257,7 @@ FLOCAL_RC=${PIPESTATUS[0]}
 the adapter is still persisted below; a read that failed must not destroy the \
 thing it was reading)" | tee -a "$LOG"
 
-# ── 5 · PERSIST BEFORE THE BOX CAN END ITSELF ───────────────────────────────
+# ── 6 · PERSIST BEFORE THE BOX CAN END ITSELF ───────────────────────────────
 # ⛔⛔ THE ADAPTER IS THE ONE ARTIFACT RE-RUNNING CANNOT REGENERATE CHEAPLY, and
 # a Lambda box takes its disk with it on terminate.
 # ⛔⛔ `CELL_FILES` DEMANDS `factorial.json` AND `persist_cell` REFUSES AN

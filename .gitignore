@@ -77,3 +77,13 @@ venv/
 **/ledger_tlon.jsonl
 **/ledger_harden.jsonl
 runs/act2/ledger.jsonl
+
+# ⭐ THE PUZZLE'S TRAINING ROWS ARE REGENERABLE AND THEREFORE NOT COMMITTED —
+# the same test every exclusion above passes. `corpus_bench_steered/` is an
+# exact function of the three committed inputs at seed 20624, verified
+# byte-identical on a clean rebuild, and `pipeline_puzzle.sh` rebuilds it ON THE
+# BOX and refuses unless its sha matches. Committing it would put a 9.4 MB copy
+# in the repo that can go stale against its own inputs without anything saying
+# so — which is worse than not having it, because it looks authoritative.
+runs/act2/corpus_bench_steered/
+runs/act2/corpus_bench/

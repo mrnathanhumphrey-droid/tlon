@@ -40,3 +40,15 @@ tlon/act2/happening_words.json -text
 # CRLF: `bash -n` tolerates it, and then a line like `for B in $BUILDS; do\r`
 # fails at run time on a machine that bills by the hour.
 *.sh text eol=lf
+
+# ⛔⛔ THE PUZZLE CORPORA ARE BYTE-PINNED, SO A CHECKOUT MAY NOT REWRITE THEM.
+# `pipeline_puzzle.sh` rebuilds the training rows on the box and refuses unless
+# their sha matches the one whose root-carry and truncation figures are
+# published. These three files are the inputs to that build. If a checkout gave
+# any of them CRLF the rebuild would still parse them — Python's universal
+# newlines hide it — but the repo would carry a different artifact than the one
+# that was audited, and the next person to hash them would get a different
+# answer for no stated reason. Same reason as the lexicon above.
+runs/act2/corpus_conv_steered/*.jsonl -text
+runs/act2/corpus_natural/*.jsonl -text
+runs/act2/corpus_contrastive/*.jsonl -text

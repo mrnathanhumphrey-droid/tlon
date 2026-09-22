@@ -382,6 +382,38 @@ def test_the_built_bench_corpus_carries_the_stamp_on_disk():
         % (unstamped, seen))
 
 
+def test_the_corpus_bytes_do_not_depend_on_the_machine(tmp_path, monkeypatch):
+    """⛔⛤ THE ROWS WERE CRLF ON WINDOWS AND LF ON THE BOX THAT TRAINS ON THEM.
+
+    Python text mode rewrites "\\n" as "\\r\\n" on Windows, so the same builder,
+    the same inputs and the same seed produced a different file — different
+    length, different sha — depending on who ran it. It is invisible from the
+    machine you are on, and it makes the corpus unpinnable: the hash the
+    pipeline checks would have been computed on a laptop and could never match
+    the box. Caught while pinning that hash, before it burned a run.
+    """
+    import act2_build_multiturn_rows as M
+
+    convs = tmp_path / "conversations.jsonl"
+    convs.write_text(json.dumps(
+        _conversation(forced_root_carry=True, recipe="puzzle_steered")) + "\n",
+        encoding="utf-8")
+    out = tmp_path / "corpus"
+    monkeypatch.setattr(sys, "argv", [
+        "act2_build_multiturn_rows.py",
+        "--conversations", str(convs),
+        "--natural", str(tmp_path / "absent_natural.jsonl"),
+        "--contrastive", str(tmp_path / "absent_contrastive.jsonl"),
+        "--out", str(out), "--eval-frac", "0"])
+    assert M.main() == 0
+
+    for name in ("train.jsonl", "meta.json"):
+        raw = (out / name).read_bytes()
+        assert b"\r\n" not in raw, (
+            "%s carries CRLF — its bytes depend on the platform that built it, "
+            "so it cannot be pinned against the box that trains on it" % name)
+
+
 def test_no_verdict_may_be_printed_below_the_deciding_n():
     """⛔⛤ THE ACCEPTED THAT A RERUN REVERSED.
 
