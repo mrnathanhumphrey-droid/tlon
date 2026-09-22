@@ -32,7 +32,8 @@ class Proposer(Protocol):
     name: str
 
     def propose(self, english: str, *, feedback: str | None = None,
-                require_roots: "list[str] | None" = None) -> dict:
+                require_roots: "list[str] | None" = None,
+                carry_mode: str = "exact") -> dict:
         ...
 
 
@@ -117,7 +118,8 @@ class AnthropicProposer:
         self._card = lexicon_card()
 
     def propose(self, english: str, *, feedback: str | None = None,
-                require_roots: "list[str] | None" = None) -> dict:
+                require_roots: "list[str] | None" = None,
+                carry_mode: str = "exact") -> dict:
         tool = {"name": "render_scene",
                 "description": "Render the impression underneath the English.",
                 "input_schema": PS.json_schema()}
@@ -136,14 +138,31 @@ class AnthropicProposer:
             lex = C.load()["classes"]["R"]
             named = ", ".join("`%s` (%s)" % (r, lex.get(r, "?"))
                               for r in require_roots)
-            user += (
-                "\n\nCARRY REQUIREMENT. The line before this one rendered to "
-                "%s. This line names the SAME happening, so render that "
-                "happening with the SAME ROOT — do not choose a near-synonym "
-                "for it. Your scene MUST contain at least one of those roots, "
-                "and MUST ALSO contain at least one further root of its own, "
-                "so that it carries something across and still says something "
-                "new." % named)
+            if carry_mode == "synonym":
+                # ⛔⛔ THE SOFTENED STEER, AND ITS WORDING MUST NOT CONTRADICT
+                # ITSELF. The exact steer below says "do not choose a
+                # near-synonym"; saying that while handing over a synonym SET
+                # would instruct the model both ways at once, and the corpus
+                # would measure the confusion rather than the softening.
+                user += (
+                    "\n\nCARRY REQUIREMENT. The line before this one named a "
+                    "happening that these roots all encode: %s. This line "
+                    "names the SAME happening, so render it with WHICHEVER of "
+                    "those roots fits this line best — they are alternatives "
+                    "for one happening, not a list to pick the first of. Your "
+                    "scene MUST contain at least one of them, and MUST ALSO "
+                    "contain at least one root from OUTSIDE that group, so "
+                    "that it carries the happening across and still says "
+                    "something new." % named)
+            else:
+                user += (
+                    "\n\nCARRY REQUIREMENT. The line before this one rendered "
+                    "to %s. This line names the SAME happening, so render that "
+                    "happening with the SAME ROOT — do not choose a "
+                    "near-synonym for it. Your scene MUST contain at least one "
+                    "of those roots, and MUST ALSO contain at least one further "
+                    "root of its own, so that it carries something across and "
+                    "still says something new." % named)
         if feedback:
             # ⛔ The retry carries the PARSER's refusal verbatim. The model is
             # being corrected by the grammar, not by a paraphrase of it.
@@ -215,7 +234,8 @@ class ScriptedProposer:
         self.usage: list[dict] = []
 
     def propose(self, english: str, *, feedback: str | None = None,
-                require_roots: "list[str] | None" = None) -> dict:
+                require_roots: "list[str] | None" = None,
+                carry_mode: str = "exact") -> dict:
         if not self._q:
             raise ProposerError("scripted proposer exhausted")
         return self._q.pop(0)

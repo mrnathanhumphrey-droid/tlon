@@ -94,8 +94,33 @@ for _s in (sys.stdout, sys.stderr):
 # drift and the second one is always the one nobody checks.
 from act2_build_natural_corpus import (Budget, BudgetExceeded,   # noqa: E402
                                        _jsonl_append, _read_jsonl)
-from tlon.act2.carry import (ACCEPTANCE, decide, gate_dialogue,  # noqa: E402
-                             scene_carry, scene_roots, wilson)
+from tlon.act2.carry import (ACCEPTANCE, decide, expand_roots,  # noqa: E402
+                             gate_dialogue, gloss_synonyms, scene_carry,
+                             scene_carry_soft, scene_roots, wilson)
+
+
+def steer_mode(steer: bool, soft: bool):
+    """`(prompt_mode, gate, recipe)` — ONE switch for all three. Pure.
+
+    ⛔⛔ THE REQUIREMENT, THE GATE AND THE STAMP MUST MOVE TOGETHER. Deciding
+    them at three separate sites is how an arm ends up steered with a synonym
+    family in the prompt and graded by the EXACT gate: every reply the prompt
+    invited would be recorded as a carry failure, and the softening would read
+    as the treatment not working. Derived once, here, so the three cannot drift.
+
+    ⛔ `--soft-steer --no-steer` is refused rather than quietly resolved. There
+    is no carry requirement to soften, and picking either reading for the user
+    would run an arm they did not ask for under a stamp that says otherwise.
+    """
+    if soft and not steer:
+        raise SystemExit(
+            "⛔⛔ --soft-steer with --no-steer is incoherent: there is no "
+            "carry requirement to soften. Pick one.")
+    if soft:
+        return "synonym", scene_carry_soft, "puzzle_softsteer"
+    if steer:
+        return "exact", scene_carry, "puzzle_steered"
+    return "exact", scene_carry, "puzzle_unsteered"
 
 DEFAULT_LEXICON = "lexicon_expanded.yaml"
 
@@ -339,9 +364,22 @@ def build(args) -> int:
     # pooling step has to strip it deliberately rather than inherit it by
     # accident. Same discipline as `factorial.json` carrying no pair key.
     steer = args.steer
+    soft = args.soft_steer
+    mode, gate, recipe = steer_mode(steer, soft)
     print("root-steer: %s%s"
           % ("ON — FORCED CARRY, PUZZLE CORPUS ONLY" if steer else "OFF",
              "" if steer else "  (the control arm)"))
+    if soft:
+        n_fam = len({v for v in gloss_synonyms().values()})
+        print("            SOFTENED — the requirement is the happening's "
+              "gloss family, not the exact root")
+        print("            %d families over %d roots · gate=scene_carry_soft "
+              "· recipe=%s" % (n_fam, len(gloss_synonyms()), recipe))
+        if not gloss_synonyms():
+            raise SystemExit(
+                "⛔⛔ --soft-steer but tlon/act2/gloss_synonyms.json is empty "
+                "or missing. Every root would expand to itself and this would "
+                "silently run as the EXACT steer under a softsteer stamp.")
 
     budget = Budget(args.budget_usd)
     prop = AnthropicProposer(args.model)
@@ -365,14 +403,15 @@ def build(args) -> int:
         {"full": 0, "truncated": 0, "dropped": 0, "turns": 0})
     stop = threading.Event()
 
-    def render_turn(english, require_roots=None):
+    def render_turn(english, require_roots=None, carry_mode="exact"):
         """English -> legal Tlön, or None. ⛔ Raises BudgetExceeded upward."""
         feedback = None
         for attempt in range(args.retries + 1):
             budget.reserve()
             try:
                 proposal = prop.propose(english, feedback=feedback,
-                                        require_roots=require_roots)
+                                        require_roots=require_roots,
+                                        carry_mode=carry_mode)
             except Exception as exc:                        # noqa: BLE001
                 budget.settle_proposer(prop.cost_report()["usd_total"])
                 return None, "proposer: %s" % str(exc)[:200]
@@ -431,9 +470,20 @@ def build(args) -> int:
                 # work rather than rolling the same dice. ⛔ A resample without
                 # a steer remains forbidden; `test_carry_gate.py` holds that.
                 exchange, verdict = None, None
-                want = p_turn["roots"] if steer else None
+                # ⛔⛔ THE REQUIREMENT AND THE VERDICT MUST WIDEN TOGETHER.
+                # Handing the proposer a synonym family while grading it with
+                # the EXACT gate would reject replies the prompt had just
+                # invited, and the corpus would record the softening as a
+                # failure of the model. `mode` drives both, from one place.
+                if steer and soft:
+                    want = sorted(expand_roots(p_turn["roots"]))
+                elif steer:
+                    want = p_turn["roots"]
+                else:
+                    want = None
                 for _try in range(args.steer_attempts if steer else 1):
-                    got, why = render_turn(t_en, require_roots=want)
+                    got, why = render_turn(t_en, require_roots=want,
+                                           carry_mode=mode)
                     if got is None:
                         _jsonl_append(refus_p, {"id": d["id"], "voice": tv,
                                                 "english": t_en,
@@ -444,7 +494,7 @@ def build(args) -> int:
                               "surface": t_surface, "scene": t_proposal,
                               "roots": sorted(scene_roots(t_proposal, roots))}
                     counts["steer_attempts"] += 1
-                    verdict = scene_carry(p_turn["roots"], t_turn["roots"])
+                    verdict = gate(p_turn["roots"], t_turn["roots"])
                     exchange = [p_turn, t_turn]
                     if verdict.ok:
                         counts["steer_landed_on_try_%d" % (_try + 1)] += 1
@@ -492,8 +542,7 @@ def build(args) -> int:
         _jsonl_append(conv_p, {"id": d["id"], "theme": d["theme"],
                                "lexicon": lex["_hash"],
                                "forced_root_carry": steer,
-                               "recipe": "puzzle_steered" if steer
-                                         else "puzzle_unsteered",
+                               "recipe": recipe,
                                "turns": rendered}, lock)
 
     t0 = time.perf_counter()
@@ -589,8 +638,7 @@ def build(args) -> int:
                            "conversations_after": len(convs),
                            "scene_pairs": counts["scene_pairs"],
                            "scene_passed": counts["scene_passed"],
-                           "recipe": "puzzle_steered" if steer
-                                     else "puzzle_unsteered"}, lock)
+                           "recipe": recipe}, lock)
     ledger = _read_jsonl(runs_p)
     cumulative = sum(r.get("usd", 0.0) for r in ledger)
     pooled_pairs = sum(r.get("scene_pairs", 0) for r in ledger)
@@ -613,7 +661,7 @@ def build(args) -> int:
                     "stopped_on_budget": stop.is_set(),
                     "carry_gate": dict(_gate_report),
                     "forced_root_carry": steer,
-                    "recipe": "puzzle_steered" if steer else "puzzle_unsteered",
+                    "recipe": recipe,
                     "scene_band_ci95": wilson(counts["scene_passed"],
                                               counts["scene_pairs"]),
                     "acceptance": {"thresholds": ACCEPTANCE,
@@ -643,6 +691,14 @@ def main() -> int:
                          "root. Unsteered carry measured 40.9%% [26.4, 55.4]. "
                          "Kept so the steer can be measured against its own "
                          "control rather than against a remembered number.")
+    ap.add_argument("--soft-steer", action="store_true",
+                    help="⭐ SOFTEN the steer: require a root from the prior "
+                         "happening's gloss-derived synonym family rather than "
+                         "the exact root, and grade with the matching gate. "
+                         "The exact steer bought carry (9%% -> 97%%) and cost "
+                         "~14 points of render; this tests whether the "
+                         "EXACTNESS was the cost. Stamps recipe "
+                         "`puzzle_softsteer`. ⛔ Requires --steer.")
     ap.add_argument("--steer-attempts", type=int, default=2,
                     help="resamples of a STEERED reply that still misses the "
                          "band. ⛔ Meaningless without the steer, and forbidden "

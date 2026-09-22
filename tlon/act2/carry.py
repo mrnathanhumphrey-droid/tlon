@@ -280,6 +280,73 @@ def scene_carry(prior_roots, reply_roots) -> Carry:
     return Carry(True, carried, added, "ok")
 
 
+GLOSS_SYNONYMS_PATH = pathlib.Path(__file__).with_name("gloss_synonyms.json")
+
+
+@functools.lru_cache(maxsize=1)
+def gloss_synonyms() -> dict:
+    """`{root: frozenset(its happening-family)}`, from the gloss judgment.
+
+    ⛔ PUZZLE-ONLY. See `tools/act2_build_gloss_synonyms.py`: these families are
+    a hand-made SEMANTIC reading of the root glosses, appropriate for a product
+    crib and not a measured claim. A root with no family is simply absent, and
+    every caller must then fall back to the exact root.
+    """
+    if not GLOSS_SYNONYMS_PATH.exists():
+        return {}
+    body = json.loads(GLOSS_SYNONYMS_PATH.read_text(encoding="utf-8"))
+    out = {}
+    for members in body["families"].values():
+        fam = frozenset(members)
+        for r in members:
+            out[r] = fam
+    return out
+
+
+def expand_roots(roots) -> frozenset:
+    """Every root that names the same happening as one of `roots`.
+
+    ⛔⛔ THE FALLBACK TIGHTENS. An unfamilied root expands to ITSELF, so the
+    softened gate degenerates to the exact gate for the 110 roots that stand
+    alone rather than loosening to anything-goes.
+    """
+    sets = gloss_synonyms()
+    out: set = set()
+    for r in roots or ():
+        out |= sets.get(r) or {r}
+    return frozenset(out)
+
+
+def scene_carry_soft(prior_roots, reply_roots) -> Carry:
+    """The SOFTENED band: carry the HAPPENING, not necessarily the exact root.
+
+    ⛔⛔ `added` IS COMPUTED AGAINST THE EXPANDED SET, NOT THE PRIOR SET, and
+    this is the whole subtlety. If the reply answers P's `flöx` (it dims) with
+    `pön` (it darkens), then `pön` is CARRIED. Measuring `added` against the
+    raw prior roots would also count `pön` as new, so a pure echo-in-synonyms
+    — a reply that restates the prior happening and says nothing else — would
+    pass both the "something carried" and the "something new" tests at once.
+    The echo clause only means anything if a synonym cannot be its own novelty.
+
+    ⛔ The exact gate is the special case where every family is a singleton, so
+    `scene_carry` and this function agree whenever no root has an alternative.
+    """
+    prior = frozenset(prior_roots or ())
+    reply = frozenset(reply_roots or ())
+    wide = expand_roots(prior)
+    carried, added = reply & wide, reply - wide
+    if not reply:
+        return Carry(False, carried, added, "the reply has no root at all")
+    if not carried:
+        return Carry(False, carried, added,
+                     "no root naming the prior turn's happening")
+    if not added:
+        return Carry(False, carried, added,
+                     "echo: every root restates the prior happening and none "
+                     "is new")
+    return Carry(True, carried, added, "ok")
+
+
 def wilson(hits: int, n: int, z: float = 1.96) -> tuple:
     """95% CI for a proportion, Wilson rather than normal-approximation.
 

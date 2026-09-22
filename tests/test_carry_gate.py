@@ -293,7 +293,18 @@ def test_forced_carry_is_stamped_on_the_corpus_not_just_documented():
     src = inspect.getsource(B.build)
     assert '"forced_root_carry": steer' in src, (
         "conversations are written without the puzzle-only marker")
-    assert '"recipe": "puzzle_steered"' in src
+    assert '"recipe": recipe' in src, (
+        "conversations are written without a recipe stamp")
+    # ⛔⛤ THIS ASSERTION USED TO GREP `build`'s SOURCE FOR THE LITERAL
+    # '"recipe": "puzzle_steered"'. The stamp later moved into `steer_mode()`,
+    # which is a single source of truth for prompt, gate and recipe — a strict
+    # improvement — and the test went red for a STALE REASON, guarding the
+    # shape of the code instead of the value on the corpus. Checking the string
+    # in the source could never have told a correct recipe from a wrong one
+    # anyway. The stamp is now read from the function that produces it.
+    assert B.steer_mode(True, False)[2] == "puzzle_steered"
+    assert B.steer_mode(True, True)[2] == "puzzle_softsteer"
+    assert B.steer_mode(False, False)[2] == "puzzle_unsteered"
 
 
 def _conversation(**stamp) -> dict:
