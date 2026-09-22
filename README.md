@@ -35,7 +35,7 @@ There is no "it" in the Tlön. There is no thing that repeats. There is only
 
 ## What this actually is
 
-Three things in one repository:
+Four things in one repository:
 
 1. **A complete constructed language** — 233 forms in 9 grammatical classes, with
    a parser, a renderer, and an exact round-trip guarantee.
@@ -43,6 +43,10 @@ Three things in one repository:
    you what survived the translation and what didn't.
 3. **A research record** — pre-registered experiments, with the failures and
    retractions left in.
+4. **A puzzle** (`puzzle/`) — a served speaker you hold a conversation with,
+   where the task is to decode the language from the replies alone. It has its
+   own corpus and its own speaker, deliberately kept apart from the research
+   ones; see *A note on the two corpora* below.
 
 ---
 
@@ -211,12 +215,14 @@ them.
 | `tlon/grammar/` | the language — parser, renderer, frozen lexicon |
 | `tlon/product/` | the chatbot: schema gate, translation, literary render |
 | `tlon/act2/` | the drift experiment — probes, falsifiers, corpus, diversity guard |
+| `tlon/discourse/` | multi-turn structure: provocation, force chains |
 | `tlon/harness/` | comparison guards that make bad statistics *unexpressable* |
-| `tools/` | `chat.py`, corpus builder, fine-tune, evaluation gates |
+| `puzzle/` | the served puzzle — speaker, prompt shape, leak guard, deploy |
+| `tools/` | `chat.py`, corpus builders, fine-tune, evaluation gates, pipelines |
 | `docs/` | pre-registrations, deviations, decision records |
-| `tests/` | 928 tests |
+| `tests/` | 2,152 tests |
 
-### Two things worth knowing before reading the code
+### Three things worth knowing before reading the code
 
 **The lexicon is frozen** at `e2b8527010231a81fd31b6eeb9de3d8c` and verified by
 test. It was the measuring instrument for every experiment here; changing it
@@ -227,12 +233,34 @@ prediction turned out wrong, the correction goes in a `DEVIATIONS` file beside
 it. That is why the mistakes are still visible — they were not allowed to be
 edited away.
 
+### A note on the two corpora
+
+**The puzzle and the research do not share a language or a corpus, on purpose.**
+
+The 233 forms and 156 roots described above are the *frozen* lexicon, and it is
+still what `tlon.grammar.classes.load()` returns by default. The puzzle speaks a
+**218-root expanded** language (`lexicon_expanded.yaml`, `08c03b0a…`), opted into
+through the `TLON_LEXICON` environment variable. A run that silently used the
+wrong one would train a speaker that cannot say words its own corpus contains,
+so the puzzle's pipeline asserts the hash before it spends anything.
+
+More important, the puzzle's conversational corpus has its continuity **forced**:
+when it builds a reply, it tells the model which root to carry over from the
+previous turn. That is what makes the cipher solvable by a player — and it is
+precisely the persistence the drift experiment exists to measure the *absence*
+of. Pooling the two would not be a labelling error, it would invent the result.
+
+Every row of it is therefore stamped `forced_root_carry` / `recipe:
+puzzle_steered`, in the training rows and in the corpus manifest, so a script
+that pools corpora has to strip the marker deliberately rather than merely fail
+to notice it.
+
 ---
 
 ## Reproducing it
 
 ```bash
-python -m pytest -q                              # 928 tests, no GPU needed
+python -m pytest -q                              # 2,152 tests, no GPU needed
 python tools/act2_build_corpus.py --n 40000      # deterministic, seed 20620
 python tools/act2_finetune.py --model <backbone> --dtype bf16 --seq 192 \
     --batch 16 --accum 1 --epochs 1 --out runs/act2/adapter
