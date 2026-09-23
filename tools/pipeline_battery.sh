@@ -7,10 +7,14 @@
 # needs a card. Measured at n=64 it ran 12m31s and 12m49s on an A100; at n=256
 # budget ~50 min per adapter.
 #
-# WHY IT EXISTS. Three adapters differ in render by up to 12.5 points and in
+# WHY IT EXISTS. The adapters differ in render by up to 12.5 points and in
 # `choose` by 12.5, and at n=64 EVERY pairwise 95% CI overlaps — the battery
 # cannot resolve the adapters we already own. The binding constraint stopped
 # being corpora and became n. This spends on resolution.
+# ⛔⛤ AND IT JUST HAPPENED AGAIN: the dosed arm read render 98.4% against the
+# steered 85.9% at n=64, and those CIs OVERLAP by seven tenths of a point
+# ([91.7, 99.7] vs [75.4, 92.4]). A point estimate 12.5 points clear of its
+# reference still decided nothing. That is what this run is for.
 #
 # ⛔⛔ THE ONLY THING THAT CHANGES IS n. `act2_flocal.py:214` records that the
 # battery APPENDS as it grows and that the first 64 items are verified
@@ -39,15 +43,28 @@ export TLON_LEXICON="${TLON_LEXICON:-lexicon_expanded.yaml}"
 export EXPECT_LEXICON="${EXPECT_LEXICON:-08c03b0a81330e4ba42883fa8b08c873}"
 export ROOT
 
-# ⛔ THE THREE ADAPTERS, NAMED. Not globbed: a glob would silently read whatever
+# ⛔ THE FOUR ADAPTERS, NAMED. Not globbed: a glob would silently read whatever
 # the hub happens to hold, and two of these names differ by four characters.
-CELLS="${CELLS:-bench5208-s20624 rowmatch-s20624 bench-s20624}"
+# ⭐ `dosed-s20624` is the arm this battery now adjudicates; the other three are
+# its references — steered, the row-matched control, and the 98.4% adapter.
+# ⛔⛔ COLONS ARE ACCEPTED BECAUSE THE SANCTIONED PATH CANNOT CARRY A SPACE.
+# `act2_retrain_orchestrate.ENV_PASSTHROUGH` is `^[A-Z][A-Z0-9_]*=[A-Za-z0-9_./:-]*$`
+# — a space is not in that class, so `--env CELLS="a b"` is REFUSED. That guard
+# is correct: the value is interpolated into a remote shell command. So the
+# LIST TRAVELS AS `a:b:c` and is split here, rather than the guard being widened
+# to let a space through on a billing box.
+CELLS="${CELLS:-dosed-s20624 bench-s20624 rowmatch-s20624 bench5208-s20624}"
+CELLS="${CELLS//:/ }"
 N="${N:-256}"
 N_COMP="${N_COMP:-256}"
 
-# ⛔ 6 h, not 8: three ~50 min reads plus model pulls. A deadline sized for a
-# training run would let a hung read bill for hours past the point of use.
-DEADLINE_H="${DEADLINE_H:-6}"
+# ⛔ 7 h, not 8: FOUR ~50 min reads plus model pulls is ~3.6 h, so this is
+# roughly double the expected wall — enough that a slow box is not killed
+# mid-read, tight enough that a HUNG one does not bill for hours past the point
+# of use. It was 6 h when this battery read three cells; adding `dosed-s20624`
+# moved the expected wall and the deadline has to move with it, or the guard
+# quietly becomes tighter than the job it guards.
+DEADLINE_H="${DEADLINE_H:-7}"
 STALL_MIN="${STALL_MIN:-45}"
 
 mkdir -p "$ROOT/logs"
@@ -112,8 +129,8 @@ for c in cells:
 dupes = {h: cs for h, cs in seen.items() if len(cs) > 1}
 if dupes:
     raise SystemExit("⛔⛔ REFUSING: these cells hold the SAME weights %r. The "
-                     "battery would report three readings of one adapter as a "
-                     "three-way comparison." % dupes)
+                     "battery would report two readings of one adapter as a "
+                     "comparison between different runs." % dupes)
 print("  ✅ %d cells, %d distinct adapters" % (len(cells), len(seen)))
 PYDIST
 
