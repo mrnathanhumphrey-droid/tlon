@@ -28,6 +28,9 @@ third is the one that decides whether the arm is worth running at all:
       paid for. This is the number that says "do not spend", and neither of
       the first two can see it: a corpus where the softening changed nothing
       scores IDENTICALLY on both.
+
+⛔⛔ AND THE THIRD HAS A FLOOR, PRE-DECLARED BEFORE THE RUN THAT MEASURES IT.
+See `EXERCISED_FLOOR`.
 """
 from __future__ import annotations
 
@@ -36,6 +39,26 @@ import json
 import os
 import pathlib
 import sys
+
+#: ⛔⛔ PRE-DECLARED 2026-09-22, BEFORE the n>=150 pilot was run, and committed
+#: before it was fired so that the declaration is in a diff rather than in
+#: anyone's memory.
+#:
+#: THE FALSE-NEGATIVE TRAP THIS CLOSES. The softened run exists to ask whether
+#: a gentler steer recovers render. If the softening is exercised on only a
+#: small share of pairs, the softened corpus is mostly the steered corpus, a
+#: retrain on it comes back near the steered render of 85.9%, and that reads as
+#: "softening does not recover render" when the truth is "softening barely
+#: happened". A weak treatment and a real null are indistinguishable in the
+#: result, so the treatment's STRENGTH has to be established before the run,
+#: not inferred from it afterwards.
+#:
+#: The first pilot measured 23.2% on 56 pairs — roughly [14%, 36%]. At the
+#: bottom of that interval the corpus is ~86% identical to the steered one.
+#: Below this floor the answer is to STRENGTHEN the softening (larger families,
+#: i.e. re-judge the glosses more inclusively) and re-pilot — never to spend on
+#: a comparison between two near-replicates and read the null as an answer.
+EXERCISED_FLOOR = 0.20
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
@@ -177,11 +200,34 @@ def main() -> int:
     print("KILL SWITCH  carry %.1f%% against a %.0f%% floor  ->  %s"
           % (100 * rate, 100 * args.floor,
              "TRAIN" if ok else "⛔⛔ DO NOT TRAIN"))
+
+    # ⛔⛔ THE TREATMENT-STRENGTH GATE, against a floor fixed before this ran.
+    ex_rate = via_synonym / n
+    ex_lo, ex_hi = wilson(via_synonym, n)
+    strong = ex_rate >= EXERCISED_FLOOR
+    print("TREATMENT    exercised %.1f%% [%.1f, %.1f] against a %.0f%% floor "
+          "(pre-declared)  ->  %s"
+          % (100 * ex_rate, 100 * ex_lo, 100 * ex_hi, 100 * EXERCISED_FLOOR,
+             "STRONG ENOUGH" if strong else "⛔⛔ TOO WEAK TO TEST"))
+    if not strong:
+        print("             ⛔ a corpus this close to the steered one would "
+              "return a null that cannot be told from 'softening does not "
+              "help'. STRENGTHEN the softening and re-pilot; do not spend.")
+    ok = ok and strong
+
     if via_synonym == 0:
         print("⛔⛔ AND STOP ANYWAY: the softening was never exercised. This "
               "corpus is a relabelled copy of the steered one and the retrain "
               "would re-measure a run already paid for.")
         ok = False
+
+    # ⛔ n MATTERS FOR THE TREATMENT GATE TOO. `decide()` refuses a carry
+    # verdict below 150 pairs because one was printed off 22 and the next
+    # identical run reversed it; the same arithmetic governs this rate.
+    if n < 150:
+        print("⚠ %d pairs. The carry verdict is UNDECIDED below 150 and this "
+              "interval is too wide to act on — both numbers above are "
+              "indicative, not a verdict." % n)
     return 0 if ok else 1
 
 

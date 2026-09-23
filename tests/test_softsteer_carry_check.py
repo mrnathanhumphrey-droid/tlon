@@ -111,6 +111,68 @@ def test_a_corpus_that_DOES_exercise_the_softening_is_accepted(tmp_path):
     assert "100.0% of pairs" in rc.stdout
 
 
+def _run_tool(tmp_path):
+    return subprocess.run(
+        [sys.executable, str(TOOLS / "act2_softsteer_carry_check.py"),
+         "--run", str(tmp_path)],
+        cwd=str(pathlib.Path(__file__).resolve().parents[1]),
+        capture_output=True, text=True, encoding="utf-8",
+        env={**__import__("os").environ, "PYTHONIOENCODING": "utf-8"})
+
+
+def test_a_treatment_below_the_PRE_DECLARED_floor_is_REFUSED(tmp_path):
+    """⛔⛔ THE FALSE-NEGATIVE TRAP, RED-PROOFED. 10% of pairs carry a synonym
+    and 90% carry the exact root — every carry rate is perfect, so the kill
+    switch alone says TRAIN. A retrain on a corpus 90% identical to the steered
+    one returns a null that cannot be told from "softening does not help".
+    """
+    soft = {"node": {"root": "pön", "edges": [{"node": {"root": "hlun"}}]}}
+    exact = {"node": {"root": "flöx", "edges": [{"node": {"root": "hlun"}}]}}
+    lines = []
+    for i in range(40):
+        reply = soft if i < 4 else exact          # 10% exercised
+        lines.append(json.dumps({"id": "c%d" % i, "turns": [
+            {"voice": "P", "scene": _scene("flöx")},
+            {"voice": "T", "scene": reply}]}))
+    (tmp_path / "conversations.jsonl").write_text("\n".join(lines) + "\n",
+                                                  encoding="utf-8")
+    (tmp_path / "scene_gate_missed.jsonl").write_text("", encoding="utf-8")
+
+    rc = _run_tool(tmp_path)
+    assert "TRAIN" in rc.stdout                   # carry alone is healthy
+    assert "TOO WEAK TO TEST" in rc.stdout
+    assert "STRENGTHEN the softening" in rc.stdout
+    assert rc.returncode == 1, rc.stdout
+
+
+def test_the_floor_is_NOT_vacuous_and_passes_a_strong_treatment(tmp_path):
+    """⛔ The other direction: a treatment well above the floor must pass, or
+    the gate would block every run rather than the weak ones.
+    """
+    soft = {"node": {"root": "pön", "edges": [{"node": {"root": "hlun"}}]}}
+    lines = [json.dumps({"id": "c%d" % i, "turns": [
+        {"voice": "P", "scene": _scene("flöx")},
+        {"voice": "T", "scene": soft}]}) for i in range(40)]
+    (tmp_path / "conversations.jsonl").write_text("\n".join(lines) + "\n",
+                                                  encoding="utf-8")
+    (tmp_path / "scene_gate_missed.jsonl").write_text("", encoding="utf-8")
+
+    rc = _run_tool(tmp_path)
+    assert "STRONG ENOUGH" in rc.stdout
+    assert rc.returncode == 0, rc.stdout
+
+
+def test_the_floor_is_pre_declared_as_a_constant_not_a_flag():
+    """⛔⛔ A THRESHOLD THAT CAN BE PASSED IN IS NOT PRE-DECLARED. The carry
+    floor is a `--floor` argument because it was fixed long ago; the treatment
+    floor is a module constant so that changing it after seeing a number shows
+    up as a source diff rather than a different command line.
+    """
+    assert K.EXERCISED_FLOOR == 0.20
+    src = (TOOLS / "act2_softsteer_carry_check.py").read_text(encoding="utf-8")
+    assert "--exercised-floor" not in src
+
+
 def test_an_empty_run_directory_is_REFUSED(tmp_path):
     rc = subprocess.run(
         [sys.executable, str(TOOLS / "act2_softsteer_carry_check.py"),
