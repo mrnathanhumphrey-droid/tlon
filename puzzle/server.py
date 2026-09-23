@@ -47,7 +47,36 @@ COOKIE = "tlon_bench"
 
 app = FastAPI(title="Tlön", docs_url=None, redoc_url=None, openapi_url=None)
 store = ConversationStore(DB_PATH)
-speaker = Speaker()
+# ⭐ THE SKELETON'S SPEAKER, WHEN ASKED FOR. `TLON_MOCK_SPEAKER=1` serves the
+# whole shape — real window, real store, real translate button, real refusals —
+# with no model and no GPU, so the page can be reacted to before anything is
+# spent. ⛔ `mock.enabled()` REFUSES on a deployed environment rather than
+# returning False: the mock emits legal Tlön, so it would answer every visitor
+# plausibly and nothing on the page would say the speaker was not the trained
+# model. A silent wrong answer is worse than a loud refusal to start.
+from . import mock_speaker as mock                                # noqa: E402
+
+if mock.enabled():
+    speaker = mock.MockSpeaker()
+    print("⚠⚠ MOCK SPEAKER — legal Tlön from the probe generator, carrying at "
+          "v1's measured %.1f%%. NOT the trained model." % (100 * mock.V1_CARRY_RATE),
+          flush=True)
+    # ⛔⛤ THE SKELETON RUNS ON http://, SO THE COOKIE MUST NOT BE `Secure`, AND
+    # `_set_cookie`'s own comment already warned about this: "the bench then
+    # forgets every turn with no error anywhere". It does — the first mock run
+    # of this server created a NEW conversation on every turn, so the window was
+    # always empty and the puzzle had no recurring roots at all. Nothing failed;
+    # it just quietly was not a conversation.
+    # ⛔ Only when TLON_HTTPS is UNSET. An explicit setting is the operator's and
+    # is never overridden — and this is safe to default only because
+    # `mock.enabled()` refuses to run in a deployed environment at all.
+    if "TLON_HTTPS" not in os.environ:
+        os.environ["TLON_HTTPS"] = "0"
+        print("   ↳ TLON_HTTPS=0 for the local skeleton; without it the bench "
+              "cookie is Secure, never returns over http, and every turn "
+              "starts a new conversation.", flush=True)
+else:
+    speaker = Speaker()
 # ⛔⛔ THE PUBLIC DEFAULTS ARE THE DEFAULTS, and they are deliberately tight: a
 # link mailed to strangers where every request runs a 7B model. But they are not
 # right for every context, and discovering that by having the limiter silently
@@ -128,7 +157,13 @@ def index():
 
 @app.get("/healthz")
 def healthz():
+    # ⛔ `mock` IS REPORTED, ALWAYS. A skeleton that looks identical to the real
+    # thing is exactly what a health check is for: without this the only way to
+    # tell a mocked bench from a trained one is to read the Tlön, and both are
+    # legal. It is a bare boolean on purpose — anything that has to be parsed
+    # to be understood will eventually be misread.
     return {"ok": True, "speaker_loaded": speaker.ready,
+            "mock": bool(getattr(speaker, "is_mock", False)),
             "load_seconds": speaker.load_seconds, **limiter.stats()}
 
 

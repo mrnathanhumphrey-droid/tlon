@@ -42,6 +42,17 @@ ALLOWED_PREFIXES = {
                             "prompt construction, so an empty bench is "
                             "byte-identical to the single-turn path",
     "tlon.act2.schema_bridge": "the scene schema the gate validates against",
+    # ⛔ DEV-ONLY, AND THE NARROWEST ENTRY HERE. `mock_speaker` draws
+    # already-validated surfaces from the probe generator so the skeleton emits
+    # REAL Tlön with no model — which is what keeps `parse`, `gloss` and the
+    # translate button exercised instead of stubbed. It is the only puzzle file
+    # that may import it, and `mock_speaker.enabled()` refuses to run in a
+    # deployed environment at all, so this never reaches a visitor.
+    "tlon.act2.probes":   "the probe generator — MOCK SPEAKER ONLY, dev-only, "
+                          "refuses to start in a deployed environment. Import "
+                          "the LEAF: `from tlon.act2 import probes` registers "
+                          "as `tlon.act2` and would allow-list the whole "
+                          "research package.",
     "act2_backends":      "LocalBackend — owned weights, the $0.00 path",
     "act2_finetune":      "SYSTEM — the TRAINED prompts, never re-spelt",
     "tlon_converse":      "the turn shape, imported not re-spelt",
@@ -122,6 +133,28 @@ def test_every_campaign_import_is_on_the_allow_list(path):
         "⛔ %s imports campaign modules that are not on the allow list: %s\n"
         "   Add it with a one-line reason, or do not import it."
         % (path.name, ", ".join(unlisted)))
+
+
+@pytest.mark.parametrize("path", _puzzle_files(), ids=lambda p: p.name)
+def test_the_probe_generator_is_the_MOCKS_alone(path):
+    """⛔⛔ NARROW THE GUARD, DO NOT WEAKEN IT — this file's own rule, applied
+    to its own allow list.
+
+    `tlon.act2.probes` was added so the MOCK speaker could emit real, validated
+    Tlön with no model. But an allow-list entry is granted to every file in the
+    package, so on its own it quietly licenses the shipped server to import the
+    research probe generator too. It does not: the mock is dev-only and refuses
+    to start in a deployed environment, and nothing that CAN reach a visitor may
+    depend on it.
+    """
+    if path.name == "mock_speaker.py":
+        return
+    assert not any(m == "tlon.act2.probes"
+                   or m.startswith("tlon.act2.probes.")
+                   for m in _modules(path)), (
+        "⛔ %s imports tlon.act2.probes. That entry exists for the dev-only "
+        "mock speaker; a file that can serve a visitor must not depend on the "
+        "research probe generator." % path.name)
 
 
 def test_no_anthropic_backend_anywhere_in_the_puzzle():
