@@ -154,6 +154,7 @@ echo "  corpus   $CORPUS"          | tee -a "$LOG"
 # source produce logs that are otherwise identical, and the one thing a reader
 # needs to tell them apart is the one thing that was never printed.
 echo "  conv     $CONV${CONV_ROWS:+  (row-matched to $CONV_ROWS)}" | tee -a "$LOG"
+echo "  dose     ${DOSE:-none (arm uses \$CONV as given)}" | tee -a "$LOG"
 echo "  lexicon  $TLON_LEXICON"    | tee -a "$LOG"
 echo "  shape    seq $SEQ · batch $BATCH x $ACCUM · $EPOCHS epochs · rank $RANK" \
      | tee -a "$LOG"
@@ -219,6 +220,27 @@ A="$ROOT/adapter_$CELL"
 # inputs at a fixed seed — verified byte-identical on a clean rebuild — so the
 # builder plus the pin below is the stronger artifact.
 step corpus
+# ⭐ THE DOSED ARM DERIVES ITS CONVERSATION POOL HERE, ON THE BOX, from the two
+# committed pools — exactly as the rows below are derived rather than shipped.
+# ⛔ `DOSE` unset leaves every existing arm byte-for-byte unchanged: no dosing
+# step runs and `$CONV` is used as given. Setting it blends the steered and
+# unsteered pools to that fraction and points `$CONV` at the result, so the
+# only thing this pipeline ever trains on is something it built itself.
+if [ -n "${DOSE:-}" ]; then
+  DOSED_CONV="$ROOT/corpus_conv_dosed/conversations.jsonl"
+  $PY tools/act2_build_dosed_corpus.py \
+      --steered runs/act2/corpus_conv_steered/conversations.jsonl \
+      --unsteered runs/act2/corpus_conversations/conversations.jsonl \
+      --dose "$DOSE" --rows "${CONV_ROWS:-4578}" --seed "$SEED" \
+      --out "$DOSED_CONV" 2>&1 | tee -a "$LOG"
+  DOSE_RC=${PIPESTATUS[0]}
+  [ "$DOSE_RC" -eq 0 ] || { echo "⛔ dose build rc=$DOSE_RC" | tee -a "$LOG"; exit 1; }
+  CONV="$DOSED_CONV"
+  # ⛔⛔ The dosing tool already selected to the row target. Passing
+  # --conversation-rows again would re-subset it and silently move the dose.
+  ROWS_ARG=""
+  echo "  ⭐ dosed pool built on the box · dose=$DOSE" | tee -a "$LOG"
+fi
 $PY tools/act2_build_multiturn_rows.py \
     --conversations "$CONV" \
     --natural runs/act2/corpus_natural/pairs.jsonl \
