@@ -338,6 +338,25 @@ FLOCAL_RC=${PIPESTATUS[0]}
 the adapter is still persisted below; a read that failed must not destroy the \
 thing it was reading)" | tee -a "$LOG"
 
+# ── 6b · MODEL-SIDE CARRY, WHILE THE CARD IS STILL RENTED ───────────────────
+# ⛔⛔ EVERY CARRY NUMBER IN THIS ARC IS A CORPUS PROPERTY. 9.3%, 54.8%, 97.1% —
+# all measured at build time on text a hosted proposer wrote. None of them says
+# whether the TRAINED SPEAKER carries anything, and `act2_flocal.py` does not
+# measure it. "Render AND carry" was therefore half unmeasurable.
+# ⛔ It runs HERE rather than later because the alternative is keeping a box
+# alive for it or buying a second one, and an unexecuted runbook step is how
+# s20620 was lost.
+# ⛔ Non-fatal for the same reason f_local is: a read that fails must not
+# destroy the adapter it was reading.
+if [ -n "${CARRY_N:-}" ]; then
+  step model_carry
+  $PY tools/act2_model_carry.py --model "$MODEL" --adapter "$A" \
+      --n "$CARRY_N" --out "$ROOT/model_carry_$CELL.json" 2>&1 | tee -a "$LOG"
+  CARRY_RC=${PIPESTATUS[0]}
+  [ "$CARRY_RC" -eq 0 ] || echo "⚠ model_carry rc=$CARRY_RC (recorded, not \
+fatal)" | tee -a "$LOG"
+fi
+
 # ── 7 · PERSIST BEFORE THE BOX CAN END ITSELF ───────────────────────────────
 # ⛔⛔ THE ADAPTER IS THE ONE ARTIFACT RE-RUNNING CANNOT REGENERATE CHEAPLY, and
 # a Lambda box takes its disk with it on terminate.
@@ -400,4 +419,13 @@ $PY tools/act2_box_persist.py --root "$ROOT" --repo "$HF_REPO" \
     cell --cell "$CELL" --solo-n 0 \
     --corpus-manifest "$CORPUS/meta.json" 2>&1 | tee -a "$LOG"
 
-tlon_gate_done "$PY" "$ROOT" "$HF_REPO" "$CELL" 2>&1 | tee -a "$LOG"
+# ⛔⛔ THE CARRY ARTIFACT IS PASSED AS AN EXTRA RUN FILE, AND THE REASON IS A
+# LOSS THAT HAPPENED HOURS AGO. The n=256 battery's per-item ledger existed only
+# on a box that was killed before its persist step, so three cells' worth of
+# pairing is gone and every comparison had to be made UNPAIRED. A per-item
+# artifact that lives only on the instance is an artifact you are choosing to
+# lose. `tlon_gate_done`'s 5th argument onward is exactly the hook for this.
+EXTRA_FILES=()
+[ -n "${CARRY_N:-}" ] && [ -f "$ROOT/model_carry_$CELL.json" ] \
+  && EXTRA_FILES+=("$ROOT/model_carry_$CELL.json")
+tlon_gate_done "$PY" "$ROOT" "$HF_REPO" "$CELL" "${EXTRA_FILES[@]}" 2>&1 | tee -a "$LOG"
