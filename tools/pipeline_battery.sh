@@ -153,8 +153,17 @@ PYLEX
 # ⛔ `--n` and `--n-comp` are the ONLY arguments that differ from the n=64 runs.
 # Everything else is left at the value those runs used, because the comparison
 # to them is the entire point.
+# ⛔ SKIP_FLOCAL EXISTS SO A CARRY SWEEP DOES NOT RE-BUY READS ALREADY OWNED.
+# dosed, steered and rowmatch already have n=256 render/speak/choose from the
+# battery of 2026-09-23; re-reading them would spend ~50 min per cell to
+# reproduce numbers already on the record. ⛔⛔ It is NOT a way to skip a read
+# that was never taken — if a cell has no n=256 figures, do not set this.
 step flocal
 for C_ in $CELLS; do
+  if [ -n "${SKIP_FLOCAL:-}" ]; then
+    echo "── F-LOCAL · $C_ · SKIPPED (n=256 already on record) ──" | tee -a "$LOG"
+    continue
+  fi
   echo "── F-LOCAL · $C_ · n=$N n_comp=$N_COMP ──" | tee -a "$LOG"
   $PY tools/act2_flocal.py --model "$MODEL" \
       --adapter "$ROOT/hub/$C_" --n "$N" --n-comp "$N_COMP" 2>&1 | tee -a "$LOG"
@@ -164,14 +173,52 @@ for C_ in $CELLS; do
   [ "$RC" -eq 0 ] || { echo "⛔ f_local rc=$RC on $C_" | tee -a "$LOG"; exit 1; }
 done
 
+# ── 5b · THE CARRY SWEEP ────────────────────────────────────────────────────
+# ⛔⛔ A CARRY NUMBER WITH NO REFERENCE IS NOT INTERPRETABLE. dose75 measured
+# 50.4% [44.3, 56.5] — the first model-side carry ever taken in this project —
+# and nothing could be said about whether that was good or bad, because no
+# other adapter had ever been asked the question. This sweeps the same probe,
+# at the same seed, on the same battery, across every cell, so the numbers are
+# comparable to one another AND paired item-for-item.
+# ⛔ A failed carry read is FATAL here, unlike in `pipeline_puzzle.sh`. There
+# the adapter was the deliverable and a failed read must not destroy it; here
+# THE READ IS the deliverable, so a missing one is a missing result.
+CARRY_FILES=()
+if [ -n "${CARRY_N:-}" ]; then
+  step model_carry
+  for C_ in $CELLS; do
+    echo "── MODEL CARRY · $C_ · n=$CARRY_N ──" | tee -a "$LOG"
+    $PY tools/act2_model_carry.py --model "$MODEL" \
+        --adapter "$ROOT/hub/$C_" --n "$CARRY_N" \
+        --out "$ROOT/model_carry_$C_.json" 2>&1 | tee -a "$LOG"
+    RC=${PIPESTATUS[0]}
+    [ "$RC" -eq 0 ] || { echo "⛔ model_carry rc=$RC on $C_" | tee -a "$LOG"; exit 1; }
+    CARRY_FILES+=("$ROOT/model_carry_$C_.json")
+  done
+fi
+
 # ── 6 · PERSIST THE LEDGER, WHICH IS WHERE THE PAIRING LIVES ────────────────
 # ⛔⛔ THE PER-ITEM RESULTS ARE THE DELIVERABLE, NOT THE PRINTED RATES.
 # `act2_flocal` ledgers `comprehension_items`, and a PAIRED test (McNemar) on
 # the same items is what this run is for — the printed percentage cannot be
 # paired with anything. Terminal output is not an artifact.
 step persist
-cp runs/act2/ledger.jsonl "$ROOT/ledger_battery.jsonl"
-tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" "$ROOT/ledger_battery.jsonl"
+# ⛔⛔ THE LEDGER ONLY EXISTS IF F-LOCAL RAN. A carry-only sweep has none, and
+# `cp` on a missing file under `set -e` would kill the run AFTER every read was
+# paid for and BEFORE anything was persisted — losing precisely what the box
+# was rented to produce. That is the shape of the loss this battery already
+# suffered once, from the other direction: its per-item ledger died with a box
+# that was killed before reaching this step.
+LEDGER_FILES=()
+if [ -f runs/act2/ledger.jsonl ]; then
+  cp runs/act2/ledger.jsonl "$ROOT/ledger_battery.jsonl"
+  LEDGER_FILES+=("$ROOT/ledger_battery.jsonl")
+else
+  echo "  ⚠ no ledger.jsonl — F-LOCAL did not run this pass (carry-only sweep)" \
+       | tee -a "$LOG"
+fi
+tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" \
+    "${LEDGER_FILES[@]}" "${CARRY_FILES[@]}"
 
 # ── 7 · VERIFY THE READ LANDED, THEN AND ONLY THEN MARK DONE ────────────────
 # ⛔⛔ NOT `tlon_gate_done`. That helper verifies CELLS, and this run writes no
@@ -181,15 +228,31 @@ tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" "$ROOT/ledger_battery.jsonl"
 # is checked, exactly as `pipeline_fullft_read.sh` does.
 # ⛔ `~/DONE` means PERSISTED-AND-VERIFIED, because the watchdog terminates the
 # box within one poll of seeing it.
+# ⛔⛔ THE GATE MUST VERIFY WHAT THIS RUN PRODUCED, NOT WHAT SOME RUN PRODUCES.
+# `want` was a fixed list naming `ledger_battery.jsonl`, which only exists when
+# F-LOCAL ran. A carry-only sweep would have produced four carry artifacts,
+# persisted all of them, and then been REFUSED the done-marker for missing a
+# file it was never going to write — so the box would have billed to its 7 h
+# deadline holding results it had already delivered. The expected set is now
+# derived from the artifacts the run actually created.
 step verify_reads
 RBASE=$(basename "$ROOT")
+WANT_LIST="$RBASE/pipeline_battery.log"
+[ ${#LEDGER_FILES[@]} -gt 0 ] && WANT_LIST="$WANT_LIST $RBASE/ledger_battery.jsonl"
+for f in ${CARRY_FILES[@]+"${CARRY_FILES[@]}"}; do
+  WANT_LIST="$WANT_LIST $RBASE/$(basename "$f")"
+done
 $PY - <<PYVER 2>&1 | tee -a "$LOG"
 import sys
 sys.path.insert(0, "tools")
 from huggingface_hub import HfApi
 import act2_provision as P
 have = set(HfApi(token=P._hf_token()).list_repo_files("$HF_REPO"))
-want = ["$RBASE/ledger_battery.jsonl", "$RBASE/pipeline_battery.log"]
+want = "$WANT_LIST".split()
+if not want:
+    raise SystemExit("⛔⛔ REFUSING: this run declared NO read artifacts. A "
+                     "verification with an empty expected set cannot fail, "
+                     "and a check that cannot fail is not a check.")
 missing = [w for w in want if w not in have]
 for w in want:
     print("  %s %s" % ("MISSING" if w in missing else "OK     ", w))
