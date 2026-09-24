@@ -9,8 +9,8 @@
 # settled before `fly deploy` — see puzzle/README.md §deploy. The GPU line in
 # particular is a COST decision and is Nate's, not a default.
 
-app = "tlon-bench"                 # ⛔ PLACEHOLDER — confirm before first deploy
-primary_region = "sjc"             # ⛔ PLACEHOLDER — pick for GPU availability
+app = "tlon-bench"
+primary_region = "iad"             # Ashburn, Virginia — us-east, Nate's call
 
 [build]
   dockerfile = "Dockerfile"
@@ -74,12 +74,26 @@ primary_region = "sjc"             # ⛔ PLACEHOLDER — pick for GPU availabili
   initial_size = "40gb"
 
 # ── the machine ─────────────────────────────────────────────────────────────
-# ⛔⛔ GPU SKU AND SIZE ARE UNSET ON PURPOSE. Measured need is 7.21 GiB of VRAM
-# at 4-bit plus KV cache, so the smallest available card is very likely enough —
-# but the SKU names, their VRAM and their hourly rates must be READ FROM FLY AT
-# DECISION TIME, never recalled. Fill this in with Nate after that check.
+# ⛔⛔ A GPU, AND IT IS NOT OPTIONAL. This serves Qwen2.5-7B with a LoRA. Without
+# `gpu_kind` Fly hands back a CPU machine, torch falls back, and every turn takes
+# roughly a minute — slow, not broken, so nothing alerts and the app looks
+# healthy. The Dockerfile names that same failure for the same reason.
+#
+# ⭐ L40S IS FLY'S GPU OFFERING, read 2026-09-24 rather than recalled: the GPU
+# quickstart now redirects to fly.io/blog/wrong-about-gpu, which says they are
+# NOT being retired — "if you're using Fly GPU Machines, don't freak out" — and
+# that the L40S line stays. Measured need is 7.21 GiB of VRAM at 4-bit plus KV
+# cache, so one card is far more than enough; there is no smaller SKU to choose.
+#
+# ⛔ `fly platform regions` does NOT report GPU availability, so `iad` is a
+# choice that DEPLOY WILL VERIFY, not one that has been verified here. If it is
+# refused for capacity, `ord` is the nearest alternative — do not silently drop
+# `gpu_kind` to make the deploy succeed.
+#
+# ⛔ 16 GB of host RAM, not 8. The shards are loaded and quantised on the host
+# before they reach the card; 8 GB was set when nothing had tried it.
 [[vm]]
-  # gpu_kind = "<confirm at deploy time>"
-  # gpus = 1
-  memory = "8gb"
-  cpus = 4
+  gpu_kind = "l40s"
+  gpus = 1
+  memory = "16gb"
+  cpus = 8

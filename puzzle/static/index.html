@@ -8,8 +8,17 @@
      (`rr_theme`), so a reader who chose light on resolveresearcher.com arrives
      here already in light. -->
 <script>(function(){try{if(localStorage.getItem('rr_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
-<link rel="stylesheet" href="/assets/theme.css?v=4">
-<script src="/assets/theme.js" defer></script>
+<!-- ⛔⛔ THE SHARED SHEETS ARE APEX'S AND ARE NOT COPIED HERE.
+     `puzzle/static/assets/theme.css` was a THIRD fork -- 221 lines against
+     apex's 252 -- so it had already missed 31 lines of palette work and a
+     fix on apex could never reach this page. The Oracle's own head says to
+     do this once apex carried the files; it now does.
+     ⛔ This makes the bench depend on apex being up for its chrome. That
+     is the trade the family already takes for `modals.css`, and one copy
+     that is occasionally unreachable beats four copies that silently
+     disagree. -->
+<link rel="stylesheet" href="https://resolveresearcher.com/assets/theme.css?v=18">
+<script src="https://resolveresearcher.com/assets/theme.js?v=4" defer></script>
 <title>tlön — the bench</title>
 <meta name="description" content="Say anything in English. Something answers in a language with no nouns.">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
@@ -19,6 +28,9 @@
      sans, Chivo Mono for eyebrows and keys — the same three faces and the same
      fallbacks as every other surface in the family. -->
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Mulish:wght@400;500;600&family=Chivo+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- ⭐ THE DOOR: one bar on every surface in the family. -->
+<link rel="stylesheet" href="https://resolveresearcher.com/assets/bar.css?v=2">
+<script defer src="https://resolveresearcher.com/assets/bar.js"></script>
 <link rel="stylesheet" href="/static/chrome.css?v=2">
 <link rel="stylesheet" href="/static/oracle.css?v=19">
 <link rel="stylesheet" href="/static/puzzle.css?v=1">
@@ -26,12 +38,82 @@
 </head>
 <body>
 
-<!-- ═══ PLACEHOLDER ═══ the bar. Wordmark copy and the logo are Nate's. ═══ -->
-<header class="bar">
-  <a class="brand" href="/">
-    <span class="brand-tlon" data-placeholder>tlön</span>
-  </a>
-  <nav class="nav"><!-- theme.js injects the light/dark toggle here --></nav>
+<!-- ⛔⛔ THE FAMILY'S DOOR, COPIED FROM THE ORACLE AND NOT FROM APEX.
+     apex links its own pages relatively (`/writings/`, `/sportshome/`);
+     on a subdomain every one of those 404s. The Oracle is already on a
+     subdomain and fully-qualifies them, so its block is the correct one.
+     ⏭ töln itself is NOT yet a row in this door -- that is an apex
+     change, in Billy's repo, and is not made from here. -->
+<header class="bar bar-v2">
+  <div class="door-wrap">
+    <button class="door" type="button" aria-haspopup="true" aria-expanded="false"
+            aria-label="resolve research, open the menu">
+      <img src="https://resolveresearcher.com/assets/rr-logo.png" alt="">
+      <span class="nm"><span class="q">resolve</span> <span class="s">oracle</span></span>
+      <span class="car" aria-hidden="true">&#9662;</span>
+    </button>
+    <div class="door-panel" hidden>
+      <a class="dp-oracle" href="https://oracle.resolveresearcher.com">
+        <span class="dot" aria-hidden="true">&#9679;</span>
+        <span><b>ai home</b><span>every tool on one page</span></span>
+      </a>
+      <span class="dp-label">projections</span>
+      <div class="dp-grid">
+        <a class="hub" href="https://resolveresearcher.com/sportshome/">sports home</a>
+        <a href="https://nba.resolveresearcher.com">nba</a>
+        <a href="https://wnba.resolveresearcher.com">wnba</a>
+        <a href="https://nfl.resolveresearcher.com">nfl</a>
+        <a href="https://nhl.resolveresearcher.com">hockey</a>
+        <a href="https://mlb.resolveresearcher.com">mlb</a>
+        <a href="https://pga.resolveresearcher.com">golf</a>
+        <a href="https://futbol.resolveresearcher.com">futbol</a>
+        <a href="https://tennis.resolveresearcher.com">tennis</a>
+      </div>
+      <span class="dp-label">tools</span>
+      <div class="dp-grid">
+        <a class="hub" href="https://resolveresearcher.com/aihome/">ai home</a>
+        <a data-modal="buy-tokens" href="https://resolveresearcher.com/pricing/">buy tokens</a>
+        <a data-modal="buy-oracle" href="https://resolveresearcher.com/pricing/">buy questions</a>
+        <a href="https://detector.resolveresearcher.com">detector</a>
+        <a href="https://deepdive.resolveresearcher.com">deepdive</a>
+        <a href="https://resolveresearcher.com/osint/">osint</a>
+      </div>
+      <span class="dp-label">fantasy leagues</span>
+      <div class="dp-grid">
+        <a href="https://fbb.resolveresearcher.com">resolve fbb</a>
+        <a href="https://ffb.resolveresearcher.com">resolve ffb</a>
+      </div>
+      <div class="dp-site">
+        <span class="dp-label">the site</span>
+        <div class="dp-grid">
+          <a href="https://resolveresearcher.com/">home</a>
+          <a href="https://resolveresearcher.com/writings/">writings</a>
+          <a href="https://resolveresearcher.com/about/">about</a>
+          <a href="https://resolveresearcher.com/pricing/">pricing</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="bar-nav" aria-label="primary">
+    <a href="https://resolveresearcher.com/">home</a>
+    <a href="https://resolveresearcher.com/writings/">writings</a>
+    <a href="https://resolveresearcher.com/about/">about</a>
+    <a href="https://resolveresearcher.com/pricing/">pricing</a>
+  </nav>
+  <div class="bar-tools">
+    <!-- ⛔ BOTH ENTRY POINTS STAY. The old bar carried a quiet "log in" and a
+         filled "sign up"; the door bar's single CTA would have dropped the
+         sign-up one, which is a conversion change and not an aesthetic one.
+         Both keep their data-modal so buying and joining still happen in a
+         panel on this page — tools/no_redirect_sweep.py enforces that. -->
+    <a class="bar-quiet" data-auth-out data-modal="login" href="https://resolveresearcher.com/login/"><span class="lbl">log in</span></a>
+    <a class="bar-cta" data-auth-out data-modal="signup" href="https://resolveresearcher.com/signup/"><i class="ph ph-arrow-right"></i><span class="lbl">sign up</span></a>
+    <a class="bar-cta" data-auth-in href="https://profile.resolveresearcher.com/profile/"><i class="ph ph-user-circle"></i><span class="lbl">account</span></a>
+  </div>
+  <button class="hamburger" type="button" aria-label="open menu" aria-expanded="false"
+          aria-controls="mobile-drawer" data-drawer-open>
+    <i class="ph ph-list"></i>
+  </button>
 </header>
 
 <div class="container">

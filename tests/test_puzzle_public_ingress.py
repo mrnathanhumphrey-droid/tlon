@@ -173,3 +173,41 @@ def test_dockerfile_bakes_the_adapter():
     assert "COPY runs/puzzle_speaker/" in code, (
         "no adapter is baked into the image at all")
     assert "TLON_ADAPTER=" in code
+
+
+# ── the card ────────────────────────────────────────────────────────────────
+
+def test_fly_asks_for_a_gpu(fly):
+    """⛔⛔ WITHOUT `gpu_kind` FLY HANDS BACK A CPU MACHINE.
+
+    This serves Qwen2.5-7B with a LoRA. On CPU torch still runs — every turn
+    just takes roughly a minute. Slow, not broken: the container boots, the
+    health check passes, `/healthz` is green, and the only symptom is that the
+    bench feels dead. The Dockerfile names the same failure for the same
+    reason, and it is the exact shape of every other defect this file guards.
+
+    ⭐ It is also the single largest cost line in the project, which is why
+    `min_machines_running = 0` sits above — a card that bills while nobody is
+    typing is the other way this goes wrong.
+    """
+    vm = fly.get("vm")
+    assert vm, "⛔⛔ no [[vm]] block — Fly would pick a default CPU machine"
+    assert vm[0].get("gpu_kind"), (
+        "⛔⛔ no gpu_kind — this deploys a 7B onto a CPU and it will look "
+        "healthy while taking a minute a turn")
+    assert vm[0].get("gpus", 0) >= 1
+
+
+def test_the_host_has_room_to_load_the_shards(fly):
+    """⛔ The weights are loaded and quantised on the HOST before they reach the
+    card. 8 GB was the value set before anything had tried it."""
+    mem = fly["vm"][0].get("memory", "")
+    assert mem.endswith("gb") and int(mem[:-2]) >= 16, (
+        "host memory %r is too small to stage a 7B's shards" % mem)
+
+
+def test_the_puzzle_does_not_quietly_drop_to_the_frozen_lexicon(fly):
+    """⭐ Belt and braces with `test_puzzle_serves_the_trained_lexicon`, which
+    owns this. Named here too because THIS file is what someone reads when they
+    are about to deploy."""
+    assert fly["env"]["TLON_LEXICON"] == "lexicon_expanded.yaml"
