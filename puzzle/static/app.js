@@ -156,14 +156,13 @@
     }).catch(function (e) { say(e.message, "bad"); });
   });
 
-  /* The examples fill the composer; they do not send. Pressing one is a
-     reading decision, not a turn. */
-  document.addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest("[data-q]") : null;
-    if (!b) return;
-    input.value = b.getAttribute("data-q");
-    input.focus();
-  });
+  /* ⛔⛔ THE EXAMPLE HANDLER IS GONE, AND NOTHING MAY PUT IT BACK. Suggested
+     lines were removed because a reader who presses a known English sentence
+     and reads the Tlön that returns is holding an aligned pair before they
+     have decoded anything — the parallel-text leak the reply template warns
+     about, arriving first and unasked. `data-q` is therefore a dead attribute
+     in this app; if one ever reappears in the markup, nothing here will fill
+     the composer from it. */
 
   /* ⛔ PLACEHOLDER MEDIA. Until Nate supplies the real files these <video>
      elements point at paths with nothing behind them. Hide any that fail to
