@@ -152,6 +152,32 @@ SHAPE = "trained"
 #: `test_puzzle_context.py` asserts no built row exceeds this.
 CONTEXT_TURNS = int(os.environ.get("TLON_CONTEXT_TURNS", "4"))
 
+#: ⛔⛔ EXTRA REPLIES THE **FIRST** EXCHANGE MAY DRAW WHEN THE FIRST DOES NOT
+#: CARRY. Three, and only on the first exchange. Both halves are measured.
+#:
+#: ⭐ WHY IT EXISTS. The onset baseline (n=192, depths 0-3) found the whole
+#: conversation is settled by its first exchange: P(carry | previous turn
+#: carried) = 0.842 against 0.156 if it missed, and turn 1 has no context at
+#: all. So the three-turn reach is p1 + (1-p1)*0.3325, and raising p1 is the
+#: entire lever. The reseed run (n=188, k=3, provocation held FIXED) measured
+#: what a retry buys: **48.9% of missed first replies carry within three more
+#: draws**, taking p1 from 0.511 to 0.750 and the three-turn joint from 0.673
+#: to 0.833.
+#:
+#: ⛔ THREE IS THE CEILING, NOT A DIAL. 47 of those 188 provocations (25.0%)
+#: never carried in four tries, and 141/188 is exactly 0.750 — k=3 already
+#: extracts essentially everything resampling can give. Raising it buys almost
+#: nothing and costs latency on the turns that are already hopeless. That floor
+#: is a property of the language, not of the weights: inside the STEERED
+#: corpus, where carry was forced, those roots still only carried 33.4%.
+#:
+#: ⛔⛔ FIRST EXCHANGE ONLY, AND THAT IS A PRODUCT DECISION. Resampling for
+#: carry on EVERY turn is rejection sampling toward repetition — the
+#: "repetitive collapse" `tlon/act2/carry.py` names as the reason the predicate
+#: is a BAND rather than a maximum. The puzzle needs ONE foothold a reader can
+#: notice, not a parrot. It is also the only case measured.
+CARRY_RETRIES = int(os.environ.get("TLON_CARRY_RETRIES", "3"))
+
 #: ⭐ THE OTHER HALF OF THE TIME-OUT. A bench that has gone quiet this long is
 #: over; the next thing said starts a new moment. Without it a reader returning
 #: days later resumes a conversation neither they nor the model remember the
@@ -349,6 +375,10 @@ class Speaker:
 
         backend = self.load()
         t0 = time.perf_counter()
+        # ⛔ MATERIALISED ONCE. It is read three times below (the bench, the
+        # first-exchange test, the recorded depth); a generator would be empty
+        # after the first and the turn would silently lose its window.
+        provoke_pairs = list(provoke_pairs)
 
         # ⭐ The window, trimmed to the time-out and rendered into the shape a
         # training row has — user payload bare, assistant turn a JSON scene.
@@ -363,14 +393,84 @@ class Speaker:
         finally:
             backend.conversation = []
 
-        reply = self.reply_to(yours.surface, provoke_pairs) if yours.ok else None
+        # ⭐ THE FIRST EXCHANGE MAY DRAW AGAIN IF IT DOES NOT CARRY. See
+        # `CARRY_RETRIES` for the measurement this rests on. `provoke_pairs`
+        # being empty IS "this is the reader's first message" — the same test
+        # the window uses, so the two cannot disagree.
+        reply, drawn = None, 0
+        if yours.ok:
+            budget = 1 + (CARRY_RETRIES if not provoke_pairs else 0)
+            candidates = []
+            for _ in range(budget):
+                candidates.append(self.reply_to(yours.surface, provoke_pairs))
+                drawn += 1
+                # ⛔ STOP AT THE FIRST CARRY. The retry only ever fires on a
+                # miss, so a reader whose first reply already carries waits no
+                # longer than before.
+                if carries(yours.surface, candidates[-1]):
+                    break
+            reply = pick_reply(candidates, yours.surface)
 
         seconds = time.perf_counter() - t0
         return {"you": _row(yours, english=english),
                 "tlon": _row(reply) if reply is not None else None,
                 "seconds": round(seconds, 2),
                 "shape": SHAPE,
-                "context_turns": min(len(list(provoke_pairs)), CONTEXT_TURNS)}
+                # ⭐ Recorded so the bench can show what the retry actually
+                # cost in production rather than what it cost in a probe.
+                "replies_drawn": drawn,
+                "context_turns": min(len(provoke_pairs), CONTEXT_TURNS)}
+
+
+def carries(provocation: str, turn) -> bool:
+    """Does this reply take up a happening the provocation offered?
+
+    ⛔ THE BAND, NOT BARE OVERLAP — `scene_carry` demands a root carried AND a
+    root new. Retrying on bare overlap would select for the echo the band was
+    written to refuse, and a parrot scores 100% on overlap and 0% on the band.
+
+    ⛔ The prior's roots come from SPLITTING THE SURFACE, which is what
+    `act2_model_carry.score` does; the reply's come from walking its scene
+    tree. Keeping both exactly as the probes compute them is what makes the
+    served behaviour the measured behaviour.
+
+    ⛔⛔ `parsed_roots`, NOT `scene_roots`. `generate` returns `.scene` as a
+    `Scene` DATACLASS (`aspect` is a pair, `edges` are pairs), not the proposer
+    dict (`aspect_root`, `edges:[{relator,node}]`). `scene_roots` reads the
+    proposer shape and RAISES on this one — so this function would have thrown
+    on every reader's first turn. It is the same two-shapes trap that made the
+    onset probe report 0.0% carry, and it reached the SERVING path this time.
+    """
+    from tlon.act2.carry import parsed_roots, scene_carry
+    from tlon.grammar import classes as C
+
+    if turn is None or not getattr(turn, "ok", False):
+        return False
+    roots = frozenset(C.load()["classes"]["R"])
+    prior = frozenset(w for w in (provocation or "").split() if w in roots)
+    if not prior:
+        # ⛔ Nothing to carry FROM. Retrying would burn the budget on a turn no
+        # reply could satisfy, and every draw would be scored a failure.
+        return True
+    return scene_carry(prior, parsed_roots(turn.scene, roots)).ok
+
+
+def pick_reply(candidates, provocation: str):
+    """The reply to serve, given every draw that was taken.
+
+    ⛔⛔ A RETRY MUST NEVER MAKE A TURN WORSE THAN NOT RETRYING. Preference is
+    (1) the first candidate that CARRIES, (2) failing that the first USABLE
+    one, (3) failing that the LAST one — because a refusal carries the text
+    explaining itself and `_row` reports it, and returning None instead would
+    turn a stated refusal into a blank.
+    """
+    usable = [c for c in candidates if c is not None and getattr(c, "ok", False)]
+    for c in usable:
+        if carries(provocation, c):
+            return c
+    if usable:
+        return usable[0]
+    return candidates[-1] if candidates else None
 
 
 def _bench(direction: str, pairs) -> list[tuple[str, str]]:

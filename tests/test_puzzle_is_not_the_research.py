@@ -42,6 +42,17 @@ ALLOWED_PREFIXES = {
                             "prompt construction, so an empty bench is "
                             "byte-identical to the single-turn path",
     "tlon.act2.schema_bridge": "the scene schema the gate validates against",
+    # ⛔ THE CARRY PREDICATE, AND IT MUST BE THE CAMPAIGN'S. The first exchange
+    # redraws when its reply does not carry (see `speaker.CARRY_RETRIES`), and
+    # the rule deciding that has to be the SAME band the corpus was gated on
+    # and the probes measured — a root carried AND a root new. Re-spelling it
+    # in the puzzle would let the served behaviour drift from the 83.3% it was
+    # measured at, and a looser copy (bare overlap) would retry toward the echo
+    # the band exists to refuse. Leaf import: `from tlon.act2 import carry`
+    # would register as `tlon.act2` and allow-list the whole package.
+    "tlon.act2.carry":    "scene_carry/parsed_roots — the carry BAND the first "
+                          "exchange retries against, one definition shared "
+                          "with the corpus gate and every probe",
     # ⛔ DEV-ONLY, AND THE NARROWEST ENTRY HERE. `mock_speaker` draws
     # already-validated surfaces from the probe generator so the skeleton emits
     # REAL Tlön with no model — which is what keeps `parse`, `gloss` and the
