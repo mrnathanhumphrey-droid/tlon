@@ -184,6 +184,7 @@ done
 # the adapter was the deliverable and a failed read must not destroy it; here
 # THE READ IS the deliverable, so a missing one is a missing result.
 CARRY_FILES=()
+ONSET_FILES=()
 if [ -n "${CARRY_N:-}" ]; then
   step model_carry
   for C_ in $CELLS; do
@@ -194,6 +195,85 @@ if [ -n "${CARRY_N:-}" ]; then
     RC=${PIPESTATUS[0]}
     [ "$RC" -eq 0 ] || { echo "⛔ model_carry rc=$RC on $C_" | tee -a "$LOG"; exit 1; }
     CARRY_FILES+=("$ROOT/model_carry_$C_.json")
+  done
+fi
+
+# ── 5c · ONSET CARRY — CARRY BY DEPTH AND THE THREE-TURN JOINT ──────────────
+# ⛔⛔ THE CARRY SWEEP ABOVE IS A DEPTH-0 PROBE AND WAS READ AS A POOLED ONE.
+# `act2_model_carry` hands the model a ONE-turn history, so its 27.5% is v1's
+# TURN-1 number and turns 2-3 have never been measured on the served model.
+# The product claim — "three messages and confident one of his words came
+# back" — is a JOINT over turns 1-3, which no instrument here could express.
+#
+# ⛔ COST DRIVER: `generate()` CALLS, AND THIS MAKES TWO PER TURN. The served
+# path renders the reader's English (write) and then answers it (provoke), so
+# `n × turns × 2` — not `n`. Anchor: the carry sweep of 2026-09-23 did 256
+# generations per ~30 min on this SKU (20:56→22:51 for 4 cells plus pulls).
+# At ONSET_N=192 × ONSET_TURNS=4 that is 1,536 calls ≈ 3 h.
+#
+# ⛔⛔ bf16, NOT THE PRODUCT'S 4-BIT. `puzzle/speaker.py` defaults `TLON_4BIT=1`
+# and says in its own words that 4-bit changes the model and every measured
+# number in this project is bf16. Reading carry at 4-bit would produce a figure
+# that cannot sit beside the 27.5% this is meant to extend, and the depth-0
+# cell is exactly the instrument check that proves the probe agrees with the
+# published read. ⭐ The PRODUCT's 4-bit carry is therefore still unmeasured —
+# a known, cheap gap, not something this run silently covers.
+if [ -n "${ONSET_N:-}" ]; then
+  step onset_carry
+  export TLON_4BIT=0
+  ONSET_TURNS="${ONSET_TURNS:-4}"
+  # ⛔ v1's training corpus, pulled so held-out can be enforced BY ID. 265 of
+  # the 599 unsteered conversations are inside it; probing on those is
+  # train-on-test and would inflate carry with memorisation.
+  $PY - <<PYTRAINED 2>&1 | tee -a "$LOG"
+import pathlib, sys
+sys.path.insert(0, "tools")
+from huggingface_hub import hf_hub_download
+import act2_provision as P
+p = hf_hub_download("$HF_REPO", "corpora/corpus_conv_dosed.jsonl",
+                    token=P._hf_token(), local_dir="$ROOT")
+n = sum(1 for _ in open(p, encoding="utf-8"))
+print("    trained-on corpus: %d conversations" % n)
+if n < 500:
+    raise SystemExit("⛔⛔ REFUSING: only %d conversations in the trained-on "
+                     "corpus — the held-out split would be wrong and the "
+                     "probe would silently measure memorisation." % n)
+PYTRAINED
+  # ⛔⛔ PREFLIGHT ON THE BOX, BEFORE THE MODEL IS EVEN PULLED. `--replay` runs
+  # the whole probe against the corpus's RECORDED surfaces: imports,
+  # held-out split, scoring, the joint, the report and the ledger write — with
+  # no model at all. A missing dependency or a bad path fails here in seconds
+  # instead of after a 7 GB download and the first generation.
+  # ⭐ It is also the probe's CALIBRATION. Replayed over the unsteered pool it
+  # must recover that corpus's independently-known ~9% carry; locally it read
+  # 8.6/10.5/9.8 by depth against an audit's 9.3% [8.1, 10.8]. This same check
+  # already caught a shape bug that reported 0.0% carry with clean confidence
+  # intervals — a probe that cannot recover a known quantity is not ready to
+  # measure a new one, and that is worth twenty seconds of a billing box.
+  echo "── ONSET PREFLIGHT · replay, no model ──" | tee -a "$LOG"
+  $PY tools/act2_onset_carry.py --replay --n 32 --max-turns "$ONSET_TURNS" \
+      --trained-on "$ROOT/corpora/corpus_conv_dosed.jsonl" 2>&1 | tee -a "$LOG"
+  RC=${PIPESTATUS[0]}
+  [ "$RC" -eq 0 ] || { echo "⛔⛔ onset preflight rc=$RC — refusing to spend a "\
+"GPU hour on a probe that cannot run" | tee -a "$LOG"; exit 1; }
+
+  for C_ in $CELLS; do
+    echo "── ONSET CARRY · $C_ · n=$ONSET_N · turns=$ONSET_TURNS ──" | tee -a "$LOG"
+    $PY tools/act2_onset_carry.py \
+        --adapter "$ROOT/hub/$C_" --n "$ONSET_N" --max-turns "$ONSET_TURNS" \
+        --trained-on "$ROOT/corpora/corpus_conv_dosed.jsonl" \
+        --out "$ROOT/onset_carry_$C_.json" 2>&1 | tee -a "$LOG"
+    RC=${PIPESTATUS[0]}
+    # ⛔ FATAL, like the carry sweep: here the READ is the deliverable, so a
+    # failed one is a missing result, not a degraded build.
+    [ "$RC" -eq 0 ] || { echo "⛔ onset_carry rc=$RC on $C_" | tee -a "$LOG"; exit 1; }
+    ONSET_FILES+=("$ROOT/onset_carry_$C_.json")
+    # ⛔⛔ PERSIST AFTER EVERY CELL, NOT ONLY AT THE END. The last battery's
+    # per-item ledger died with a box killed before its persist step, and every
+    # comparison since has been unpaired. A three-hour read is too expensive to
+    # hold in a single basket until the end.
+    tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" "$ROOT/onset_carry_$C_.json" \
+        2>&1 | tee -a "$LOG" || echo "  ⚠ interim persist failed for $C_" | tee -a "$LOG"
   done
 fi
 
@@ -217,8 +297,16 @@ else
   echo "  ⚠ no ledger.jsonl — F-LOCAL did not run this pass (carry-only sweep)" \
        | tee -a "$LOG"
 fi
+# ⛔ `${arr[@]}` ON AN EMPTY ARRAY UNDER `set -u` IS AN UNBOUND-VARIABLE
+# ERROR in older bash, and these arrays are routinely empty — a render-only
+# battery writes no carry and no onset files. The `${arr[@]+"${arr[@]}"}`
+# form is what the verify step below already uses. A pipeline that dies HERE
+# dies after every read is paid for and before anything is saved, which is
+# the exact loss this battery already suffered once.
 tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" \
-    "${LEDGER_FILES[@]}" "${CARRY_FILES[@]}"
+    ${LEDGER_FILES[@]+"${LEDGER_FILES[@]}"} \
+    ${CARRY_FILES[@]+"${CARRY_FILES[@]}"} \
+    ${ONSET_FILES[@]+"${ONSET_FILES[@]}"}
 
 # ── 7 · VERIFY THE READ LANDED, THEN AND ONLY THEN MARK DONE ────────────────
 # ⛔⛔ NOT `tlon_gate_done`. That helper verifies CELLS, and this run writes no
@@ -239,7 +327,8 @@ step verify_reads
 RBASE=$(basename "$ROOT")
 WANT_LIST="$RBASE/pipeline_battery.log"
 [ ${#LEDGER_FILES[@]} -gt 0 ] && WANT_LIST="$WANT_LIST $RBASE/ledger_battery.jsonl"
-for f in ${CARRY_FILES[@]+"${CARRY_FILES[@]}"}; do
+for f in ${CARRY_FILES[@]+"${CARRY_FILES[@]}"} \
+         ${ONSET_FILES[@]+"${ONSET_FILES[@]}"}; do
   WANT_LIST="$WANT_LIST $RBASE/$(basename "$f")"
 done
 $PY - <<PYVER 2>&1 | tee -a "$LOG"

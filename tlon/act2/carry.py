@@ -46,6 +46,7 @@ never be wired to a resample loop.
 """
 from __future__ import annotations
 
+import dataclasses
 import functools
 import json
 import pathlib
@@ -393,13 +394,79 @@ def decide(scene_passed: int, scene_pairs: int) -> tuple:
                100 * ACCEPTANCE["scene_band_target"]))
 
 
+def parsed_roots(scene, roots) -> frozenset:
+    """Every R-class form in a tree returned by `tlon.grammar.parse.parse`.
+
+    ⛔⛔ THERE ARE TWO SCENE SHAPES IN THIS CODEBASE AND THEY ARE NOT
+    INTERCHANGEABLE. The proposer — and therefore every stored corpus scene —
+    emits `{root, aspect_root, aspect_reps, degree, orient,
+    edges:[{relator,node}]}`. `parse()` returns an `EventNode` dataclass whose
+    shape is `{root, aspect:[form,reps], degree, modal, tense, quant, orient,
+    edges:[[relator,node]], residue}`. `scene_roots` reads `aspect_root` and
+    `edge["node"]`, neither of which exists in the parsed shape.
+
+    ⛔⛤ AND THE MISMATCH WAS SILENT. `scene_roots` returned an empty set for a
+    dataclass, so `tools/act2_onset_carry.py` reported **0.0% carry at every
+    depth with clean confidence intervals** on a pool an independent instrument
+    had already measured at 9.3%. A report that is confidently zero is the
+    worst shape a bug can take; this was caught only because the probe was
+    calibrated against a known quantity before it was allowed to cost anything.
+
+    ⭐ `test_onset_carry.py` certifies this function against `scene_roots` over
+    every turn in the steered corpus — exact set equality, not a spot check.
+    """
+    found: set = set()
+
+    def walk(node):
+        if node is None:
+            return
+        if dataclasses.is_dataclass(node) and not isinstance(node, type):
+            node = dataclasses.asdict(node)
+        if not isinstance(node, dict):
+            return
+        r = node.get("root")
+        if isinstance(r, str) and r in roots:
+            found.add(r)
+        # ⛔ `aspect` is a PAIR (form, reps) here, not two sibling keys.
+        asp = node.get("aspect")
+        if isinstance(asp, (list, tuple)) and asp:
+            if isinstance(asp[0], str) and asp[0] in roots:
+                found.add(asp[0])
+        # ⛔ and an edge is a PAIR (relator, node), not {"relator","node"}.
+        for edge in node.get("edges") or ():
+            if isinstance(edge, (list, tuple)) and len(edge) == 2:
+                walk(edge[1])
+            elif isinstance(edge, dict):
+                walk(edge.get("node"))
+
+    if dataclasses.is_dataclass(scene) and not isinstance(scene, type):
+        scene = dataclasses.asdict(scene)
+    if isinstance(scene, dict):
+        walk(scene.get("node") if "node" in scene else scene)
+    return frozenset(found)
+
+
 def scene_roots(scene, roots) -> frozenset:
     """Every R-class form in a proposal/scene tree.
 
     ⛔ Walks the tree rather than splitting the surface: `aspect_root` and a
     nested node's `root` are roots too, and a surface split would also collect
     any R form that happens to sit in another slot.
+
+    ⛔⛔ PROPOSER SHAPE ONLY. A `parse()` result is a different shape and used
+    to return an EMPTY SET here — a silent zero, which this repo has a standing
+    rule against. It now raises and names `parsed_roots`. `None` still returns
+    empty, because an ABSENT scene is a legitimate input and is not the same
+    thing as a scene of the wrong type.
     """
+    if scene is not None and not isinstance(scene, dict):
+        raise CarryError(
+            "⛔⛔ scene_roots got %s, which is the PARSED shape, not the "
+            "proposer shape. It reads `aspect_root` and `edge['node']`, and "
+            "the parsed tree has `aspect` and `(relator, node)` — so this "
+            "would have returned an empty set and read as 'carried nothing'. "
+            "Use `parsed_roots` for a `parse()` result."
+            % type(scene).__name__)
     found: set = set()
 
     def walk(node):
