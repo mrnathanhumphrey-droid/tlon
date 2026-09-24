@@ -43,11 +43,19 @@ COPY tlon/       /app/tlon/
 COPY tools/      /app/tools/
 COPY puzzle/     /app/puzzle/
 
-# ⭐ The adapter is BAKED. 308 MB, ours, and a machine that boots without it
+# ⭐ The adapter is BAKED. 323 MB, ours, and a machine that boots without it
 # serves the untuned base — which answers in English and looks healthy.
-COPY runs/puzzle_speaker/ct-s20624/ /app/speaker/ct-s20624/
+# ⛔⛤ v1 IS `dosed-s20624`, NOT `ct-s20624`. The old cell was the pick of
+# 2026-09-15 and was never measured on carry; see `speaker.py` for the three
+# axes v1 was chosen on. This path and the ENV below must move TOGETHER — a
+# COPY of one cell with an ENV naming another boots a machine that cannot find
+# its adapter, and `Speaker.load()` fails naming the path, which is the good
+# outcome. The bad one is a COPY that still works because the old directory is
+# also present: then the container serves last month's weights and nothing says
+# so.
+COPY runs/puzzle_speaker/dosed-s20624/ /app/speaker/dosed-s20624/
 
-ENV TLON_ADAPTER=/app/speaker/ct-s20624 \
+ENV TLON_ADAPTER=/app/speaker/dosed-s20624 \
     TLON_DB=/data/bench.sqlite3 \
     HF_HOME=/data/hf \
     TLON_TRUST_PROXY=1 \

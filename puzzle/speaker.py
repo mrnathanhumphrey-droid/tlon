@@ -66,13 +66,39 @@ from tlon.product.literary import literary                  # noqa: E402
 
 from . import bench_prompt                                  # noqa: E402
 
-#: ⛔ Defaults match the configuration the speaker was READ in
-#: (`runs/act2/retrain12_ct/model_lag_ct-s20624.json`: temperature 0.7,
+#: ⛔ Defaults match the configuration the speaker was READ in (temperature 0.7,
 #: max_new_tokens 256) so the thing on screen is the thing that was measured.
 #: The one knowing exception is 4-bit — see `FOUR_BIT` below.
 BASE_MODEL = os.environ.get("TLON_BASE", "Qwen/Qwen2.5-7B-Instruct")
+
+#: ⭐⭐ v1 IS `dosed-s20624`, AND IT WAS CHOSEN ON THREE MEASURED AXES, not on
+#: legality alone. At n=256 on battery c0e011637df51c1b:
+#:
+#:     render 97.3% [94.5, 98.7]   legal Tlön, at the ceiling
+#:     carry  27.5% [22.3, 33.2]   the reader's crib, and genuine — bare
+#:                                 overlap 27.8%, one echo in 255, so what
+#:                                 recurs also says something new
+#:     choose 46.5% [40.5, 52.6]
+#:
+#: It is STRICTLY DOMINANT over the other legal adapters: `rowmatch-s20624`
+#: matches it on render (p=0.61) and is IDENTICAL on choose (119/256 both) while
+#: carrying 0.8% — 34× less crib for nothing gained. `bench5208-s20624` carries
+#: 1.6%. The only adapter that carries more is the fully-steered `bench-s20624`
+#: at 77.0%, and it costs 15 points of legality (render 82.4%) — the trade Nate
+#: ruled out: default to legal, let the window carry the rest of the coherence.
+#:
+#: ⛔⛤ THIS WAS `ct-s20624` UNTIL 2026-09-23, the pick made on 2026-09-15 before
+#: any of the above existed. `ct` is the research campaign's content-transient
+#: cell; it was never measured on carry at all, because no model-side carry
+#: probe existed until the day this changed. A default that outlives the
+#: evidence it was chosen on is how a product ships the wrong weights while
+#: every test stays green.
+#:
+#: ⛔ The corpus behind it is a BLEND of two conversation populations, accepted
+#: deliberately to save $32 when it was an experiment. That caveat is now under
+#: a shipped v1; a single-population rebuild retires it and changes nothing else.
 ADAPTER = os.environ.get("TLON_ADAPTER",
-                         str(ROOT / "runs" / "puzzle_speaker" / "ct-s20624"))
+                         str(ROOT / "runs" / "puzzle_speaker" / "dosed-s20624"))
 TEMPERATURE = float(os.environ.get("TLON_TEMPERATURE", "0.7"))
 MAX_NEW_TOKENS = int(os.environ.get("TLON_MAX_NEW_TOKENS", "256"))
 DEVICE = os.environ.get("TLON_DEVICE", "cuda")

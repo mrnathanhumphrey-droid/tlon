@@ -157,9 +157,19 @@ def test_entrypoint_refuses_localhost_too():
 def test_dockerfile_bakes_the_adapter():
     """⛔ A machine that boots without the adapter serves the UNTUNED BASE,
     which scored 0.0% on write. It would answer in English, return 200s, and
-    look entirely healthy to every check in this file."""
+    look entirely healthy to every check in this file.
+
+    ⛔⛤ THIS ASSERTED `ct-s20624` BY NAME and went red when v1 became
+    `dosed-s20624` — red for a STALE REASON, guarding a cell rather than the
+    property it cares about, which is that SOME adapter is baked and named. The
+    identity of v1 belongs to `test_puzzle_serves_v1.py`, which owns the
+    constant and checks the COPY and the ENV agree; duplicating the literal
+    here would mean the next swap has to be made correctly in two places or a
+    green suite would disagree with itself.
+    """
     body = ENTRY.parent.joinpath("Dockerfile").read_text(encoding="utf-8")
     code = "\n".join(ln for ln in body.splitlines()
                      if not ln.lstrip().startswith("#"))
-    assert "runs/puzzle_speaker/ct-s20624/" in code
+    assert "COPY runs/puzzle_speaker/" in code, (
+        "no adapter is baked into the image at all")
     assert "TLON_ADAPTER=" in code
