@@ -99,6 +99,30 @@ BASE_MODEL = os.environ.get("TLON_BASE", "Qwen/Qwen2.5-7B-Instruct")
 #: a shipped v1; a single-population rebuild retires it and changes nothing else.
 ADAPTER = os.environ.get("TLON_ADAPTER",
                          str(ROOT / "runs" / "puzzle_speaker" / "dosed-s20624"))
+#: ⛔⛔⛔ THE LANGUAGE THIS ADAPTER SPEAKS, AND IT IS NOT THE PROCESS DEFAULT.
+#:
+#: `tlon/grammar/classes.py` makes the FROZEN 156-root lexicon the default and
+#: says, correctly, that it must stay that way so the research campaign's
+#: standing verdicts keep meaning what they say. But the puzzle is the one
+#: caller that needs the other language: `tools/pipeline_battery.sh` exports
+#: `TLON_LEXICON=lexicon_expanded.yaml`, so render 97.3% / carry 27.5% /
+#: choose 46.5% — every number v1 was chosen on — were measured on 218 roots.
+#:
+#: ⛔⛤ AND NOTHING HERE SET IT. Not this file, not the Dockerfile's ENV, not
+#: `fly.toml`, not the entrypoint. A deploy would have run this adapter against
+#: the frozen lexicon, where **2,284 of the 4,578 turns in its own training
+#: corpus (49.9%) use one of the 62 expanded-only roots** — the gate refuses
+#: them, so roughly half of what the model wants to say comes back a refusal.
+#: It fails CLOSED, which is why every health check would have stayed green.
+#:
+#: ⛔ THE ENV IS SET IN THE IMAGE, AND THIS CONSTANT IS THE PROOF IT TOOK. An
+#: env var is a thing that can be unset; a hash compared at load is not. Do NOT
+#: "simplify" this by calling `os.environ.setdefault` at import — this module is
+#: imported by probes that choose their own lexicon, and a default that leaked
+#: out of here would re-point their instrument silently.
+LEXICON_HASH = os.environ.get("TLON_LEXICON_HASH",
+                              "08c03b0a81330e4ba42883fa8b08c873")
+
 TEMPERATURE = float(os.environ.get("TLON_TEMPERATURE", "0.7"))
 MAX_NEW_TOKENS = int(os.environ.get("TLON_MAX_NEW_TOKENS", "256"))
 DEVICE = os.environ.get("TLON_DEVICE", "cuda")
@@ -226,6 +250,24 @@ class Speaker:
             if self._backend is not None:
                 return self._backend
             BenchBackend = _bench_backend_class()
+
+            # ⛔⛔ REFUSE THE WRONG LANGUAGE BEFORE A 7B IS ON THE CARD. Served
+            # against the frozen lexicon this adapter's gate refuses ~half its
+            # own vocabulary — and every refusal is a valid outcome, so the app
+            # would look healthy and merely seem inarticulate. Checked by HASH,
+            # not by reading the env back: `TLON_LEXICON` naming a file is not
+            # evidence that file is what got loaded.
+            from tlon.grammar import classes as _C
+            got = _C.load()["_hash"]
+            if got != LEXICON_HASH:
+                raise SpeakerError(
+                    "⛔⛔ REFUSING TO START: this speaker was trained and "
+                    "measured on lexicon %s but the process loaded %s (%d "
+                    "roots, TLON_LEXICON=%r). Set TLON_LEXICON in the image "
+                    "env; see the Dockerfile."
+                    % (LEXICON_HASH, got, len(_C.load()["classes"]["R"]),
+                       os.environ.get("TLON_LEXICON")))
+
             adapter = pathlib.Path(ADAPTER)
             if not (adapter / "adapter_model.safetensors").exists():
                 # ⛔ FAIL HERE, NAMING THE PATH. Without the adapter this loads

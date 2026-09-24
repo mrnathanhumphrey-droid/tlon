@@ -16,6 +16,17 @@ primary_region = "sjc"             # ⛔ PLACEHOLDER — pick for GPU availabili
   dockerfile = "Dockerfile"
 
 [env]
+  # ⛔⛔ THIS ADAPTER SPEAKS 218 ROOTS; THE LIBRARY DEFAULT IS 156. Without the
+  # expanded lexicon the gate refuses 49.9% of the turns in the speaker's own
+  # training corpus, failing CLOSED — the machine comes up healthy and merely
+  # seems inarticulate.
+  # ⭐ STATED IN BOTH PLACES ON PURPOSE. The Dockerfile's ENV is what actually
+  # carries it into the image; this line makes the requirement visible at the
+  # deploy surface, where someone reading fly.toml decides what a machine gets.
+  # ⛔ It is NOT the safety net — `speaker.py` refuses to load on a lexicon
+  # hash mismatch, and that check is what makes the failure loud regardless of
+  # which of these two files someone edits.
+  TLON_LEXICON = "lexicon_expanded.yaml"
   TLON_HOST = "0.0.0.0"
   TLON_TRUST_PROXY = "1"
   TLON_HTTPS = "1"

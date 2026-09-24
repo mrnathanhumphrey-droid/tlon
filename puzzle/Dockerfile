@@ -55,7 +55,17 @@ COPY puzzle/     /app/puzzle/
 # so.
 COPY runs/puzzle_speaker/dosed-s20624/ /app/speaker/dosed-s20624/
 
-ENV TLON_ADAPTER=/app/speaker/dosed-s20624 \
+# ⛔⛔⛔ THE LEXICON IS NOT OPTIONAL AND ITS ABSENCE IS SILENT. `classes.py`
+# defaults to the FROZEN 156-root lexicon — correctly, so the research
+# campaign's verdicts keep their meaning — but this adapter was trained and
+# measured on the EXPANDED 218. Without this line the gate refuses any scene
+# using one of the 62 expanded-only roots, which is 49.9% of the turns in the
+# adapter's own training corpus. It fails CLOSED, so the container comes up
+# healthy and merely seems inarticulate. `speaker.py` now refuses to load on a
+# hash mismatch; this line is what makes that check pass.
+# ⛔ The file ships via `COPY tlon/` above — it is `tlon/grammar/lexicon_expanded.yaml`.
+ENV TLON_LEXICON=lexicon_expanded.yaml \
+    TLON_ADAPTER=/app/speaker/dosed-s20624 \
     TLON_DB=/data/bench.sqlite3 \
     HF_HOME=/data/hf \
     TLON_TRUST_PROXY=1 \

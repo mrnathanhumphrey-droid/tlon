@@ -203,3 +203,54 @@ def test_every_new_root_is_impersonal_present():
 
     bad = [(f, m) for f, m in EX.expansion().items() if not m.startswith("it ")]
     assert not bad, "roots not in the impersonal frame: %s" % bad
+
+
+# ── switching lexicons inside one process ───────────────────────────────────
+
+def test_clearing_only_load_leaves_the_classifier_on_the_old_language(
+        monkeypatch):
+    """⛔⛔ THREE CACHES, AND TWO OF THEM ARE NOT `load`.
+
+    `form_class` and `_aspect_re` each hold their own `lru_cache` built FROM a
+    lexicon. A process that switches `TLON_LEXICON` after any token has been
+    classified keeps classifying against the OLD language while `load()`
+    truthfully reports the new one — so `parse` refuses tokens that exist and
+    the caller reads it as the model emitting garbage.
+
+    ⭐ Found when `tools/act2_onset_carry.py` went green alone and red in the
+    full suite: an earlier test had warmed `form_class` on the frozen 156.
+    """
+    C.reset_caches()
+    monkeypatch.delenv("TLON_LEXICON", raising=False)
+    C.classify("nu")                                   # warm it on the frozen
+    assert C.load()["_hash"] == FROZEN_HASH
+
+    monkeypatch.setenv("TLON_LEXICON", "lexicon_expanded.yaml")
+    C.load.cache_clear()                               # ⛔ the INSUFFICIENT fix
+    assert C.load()["_hash"] != FROZEN_HASH, "load did switch"
+
+    stale = {f for f in C.form_class()}
+    expanded_only = set(yaml.safe_load(EXPANDED.read_bytes())["classes"]["R"]) \
+        - set(yaml.safe_load(FROZEN.read_bytes())["classes"]["R"])
+    assert not (expanded_only & stale), (
+        "⭐ form_class is stale, as documented — this assertion records the "
+        "bug, not a wish")
+
+    C.reset_caches()
+    fresh = {f for f in C.form_class()}
+    assert expanded_only & fresh, (
+        "⛔⛔ reset_caches did NOT rebuild form_class — anything that parses "
+        "would still refuse valid tokens")
+
+
+def test_reset_caches_restores_the_frozen_default(monkeypatch):
+    """⛔ The reset must work in BOTH directions, or a test that switched to
+    the expansion would poison every later frozen-lexicon assertion in the
+    same process."""
+    monkeypatch.setenv("TLON_LEXICON", "lexicon_expanded.yaml")
+    C.reset_caches()
+    C.classify("nu")
+    monkeypatch.delenv("TLON_LEXICON", raising=False)
+    C.reset_caches()
+    assert C.load()["_hash"] == FROZEN_HASH
+    assert len(C.load()["classes"]["R"]) == 156

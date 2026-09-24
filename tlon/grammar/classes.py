@@ -115,6 +115,28 @@ def _aspect_re() -> re.Pattern:
     return re.compile(rf"^(?P<reps>(?:{alt})+){closer}$")
 
 
+def reset_caches() -> None:
+    """Forget every lexicon-derived cache in this module.
+
+    ⛔⛔ THERE ARE THREE, AND CLEARING ONLY `load` IS THE TRAP. `form_class`
+    and `_aspect_re` each hold their own `lru_cache` built FROM a lexicon, so a
+    process that switches `TLON_LEXICON` after any token has been classified
+    keeps classifying against the OLD language while `load()` reports the new
+    one. Nothing errors: `parse` simply refuses tokens that exist, and the
+    caller reads it as the model emitting garbage.
+
+    ⭐ It surfaced when `tools/act2_onset_carry.py` parsed replies under the
+    expanded lexicon — green alone, red in the full suite, because an earlier
+    test had already warmed `form_class` on the frozen 156 roots. Tools that
+    only ever call `load()` (`bind_lexicon` in
+    `tools/act2_score_happening_words.py`) are unaffected and were not changed;
+    anything that PARSES must call this.
+    """
+    load.cache_clear()
+    form_class.cache_clear()
+    _aspect_re.cache_clear()
+
+
 def classify(token: str) -> tuple[str, object]:
     """Return (class_label, payload). Payload is the form, or (root, count) for A."""
     fc = form_class()
