@@ -19,11 +19,12 @@ import os
 import pathlib
 
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import guard as G
+from . import turnstile as TS
 from .speaker import (BENCH_IDLE_MINUTES, CONTEXT_TURNS, MAX_ENGLISH_CHARS,
                       Speaker, SpeakerError, translate)
 from .window import TLON, YOU, ConversationStore
@@ -97,6 +98,12 @@ limiter = G.Guard(
 
 @app.on_event("startup")
 def _startup():
+    # ⛔⛔ FIRST, AND IT MAY KILL THE BOOT. A deployment whose Turnstile
+    # secret was never set would serve a public GPU endpoint with nothing
+    # but the rate limit in front of it, and report healthy while doing so.
+    # Unlike the speaker below -- where dying would cost a restart loop and
+    # the model can load late -- there is no safe degraded mode here.
+    TS.preflight()
     if PRELOAD:
         try:
             speaker.load()
@@ -111,6 +118,13 @@ def _startup():
 
 class Say(BaseModel):
     english: str = Field(min_length=1, max_length=MAX_ENGLISH_CHARS)
+    #: ⛔⛔ THE TURNSTILE TOKEN, AND IT IS CHECKED ON THIS REQUEST.
+    #: Verifying it anywhere else -- in the browser, in a separate call the
+    #: client may simply not make -- guards nothing: `/say` is the endpoint
+    #: that runs the 7B, so it is the endpoint that has to be satisfied.
+    #: Optional in the SCHEMA so a request without one gets the app's own
+    #: refusal rather than a 422 the page cannot explain.
+    turnstile: str = ""
 
 
 class Reveal(BaseModel):
@@ -150,9 +164,24 @@ def _set_cookie(response: Response, cid: str) -> None:
         secure=os.environ.get("TLON_HTTPS", "1") not in ("0", "false", "no"))
 
 
+#: ⛔ The page is RENDERED, not sent as a file, for exactly one reason:
+#: the Turnstile SITE key has to reach the markup. It is public by design
+#: -- it sits in the HTML of every site that uses Turnstile -- so this is
+#: a substitution, not a secret. The SECRET never leaves the server.
+#: ⭐ Read once at import. The file does not change under a running
+#: machine, and re-reading it per request would put a disk hit in front
+#: of every visitor for no gain.
+_INDEX = (STATIC / "index.html").read_text(encoding="utf-8")
+
+
 @app.get("/")
 def index():
-    return FileResponse(STATIC / "index.html")
+    # ⛔ When no key is configured the placeholder resolves to an empty
+    # string and `app.js` renders no widget -- which is correct locally,
+    # where `turnstile.required()` is also false. The two agree because
+    # both read the same absence, not because they were kept in step.
+    return HTMLResponse(_INDEX.replace("{{TURNSTILE_SITEKEY}}",
+                                       TS.SITE_KEY))
 
 
 @app.get("/healthz")
@@ -195,6 +224,22 @@ def say(body: Say, request: Request, response: Response):
         limiter.check(ip)
     except G.Refused as exc:
         return _refused(exc)
+
+    # ⛔⛔ AFTER THE RATE LIMIT, BEFORE THE MODEL. The order is
+    # deliberate: the limiter is a dictionary lookup and Turnstile is a
+    # network round-trip, so an IP that is already hammering is refused
+    # without also making Cloudflare do work for it. Both come before
+    # anything that touches the card.
+    ok, why = TS.verify(body.turnstile, ip)
+    if not ok:
+        # ⭐ 403, not 400: this is "prove you are a person", and the page
+        # resets the widget on it. ⛔ The REASON is returned because
+        # `invalid-input-secret` (the wrong key was deployed) is otherwise
+        # indistinguishable from a reader failing the challenge, and the
+        # first would look like a broken puzzle to everyone at once.
+        return JSONResponse({"error": "could not verify you are a "
+                                      "person — try again",
+                             "turnstile": why}, status_code=403)
 
     english = body.english.strip()
     if not english:

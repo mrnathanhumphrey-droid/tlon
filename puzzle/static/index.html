@@ -34,7 +34,11 @@
 <link rel="stylesheet" href="/static/chrome.css?v=2">
 <link rel="stylesheet" href="/static/oracle.css?v=19">
 <link rel="stylesheet" href="/static/puzzle.css?v=1">
-<script src="/static/app.js?v=1" defer></script>
+<!-- ⭐ Turnstile. `defer` so it does not block first paint; the widget
+     renders itself into `.cf-turnstile` once the sitekey is present. -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        async defer></script>
+<script src="/static/app.js?v=2" defer></script>
 </head>
 <body>
 
@@ -185,7 +189,16 @@
              aria-label="Say something in English">
       <button class="btn primary" id="ask-send" type="submit">Say it</button>
     </form>
-    <p class="ask-note" id="ask-note" role="status"></p>
+    <!-- ⛔⛔ THE WIDGET IS THE VISIBLE HALF AND THE LEAST IMPORTANT ONE.
+       The token it produces is verified in `/say`, server-side, because a
+       script can decline to render this at all. If this element is empty
+       the page still works and the server still refuses.
+       ⭐ `data-action` is the Spin telemetry marker; removing it costs
+       only Cloudflare's analytics segmentation, not the protection. -->
+  <div class="cf-turnstile" data-sitekey="{{TURNSTILE_SITEKEY}}"
+       data-action="turnstile-spin-v1" data-theme="auto"
+       data-size="flexible"></div>
+  <p class="ask-note" id="ask-note" role="status"></p>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════════════════════

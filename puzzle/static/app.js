@@ -128,7 +128,13 @@
     if (empty) empty.hidden = true;
     say("it is thinking…", "wait");
 
-    post("/say", { english: english })
+    // ⛔ The token is read at SUBMIT time, not at page load: Turnstile
+    // tokens expire (~5 min) and a reader who opens the bench and thinks
+    // for a while would otherwise send a stale one and be refused.
+    var tsField = document.querySelector("[name='cf-turnstile-response']");
+    var tsToken = tsField ? tsField.value : "";
+
+    post("/say", { english: english, turnstile: tsToken })
       .then(function (data) {
         (data.messages || []).forEach(render);
         newThread.hidden = false;
@@ -145,6 +151,18 @@
         busy = false;
         send.disabled = false;
         input.focus();
+        /* ⛔⛔ RESET THE WIDGET AFTER EVERY TURN. A Turnstile token is
+           SINGLE-USE. Without this the first message works, the second replays
+           a spent token, and the server refuses it — so the bug would look
+           like "it stopped answering me" rather than like a captcha problem,
+           and it would never show up in a one-message smoke test.
+           ⛔ Guarded: the script is `async defer` and a reader on a blocked
+           network may have no `turnstile` global at all, in which case there
+           is nothing to reset and the server is already letting them through
+           or already refusing them on its own terms. */
+        try {
+          if (window.turnstile) window.turnstile.reset();
+        } catch (err) { /* a failed reset must not break the composer */ }
       });
   });
 

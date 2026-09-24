@@ -31,8 +31,23 @@ import time
 IP_TURNS = 12
 IP_WINDOW_S = 10 * 60
 
-#: Global: this many turns a day across everyone. ⭐ At ~8s a turn this is well
-#: under an hour of GPU, so the box is never the thing that runs out first.
+#: Global: this many turns a day across everyone.
+#:
+#: ⛔⛤ THE JUSTIFICATION THAT WAS HERE IS NO LONGER TRUE, AND THE NUMBER WAS
+#: SIZED UNDER IT. It read "at ~8s a turn this is well under an hour of GPU".
+#: Two things are wrong with that now:
+#:   * the arithmetic never worked — 1500 × 8s is 3.3 hours, not "well under
+#:     an hour";
+#:   * and a turn is no longer ~8s. `speaker.CARRY_RETRIES` lets the FIRST
+#:     exchange draw up to four replies when none carries, which is what takes
+#:     the three-turn reach from 67.3% to 83.3%. Expected draws on turn 1 are
+#:     ~2.1 provoke generations plus the write, so ~3.1 against 2, and roughly
+#:     2.3 generations per turn averaged over a four-turn conversation.
+#:
+#: ⭐ SO THE HONEST FIGURE IS ~16s A TURN AND ~6.7 GPU-HOURS A DAY AT THIS
+#: CEILING. That may well be the right ceiling — it is a cost decision, not a
+#: correctness one, and it is Nate's. What is not defensible is a constant
+#: carrying a reason that stopped being true when something else shipped.
 GLOBAL_TURNS_PER_DAY = 1500
 
 #: ⛔ ONE GPU, ONE GENERATION. The model is a single process-wide object; two
