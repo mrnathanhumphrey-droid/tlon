@@ -199,3 +199,64 @@ def test_the_speaker_passes_the_gate_on_the_expanded_lexicon(
             "expected to reach the adapter check, got: %s" % msg)
     finally:
         C.reset_caches()
+
+
+# ── the bench must never outlive the turn that set it ───────────────────────
+
+def test_a_refused_write_does_not_leak_its_bench_to_the_next_reader(
+        speaker_module, monkeypatch):
+    """⛔⛔ ONE PERSON'S CONVERSATION CONDITIONING A STRANGER'S.
+
+    `backend.conversation` is a process-wide attribute. `turn` sets it for the
+    WRITE call and `reply_to` clears the one it sets — but a REFUSED write
+    never reaches `reply_to`, so before the `finally` the WRITE window survived
+    the turn and would be handed to the next reader's first exchange.
+
+    ⭐ The leak lives ONLY on the refusal path, which is the path least likely
+    to be exercised by hand, and it would present as a stranger's first reply
+    being oddly on-topic — not as an error.
+    """
+    from tlon.grammar import classes as C
+    sp = speaker_module
+    monkeypatch.setenv("TLON_LEXICON", EXPANDED_FILE)
+    C.reset_caches()
+
+    class FakeBackend:
+        conversation: list = []
+
+    backend = FakeBackend()
+    monkeypatch.setattr(sp.Speaker, "load", lambda self: backend)
+
+    # A REAL surface, because `_bench` silently DROPS a pair whose surface will
+    # not re-parse. A made-up one produced an empty bench either way, so the
+    # assertion below passed against the unfixed code -- the mutant survived
+    # and the guard proved nothing.
+    import json as _json
+    src = ROOT / "runs" / "act2" / "corpus_conv_steered" / "conversations.jsonl"
+    if not src.exists():
+        pytest.skip("steered corpus not in this checkout")
+    first = _json.loads(src.read_text(encoding="utf-8").splitlines()[0])
+    pair = (first["turns"][0]["english"], first["turns"][0]["surface"])
+    assert sp._bench(__import__("tlon_converse").WRITE, [pair]), (
+        "the fixture pair does not survive _bench, so this test cannot bite")
+
+    class Refused:
+        ok = False
+        surface = None
+        scene = None
+        refused = None
+        error = "the gate would not pass it"
+        seconds = 0.0
+
+    import tlon_converse
+    monkeypatch.setattr(tlon_converse, "generate",
+                        lambda *a, **k: Refused())
+    try:
+        out = sp.Speaker().turn("anything", [pair], [])
+    finally:
+        C.reset_caches()
+
+    assert out["tlon"] is None, "a refused write must produce no reply"
+    assert backend.conversation == [], (
+        "⛔⛔ the WRITE bench outlived a refused turn: %r"
+        % (backend.conversation,))

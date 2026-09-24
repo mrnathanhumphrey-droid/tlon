@@ -287,6 +287,43 @@ class Speaker:
 
     # ── the turn ────────────────────────────────────────────────────────────
 
+    def reply_to(self, provocation: str, provoke_pairs):
+        """The Tlonian's answer to one already-rendered line.
+
+        ⭐⭐ EXTRACTED FROM `turn`, WHICH NOW CALLS IT — not copied. This is the
+        half of an exchange that can be RE-RUN without changing what the reader
+        said: `provocation` is their own line already in Tlön and already shown
+        to them, so regenerating from here is the only retry the product could
+        honestly offer. A retry that re-rendered their line would be answering
+        a different sentence than the one on their screen.
+
+        ⛔ It exists because the onset baseline found the whole conversation is
+        decided by turn 1: P(carry | previous carried) = 0.842 against 0.156 if
+        it missed, and turn 1 has no context at all. Whether a missed turn 1 is
+        DECODE VARIANCE or is determined by the provocation is the question a
+        resample answers, and answering it needs exactly this seam.
+
+        ⛔ The backend samples at temperature 0.7 with no per-call seed, so two
+        calls here are independent draws. That is the mechanism a retry would
+        rely on; it is not something this method arranges.
+        """
+        from tlon_converse import PROVOKE, generate
+
+        backend = self.load()
+        backend.conversation = _bench(PROVOKE, provoke_pairs)
+        try:
+            # ⭐ The bench's own framing, when it is turned on. Off by default:
+            # it is a hypothesis under test, not yet a finding. See
+            # `puzzle/bench_prompt.py` for what it overturns and why.
+            return generate(backend, PROVOKE, provocation, [], shape=SHAPE,
+                            system=bench_prompt.system_for(PROVOKE))
+        finally:
+            # ⛔ Clear it. A stale bench left on a process-wide object would be
+            # handed to the NEXT reader's first turn — one person's
+            # conversation conditioning a stranger's. In a `finally` because a
+            # raising generate would otherwise leave it set.
+            backend.conversation = []
+
     def turn(self, english: str, write_pairs, provoke_pairs) -> dict:
         """One exchange, ON A BENCH. Returns rows for the store and the page.
 
@@ -308,29 +345,26 @@ class Speaker:
         which is the language working. Run 4 lost its largest result because 60
         of 61 failures were stored as `null` with the text dropped.
         """
-        from tlon_converse import PROVOKE, WRITE, generate
+        from tlon_converse import WRITE, generate
 
         backend = self.load()
         t0 = time.perf_counter()
 
         # ⭐ The window, trimmed to the time-out and rendered into the shape a
         # training row has — user payload bare, assistant turn a JSON scene.
-        backend.conversation = _bench(WRITE, write_pairs)
-        yours = generate(backend, WRITE, english, [], shape=SHAPE)
+        # ⛔⛔ CLEARED IN A `finally`, NOT AFTER THE REPLY. `reply_to` clears the
+        # bench it sets, but a REFUSED write never reaches it — and that path
+        # would leave the WRITE window on a process-wide object, to be handed
+        # to the next reader's first turn. The leak only ever appears when a
+        # turn is refused, which is the path least likely to be exercised.
+        try:
+            backend.conversation = _bench(WRITE, write_pairs)
+            yours = generate(backend, WRITE, english, [], shape=SHAPE)
+        finally:
+            backend.conversation = []
 
-        reply = None
-        if yours.ok:
-            backend.conversation = _bench(PROVOKE, provoke_pairs)
-            # ⭐ The bench's own framing, when it is turned on. Off by default:
-            # it is a hypothesis under test, not yet a finding. See
-            # `puzzle/bench_prompt.py` for what it overturns and why.
-            reply = generate(backend, PROVOKE, yours.surface, [], shape=SHAPE,
-                             system=bench_prompt.system_for(PROVOKE))
+        reply = self.reply_to(yours.surface, provoke_pairs) if yours.ok else None
 
-        # ⛔ Clear it. A stale bench left on a process-wide object would be
-        # handed to the NEXT reader's first turn — one person's conversation
-        # conditioning a stranger's.
-        backend.conversation = []
         seconds = time.perf_counter() - t0
         return {"you": _row(yours, english=english),
                 "tlon": _row(reply) if reply is not None else None,

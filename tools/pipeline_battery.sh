@@ -185,6 +185,7 @@ done
 # THE READ IS the deliverable, so a missing one is a missing result.
 CARRY_FILES=()
 ONSET_FILES=()
+RESEED_FILES=()
 if [ -n "${CARRY_N:-}" ]; then
   step model_carry
   for C_ in $CELLS; do
@@ -277,6 +278,59 @@ PYTRAINED
   done
 fi
 
+# ── 5d · RESEED TURN 1 — IS A MISS DECODE VARIANCE OR THE PROVOCATION'S? ────
+# ⛔⛔ THE QUESTION THAT DECIDES THE NEXT SPEND. The onset baseline found the
+# conversation is settled by its first exchange: P(carry | previous carried) =
+# 0.842 against 0.156 if it missed, and turn 1 has no context at all. So
+# joint ~= p1 + (1-p1)*0.3325, and raising p1 is the whole lever. If a missed
+# turn 1 is DECODE VARIANCE a bounded retry buys it for free; if the
+# PROVOCATION decides, retries are wasted GPU and the fix is in the weights.
+#
+# ⛔ THE PROVOCATION IS HELD FIXED. It is the reader's own line, already
+# rendered and already on their screen — re-rendering it would answer a
+# different sentence than the one they can see. So this drives
+# `Speaker.reply_to`, the seam `turn` itself calls.
+#
+# ⛔ COST: n x k generations, ONE per attempt (not two — the write step is not
+# re-run). 192 x 3 = 576 calls, ~68 min at the measured 256-per-30-min.
+if [ -n "${RESEED_K:-}" ]; then
+  step reseed_turn1
+  export TLON_4BIT=0
+  RESEED_LEDGER="${RESEED_LEDGER:-onset/onset_carry_dosed-s20624.json}"
+  $PY - <<PYLEDGER 2>&1 | tee -a "$LOG"
+import json, sys
+sys.path.insert(0, "tools")
+from huggingface_hub import hf_hub_download
+import act2_provision as P
+p = hf_hub_download("$HF_REPO", "$RESEED_LEDGER", token=P._hf_token(),
+                    local_dir="$ROOT")
+body = json.loads(open(p, encoding="utf-8").read())
+n = len(body.get("items") or ())
+print("    baseline ledger: %d conversations · adapter %s"
+      % (n, body.get("adapter")))
+# ⛔⛔ A --replay ledger's flags are the CORPUS's, not the model's. Resampling
+# against them would compare the model to a transcript. The probe refuses too;
+# refusing HERE means it costs nothing rather than a provisioned box.
+if body.get("replay"):
+    raise SystemExit("⛔⛔ REFUSING: the baseline ledger is a --replay run")
+if n < 100:
+    raise SystemExit("⛔⛔ REFUSING: only %d conversations in the baseline "
+                     "ledger — too few to resolve a rescue rate" % n)
+PYLEDGER
+  for C_ in $CELLS; do
+    echo "── RESEED TURN 1 · $C_ · k=$RESEED_K ──" | tee -a "$LOG"
+    $PY tools/act2_reseed_turn1.py \
+        --adapter "$ROOT/hub/$C_" --k "$RESEED_K" \
+        --ledger "$ROOT/$RESEED_LEDGER" \
+        --out "$ROOT/reseed_turn1_$C_.json" 2>&1 | tee -a "$LOG"
+    RC=${PIPESTATUS[0]}
+    [ "$RC" -eq 0 ] || { echo "⛔ reseed rc=$RC on $C_" | tee -a "$LOG"; exit 1; }
+    RESEED_FILES+=("$ROOT/reseed_turn1_$C_.json")
+    tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" "$ROOT/reseed_turn1_$C_.json" \
+        2>&1 | tee -a "$LOG" || echo "  ⚠ interim persist failed for $C_" | tee -a "$LOG"
+  done
+fi
+
 # ── 6 · PERSIST THE LEDGER, WHICH IS WHERE THE PAIRING LIVES ────────────────
 # ⛔⛔ THE PER-ITEM RESULTS ARE THE DELIVERABLE, NOT THE PRINTED RATES.
 # `act2_flocal` ledgers `comprehension_items`, and a PAIRED test (McNemar) on
@@ -306,7 +360,8 @@ fi
 tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" \
     ${LEDGER_FILES[@]+"${LEDGER_FILES[@]}"} \
     ${CARRY_FILES[@]+"${CARRY_FILES[@]}"} \
-    ${ONSET_FILES[@]+"${ONSET_FILES[@]}"}
+    ${ONSET_FILES[@]+"${ONSET_FILES[@]}"} \
+    ${RESEED_FILES[@]+"${RESEED_FILES[@]}"}
 
 # ── 7 · VERIFY THE READ LANDED, THEN AND ONLY THEN MARK DONE ────────────────
 # ⛔⛔ NOT `tlon_gate_done`. That helper verifies CELLS, and this run writes no
@@ -328,7 +383,8 @@ RBASE=$(basename "$ROOT")
 WANT_LIST="$RBASE/pipeline_battery.log"
 [ ${#LEDGER_FILES[@]} -gt 0 ] && WANT_LIST="$WANT_LIST $RBASE/ledger_battery.jsonl"
 for f in ${CARRY_FILES[@]+"${CARRY_FILES[@]}"} \
-         ${ONSET_FILES[@]+"${ONSET_FILES[@]}"}; do
+         ${ONSET_FILES[@]+"${ONSET_FILES[@]}"} \
+         ${RESEED_FILES[@]+"${RESEED_FILES[@]}"}; do
   WANT_LIST="$WANT_LIST $RBASE/$(basename "$f")"
 done
 $PY - <<PYVER 2>&1 | tee -a "$LOG"
