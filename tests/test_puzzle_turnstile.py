@@ -178,3 +178,76 @@ def test_the_token_is_read_at_submit_not_at_load():
     at_handler = js.index('form.addEventListener("submit"')
     at_read = js.index("cf-turnstile-response")
     assert at_read > at_handler
+
+
+# ── the proxy's client address ──────────────────────────────────────────────
+
+class _Req:
+    def __init__(self, headers, peer="10.0.0.1"):
+        self.headers = {k.lower(): v for k, v in headers.items()}
+        self.client = type("C", (), {"host": peer})()
+
+
+def test_the_proxy_header_is_ignored_without_the_secret(monkeypatch):
+    """⛔⛔ THE FORGERY. The modal.run URL stays publicly reachable, so anyone
+    could send X-Tlon-Client-IP and mint a fresh identity per request — which is
+    unlimited per-IP budget on a GPU. Unsigned, it must count for nothing."""
+    from puzzle import guard as G
+    monkeypatch.delenv("TLON_PROXY_SECRET", raising=False)
+    ip = G.client_ip(_Req({"X-Tlon-Client-IP": "1.2.3.4",
+                           "X-Forwarded-For": "9.9.9.9"}), trust_proxy=True)
+    assert ip != "1.2.3.4", "⛔⛔ an unsigned client-IP header was believed"
+    assert ip == "9.9.9.9"
+
+
+def test_a_wrong_secret_is_ignored(monkeypatch):
+    from puzzle import guard as G
+    monkeypatch.setenv("TLON_PROXY_SECRET", "right")
+    ip = G.client_ip(_Req({"X-Tlon-Proxy-Secret": "wrong",
+                           "X-Tlon-Client-IP": "1.2.3.4",
+                           "X-Forwarded-For": "9.9.9.9"}), trust_proxy=True)
+    assert ip == "9.9.9.9"
+
+
+def test_the_signed_header_wins(monkeypatch):
+    """⭐ The whole point: behind Cloudflare the last XFF entry is CLOUDFLARE's
+    egress address, so without this every reader shares one identity and the
+    per-IP limit becomes a second global limit — failing OPEN."""
+    from puzzle import guard as G
+    monkeypatch.setenv("TLON_PROXY_SECRET", "right")
+    ip = G.client_ip(_Req({"X-Tlon-Proxy-Secret": "right",
+                           "X-Tlon-Client-IP": "1.2.3.4",
+                           "X-Forwarded-For": "cloudflare-egress"}),
+                     trust_proxy=True)
+    assert ip == "1.2.3.4"
+
+
+def test_nothing_is_trusted_without_trust_proxy(monkeypatch):
+    """⛔ On a naked socket every one of these headers is client-supplied."""
+    from puzzle import guard as G
+    monkeypatch.setenv("TLON_PROXY_SECRET", "right")
+    ip = G.client_ip(_Req({"X-Tlon-Proxy-Secret": "right",
+                           "X-Tlon-Client-IP": "1.2.3.4"}), trust_proxy=False)
+    assert ip == "10.0.0.1"
+
+
+def test_the_secret_is_compared_in_constant_time():
+    """⛔ A `==` leaks the secret one character at a time to anyone willing to
+    time the responses, and the prize is an unlimited per-IP budget on a GPU."""
+    import inspect
+    from puzzle import guard as G
+    assert "compare_digest" in inspect.getsource(G._const_eq)
+
+
+def test_the_worker_sends_both_halves():
+    """⛔ The header is useless without the secret, and the secret is useless
+    without the header. A Worker that sent one would look like it worked."""
+    js = (ROOT / "puzzle" / "worker" / "tlon-proxy.js").read_text(encoding="utf-8")
+    assert "CF-Connecting-IP" in js, (
+        "⛔⛔ the Worker does not read Cloudflare's own client-IP header — "
+        "X-Forwarded-For is forgeable and CF-Connecting-IP is not")
+    assert "X-Tlon-Client-IP" in js and "X-Tlon-Proxy-Secret" in js
+    assert 'headers.delete("host")' in js, (
+        "⛔ a stale Host makes Modal fail to route — a 404 on a URL that exists")
+    assert 'redirect: "manual"' in js, (
+        "⛔ a followed redirect leaks the modal.run hostname into the address bar")

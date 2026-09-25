@@ -24,6 +24,8 @@ client eat everybody's budget. Neither substitutes for the other.
 from __future__ import annotations
 
 import collections
+import hmac
+import os
 import threading
 import time
 
@@ -80,6 +82,27 @@ def client_ip(request, *, trust_proxy: bool) -> str:
     client started.
     """
     if trust_proxy:
+        # ⛔⛔ THE CLOUDFLARE-IN-FRONT-OF-MODAL CASE, AND IT BREAKS EVERY RULE
+        # BELOW. `tlon.resolveresearcher.com` is a Cloudflare Worker proxying to
+        # a `modal.run` URL, because Modal gates custom domains behind a $250/mo
+        # plan. In that chain the LAST `X-Forwarded-For` entry is CLOUDFLARE'S
+        # egress address, not the reader's — so the rule below would give every
+        # reader on earth one shared identity and the per-IP limit would quietly
+        # become a second global limit. It would fail OPEN and look fine.
+        #
+        # ⛔ A CUSTOM HEADER ALONE IS NOT ENOUGH. The `modal.run` URL stays
+        # publicly reachable, so anyone could send `X-Tlon-Client-IP` themselves
+        # and mint a fresh identity per request — which is the exact forgery
+        # this function's docstring already refuses to allow on a naked socket.
+        # The header is therefore only believed when it arrives with a secret
+        # that only the Worker knows.
+        secret = os.environ.get("TLON_PROXY_SECRET", "")
+        if secret and _const_eq(request.headers.get("x-tlon-proxy-secret", ""),
+                                secret):
+            claimed = (request.headers.get("x-tlon-client-ip") or "").strip()
+            if claimed:
+                return claimed
+
         fly = request.headers.get("fly-client-ip")
         if fly:
             return fly.strip()
@@ -89,6 +112,13 @@ def client_ip(request, *, trust_proxy: bool) -> str:
             # are whatever the client chose to claim.
             return xff.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
+
+
+def _const_eq(a: str, b: str) -> bool:
+    """⛔ Constant-time. A `==` here leaks the secret one character at a time to
+    anyone willing to time the responses, and the reward for guessing it is an
+    unlimited per-IP budget on a GPU."""
+    return hmac.compare_digest(a or "", b or "")
 
 
 class Guard:
