@@ -152,8 +152,14 @@
          Both keep their data-modal so buying and joining still happen in a
          panel on this page — tools/no_redirect_sweep.py enforces that. -->
     <a class="bar-quiet" data-auth-out data-modal="login" href="https://resolveresearcher.com/login/"><span class="lbl">log in</span></a>
-    <a class="bar-cta" data-auth-out data-modal="signup" href="https://resolveresearcher.com/signup/"><i class="ph ph-arrow-right"></i><span class="lbl">sign up</span></a>
-    <a class="bar-cta" data-auth-in href="https://profile.resolveresearcher.com/profile/"><i class="ph ph-user-circle"></i><span class="lbl">account</span></a>
+    <!-- ⛔ aria-label BECAUSE THE TEXT IS HIDDEN AT MOBILE WIDTH. The
+         `.lbl` span is display:none under the bar's breakpoint, which
+         leaves an anchor containing nothing but an icon font glyph -- a
+         screen reader announces "link" and stops. Caught by reading the
+         accessibility tree at 390px during the v1 audit; invisible at
+         desktop width, where the label is present. -->
+    <a class="bar-cta" aria-label="sign up" data-auth-out data-modal="signup" href="https://resolveresearcher.com/signup/"><i class="ph ph-arrow-right"></i><span class="lbl">sign up</span></a>
+    <a class="bar-cta" aria-label="account" data-auth-in href="https://profile.resolveresearcher.com/profile/"><i class="ph ph-user-circle"></i><span class="lbl">account</span></a>
   </div>
   <button class="hamburger" type="button" aria-label="open menu" aria-expanded="false"
           aria-controls="mobile-drawer" data-drawer-open>

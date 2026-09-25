@@ -281,3 +281,19 @@ def test_the_tab_has_an_icon():
     assert re.search(r'<link[^>]+rel="icon"[^>]+href="[^"]+"', html), (
         "⛔ the page declares no icon, so the tab falls back to /favicon.ico "
         "and that path does not exist")
+
+
+def test_the_icon_only_buttons_are_named():
+    """⛔⛔ THE `.lbl` SPAN IS `display:none` UNDER THE BAR'S MOBILE BREAKPOINT,
+    which leaves an anchor containing nothing but an icon-font glyph. A screen
+    reader announces "link" and stops — on the two CTAs that are the only way
+    off this page into an account.
+
+    ⛔⛤ INVISIBLE AT DESKTOP WIDTH, where the label is right there in the tree.
+    Found by reading the accessibility tree at 390px during the v1 audit, which
+    is a different instrument from looking at the page."""
+    html = (ROOT / "puzzle" / "static" / "index.html").read_text(encoding="utf-8")
+    for anchor in re.findall(r'<a class="bar-cta"[^>]*>', html):
+        assert 'aria-label=' in anchor, (
+            "⛔ an icon-only CTA has no accessible name at mobile width: %s"
+            % anchor)
