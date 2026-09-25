@@ -1,0 +1,33 @@
+# The front door for tlon.resolveresearcher.com.
+#
+# ⛔ Modal gates custom domains behind its Team plan ($250/mo). This Worker sits
+# on the family domain instead and proxies to the modal.run URL — Cloudflare's
+# free tier covers 100k requests a day, which is far more than a puzzle mailed
+# to a short list will ever see.
+#
+# ⛔⛔ `TLON_PROXY_SECRET` IS NOT DECLARED HERE AND MUST NOT BE. Anything in
+# `[vars]` is committed to the repository in plain text, and this particular
+# value is what convinces the app to believe a claimed client address. Set it
+# with `wrangler secret put TLON_PROXY_SECRET`, and set the SAME value in the
+# Modal secret, or the app falls back to Cloudflare's egress IP and the per-IP
+# rate limit silently becomes a second global one.
+
+name = "tlon-proxy"
+main = "tlon-proxy.js"
+compatibility_date = "2026-09-01"
+
+# ⭐ The route. `/*` so every path — the page, /say, /reveal, the static files —
+# arrives here. ⛔ A route needs a DNS record to attach to: add a PROXIED
+# (orange-cloud) AAAA record for `tlon` pointing at `100::`, the IPv6 discard
+# address. Nothing ever connects to it; it exists so Cloudflare has something to
+# intercept. Without the record the route matches nothing and the hostname does
+# not resolve at all.
+[[routes]]
+pattern = "tlon.resolveresearcher.com/*"
+zone_name = "resolveresearcher.com"
+
+# ⛔ Observability on: this is the only place a proxy-level failure would show.
+# If the Worker 5xxs, the app's own logs say nothing at all — Modal never sees
+# the request.
+[observability]
+enabled = true
