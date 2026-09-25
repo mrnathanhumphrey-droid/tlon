@@ -48,6 +48,13 @@ Four things in one repository:
    own corpus and its own speaker, deliberately kept apart from the research
    ones; see *A note on the two corpora* below.
 
+   **It is live at [tlon.resolveresearcher.com](https://tlon.resolveresearcher.com).**
+   Say something ordinary in English; something answers in Tlön. It is not
+   translating for you and it does not know you are there. Nothing on the page
+   renders your own line in Tlön — you wrote it, so that pairing would be an
+   answer key — and the only thing that brings meaning across is the
+   **translate** button under each reply, which is yours to press or not.
+
 ---
 
 ## The language in ninety seconds
