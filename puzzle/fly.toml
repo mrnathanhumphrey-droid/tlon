@@ -65,11 +65,20 @@ primary_region = "iad"             # Ashburn, Virginia — us-east, Nate's call
     hard_limit = 12
     soft_limit = 6
 
-# ⛔ A generation takes ~5-8s on the box it was measured on, and a cold start
-# adds the model load on top. The default grace is far too short for that: the
-# health check fails, Fly restarts the machine, and it never finishes loading.
+# ⛔⛤ THIS ASKED FOR 180s AND FLY SILENTLY LOWERS IT TO 60. The deploy says so
+# in passing — "Service HTTP check has a grace period greater than 1 minute
+# (3m0s); this will be lowered to 1 minute" — and a config that asks for
+# something the platform will not honour is a config that lies to the next
+# person who reads it. 60 is what is enforced, so 60 is what is written.
+#
+# ⛔⛔ THE GRACE PERIOD WAS NEVER THE REAL FIX ANYWAY. A cold machine pulls
+# ~14 GB of base weights onto the volume before the model loads, which no grace
+# period covers. `server._startup` therefore warms the speaker on a THREAD, so
+# uvicorn binds immediately and `/healthz` answers — reporting
+# `speaker_loaded: false` — while the card warms. Serving before ready is
+# correct here: the page, the copy and the translate button are all model-free.
 [[http_service.checks]]
-  grace_period = "180s"
+  grace_period = "60s"
   interval = "30s"
   method = "GET"
   timeout = "10s"

@@ -115,15 +115,31 @@ def test_fly_keeps_exactly_one_machine_worth_of_state(fly):
     assert mounts[0]["destination"] == "/data"
 
 
-def test_health_check_grace_survives_a_cold_model_load(fly):
-    """⛔ Loading the speaker took 14-25s on the box that ran it, and a cold Fly
-    machine also pulls weights from the volume. Too short a grace means the
-    check fails, Fly restarts the machine, and it never finishes loading —
-    a boot loop whose logs say only 'health check failed'."""
-    checks = fly["http_service"]["checks"]
-    grace = checks[0]["grace_period"]
+def test_a_cold_model_load_cannot_boot_loop_the_machine(fly):
+    """⛔⛤ THIS TEST USED TO ASSERT `grace_period >= 120s`, AND BOTH HALVES OF
+    THAT WERE WRONG.
+
+    It encoded the belief that a long grace period was the fix for a slow cold
+    start. Two things refute it:
+
+      * FLY WILL NOT HONOUR IT. An http_service check's grace is capped at 60
+        seconds. The deploy lowers the value and mentions it once, in passing,
+        among the build output — so the config read as protective while the
+        platform ignored it, and the suite agreed with the config rather than
+        with the machine.
+      * NO GRACE PERIOD IS LONG ENOUGH ANYWAY. A cold machine pulls ~14 GB of
+        base weights onto the volume before `load()` starts.
+
+    ⭐ The actual fix is that `server._startup` warms the speaker on a THREAD,
+    so uvicorn binds immediately and `/healthz` answers while the card warms.
+    That is asserted by `test_the_speaker_is_warmed_off_the_startup_path`; this
+    one now only checks the config does not claim a grace it will not get.
+    """
+    grace = fly["http_service"]["checks"][0]["grace_period"]
     assert grace.endswith("s")
-    assert int(grace[:-1]) >= 120, "grace %s is shorter than a cold load" % grace
+    assert int(grace[:-1]) <= 60, (
+        "grace %s will be silently lowered to 60s by Fly — write what is "
+        "enforced" % grace)
 
 
 # ── the bind ────────────────────────────────────────────────────────────────
@@ -238,3 +254,45 @@ def test_fly_does_NOT_carry_the_turnstile_secret(fly):
     code = "\n".join(ln for ln in body.splitlines()
                      if not ln.lstrip().startswith("#"))
     assert "TURNSTILE_SECRET_KEY" not in code
+
+
+# ── the cold start ──────────────────────────────────────────────────────────
+
+def test_the_speaker_is_warmed_off_the_startup_path():
+    """⛔⛔ A BLOCKING STARTUP IS A BOOT LOOP ON THIS PLATFORM.
+
+    FastAPI accepts no connection until the startup handler returns, and a cold
+    machine pulls ~14 GB of base weights onto the volume before `load()` even
+    begins. Fly caps an http_service check's grace period at 60s — it lowers
+    the config's value and says so only in passing at deploy time — so a
+    synchronous load fails the check, the machine restarts, and the download
+    starts over. Every log line would read "health check failed".
+    """
+    import ast
+
+    src = (ROOT / "puzzle" / "server.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    fn = next((n for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name == "_startup"), None)
+    assert fn, "no _startup handler"
+
+    spawns = {getattr(c.func, "attr", None) for c in ast.walk(fn)
+              if isinstance(c, ast.Call)}
+    assert "Thread" in spawns, (
+        "⛔⛔ _startup loads the speaker synchronously — the machine will fail "
+        "its health check before a cold model load finishes")
+
+    # ⭐ and the Turnstile preflight must stay SYNCHRONOUS: it is the one thing
+    # that should stop the boot.
+    body_calls = [c for c in fn.body if isinstance(c, ast.Expr)
+                  and isinstance(c.value, ast.Call)]
+    first = body_calls[0].value if body_calls else None
+    assert first is not None and getattr(first.func, "attr", "") == "preflight", (
+        "⛔ TS.preflight() is no longer the first thing startup does")
+
+
+def test_the_grace_period_is_one_fly_will_honour(fly):
+    """⛔ Fly lowers anything over 60s on an http_service check. A config asking
+    for more is a config that lies to whoever reads it next."""
+    grace = fly["http_service"]["checks"][0]["grace_period"]
+    assert grace.endswith("s") and int(grace[:-1]) <= 60

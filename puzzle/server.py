@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import threading
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
@@ -105,13 +106,32 @@ def _startup():
     # the model can load late -- there is no safe degraded mode here.
     TS.preflight()
     if PRELOAD:
-        try:
-            speaker.load()
-        except Exception as exc:              # noqa: BLE001
-            # ⛔ DO NOT DIE HERE. A machine that exits on startup is restarted
-            # forever by the platform and the reason scrolls past. Come up,
-            # serve the copy, and let /healthz report the speaker as down.
-            print("⛔ speaker did not load at startup: %s" % exc, flush=True)
+        # ⛔⛔ IN A THREAD, BECAUSE A BLOCKING STARTUP IS A BOOT LOOP. FastAPI
+        # does not accept a single connection until this handler returns, and
+        # on a cold machine `load()` first pulls ~14 GB of base weights onto
+        # the volume. Fly caps an http_service check's grace period at 60
+        # seconds — it says so at deploy time and silently lowers the 180 this
+        # config asks for — so a synchronous load fails the check, the machine
+        # is restarted, and the download begins again. The app would never come
+        # up, and every log line would say only "health check failed".
+        #
+        # ⭐ SERVING BEFORE READY IS CORRECT HERE. The page, the copy and the
+        # translate button are all model-free, so the bench is genuinely usable
+        # while the card warms. `/healthz` already reports `speaker_loaded`,
+        # which is the honest signal; a reader who asks early waits on
+        # `load()`'s own lock rather than getting a wrong answer, and
+        # `guard.MAX_QUEUED` bounds how many may wait.
+        def _warm():
+            try:
+                speaker.load()
+            except Exception as exc:          # noqa: BLE001
+                # ⛔ DO NOT DIE HERE. A machine that exits on startup is
+                # restarted forever by the platform and the reason scrolls
+                # past. Come up, serve the copy, and let /healthz report the
+                # speaker as down.
+                print("⛔ speaker did not load at startup: %s" % exc, flush=True)
+
+        threading.Thread(target=_warm, name="speaker-warm", daemon=True).start()
 
 
 # ── the door ────────────────────────────────────────────────────────────────
