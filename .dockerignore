@@ -1,0 +1,48 @@
+# ⛔⛔ WITHOUT THIS FILE THE BUILD CONTEXT IS 26 GB.
+#
+# `puzzle/Dockerfile` COPIES repo-root-relative paths (`tlon/`, `tools/`,
+# `puzzle/`, `runs/puzzle_speaker/dosed-s20624/`), so the build context has to
+# be the repository root. The root holds `runs/` — every adapter, corpus, probe
+# ledger and log this project has ever produced — and Docker uploads the whole
+# context before it reads the first COPY. The image needs 309 MB of that.
+#
+# ⛔ THE FAILURE IS SLOW AND EXPENSIVE, WHICH IS WHY IT IS WORTH A FILE. A 26 GB
+# upload does not fail fast; it crawls, and then times out after a long time
+# spent looking like progress. Nothing about the Dockerfile would look wrong.
+
+# ── everything under runs/, then the one cell the image serves back ─────────
+# ⛔ ORDER AND GRANULARITY BOTH MATTER. Docker cannot re-include a path whose
+# PARENT is excluded, so the directories are opened one level at a time rather
+# than with a single `!runs/puzzle_speaker/dosed-s20624/` after `runs/`.
+# ⛔ The cell name is spelt here as well as in the Dockerfile and
+# `tests/test_puzzle_serves_v1.py`. `tests/test_puzzle_build_context.py` pins
+# them together, because an adapter swap that missed this file would exclude
+# the weights and the image would silently ship without them — and
+# `Speaker.load()` refuses on a missing adapter, so it would fail at boot on a
+# machine that had already been paid for and deployed.
+runs/*
+!runs/puzzle_speaker/
+runs/puzzle_speaker/*
+!runs/puzzle_speaker/dosed-s20624/
+
+# ── the rest of the repository the image does not serve ────────────────────
+.git/
+.github/
+.pytest_cache/
+**/__pycache__/
+**/*.pyc
+tests/
+spec/
+docs/
+scratchpad/
+*.md
+!puzzle/README.md
+
+# ⛔ Never. These are credentials and local machine state, and a build context
+# is not a private channel — every layer is readable by anyone who can pull the
+# image.
+.env
+.env.*
+**/INSTANCE.json
+**/IP.txt
+*.sqlite3
