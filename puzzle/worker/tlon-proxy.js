@@ -105,6 +105,24 @@ export default {
     out.delete("transfer-encoding");
     out.delete("content-range");
 
+    // ⛔⛔⛔ SET-COOKIE IS THE ONE HEADER `new Headers(...)` CAN DESTROY.
+    // A `Headers` object joins repeated fields with ", ", which is correct for
+    // every header except this one: two cookies become one malformed value and
+    // the browser stores NEITHER. `/say` returns exactly that pair the first
+    // time a reader speaks — `tlon_bench` (their conversation) and `tlon_human`
+    // (their pass) — so the failure would land on the very first turn of every
+    // new reader, and it would present as the bench forgetting them: a fresh
+    // conversation on every message, with nothing in any log to say why.
+    // ⭐ `getSetCookie()` is the runtime's own accessor for exactly this, and
+    // re-appending one at a time is the only way to keep them separate.
+    if (typeof resp.headers.getSetCookie === "function") {
+      const cookies = resp.headers.getSetCookie();
+      if (cookies.length) {
+        out.delete("set-cookie");
+        for (const c of cookies) out.append("set-cookie", c);
+      }
+    }
+
     const loc = out.get("location");
     if (loc && loc.startsWith(ORIGIN)) {
       out.set("location", loc.replace(ORIGIN, `https://${inbound.host}`));

@@ -23,67 +23,324 @@
   line-height: 1;
 }
 
-/* ── the chat head ───────────────────────────────────────────────────────── */
-.oracle-chat-head .wordmark .suffix { color: var(--accent); }
+/* ── the page measure ────────────────────────────────────────────────────── */
+/* ⛔ `main > .container` in oracle.css strips .container's max-width and
+   padding, which is correct — the chat wants the 900px reading column, not the
+   1040px site one. That means every top-level section here carries the measure
+   itself rather than inheriting one. */
+.bench-head,
+.bench-brief,
+.copy-deck {
+  width: 100%;
+  max-width: 900px;
+  margin-inline: auto;
+}
 
-/* ⛔ OVERRIDE, NOT EDIT-IN-PLACE. oracle.css sets this to "you asked", which
-   is the Oracle's verb and the wrong one here: you are not asking, and it is
-   not answering. Overriding leaves oracle.css byte-identical to the file it
-   was copied from, so a future diff against the site shows nothing drifted. */
-.msg-you::before { content: "you said"; }
-.msg-tlon::before {
-  content: "it answered";
+/* ── the head ────────────────────────────────────────────────────────────── */
+.bench-head {
+  padding: 56px 26px 0;
+  text-align: center;
+}
+.bench-head .ex-label { justify-content: center; }
+.bench-mark {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(46px, 7vw, 78px);
+  line-height: 1;
+  letter-spacing: -.025em;
+  color: var(--text);
+  margin: 14px 0 0;
+}
+.bench-mark .s { color: var(--accent); }
+.bench-tagline {
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text-2);
+  margin: 14px 0 0;
+}
+
+/* ── the brief, ABOVE the bench ──────────────────────────────────────────── */
+/* ⛔ This copy used to sit below the composer. A reader was being asked to talk
+   to the thing before anything had told them what the thing was, and a reader
+   who scrolls past a chat box does not come back up for the explanation. */
+.bench-brief {
+  padding: 52px 26px 44px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+.brief-h {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(23px, 2.6vw, 29px);
+  line-height: 1.15;
+  letter-spacing: -.015em;
+  color: var(--text);
+  margin: 10px 0 14px;
+}
+.brief-p {
+  font-family: var(--sans);
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* ── the bench itself: an actual, visible chat box ───────────────────────── */
+/* ⛔⛔ THE PAGE HAD NO CHAT BOX. It wore `.oracle-ask` + `.oracle-input`, which
+   is the Oracle's LANDING-PAGE ask row — a bare field floating in whitespace —
+   while `.oracle-composer`, the Oracle's actual bounded chat composer, sat
+   unused in the oracle.css this page already loads. This bounds it. */
+/* ⛔⛔ THE SELECTOR CARRIES THREE CLASSES BECAUSE IT HAS TO. oracle.css sets
+   `.oracle.oracle-chat { max-width: none; background: none; border: 0;
+   border-radius: 0; min-height: calc(100vh - 62px) }` — specificity (0,2,0).
+   A plain `.bench-box` block is (0,1,0) and LOSES every one of those, which is
+   exactly what happened on the first pass: the rules were all present, the
+   stylesheet was valid, and the box simply did not appear. A border that does
+   not draw looks identical to a border nobody wrote.
+
+   ⛔ And `min-height: 100vh` is wrong here specifically: on the Oracle the
+   chat IS the page, but here it is one panel with copy above and below it, so
+   a viewport-tall panel would open a void over the composer and push the
+   closing note off the bottom of the world. */
+.oracle.oracle-chat.bench-box {
+  width: 100%;
+  max-width: 900px;
+  margin-inline: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.bench-box-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .17em;
+  text-transform: lowercase;
+  color: var(--text-3);
+  margin: 0;
+}
+/* ⛔ oracle.css injects the literal word "the oracle" before this head whenever
+   the log is empty. That is the wrong product's name, and it is content, not
+   style, so it cannot be left to be noticed later. */
+.oracle-chat.bench-box:has(#chat-empty) .oracle-chat-head::before { content: none; }
+/* ⭐ and the rule under the head stays in both states — the head is the top of
+   a bordered panel here, not a floating page header. */
+.oracle-chat.bench-box:has(#chat-empty) .oracle-chat-head::after { display: block; }
+
+.bench-box .oracle-chat-log { padding: 0 26px 26px; }
+.bench-box #chat-empty { margin: 0; padding: 34px 0 10px; }
+
+/* ⛔⛔ THIS PAGE HAS NO ACCOUNTS AND MUST NEVER BE HIDDEN BY ONE. oracle.css
+   carries `body[data-auth="out"] .oracle-composer, … #chat-empty { display:
+   none }`, because on the Oracle a signed-out visitor is shown a sign-up wall
+   instead of a composer. The bench is PUBLIC and free, and nothing here stamps
+   `data-auth` — but apex's shared chrome resolves auth on its own and one day
+   may, at which point the composer and the onset would both silently vanish
+   from a page with no way to sign in to. Answered here, once, on purpose. */
+body[data-auth="out"] .bench-box .oracle-composer { display: flex; }
+body[data-auth="out"] .bench-box #chat-empty { display: block; }
+body[data-auth="out"] .bench-box #new-thread:not([hidden]) { display: inline-flex; }
+
+/* ── the composer ────────────────────────────────────────────────────────── */
+/* ⛔ The Oracle's composer sticks to the bottom of the viewport because there
+   the thread IS the page. Inside a bordered panel it must sit at the foot of
+   the panel, or it detaches and floats over the copy below. */
+.bench-box .oracle-composer {
+  position: static;
+  z-index: auto;
+  backdrop-filter: none;
+  background: none;
+  border-top: 1px solid var(--line);
+  padding: 16px 26px;
+}
+/* the field takes the next ground down so it reads as a well, not as the panel */
+.bench-box .oracle-composer-input {
+  flex: 1 1 auto;
+  background: var(--inset);
+}
+
+/* ── the gate ────────────────────────────────────────────────────────────── */
+/* ⛔⛔⛔ NOT `display: none` WHEN IDLE, AND THIS IS THE WHOLE TRICK. Turnstile
+   will not draw into a subtree that is not being rendered, so a gate hidden
+   the obvious way produces a challenge that never appears — which is one of
+   the two failures this page has already shipped ("invisible"). The card is
+   therefore ALWAYS rendered and simply parked off-screen, where Cloudflare can
+   draw it and solve it silently. For most readers it is solved before the gate
+   would ever have been raised, and they never see anything at all.
+   ⭐ Once the pass is granted the gate is removed from the document entirely
+   (`.is-done`), because at that point it must never come back. */
+.ts-gate {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 340px;
+  z-index: 9999;
+}
+.ts-gate.is-open {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+.ts-gate.is-done { display: none; }
+
+.ts-gate-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 28px 26px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+/* ⛔ The card carries no chrome while parked: it is off-screen, and a reader
+   who lands on it by tabbing should find nothing to read. */
+.ts-gate:not(.is-open) .ts-gate-card {
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.ts-gate:not(.is-open) .ts-gate-title,
+.ts-gate:not(.is-open) .ts-gate-lead { display: none; }
+
+.ts-gate-title {
   font-family: var(--mono);
   font-size: 10.5px;
   font-weight: 500;
   letter-spacing: .17em;
   text-transform: lowercase;
   color: var(--accent);
-  margin-bottom: 10px;
+  margin: 0;
 }
+.ts-gate-lead {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+  margin: 0;
+  max-width: 30ch;
+}
+.ts-gate-note {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .05em;
+  color: var(--text-3);
+  margin: 0;
+  min-height: 1.2em;
+}
+.ts-gate-note.bad { color: var(--danger-text); }
 
-/* ── a message ───────────────────────────────────────────────────────────── */
-.msg-tlon {
-  align-self: stretch;
-  width: 100%;
-  margin: 34px 0 0;
+/* ── the challenge row ───────────────────────────────────────────────────── */
+/* ⛔⛔ ABOVE THE COMPOSER, CENTRED, WITH AIR ON BOTH SIDES OF IT. The original
+   build put a full-width white slab flush UNDER the send button — measured gap
+   zero — so a thumb reaching for send hit the challenge, and on any viewport
+   under ~720px tall it sat entirely below the fold.
+   ⛔⛤ THEN I MADE IT INVISIBLE, WHICH WAS WORSE: Nate got "could not verify
+   you are a person" with nothing on screen to press. A blocker you cannot see
+   has no move that clears it. It is visible, always.
+   ⭐ The padding is conditional so that a reader whose network blocks
+   challenges.cloudflare.com gets an empty row of zero height rather than a
+   framed gap where a widget should be. */
+.ts-row {
+  display: flex;
+  justify-content: center;
+}
+.ts-row:has(iframe) { padding: 16px 26px; }
+
+/* ── the thread ──────────────────────────────────────────────────────────── */
+/* ⛔⛔ NO "you said" / "it answered" LABELS. The Oracle's chat prints them, and
+   this page inherited them — but a bubble on the right that is plainly yours
+   does not need to be announced, and iMessage, Claude and every chat anyone has
+   used in fifteen years agree. Overriding rather than editing oracle.css keeps
+   that file byte-identical to the one it was copied from. */
+.msg-you::before,
+.msg-tlon::before { content: none; display: none; }
+
+.oracle-chat-log { gap: 14px; }
+
+.msg {
   display: flex;
   flex-direction: column;
+  max-width: 76%;
+  margin: 0;
 }
 
-/* ⛔⛔ THERE IS NO `.msg-english` RULE AND THERE MUST NOT BE ONE. Styling for a
-   reader's-English element was the visible half of a parallel-text leak: an
-   aligned English/Tlön pair on every turn, which is a word-list after a few
-   and makes both the onset and the translate button pointless. */
-
-/* ⭐ The Tlön itself is the object on the page, so it gets the display face at
-   the size the Oracle gives its questions. This is the thing to look at. */
-.msg-tlon .msg-text,
+/* ⭐ YOURS, ON THE RIGHT, IN ENGLISH — your own words, set in the body face,
+   because they are a message and not a specimen. */
+.msg-you {
+  align-self: flex-end;
+  align-items: flex-end;
+  margin: 0;
+}
 .msg-you .msg-text {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 15.5px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: var(--r) var(--r) 5px var(--r);
+  padding: 11px 16px;
+  max-width: none;
+  text-align: left;
+}
+
+/* ⭐ ITS, ON THE LEFT, IN TLÖN — the display face, because this IS the object
+   on the page and the thing you are here to look at. */
+.msg-tlon {
+  align-self: flex-start;
+  align-items: flex-start;
+  width: auto;
+  margin: 0;
+}
+.msg-tlon .msg-text {
   font-family: var(--display);
   font-weight: 400;
-  font-size: clamp(26px, 3.2vw, 38px);
-  line-height: 1.15;
-  letter-spacing: -.015em;
-  color: var(--text);
-  max-width: 22ch;
-  background: none;
-  padding: 0;
-  border-radius: 0;
+  font-size: clamp(21px, 2.3vw, 27px);
+  line-height: 1.25;
+  letter-spacing: -.01em;
+  color: var(--accent);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: var(--r) var(--r) var(--r) 5px;
+  padding: 13px 18px;
+  max-width: none;
 }
-.msg-tlon .msg-text { color: var(--accent); }
+
+/* ⛔⛔ THERE IS NO RULE HERE THAT PUTS TLÖN IN A `.msg-you` BUBBLE, AND THERE
+   MUST NEVER BE ONE. The reader typed the English; showing them its Tlön is an
+   aligned pair on every turn, which is the leak this whole app is built to
+   refuse. It shipped for months because the field was called `surface` and
+   looked like Tlön rather than like a translation. */
 
 .msg-refused .msg-text {
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: 14.5px;
   line-height: 1.5;
   color: var(--danger-text);
+  background: none;
+  border: 1px dashed var(--line-dashed);
   max-width: 62ch;
 }
-
-/* ⛔ No `.msg-let-go` rule. It styled a line of English nouns printed beside
-   every Tlön utterance, unasked — the same leak as the reader's-English
-   element above, under a friendlier name. */
 
 /* ── the translate button — the puzzle mechanic ──────────────────────────── */
 /* ⭐ Sincere and always available. It is not gated, not scored, not counted and
@@ -146,38 +403,38 @@
   letter-spacing: .06em;
   color: var(--text-3);
   min-height: 1.4em;
-  margin-top: 10px;
+  margin: 0;
+  padding: 0 26px 16px;
 }
 .ask-note.bad { color: var(--danger-text); }
 .ask-note.wait { color: var(--accent); }
 
-/* ── the onset ───────────────────────────────────────────────────────────── */
-.onset {
-  max-width: 58ch;
-  margin: 0 auto 38px;
-  padding: 22px 24px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--surface);
-}
-.onset-body {
-  font-family: var(--display);
-  font-weight: 400;
-  font-size: 19px;
-  line-height: 1.45;
-  color: var(--text-2);
-  margin-top: 10px;
+/* ── the empty bench ─────────────────────────────────────────────────────── */
+/* ⛔⛤ THE `.onset` RULES ARE DELETED, NOT COMMENTED OUT, AND SO IS THE BOX
+   THEY DREW. A crib stood inside the chat printing an English sentence, its
+   Tlön and a word-by-word gloss — a starter dictionary on the face of a
+   puzzle whose entire mechanic is that meaning crosses ONLY when the reader
+   presses translate. `.onset`, `.onset-lead`, `.onset-line`, `.onset-gloss`
+   and `.onset-body` all went with it; a surviving rule would make the markup
+   one paste away from coming back looking deliberate. */
+.bench-empty-line {
+  max-width: 46ch;
+  margin: 0 auto;
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-3);
+  text-align: center;
 }
 
-/* ── the copy deck ───────────────────────────────────────────────────────── */
+/* ── the closing note, BELOW the bench ───────────────────────────────────── */
 .copy-deck {
-  max-width: 70ch;
-  margin: 0 auto;
-  padding: 72px 0 96px;
+  padding: 64px 26px 88px;
   display: flex;
   flex-direction: column;
   gap: 64px;
 }
+.copy-block { max-width: 70ch; }
 .copy-h {
   font-family: var(--display);
   font-weight: 400;
@@ -194,43 +451,13 @@
   color: var(--text-2);
 }
 
-.copy-video { margin-top: 26px; }
-.copy-video video {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: var(--r);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  aspect-ratio: 16 / 9;
-}
-.copy-video figcaption {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: .08em;
-  color: var(--text-4);
-  margin-top: 10px;
-}
-
-/* ⛔ A media path with nothing behind it renders as an EMPTY SLOT that says so,
-   never as a broken player. app.js adds .is-missing on a load error. */
-.copy-video.is-missing video { display: none; }
-.copy-video.is-missing::before {
-  content: "[PLACEHOLDER — video slot, asset not supplied yet]";
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 16 / 9;
-  border: 1px dashed var(--line-dashed);
-  border-radius: var(--r);
-  font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: .08em;
-  color: var(--text-4);
-  text-align: center;
-  padding: 0 20px;
-}
-.oracle-runner.is-missing { display: none; }
+/* ⛔ THE VIDEO SLOTS ARE GONE, AND SO ARE THEIR RULES. Four <video> elements
+   pointed at files that were never supplied: four 404s on every load, apex's
+   chrome painting a big play button over each one, and an `.is-missing`
+   fallback that only half-fired — the figures got their dashed box while the
+   players kept their controls in the accessibility tree. `.copy-video`,
+   `.copy-video.is-missing` and `.oracle-runner.is-missing` were all deleted
+   with the markup they styled. */
 
 .puzzle-foot {
   border-top: 1px solid var(--line);
@@ -242,40 +469,26 @@
   text-align: center;
 }
 
-/* ── the placeholder marker ──────────────────────────────────────────────── */
-/* ⛔⛔ EVERY STUB IS VISIBLY A STUB. Unmarked placeholder copy is how lorem
-   ships: it reads as a finished sentence nobody re-read. Deleting the
-   `data-placeholder` attribute removes the treatment, so the marker disappears
-   exactly when the real words land — there is no second place to remember. */
-[data-placeholder] {
-  position: relative;
-  outline: 1px dashed var(--line-dashed);
-  outline-offset: 6px;
-  border-radius: 3px;
-}
-[data-placeholder]::after {
-  content: "placeholder";
-  position: absolute;
-  top: -8px;
-  right: -6px;
-  transform: translateY(-100%);
-  font-family: var(--mono);
-  font-size: 8.5px;
-  font-weight: 600;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--accent-ink);
-  background: var(--accent);
-  border-radius: 3px;
-  padding: 2px 6px;
-  pointer-events: none;
-  z-index: 3;
+/* ⛔ THE `[data-placeholder]` TREATMENT IS GONE. It drew a dashed outline and a
+   green "PLACEHOLDER" chip on every stub, which was right while the page was a
+   skeleton and wrong the moment it went public: ten of them shipped to a live
+   URL over finished copy. If the page ever carries a stub again, bring the
+   marker back WITH the stub — not before it, and never on words that are done. */
+
+@media (max-width: 860px) {
+  .bench-brief { grid-template-columns: 1fr; gap: 32px; }
 }
 
 @media (max-width: 720px) {
-  .copy-deck { padding: 48px 20px 72px; gap: 48px; }
-  .onset { margin-inline: 16px; }
+  .bench-head { padding: 36px 16px 0; }
+  .bench-brief { padding: 36px 16px 32px; }
+  .bench-box { border-radius: var(--r); }
+  .bench-box .oracle-chat-log { padding: 0 16px 20px; }
+  .bench-box .oracle-composer { padding: 14px 16px; }
+  .ts-row:has(iframe) { padding: 14px 16px 0; }
+  .ask-note { padding: 0 16px 14px; }
+  .onset { padding: 20px 18px; }
+  .copy-deck { padding: 48px 16px 72px; gap: 48px; }
   .msg-tlon .msg-text,
   .msg-you .msg-text { max-width: none; }
-  [data-placeholder] { outline-offset: 3px; }
 }

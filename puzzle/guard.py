@@ -61,6 +61,16 @@ MAX_CONCURRENT = 1
 MAX_QUEUED = 8
 
 
+#: ⛔⛔ HOW MANY REQUESTS ARRIVED WITH A TRUSTWORTHY CLIENT ADDRESS, AND HOW
+#: MANY DID NOT. In a healthy deployment `unsigned` stays at 0: the Worker
+#: signs every request. Any other number means the proxy secret is wrong on one
+#: side, in which case every reader shares Cloudflare's egress address — the
+#: per-IP limit becomes a second global one AND the session pass stops being
+#: bound to anybody. Both failures are invisible from the outside, which is the
+#: only reason this counter exists.
+PROXY_TRUST = {"signed": 0, "unsigned": 0}
+
+
 class Refused(Exception):
     """Carries the HTTP status and a line that is honest about which limit hit."""
 
@@ -101,7 +111,24 @@ def client_ip(request, *, trust_proxy: bool) -> str:
                                 secret):
             claimed = (request.headers.get("x-tlon-client-ip") or "").strip()
             if claimed:
+                PROXY_TRUST["signed"] += 1
                 return claimed
+        if secret:
+            # ⛔⛔⛔ THE SECRET IS CONFIGURED AND THE REQUEST DID NOT CARRY IT.
+            # Everything below hands back CLOUDFLARE'S EGRESS ADDRESS, which is
+            # the SAME STRING FOR EVERY READER ON EARTH — and that does not just
+            # merge the rate limit. `turnstile.issue_pass` signs HMAC(exp, ip),
+            # so a shared ip means ONE READER'S PASS VALIDATES FOR EVERYONE.
+            # The IP binding, whose entire job is to make a lifted cookie
+            # worthless elsewhere, silently becomes no binding at all.
+            #
+            # ⛔ THIS IS NOT HYPOTHETICAL. `TLON_PROXY_SECRET` was stored as a
+            # single non-printable character for days and nothing anywhere
+            # reported it; the Worker now refuses to send a malformed one,
+            # which lands the request in exactly this branch. Counted so that
+            # `/healthz` can say it out loud instead of it being inferred from
+            # a bug report months later.
+            PROXY_TRUST["unsigned"] += 1
 
         fly = request.headers.get("fly-client-ip")
         if fly:

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import secrets
 import threading
 
 from fastapi import FastAPI, Request, Response
@@ -96,6 +97,57 @@ limiter = G.Guard(
                                       G.GLOBAL_TURNS_PER_DAY)),
 )
 
+#: ⛔⛔ THE GATE NEEDS ITS OWN, LOOSER LIMIT — AND I SHIPPED IT WITH NONE.
+#: `/verify` deliberately escapes the turn limit, because a reader whose pass
+#: expired must be able to re-open the door even when they have used their
+#: turns for the window. That reasoning is right and the omission that came
+#: with it was not: every call makes an OUTBOUND request to Cloudflare's
+#: siteverify, so an unmetered endpoint is a free amplifier pointed at our own
+#: siteverify quota and at this box's CPU, reachable by anyone with curl.
+#:
+#: ⭐ 40 per ten minutes is roughly three times what the most confused human
+#: could need (one pass lasts twelve hours) and nowhere near enough to be worth
+#: aiming at anything. Loose enough to never touch a real reader, tight enough
+#: that the amplifier is not free.
+gate_limiter = G.Guard(
+    ip_turns=int(os.environ.get("TLON_VERIFY_PER_WINDOW", "40")),
+    ip_window_s=int(os.environ.get("TLON_IP_WINDOW_S", G.IP_WINDOW_S)),
+    #: ⛔ The daily ceiling is the GPU's, and this endpoint never reaches it.
+    #: Sharing `GLOBAL_TURNS_PER_DAY` here would let captcha traffic exhaust
+    #: the model's budget without a single generation ever running.
+    global_per_day=int(os.environ.get("TLON_VERIFY_PER_DAY", "20000")),
+)
+
+
+#: ⛔ "unknown" until the startup probe answers. A field that lied by
+#: defaulting to "ok" would be the placeholder bug all over again.
+KEY_VERDICT = "unknown"
+
+
+@app.middleware("http")
+async def _never_cache_a_bench(request: Request, call_next):
+    """⛔⛔⛔ ONE READER'S BENCH MUST NEVER BE SERVED TO ANOTHER.
+
+    Every response here is per-reader: the page carries a session, and
+    `/conversation` carries somebody's actual conversation. None of it said so.
+    Cloudflare happens not to cache these today (`CF-Cache-Status: DYNAMIC`,
+    verified live) — but that is a DEFAULT, not an instruction, and the whole
+    thing sits behind a CDN plus whatever corporate or ISP proxy a reader is
+    behind. One cache rule added by anyone, at any layer, and two strangers are
+    sharing a conversation.
+
+    ⭐ SAID OUT LOUD, IN MIDDLEWARE, SO NO ENDPOINT CAN FORGET IT. A per-route
+    header is one new route away from being wrong, and this is the failure
+    where being wrong is invisible from our side and total from the reader's.
+    ⛔ `/static` is excluded: those files are identical for everybody and SHOULD
+    be cached — they are the only thing here that is not somebody's.
+    """
+    response = await call_next(request)
+    if not request.url.path.startswith("/static"):
+        response.headers["Cache-Control"] = "private, no-store, max-age=0"
+        response.headers["Vary"] = "Cookie"
+    return response
+
 
 @app.on_event("startup")
 def _startup():
@@ -105,6 +157,19 @@ def _startup():
     # Unlike the speaker below -- where dying would cost a restart loop and
     # the model can load late -- there is no safe degraded mode here.
     TS.preflight()
+    # ⛔⛔⛔ AND THEN ASK WHETHER THE KEY IS A KEY. `preflight` only checks that
+    # a secret EXISTS; the deployed value was a 30-character placeholder and the
+    # app came up reporting perfectly healthy while refusing every reader with
+    # "turnstile unreachable" for days. Presence is not validity.
+    # ⭐ Reported rather than fatal: the verdict needs a network round-trip, and
+    # killing the boot on a bad Cloudflare minute would turn a blip into an
+    # outage. `/healthz` carries it too, so it is checkable from outside.
+    global KEY_VERDICT
+    KEY_VERDICT = TS.key_verdict()
+    if KEY_VERDICT == "bad-key":
+        print("⛔⛔⛔ TURNSTILE_SECRET_KEY IS NOT A VALID KEY — cloudflare says "
+              "invalid-input-secret. EVERY reader will be refused. Set the real "
+              "secret from the Turnstile dashboard.", flush=True)
     if PRELOAD:
         # ⛔⛔ IN A THREAD, BECAUSE A BLOCKING STARTUP IS A BOOT LOOP. FastAPI
         # does not accept a single connection until this handler returns, and
@@ -144,6 +209,14 @@ class Say(BaseModel):
     #: that runs the 7B, so it is the endpoint that has to be satisfied.
     #: Optional in the SCHEMA so a request without one gets the app's own
     #: refusal rather than a 422 the page cannot explain.
+    #: ⭐ The PAGE normally leaves this empty and rides the pass cookie issued
+    #: by `/verify`; it stays here so a cookie-less client (a script, the smoke
+    #: test) can still present a token inline and be let through.
+    turnstile: str = ""
+
+
+class Verify(BaseModel):
+    """⭐ The gate's only input. One token, exchanged for a session pass."""
     turnstile: str = ""
 
 
@@ -194,14 +267,88 @@ def _set_cookie(response: Response, cid: str) -> None:
 _INDEX = (STATIC / "index.html").read_text(encoding="utf-8")
 
 
+#: ⛔⛔⛔ THE BENCH'S ORIGIN IS NOW TRUSTED BY THE AUTH API, AND THAT CHANGED
+#: WHAT AN XSS HERE IS WORTH.
+#:
+#: Until 2026-09-25 an injection on this page defaced a puzzle. Then
+#: `tlon.resolveresearcher.com` was added to the API's CORS allowlist — with
+#: `allow_credentials=True`, because the top bar has to read /v1/auth/me to
+#: know whether to say "account" — and the blast radius moved: script running
+#: on this origin can now make CREDENTIALED calls to api.resolveresearcher.com
+#: as whoever is reading, and read the replies.
+#:
+#: ⭐ CSRF still blocks the writes: the token lives in each origin's own
+#: localStorage and this origin has none, so state-changing calls fail. What
+#: an injection WOULD get is read access to the victim's account through GET
+#: endpoints. That is not account takeover and it is not nothing.
+#:
+#: ⛔ This page renders output from a language model that any stranger can
+#: steer, which is the least trustworthy string in the building. `app.js` is
+#: careful — every surface goes through `textContent`, never innerHTML — but
+#: "we were careful" is not a control, and it is now the only thing standing
+#: between a prompt and somebody's account data. The CSP is the control.
+#:
+#: ⭐ NONCE, NOT 'unsafe-inline'. Two inline scripts are load-bearing and
+#: cannot move: the theme stamp must run before first paint or a light-mode
+#: reader gets a dark flash, and the Turnstile onload handshake must be
+#: registered before api.js arrives. A nonce lets exactly those two run and
+#: nothing else — 'unsafe-inline' would permit the injected script too and
+#: make the whole header decorative.
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'nonce-{nonce}' https://challenges.cloudflare.com "
+    "https://resolveresearcher.com; "
+    # ⛔ Styles keep 'unsafe-inline': apex's shared chrome sets style
+    # attributes directly (and so does the gate's scroll lock), and there is no
+    # nonce path for a style ATTRIBUTE. A style injection cannot exfiltrate a
+    # session, so this is the cheap half to concede.
+    "style-src 'self' 'unsafe-inline' https://resolveresearcher.com "
+    "https://fonts.googleapis.com https://unpkg.com; "
+    "font-src 'self' https://fonts.gstatic.com https://unpkg.com; "
+    "img-src 'self' data: https://resolveresearcher.com; "
+    # ⛔⛔ THE LINE THAT ACTUALLY MATTERS, AND THE ONE I FIRST GOT WRONG.
+    # I left api.resolveresearcher.com OUT of this, reasoning that "nothing
+    # served by this app calls the auth API". That is false in the way that
+    # matters: apex's `theme.js` is FETCHED from resolveresearcher.com but
+    # EXECUTES in this document, so its /v1/auth/me call is a connection from
+    # THIS origin and CSP judges it here. Omitting it would have silently
+    # broken the log-in this page had just been fixed to show — the same bug,
+    # re-inflicted by its own mitigation.
+    # ⭐ What this still buys: an injection can reach the auth API (which the
+    # bar needs) but CANNOT post the result to an attacker's collector,
+    # because that host is not in this list. Exfiltration is the step worth
+    # blocking.
+    "connect-src 'self' https://api.resolveresearcher.com "
+    "https://challenges.cloudflare.com; "
+    "frame-src https://challenges.cloudflare.com; "
+    "frame-ancestors 'none'; "
+    "base-uri 'none'; "
+    "form-action 'self'; "
+    "object-src 'none'"
+)
+
+
 @app.get("/")
 def index():
     # ⛔ When no key is configured the placeholder resolves to an empty
     # string and `app.js` renders no widget -- which is correct locally,
     # where `turnstile.required()` is also false. The two agree because
     # both read the same absence, not because they were kept in step.
-    return HTMLResponse(_INDEX.replace("{{TURNSTILE_SITEKEY}}",
-                                       TS.SITE_KEY))
+    # ⛔ A FRESH NONCE PER RESPONSE, OR IT IS NOT A NONCE. A fixed value would
+    # be readable in the page source and an injection could simply quote it,
+    # which is a CSP that costs a header and stops nothing.
+    nonce = secrets.token_urlsafe(16)
+    html = (_INDEX
+            .replace("{{TURNSTILE_SITEKEY}}", TS.SITE_KEY)
+            .replace("{{CSP_NONCE}}", nonce))
+    return HTMLResponse(html, headers={
+        "Content-Security-Policy": _CSP.format(nonce=nonce),
+        # ⛔ The page is never framed, and the CSP's frame-ancestors says so —
+        # this is the header older browsers actually obey.
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+    })
 
 
 @app.get("/healthz")
@@ -212,6 +359,17 @@ def healthz():
     # legal. It is a bare boolean on purpose — anything that has to be parsed
     # to be understood will eventually be misread.
     return {"ok": True, "speaker_loaded": speaker.ready,
+            # ⛔⛔ THE FIELD THAT WOULD HAVE SAVED DAYS. A health
+            # check that says "ok" while every reader is refused
+            # is the silent-success shape this repo keeps hitting.
+            "turnstile_key": KEY_VERDICT,
+            # ⛔⛔ `proxy_unsigned > 0` MEANS THE CLIENT ADDRESS IS NOT
+            # TRUSTWORTHY: every reader is being seen as Cloudflare's egress
+            # IP, so the per-IP limit is a second global limit and the session
+            # pass is bound to nobody. Reported because both failures look
+            # exactly like a healthy app from every other angle.
+            "proxy_signed": G.PROXY_TRUST["signed"],
+            "proxy_unsigned": G.PROXY_TRUST["unsigned"],
             "mock": bool(getattr(speaker, "is_mock", False)),
             "load_seconds": speaker.load_seconds, **limiter.stats()}
 
@@ -228,11 +386,21 @@ def new_conversation(response: Response):
 
 @app.get("/conversation")
 def conversation(request: Request):
-    """The bench as it stands. ⛔ Sends NO gloss and NO literary — see /reveal."""
+    """The bench as it stands. ⛔ Sends NO gloss and NO literary — see /reveal.
+
+    ⭐⭐ IT ALSO ANSWERS "MUST I SHOW THE GATE?". The pass cookie is httponly,
+    so the page CANNOT look at it — which is the point, but it means the only
+    honest source for that answer is the server. Without this the page would
+    have to guess, and a page that guesses wrong shows a human a challenge they
+    already passed. `true` also covers "Turnstile is switched off", because
+    that is the same answer to the only question being asked.
+    """
+    ip = G.client_ip(request, trust_proxy=TRUST_PROXY)
+    human = TS.has_pass(request, ip)
     cid = _conversation(request)
     if cid is None:
-        return {"conversation_id": None, "messages": []}
-    return {"conversation_id": cid,
+        return {"conversation_id": None, "messages": [], "human": human}
+    return {"conversation_id": cid, "human": human,
             "messages": [_public(r) for r in store.history(cid)]}
 
 
@@ -250,16 +418,29 @@ def say(body: Say, request: Request, response: Response):
     # network round-trip, so an IP that is already hammering is refused
     # without also making Cloudflare do work for it. Both come before
     # anything that touches the card.
-    ok, why = TS.verify(body.turnstile, ip)
-    if not ok:
-        # ⭐ 403, not 400: this is "prove you are a person", and the page
-        # resets the widget on it. ⛔ The REASON is returned because
-        # `invalid-input-secret` (the wrong key was deployed) is otherwise
-        # indistinguishable from a reader failing the challenge, and the
-        # first would look like a broken puzzle to everyone at once.
-        return JSONResponse({"error": "could not verify you are a "
-                                      "person — try again",
-                             "turnstile": why}, status_code=403)
+    #
+    # ⛔⛔⛔ A READER WHO HAS ALREADY PASSED IS NOT ASKED AGAIN. This used to
+    # verify a token on EVERY message, and because a Turnstile token is
+    # single-use that meant re-challenging a person between one sentence and
+    # the next — the widget could never clear, because clearing it was not a
+    # state the design had. Turnstile is a DOOR, and `has_pass` is the server
+    # remembering that this reader already came through it.
+    # ⭐ The inline-token path below is kept so a client with no cookie jar —
+    # a script, a curl, the smoke test — still works exactly as before. The
+    # endpoint is not weakened; it gained a second way in, not a way around.
+    earned_pass = False
+    if not TS.has_pass(request, ip):
+        ok, why = TS.verify(body.turnstile, ip)
+        if not ok:
+            # ⭐ 403, not 400: this is "prove you are a person", and the page
+            # opens its gate on it. ⛔ The REASON is returned because
+            # `invalid-input-secret` (the wrong key was deployed) is otherwise
+            # indistinguishable from a reader failing the challenge, and the
+            # first would look like a broken puzzle to everyone at once.
+            return JSONResponse({"error": "could not verify you are a "
+                                          "person — try again",
+                                 "turnstile": why}, status_code=403)
+        earned_pass = True
 
     english = body.english.strip()
     if not english:
@@ -296,6 +477,50 @@ def say(body: Say, request: Request, response: Response):
                         "seconds": result["seconds"]})
     if fresh:
         _set_cookie(out, cid)
+    # ⭐ A token spent inline earns the same pass the gate does, so a reader
+    # who arrives without a cookie is challenged once and not once per turn.
+    if earned_pass:
+        _set_pass(out, ip)
+    return out
+
+
+def _set_pass(response: Response, ip: str) -> None:
+    """⛔ httponly: nothing in the page reads this, and a script that cannot
+    read it cannot carry it anywhere else."""
+    response.set_cookie(
+        TS.PASS_COOKIE, TS.issue_pass(ip),
+        max_age=TS.PASS_HOURS * 3600, httponly=True, samesite="lax",
+        secure=os.environ.get("TLON_HTTPS", "1") not in ("0", "false", "no"))
+
+
+@app.post("/verify")
+def verify(body: Verify, request: Request):
+    """⭐⭐ THE DOOR, AND IT IS OPENED ONCE.
+
+    The page solves the challenge, posts the token here, and this hands back a
+    signed pass. Every later message rides that pass, so the widget clears and
+    stays cleared — which is the whole point, and what three attempts at fixing
+    the *placement* of a per-message challenge could never have achieved.
+
+    ⛔ NOT RATE LIMITED, DELIBERATELY. It runs no model and touches no GPU, and
+    metering it would mean a reader who hit the turn limit could not re-open the
+    door when their pass expired — locking out precisely the people who have
+    been using it properly. The compute ceiling is still `guard.py`'s job.
+    """
+    ip = G.client_ip(request, trust_proxy=TRUST_PROXY)
+    try:
+        gate_limiter.check(ip)
+    except G.Refused as exc:
+        return _refused(exc)
+    if TS.has_pass(request, ip):
+        return JSONResponse({"ok": True, "already": True})
+    ok, why = TS.verify(body.turnstile, ip)
+    if not ok:
+        return JSONResponse({"ok": False, "error": "could not verify you are "
+                                                   "a person — try again",
+                             "turnstile": why}, status_code=403)
+    out = JSONResponse({"ok": True})
+    _set_pass(out, ip)
     return out
 
 
@@ -327,26 +552,40 @@ def reveal(body: Reveal, request: Request):
 # ── helpers ─────────────────────────────────────────────────────────────────
 
 def _public(row: dict) -> dict:
-    """⛔⛔ THE PUZZLE'S ONE LOAD-BEARING RULE: NO ENGLISH LEAVES THIS FUNCTION.
+    """⛔⛔⛔ ONE ROW NEVER CARRIES BOTH AN ENGLISH LINE AND ITS TLÖN. THAT PAIR
+    IS THE WHOLE LEAK, AND FOR MONTHS THIS FUNCTION SHIPPED IT.
 
-    `gloss` and `literary` are the obvious half. `english` is the half that
-    shipped anyway — the reader's own sentence, returned beside the Tlön it
-    became. That is a PARALLEL TEXT: one aligned pair per turn, handed over
-    free, and a handful of turns is a word-list. It makes the onset redundant
-    and the translate button decorative, which is the difference between a
-    puzzle and a chatbot with subtitles.
+    ⛔⛤ THE GUARD WATCHED THE WRONG FIELD. Everything here — the docstring that
+    used to say "no English leaves this function", the leak tests, the reply
+    template's three warnings — was aimed at the `english` KEY. Meanwhile the
+    function returned `surface` for BOTH roles, and the surface of the READER'S
+    OWN TURN is their sentence rendered into Tlön. They typed the English. They
+    were shown the Tlön. **That is an aligned pair on every single turn**, built
+    out of a field nobody was guarding because it looked like Tlön.
+    Nate, seeing it on the page: *"IF YOU TELL ME WHAT I SAID — THAT IS A
+    TRANSLATION."* He is right, and it had been live the entire time.
 
-    ⛔ `let_go` WENT THE SAME WAY. It listed, in English, the nouns the language
-    could not carry — "it let go — toast" — on every turn, unasked. Honest about
-    the coverage edge and still a free English word beside a Tlön line, which is
-    the same leak wearing a different name.
+    ⭐⭐ THE RULE IS NOW STATED IN THE SHAPE THAT CAN ACTUALLY BE CHECKED:
+        the reader's turn  -> their OWN English, and NO Tlön
+        the Tlönian's turn -> Tlön, and NO English
+    Neither row is a pair, so no accumulation of rows is a word-list. Returning
+    a reader their own sentence tells them nothing they did not type; it is the
+    PAIRING that was ever the secret, not the English.
 
-    ⛔ The store still keeps the English — it is the reader's own input and the
-    server's record. This function is the WIRE, and the wire carries Tlön.
+    ⛔ `gloss`, `literary` and `let_go` still never appear. `let_go` listed, in
+    English, the nouns the language could not carry — "it let go — toast" —
+    beside a Tlön line, every turn, unasked: the same leak wearing a friendlier
+    name.
     """
-    return {"turn": row["turn"], "role": row["role"],
-            "surface": row.get("surface"),
-            "refused": row.get("refused")}
+    out = {"turn": row["turn"], "role": row["role"],
+           "refused": row.get("refused")}
+    if row["role"] == YOU:
+        # ⛔⛔ NO `surface` HERE. EVER. The reader knows what they typed, so the
+        # Tlön of it is the other half of an answer key they are holding.
+        out["english"] = row.get("english")
+    else:
+        out["surface"] = row.get("surface")
+    return out
 
 
 def _refused(exc: G.Refused) -> JSONResponse:

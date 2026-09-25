@@ -23,17 +23,29 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-#: ⛔⛔ `english` IS ON THIS LIST BECAUSE LEAVING IT OFF IS THE BUG THIS FILE
-#: FAILED TO CATCH. The first version watched for `gloss` and `literary` only,
-#: so a build that returned the reader's own English beside its Tlön rendering
-#: passed every assertion here — and that pairing is a parallel text, which is
-#: a better answer key than either of the two fields being guarded.
-#: ⭐ The lesson generalises past this app: a leak test enumerates what the
-#: author already thinks is secret, so it is blind to anything the author chose
-#: to expose. The list is the hypothesis, not the coverage.
-#: ⛔ `let_go` joined them for the same reason: it listed the English nouns the
-#: language dropped, on every turn, unasked.
-SECRETS = ("gloss", "literary", "english", "let_go")
+#: ⛔⛔⛔ THE LIST WAS THE WRONG SHAPE AND THE LEAK WALKED PAST IT FOR MONTHS.
+#:
+#: This used to be a flat set of forbidden KEYS, with `english` on it, and every
+#: assertion below asked "does the payload contain English?". Meanwhile
+#: `_public()` returned `surface` for BOTH roles — and the surface of the
+#: READER'S OWN TURN is their sentence rendered into Tlön. They typed the
+#: English. They were shown the Tlön. **That is an aligned pair on every single
+#: turn**, and not one test here could see it, because the leaking field was
+#: called `surface` and looked like Tlön rather than like a translation.
+#:
+#: ⭐⭐ A LEAK TEST ENUMERATES WHAT THE AUTHOR ALREADY THINKS IS SECRET, SO IT IS
+#: BLIND TO ANYTHING THE AUTHOR CHOSE TO EXPOSE. That lesson was already written
+#: in this very file, about `english`. It was then reproduced one field over.
+#:
+#: ⭐ THE INVARIANT IS ABOUT PAIRING, NOT ABOUT ENGLISH. Returning readers their
+#: own sentence tells them nothing they did not type; what must never happen is
+#: a row carrying BOTH an English line and its Tlön:
+#:     role "you"  -> `english`, and NEVER `surface`
+#:     role "tlon" -> `surface`, and NEVER `english`
+#: `gloss`, `literary` and `let_go` remain forbidden outright — those are the
+#: translation proper, and the translate button is the only thing that hands
+#: them over.
+ALWAYS_FORBIDDEN = ("gloss", "literary", "let_go")
 
 
 @pytest.fixture()
@@ -70,14 +82,14 @@ def client(tmp_path, monkeypatch):
     return TestClient(server.app)
 
 
-def _leaks(blob) -> list[str]:
-    """Every place a secret key appears, at any depth."""
+def _leaks(blob, keys=ALWAYS_FORBIDDEN) -> list[str]:
+    """Every place a forbidden key appears, at any depth."""
     found = []
 
     def walk(node, path):
         if isinstance(node, dict):
             for k, v in node.items():
-                if k in SECRETS:
+                if k in keys:
                     found.append("%s.%s" % (path, k))
                 walk(v, "%s.%s" % (path, k))
         elif isinstance(node, list):
@@ -105,9 +117,48 @@ def test_the_raw_body_does_not_contain_the_gloss_text(client):
     body = r.content.decode("utf-8")
     assert "While a closing" not in body
     assert "it drains" not in body
-    # ⛔ And the reader's own sentence. Echoed beside its Tlön it is an aligned
-    # pair, which is the cheapest answer key on the page.
-    assert "I burnt the toast" not in body
+    # ⛔⛤ THIS USED TO ALSO ASSERT THE READER'S OWN SENTENCE NEVER CAME BACK,
+    # AND THAT WAS GUARDING THE WRONG THING. The sentence is theirs — they
+    # typed it — so returning it teaches them nothing. What was actually
+    # leaking, past this very assertion, was `mil pläng prax ka`: THEIR LINE
+    # RENDERED INTO TLÖN, in their own bubble, every turn. The aligned pair was
+    # being assembled out of the field called `surface`, which nobody was
+    # watching because it looked like Tlön.
+    # ⭐ So the byte-level check is now for the TLÖN OF THE READER'S TURN.
+    assert "mil pläng prax ka" not in body, (
+        "⛔⛔⛔ the reader's own line came back rendered into Tlön — they typed "
+        "the English, so that is a free aligned pair on every single turn")
+
+
+def test_no_row_ever_carries_both_a_line_and_its_translation(client):
+    """⛔⛔⛔ THE INVARIANT, STATED IN THE SHAPE THAT CAN ACTUALLY FAIL.
+
+    Every earlier guard asked "is English present?" — a question about a field
+    name. The leak was never a field name: it was PAIRING. A row that carries a
+    reader's English AND the Tlön it became is an answer key, and after a
+    handful of turns it is a dictionary.
+
+    ⭐ Checked over both doors and over every row, because a rule enforced at
+    one endpoint is not a rule."""
+    client.post("/say", json={"english": "I burnt the toast."})
+    for where, blob in (("/say", client.post(
+                            "/say", json={"english": "The kettle is loud."}).json()),
+                        ("/conversation", client.get("/conversation").json())):
+        for row in blob["messages"]:
+            has_en = bool(row.get("english"))
+            has_tlon = bool(row.get("surface"))
+            assert not (has_en and has_tlon), (
+                "⛔⛔⛔ %s returned a row holding BOTH an English line and its "
+                "Tlön — that is the parallel text: %r" % (where, row))
+            if row["role"] == "you":
+                assert "surface" not in row, (
+                    "⛔⛔⛔ %s sent the Tlön of the READER'S OWN LINE. They "
+                    "typed the English; this hands them the other half: %r"
+                    % (where, row))
+            else:
+                assert "english" not in row, (
+                    "⛔⛔ %s attached English to a Tlönian line: %r"
+                    % (where, row))
 
 
 def test_conversation_replay_does_not_return_the_translation(client):

@@ -86,6 +86,34 @@ def preflight() -> None:
             % (_SECRET_ENV, _SECRET_ENV))
 
 
+def key_verdict() -> str:
+    """⛔⛔⛔ IS THE SECRET A KEY, OR JUST A STRING? `preflight` only ever asked
+    whether one was PRESENT, and presence is not validity — the deployed value
+    was a 30-character placeholder starting `<` and ending `>`, the app booted
+    reporting healthy, and every single reader was refused. That is this repo's
+    signature failure (`scope_hides_in_the_constant`): the predicate checked
+    the cheap half of the condition.
+
+    ⭐ Cloudflare distinguishes the two faults for us, and a dummy token is
+    enough to ask: `invalid-input-secret` means the KEY is wrong and nobody can
+    ever pass; `invalid-input-response` means the key is FINE and only our
+    throwaway token was junk, which is the expected answer.
+
+    Returns "ok", "bad-key", or "unknown". ⛔ NEVER raises and never returns the
+    secret.
+    """
+    if not required():
+        return "ok"
+    ok, why = verify("tlon-preflight-dummy-token")
+    if "invalid-input-secret" in why:
+        return "bad-key"
+    # ⛔ A network failure is NOT a verdict. Refusing to boot because Cloudflare
+    # had a bad minute would turn a blip into an outage.
+    if "unreachable" in why or "http " in why:
+        return "unknown"
+    return "ok"
+
+
 def verify(token: str, ip: str | None = None) -> tuple[bool, str]:
     """`(ok, reason)` for one token. ⛔ Never raises — a turn must not 500
     because Cloudflare was slow.
@@ -110,6 +138,20 @@ def verify(token: str, ip: str | None = None) -> tuple[bool, str]:
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT_S) as resp:
             body = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        # ⛔⛔⛔ SITEVERIFY ANSWERS A BAD SECRET WITH HTTP 400, NOT 200, AND
+        # `urllib` RAISES ON ANY NON-2xx. Catching that alongside the network
+        # errors reported a perfectly reachable Cloudflare as "unreachable" and
+        # THREW AWAY THE BODY — which contained `invalid-input-secret`, i.e.
+        # the one code this module's own comment calls out as the one that must
+        # stay diagnosable because it breaks the puzzle for everybody at once.
+        # It did exactly that: the deployed key was a placeholder for days and
+        # every reader saw "turnstile unreachable".
+        # ⭐ The body of a 4xx is still the answer. Read it.
+        try:
+            body = json.loads(exc.read().decode("utf-8"))
+        except Exception:
+            return False, "turnstile http %s" % exc.code
     except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
         return False, "turnstile unreachable: %s" % type(exc).__name__
 
@@ -120,3 +162,79 @@ def verify(token: str, ip: str | None = None) -> tuple[bool, str]:
     # identical to a reader failing the challenge.
     codes = body.get("error-codes") or []
     return False, "turnstile refused: %s" % (",".join(codes) or "no reason given")
+
+
+# ── the session pass ────────────────────────────────────────────────────────
+#
+# ⛔⛔⛔ THE DESIGN ERROR THIS FIXES, AND IT WAS MINE. The first wiring verified
+# a token on EVERY message. A Turnstile token is SINGLE-USE, so "verify every
+# message" means "challenge every message": the widget had to be re-armed after
+# each turn, and a reader who had just proved they were a person was asked to
+# prove it again before they could say a second sentence. Nate's words, after
+# three attempts at fixing the symptom: *"it hasn't cleared yet. its either
+# invisible or permanent."* Both of those are the same root cause — a gate
+# being used as a per-request signature.
+#
+# ⭐⭐ TURNSTILE IS A DOOR, NOT A TICKET INSPECTOR. You pass it once, and the
+# server remembers. That is what every site using it actually does, and it is
+# why nobody else's captcha "won't clear".
+#
+# ⛔ WHAT THIS DOES NOT DO IS REPLACE THE RATE LIMITS. `guard.py` still bounds
+# turns per IP and per day, which is the protection that actually matters
+# against someone who has already solved one challenge. The honest statement of
+# the trade: a determined attacker can farm one token either way, so per-message
+# challenges bought us close to nothing and cost the product its usability.
+#
+# ⛔ THE PASS IS BOUND TO THE CLIENT ADDRESS. A cookie lifted from one machine
+# is worthless on another, and a reader whose address changes is simply asked
+# once more — which is correct, not a bug.
+
+import hashlib
+import hmac as _hmac
+import time as _time
+
+#: The cookie the pass travels in. ⛔ httponly: nothing in the page ever needs
+#: to read it, and a script that cannot read it cannot replay it elsewhere.
+PASS_COOKIE = "tlon_human"
+
+#: ⭐ Long enough that a reader is never re-challenged mid-visit, short enough
+#: that a lifted cookie is not a permanent key. A puzzle mailed to a short list
+#: does not need days.
+PASS_HOURS = 12
+
+
+def _pass_sig(exp: int, ip: str) -> str:
+    #: ⛔ Keyed on the Turnstile SECRET, which is already the one value this
+    #: process holds that an attacker does not. No second secret to deploy,
+    #: forget, or malform — and this repo has already lost a day to exactly
+    #: that with TLON_PROXY_SECRET.
+    msg = ("tlon-human:%d:%s" % (exp, ip or "")).encode("utf-8")
+    return _hmac.new(secret().encode("utf-8"), msg, hashlib.sha256).hexdigest()
+
+
+def issue_pass(ip: str) -> str:
+    exp = int(_time.time()) + PASS_HOURS * 3600
+    return "%d.%s" % (exp, _pass_sig(exp, ip))
+
+
+def pass_is_good(value: str, ip: str) -> bool:
+    """⛔ Forgery-proof and expiry-checked, compared in constant time."""
+    if not value or "." not in value:
+        return False
+    raw_exp, _, sig = value.partition(".")
+    try:
+        exp = int(raw_exp)
+    except ValueError:
+        return False
+    if exp < _time.time():
+        return False
+    return _hmac.compare_digest(sig, _pass_sig(exp, ip))
+
+
+def has_pass(request, ip: str) -> bool:
+    """⭐ True when this reader has already proved they are a person, OR when
+    Turnstile is switched off entirely — the two are the same answer to the
+    only question the caller is asking: *must I challenge this person?*"""
+    if not required():
+        return True
+    return pass_is_good(request.cookies.get(PASS_COOKIE, ""), ip)

@@ -124,7 +124,21 @@ image = (
     # ⛔⛔ THE TURNSTILE SECRET. Without it `turnstile.preflight()` refuses to
     # start — which is the intended behaviour, because a public GPU endpoint
     # with an unverified challenge in front of it reports perfectly healthy.
-    secrets=[modal.Secret.from_name("tlon-turnstile")],
+    #
+    # ⛔⛔ AND `tlon-proxy`, WHICH IS A SEPARATE SECRET ON PURPOSE. It holds
+    # `TLON_PROXY_SECRET`, the value `guard.client_ip()` requires before it
+    # will believe an `X-Tlon-Client-IP` header. Without it the last
+    # `X-Forwarded-For` entry is CLOUDFLARE'S EGRESS ADDRESS, so every reader
+    # on earth shares one identity and the 12-turns-per-IP limit silently
+    # becomes a second global limit — it fails OPEN and nothing looks wrong.
+    #
+    # ⭐ IT IS ITS OWN SECRET RATHER THAN A SECOND KEY IN `tlon-turnstile`
+    # because `modal secret create --force` REPLACES the whole secret. Adding
+    # a key to the existing one means re-supplying the Turnstile key in the
+    # same breath, and a mistyped or omitted one there takes the challenge
+    # down with it. Two secrets, two blast radii.
+    secrets=[modal.Secret.from_name("tlon-turnstile"),
+             modal.Secret.from_name("tlon-proxy")],
     # ⭐ Warm for five minutes after the last request. This is the number that
     # makes the bench feel alive: nobody mid-conversation waits for a load.
     scaledown_window=300,

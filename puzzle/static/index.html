@@ -7,7 +7,7 @@
      a light-mode reader gets a dark flash. Same key as the rest of the family
      (`rr_theme`), so a reader who chose light on resolveresearcher.com arrives
      here already in light. -->
-<script>(function(){try{if(localStorage.getItem('rr_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
+<script nonce="{{CSP_NONCE}}">(function(){try{if(localStorage.getItem('rr_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 <!-- ⛔⛔ THE SHARED SHEETS ARE APEX'S AND ARE NOT COPIED HERE.
      `puzzle/static/assets/theme.css` was a THIRD fork -- 221 lines against
      apex's 252 -- so it had already missed 31 lines of palette work and a
@@ -33,12 +33,48 @@
 <script defer src="https://resolveresearcher.com/assets/bar.js"></script>
 <link rel="stylesheet" href="/static/chrome.css?v=2">
 <link rel="stylesheet" href="/static/oracle.css?v=19">
-<link rel="stylesheet" href="/static/puzzle.css?v=1">
-<!-- ⭐ Turnstile. `defer` so it does not block first paint; the widget
-     renders itself into `.cf-turnstile` once the sitekey is present. -->
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+<link rel="stylesheet" href="/static/puzzle.css?v=5">
+<!-- ⛔⛔ `render=explicit`, AND THAT IS THE FIX, NOT A PREFERENCE.
+     The widget used to render itself from the markup with `data-size=flexible`
+     and `data-theme=auto`: a full-width WHITE slab, flush against the bottom of
+     the composer with a measured gap of ZERO, so a thumb reaching for the send
+     button landed on the challenge instead. On any viewport under ~720px tall
+     it sat entirely BELOW THE FOLD — the reader was being refused by something
+     they could not see.
+     ⛔ Worse, it had no error handling at all. When the challenge failed
+     (observed live: `TurnstileError 600010`) Turnstile REMOVED ITS OWN IFRAME
+     and never came back; the page said nothing, and every submit from then on
+     got a 403 forever. Rendering from app.js is what makes the callbacks
+     reachable, so a failure is now a sentence the reader can act on. -->
+<!-- ⛔⛔⛔ THIS INLINE BLOCK MUST COME BEFORE api.js AND MUST NOT BE DEFERRED.
+     Turnstile offers two ways to know it is ready and they are MUTUALLY
+     EXCLUSIVE with how the script is loaded:
+       * `turnstile.ready(cb)` — ONLY for a plain, blocking <script>. Called
+         while api.js carries `async`/`defer` it THROWS, with Cloudflare's own
+         message: "Remove async/defer from the Turnstile api.js script tag
+         before using turnstile.ready()."
+       * `?onload=` — the async/defer path, which is this one.
+     ⛔⛤ I USED `ready()` UNDER `async defer`. It threw inside a poller, the
+     throw was swallowed, `render()` never ran, and the page showed a correctly
+     sized EMPTY RECTANGLE with no iframe, no token and no callback — the exact
+     "isn't visible but is clearly blocking me" that Nate reported. Two deploys
+     went by before I asked the API what it was complaining about instead of
+     reasoning about readiness.
+     ⭐ The handshake is a flag AND a slot because the order of `async` api.js
+     against `defer` app.js is NOT guaranteed: whichever arrives second runs
+     the render, so neither can be the one that misses. -->
+<script nonce="{{CSP_NONCE}}">
+  window.__tlonTurnstileReady = false;
+  window.onloadTurnstileCallback = function () {
+    window.__tlonTurnstileReady = true;
+    if (typeof window.__tlonOnTurnstile === "function") {
+      window.__tlonOnTurnstile();
+    }
+  };
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&render=explicit"
         async defer></script>
-<script src="/static/app.js?v=2" defer></script>
+<script src="/static/app.js?v=14" defer></script>
 </head>
 <body>
 
@@ -120,54 +156,94 @@
   </button>
 </header>
 
+<!-- ⛔⛔ `<main id="main-content">` IS LOAD-BEARING, NOT SEMANTIC TIDINESS.
+     Three separate things in sheets this page already loads key off it, and
+     all three were silently dead while it was missing:
+       * apex's bar.js injects a "skip to content" link pointing at
+         `#main-content`. It pointed at nothing.
+       * `main > .container { max-width: none; padding: 0 }` in oracle.css —
+         without it the chat kept `.container`'s narrow measure instead of the
+         900px reading column the rest of the page uses.
+       * `main { position: relative; z-index: 1 }`, which is what keeps page
+         content above anything the chrome paints behind it. -->
+<main id="main-content">
 <div class="container">
 
-  <!-- ═══════════════════════════════════════════════════════════════════════
-       THE BENCH. Class names are the Oracle's so the chat window renders
-       identically; only the copy inside differs.
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="oracle oracle-chat">
-    <!-- ⛔ PLACEHOLDER VIDEO SLOTS. Two side runners, exactly the Oracle's
-         treatment. They stay hidden until a file exists at these paths, so a
-         missing asset is an absence, never a broken black rectangle.
-         Drop files at: static/assets/videos/tlon-left.mp4  (and -right.mp4) -->
-    <video class="oracle-runner left" autoplay muted loop playsinline
-           preload="auto" aria-hidden="true" tabindex="-1" data-placeholder-video>
-      <source src="/assets/videos/tlon-left.mp4" type="video/mp4"></video>
-    <video class="oracle-runner right" autoplay muted loop playsinline
-           preload="auto" aria-hidden="true" tabindex="-1" data-placeholder-video>
-      <source src="/assets/videos/tlon-right.mp4" type="video/mp4"></video>
+  <header class="bench-head">
+    <p class="ex-label">the bench</p>
+    <h1 class="bench-mark">tl&ouml;n <span class="s">the bench</span></h1>
+    <p class="bench-tagline">Someone is speaking here. Not to you.</p>
+  </header>
 
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       THE BRIEF — ABOVE THE BENCH, ON PURPOSE.
+       ⛔ This copy used to sit UNDER the composer, which meant the page asked
+       you to talk to something before it had told you what the something was.
+       A reader who scrolls past a chat box does not come back up.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="bench-brief">
+    <article class="brief-block" id="what">
+      <p class="ex-label">what this is</p>
+      <h2 class="brief-h">A language with no nouns</h2>
+      <p class="brief-p">
+        Borges describes a world called Tl&ouml;n whose southern hemisphere
+        speaks without nouns, because its people do not believe in things that
+        persist. There is no word for <em>moon</em>. There is <em>it moons</em>.
+        Every root in this language is a happening, and whatever cannot be held
+        as an object is let go &mdash; named, and not apologised for.
+      </p>
+    </article>
+
+    <article class="brief-block" id="how">
+      <p class="ex-label">how to use it</p>
+      <h2 class="brief-h">Say something ordinary</h2>
+      <p class="brief-p">
+        Type English. Someone on the bench answers in Tl&ouml;n. It is not
+        translating for you and it does not know you are here. The language
+        repeats &mdash; the same happening comes back &mdash; and the repetition
+        is the way in. There is a button on every line that will bring its
+        meaning across into English. You do not need it.
+      </p>
+    </article>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       THE BENCH. A bordered panel, because the page had no visible chat box at
+       all: it wore `.oracle-ask`, which is the Oracle's LANDING-PAGE ask row,
+       while the Oracle's actual chat composer — `.oracle-composer`, sticky and
+       bounded — sat unused in the oracle.css this page already loads.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="oracle oracle-chat bench-box">
     <header class="oracle-chat-head">
-      <h1 class="wordmark" data-placeholder>tlön <span class="suffix">the bench</span></h1>
+      <p class="bench-box-label">say anything</p>
       <button id="new-thread" class="oracle-newthread" type="button" hidden>
         <i class="ph ph-plus"></i> New conversation</button>
     </header>
 
     <div id="chat-log" class="oracle-chat-log" aria-live="polite">
       <div id="chat-empty" class="oracle-chat-empty">
-        <p class="ex-mark" aria-hidden="true" data-placeholder>tlön <span class="s">the bench</span></p>
-        <!-- DRAFT — Claude, against Nate's framing. Overwrite freely.
-             ⛔ The bench itself stays ALIEN. Explanation lives in the
-             encyclopedic blocks below and nowhere else, so this says what is
-             true and offers no help: it does not know you are reading. -->
-        <p class="oracle-tagline">
-          Someone is speaking here. Not to you.
-        </p>
 
-        <!-- ═══ PLACEHOLDER — THE ONSET ═══════════════════════════════════════
-             ⛔⛔ THIS ONE IS NATE AND WILSON'S, AND IT IS THE MOST LOAD-BEARING
-             COPY ON THE PAGE. It is the crib: the opening seed that gives a
-             reader the toehold they need to start decoding. Too much and the
-             puzzle is over; too little and it reads as static.
-             Leave the markup, replace the words. ════════════════════════════ -->
-        <div class="onset" data-placeholder>
-          <p class="ex-label">the onset</p>
-          <p class="onset-body">
-            [PLACEHOLDER — the onset / the crib. The opening seed text that
-            gives the decoder a toehold. Ours to write.]
-          </p>
-        </div>
+        <!-- ⛔⛔⛔ NOTHING ON THIS FACE TRANSLATES ANYTHING. NOT ONE WORD.
+             ⛔⛤ A CRIB STOOD HERE AND IT WAS A CARDINAL SIN. It printed an
+             English sentence, its Tlön rendering and a word-by-word gloss —
+             an aligned pair and a starter dictionary, in a box, before the
+             reader had typed anything. Every argument for it was the same
+             argument the reply template already REFUSES three times over:
+             that one controlled pair is harmless. It is not. It is the
+             parallel-text leak with a nicer name, and it arrives first.
+
+             ⭐⭐ THERE IS EXACTLY ONE WAY MEANING CROSSES INTO ENGLISH IN THIS
+             APP, AND IT IS THE READER PRESSING TRANSLATE. That press is the
+             whole mechanic: Tlön encroaching because someone let it, one line
+             at a time, by choice. Anything printed on the face for free takes
+             that decision away from them and spends it in advance.
+
+             ⛔ So this empty state carries NO Tlön, NO gloss and NO example.
+             DRAFT — Claude. Overwrite freely; the voice is Nate's. -->
+        <p class="bench-empty-line">
+          It is already talking. Say something and it will answer you &mdash;
+          not to you, but it will answer.
+        </p>
 
         <!-- ⛔⛔ THERE ARE NO EXAMPLES AND THERE MUST NEVER BE ANY. A suggested
              line is a THIRD WAY FOR MEANING TO CROSS, and the guard on the
@@ -183,66 +259,20 @@
       </div>
     </div>
 
-    <form class="oracle-ask" id="ask-form" autocomplete="off">
-      <input class="oracle-input" id="ask-input" name="english" type="text"
-             maxlength="2000" placeholder="say something about your day…"
+    <form class="oracle-composer" id="ask-form" autocomplete="off">
+      <input class="oracle-composer-input" id="ask-input" name="english" type="text"
+             maxlength="2000" placeholder="say something about your day&hellip;"
              aria-label="Say something in English">
-      <button class="btn primary" id="ask-send" type="submit">Say it</button>
+      <button class="oracle-send" id="ask-send" type="submit" aria-label="say it">
+        <i class="ph ph-arrow-up" aria-hidden="true"></i></button>
     </form>
-    <!-- ⛔⛔ THE WIDGET IS THE VISIBLE HALF AND THE LEAST IMPORTANT ONE.
-       The token it produces is verified in `/say`, server-side, because a
-       script can decline to render this at all. If this element is empty
-       the page still works and the server still refuses.
-       ⭐ `data-action` is the Spin telemetry marker; removing it costs
-       only Cloudflare's analytics segmentation, not the protection. -->
-  <div class="cf-turnstile" data-sitekey="{{TURNSTILE_SITEKEY}}"
-       data-action="turnstile-spin-v1" data-theme="auto"
-       data-size="flexible"></div>
-  <p class="ask-note" id="ask-note" role="status"></p>
+    <p class="ask-note" id="ask-note" role="status"></p>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════
-       THE COPY. Every block below is a stub. ⛔ Nate and Wilson write these —
-       the Borges frame is a voice question, not an engineering one.
-       ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ⭐ The closing note stays BELOW the bench: it is the part you read after
+       you have talked to it, not before. -->
   <section class="copy-deck">
-
-    <article class="copy-block" id="what" data-placeholder>
-      <p class="ex-label">what this is</p>
-      <h2 class="copy-h">A language with no nouns</h2>
-      <p class="copy-p">
-        Borges describes a world called Tl&ouml;n whose southern hemisphere
-        speaks without nouns, because its people do not believe in things that
-        persist. There is no word for <em>moon</em>. There is <em>it moons</em>.
-        Every root in this language is a happening, and whatever cannot be held
-        as an object is let go &mdash; named, and not apologised for.
-      </p>
-      <!-- PLACEHOLDER VIDEO SLOT — drop a file at assets/videos/tlon-what.mp4 -->
-      <figure class="copy-video" data-placeholder-video>
-        <video controls playsinline preload="metadata" poster="">
-          <source src="/assets/videos/tlon-what.mp4" type="video/mp4"></video>
-        <figcaption>[PLACEHOLDER — video caption]</figcaption>
-      </figure>
-    </article>
-
-    <article class="copy-block" id="how" data-placeholder>
-      <p class="ex-label">how to use it</p>
-      <h2 class="copy-h">Say something ordinary</h2>
-      <p class="copy-p">
-        Type English. Someone on the bench answers in Tl&ouml;n. It is not
-        translating for you and it does not know you are here. The language
-        repeats &mdash; the same happening comes back &mdash; and the repetition
-        is the way in. There is a button on every line that will bring its
-        meaning across into English. You do not need it.
-      </p>
-      <figure class="copy-video" data-placeholder-video>
-        <video controls playsinline preload="metadata" poster="">
-          <source src="/assets/videos/tlon-how.mp4" type="video/mp4"></video>
-        <figcaption>[PLACEHOLDER — video caption]</figcaption>
-      </figure>
-    </article>
-
-    <article class="copy-block" id="why" data-placeholder>
+    <article class="copy-block" id="why">
       <p class="ex-label">why</p>
       <h2 class="copy-h">The world will be Tl&ouml;n</h2>
       <p class="copy-p">
@@ -255,8 +285,43 @@
         objects here. That was always going to happen.
       </p>
     </article>
-
   </section>
+
+</div>
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     THE GATE. ⛔⛔⛔ IT IS NOT IN THE CHAT WINDOW, AND THAT IS NOT A STYLE
+     CHOICE. Three builds put the challenge inside the composer — under the
+     send button, then above it, then invisible — and every one of them broke
+     the thing the page exists to do. Nate, after the third: *"MAKE IT A
+     FLOATING MODAL THAT CLEARS ONCE THE USER HAS SUCCEEDED."*
+
+     ⭐⭐ AND IT CLEARS BECAUSE CLEARING IS NOW A STATE THAT EXISTS. `/verify`
+     exchanges one solved challenge for a signed session pass, so this is shown
+     AT MOST ONCE and then never again — not re-armed, not reset, not re-shown
+     between one sentence and the next. The old design verified a token per
+     message, and since a Turnstile token is single-use, "it won't clear" was
+     not a bug in the widget. It was the design.
+
+     ⛔ It lives at body level, outside `.container`, so nothing in the page can
+     clip it and no stacking context can trap it.
+     ⭐ `data-sitekey` is substituted server-side; the SITE key is public by
+     design. The SECRET never leaves the server, and `/say` still refuses a
+     caller with neither a pass nor a token, because a script can simply
+     decline to render any of this. -->
+<div id="ts-gate" class="ts-gate" role="dialog" aria-modal="true"
+     aria-labelledby="ts-gate-title" aria-hidden="true">
+  <div class="ts-gate-card">
+    <p class="ts-gate-title" id="ts-gate-title">one quick check</p>
+    <p class="ts-gate-lead">
+      It is a free thing running on one machine. This asks once, then leaves
+      you alone.
+    </p>
+    <div id="ts-widget" data-sitekey="{{TURNSTILE_SITEKEY}}"
+         data-action="turnstile-spin-v1"></div>
+    <p class="ts-gate-note" id="ts-gate-note" role="status"></p>
+  </div>
 </div>
 
 <footer class="puzzle-foot">
@@ -269,14 +334,16 @@
      so nothing the model produced ever passes through innerHTML. -->
 <template id="tpl-msg">
   <div class="msg">
-    <!-- ⛔⛔ THERE IS NO ENGLISH ELEMENT HERE AND THERE MUST NEVER BE ONE.
-         An earlier build showed the reader's own English beside its Tlön
-         rendering. That is a PARALLEL TEXT: one aligned pair per turn, handed
-         over free, and after a few turns it is a word-list. It makes the onset
-         redundant, makes the translate button pointless, and turns the puzzle
-         into a chatbot with subtitles. The ONLY sanctioned ways meaning
-         crosses into English are the onset (a controlled crib we write) and a
-         deliberate press of translate. -->
+    <!-- ⛔⛔⛔ ONE BUBBLE, ONE LANGUAGE. A reader's bubble holds the English
+         THEY typed and no Tlön; the Tlönian's holds Tlön and no English.
+         ⛔⛤ THE BUILD THIS REPLACES PUT THE READER'S SENTENCE **IN TLÖN** IN
+         THEIR OWN BUBBLE. They knew the English — they had just typed it — so
+         that was an aligned pair handed over on every single turn, assembled
+         out of the one field nobody was guarding because it looked like Tlön.
+         Every warning in this file was aimed at an `english` element while the
+         leak was the Tlön attached to a line the reader wrote.
+         ⭐ The ONLY sanctioned ways meaning crosses are the reader's own words
+         (which are theirs already) and a deliberate press of translate. -->
     <div class="msg-text"></div>
     <!-- ⛔ No "it let go" element either. It named, in English, the nouns the
          language could not carry — free English beside a Tlön line, every
