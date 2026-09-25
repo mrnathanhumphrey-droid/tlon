@@ -91,6 +91,12 @@ image = (
         "TLON_ADAPTER": "/app/speaker/dosed-s20624",
         "TLON_TURNSTILE_SITEKEY": "0x4AAAAAAFCzgoZ1d8Y7fEc4",
         "TLON_DB": "/bench/bench.sqlite3",
+        # ⛔⛔ ON THE VOLUME, OR THERE IS NO LOG. `scaledown_window` is 300
+        # seconds: five quiet minutes and a container-local file is gone,
+        # along with every error and every turn it ever held. `server.py`
+        # would derive this path from `TLON_DB` anyway; it is spelled out
+        # because the ops manual has to be able to name the file.
+        "TLON_LOG_DB": "/bench/log.sqlite3",
         "HF_HOME": "/weights/hf",
         # ⭐ Modal terminates TLS and sets the forwarded headers, so the bench
         # cookie may be Secure and the per-IP limit may trust the proxy.
@@ -137,8 +143,22 @@ image = (
     # a key to the existing one means re-supplying the Turnstile key in the
     # same breath, and a mistyped or omitted one there takes the challenge
     # down with it. Two secrets, two blast radii.
+    # ⛔⛔ AND `tlon-admin`, WHICH MUST EXIST BEFORE THIS WILL DEPLOY. It holds
+    # `TLON_ADMIN_TOKEN`, the bearer the ban and snapshot endpoints check. Its
+    # absence is a deploy failure ON PURPOSE: the alternative is an app that
+    # comes up healthy with its admin door permanently 404, which is only
+    # discovered on the day somebody needs to ban a reader.
+    #
+    #     python -c "import secrets; print(secrets.token_urlsafe(32))"
+    #     modal secret create tlon-admin TLON_ADMIN_TOKEN=<that value>
+    #
+    # ⭐ ITS OWN SECRET, for the reason the two above already give: `modal
+    # secret create --force` REPLACES a whole secret, so adding a key to an
+    # existing one means re-supplying the other keys in the same breath, and a
+    # mistyped Turnstile key there takes the challenge down with it.
     secrets=[modal.Secret.from_name("tlon-turnstile"),
-             modal.Secret.from_name("tlon-proxy")],
+             modal.Secret.from_name("tlon-proxy"),
+             modal.Secret.from_name("tlon-admin")],
     # ⭐ Warm for five minutes after the last request. This is the number that
     # makes the bench feel alive: nobody mid-conversation waits for a load.
     scaledown_window=300,

@@ -15,10 +15,13 @@ binds 0.0.0.0 in `docker-entrypoint.sh` and declares `[http_service]` in
 """
 from __future__ import annotations
 
+import hmac
 import os
 import pathlib
 import secrets
 import threading
+import time
+import traceback as _tb
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
@@ -26,6 +29,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import guard as G
+from . import logbook as LB
+from . import tripwire
 from . import turnstile as TS
 from .speaker import (BENCH_IDLE_MINUTES, CONTEXT_TURNS, MAX_ENGLISH_CHARS,
                       Speaker, SpeakerError, translate)
@@ -35,6 +40,20 @@ HERE = pathlib.Path(__file__).resolve().parent
 STATIC = HERE / "static"
 
 DB_PATH = os.environ.get("TLON_DB", str(HERE / "data" / "bench.sqlite3"))
+
+#: ⛔⛔⛔ BESIDE THE BENCH, NEVER UNDER `static/`. One log row holds a reader's
+#: English and the Tlön it became — the aligned pair `_public()` exists to keep
+#: off the page. Anything under `static/` is mounted and served, so a log file
+#: there would publish the answer key to a puzzle whose whole premise is that
+#: nothing on the face translates anything.
+#: ⭐ On Modal this lands on the bench VOLUME (`TLON_DB=/bench/bench.sqlite3`),
+#: which is the only writable path that survives a five-minute scaledown.
+LOG_PATH = os.environ.get("TLON_LOG_DB") or str(
+    pathlib.Path(DB_PATH).with_name("log.sqlite3"))
+
+#: ⛔ The one credential that can write a ban. Unset means the admin routes
+#: answer 404 — not 403, because a 403 advertises that they are there.
+ADMIN_TOKEN_ENV = "TLON_ADMIN_TOKEN"
 
 #: ⛔ Off by default. Set it ONLY where a proxy we control terminates the
 #: connection (Fly does). On a naked socket it would let any caller forge a
@@ -50,6 +69,10 @@ COOKIE = "tlon_bench"
 
 app = FastAPI(title="Tlön", docs_url=None, redoc_url=None, openapi_url=None)
 store = ConversationStore(DB_PATH)
+#: ⭐ The record. ⛔ It must never be able to take the bench down: every write
+#: inside it is wrapped, and `/healthz` reports the failure count so a logger
+#: that has quietly stopped cannot keep answering "nothing happened".
+logbook = LB.Logbook(LOG_PATH)
 # ⭐ THE SKELETON'S SPEAKER, WHEN ASKED FOR. `TLON_MOCK_SPEAKER=1` serves the
 # whole shape — real window, real store, real translate button, real refusals —
 # with no model and no GPU, so the page can be reacted to before anything is
@@ -147,6 +170,92 @@ async def _never_cache_a_bench(request: Request, call_next):
         response.headers["Cache-Control"] = "private, no-store, max-age=0"
         response.headers["Vary"] = "Cookie"
     return response
+
+
+#: The routes this app actually declares. ⭐ Anything else that 404s is somebody
+#: scanning us, which is worth seeing as a shape (`/wp-login.php`, `/.env`) even
+#: though it is never actionable on its own.
+_OURS = ("/", "/healthz", "/new", "/say", "/verify", "/reveal", "/conversation",
+         "/admin/ban", "/admin/unban", "/admin/snapshot", "/admin/stats")
+
+
+@app.middleware("http")
+async def _write_it_down(request: Request, call_next):
+    """⛔⛔ EVERY UNHANDLED EXCEPTION, AND WHERE IT HAPPENED.
+
+    Before this, an error's only trace was a stack printed to Modal's stdout,
+    which is discarded when the container scales down five minutes later. A
+    reader mailing "it broke" had nothing to quote and we had nothing to look
+    up — so the bug either reproduced on demand or did not exist.
+
+    ⭐ THE READER GETS A REQUEST ID. It is in the response header and in the
+    log row, which turns "it broke yesterday" into one indexed lookup.
+
+    ⛔ LOGGING MUST NOT BE ABLE TO FAIL THE REQUEST. Every call in here is
+    wrapped; the `Logbook` swallows its own errors and counts them, and this
+    catches anything left. A logger that 500s the app it watches is worse than
+    no logger.
+    """
+    request.state.request_id = secrets.token_hex(8)
+    if request.url.path.startswith(("/static", "/assets")):
+        return await call_next(request)
+
+    started = time.time()
+    try:
+        response = await call_next(request)
+    except Exception as exc:                                      # noqa: BLE001
+        _log_failure(request, exc, time.time() - started)
+        # ⭐ An honest line, and the id to quote. ⛔ NOT the exception text:
+        # that is for the log, not for a stranger's screen.
+        return JSONResponse(
+            {"error": "Something broke on our side. It has been written down.",
+             "request_id": request.state.request_id},
+            status_code=500,
+            headers={"X-Request-Id": request.state.request_id})
+
+    try:
+        response.headers["X-Request-Id"] = request.state.request_id
+        if response.status_code >= 500:
+            _log_failure(request, None, time.time() - started,
+                         status=response.status_code)
+        elif response.status_code == 404 and request.url.path not in _OURS:
+            logbook.record_event(kind="probe", **_who(request),
+                                 detail="%s %s" % (request.method,
+                                                   request.url.path[:200]))
+    except Exception:                                             # noqa: BLE001
+        pass
+    return response
+
+
+def _who(request) -> dict:
+    """⛔ NEVER RAISES, AND NEVER RETURNS AN ADDRESS. The log's only identity is
+    the HMAC; the address it was made from does not leave this function."""
+    try:
+        ip, trusted = G.client_ip_ex(request, trust_proxy=TRUST_PROXY)
+        return {"reader": LB.reader_id(ip), "ip_trusted": trusted}
+    except Exception:                                             # noqa: BLE001
+        return {"reader": None, "ip_trusted": None}
+
+
+def _log_failure(request, exc, seconds: float, *, status: int = 500) -> None:
+    try:
+        logbook.record_error(
+            kind=type(exc).__name__ if exc is not None else "http",
+            detail=str(exc) if exc is not None else "status %d" % status,
+            traceback=_tb.format_exc() if exc is not None else None,
+            method=request.method, route=request.url.path, status=status,
+            seconds=seconds,
+            request_id=getattr(request.state, "request_id", None),
+            **_who(request))
+    except Exception:                                             # noqa: BLE001
+        pass
+    # ⭐ STILL PRINTED. Modal's stdout is where an operator looks first and it
+    # is live; the log is where they look second and it is durable.
+    print("⛔ %s %s -> %s (%s)" % (request.method, request.url.path, status,
+                                   exc if exc is not None else "no exception"),
+          flush=True)
+    if exc is not None:
+        _tb.print_exc()
 
 
 @app.on_event("startup")
@@ -371,6 +480,11 @@ def healthz():
             "proxy_signed": G.PROXY_TRUST["signed"],
             "proxy_unsigned": G.PROXY_TRUST["unsigned"],
             "mock": bool(getattr(speaker, "is_mock", False)),
+            # ⛔⛔ THE PUBLIC HALF ONLY — "is the log working", never "did your
+            # probe trip a wire". A public count of flagged turns would let an
+            # attacker binary-search the tripwire: send a line, refresh this,
+            # read the answer. The rest is behind `/admin/stats`.
+            "log": logbook.stats(),
             "load_seconds": speaker.load_seconds, **limiter.stats()}
 
 
@@ -407,10 +521,31 @@ def conversation(request: Request):
 @app.post("/say")
 def say(body: Say, request: Request, response: Response):
     """One turn: your English becomes Tlön, and that provokes the reply."""
-    ip = G.client_ip(request, trust_proxy=TRUST_PROXY)
+    ip, trusted = G.client_ip_ex(request, trust_proxy=TRUST_PROXY)
+    reader = LB.reader_id(ip)
+    rid = getattr(request.state, "request_id", None)
+    # ⭐ SCANNED BEFORE ANY REFUSAL, NOT AFTER THE MODEL. An injection attempt
+    # that happens to arrive on the reader's thirteenth turn is refused by the
+    # rate limit — and if the scan lived after that, tripping the limit would be
+    # a way to attack the bench unlogged.
+    flags, severity = tripwire.scan(body.english)
+
+    # ⛔⛔⛔ THE BAN LIST IS CONSULTED ONLY FOR AN ADDRESS WE CAN VOUCH FOR.
+    # On an unsigned request `ip` is Cloudflare's egress address — the same
+    # string for every reader on earth — so one ban would refuse the whole
+    # internet, and it would look like the bench crashing rather than like a
+    # ban. `logbook.ban()` guards the write; this guards the read.
+    if trusted and logbook.is_banned(reader):
+        logbook.record_event(kind="ban.blocked", reader=reader, ip_trusted=True,
+                             detail=tripwire.flagline(flags))
+        return JSONResponse({"error": "This bench is closed to you."},
+                            status_code=403)
+
     try:
         limiter.check(ip)
     except G.Refused as exc:
+        _note_refusal("rate", exc.message, reader, trusted, body.english,
+                      flags, severity, rid)
         return _refused(exc)
 
     # ⛔⛔ AFTER THE RATE LIMIT, BEFORE THE MODEL. The order is
@@ -437,6 +572,12 @@ def say(body: Say, request: Request, response: Response):
             # `invalid-input-secret` (the wrong key was deployed) is otherwise
             # indistinguishable from a reader failing the challenge, and the
             # first would look like a broken puzzle to everyone at once.
+            # ⭐⭐ AND IT IS THE REASON THAT GOES IN THE LOG. A sudden run of
+            # `invalid-input-secret` is the placeholder-key outage — every
+            # reader refused at once — which took days to spot when the only
+            # evidence was one person saying it did not work.
+            _note_refusal("turnstile", why, reader, trusted, body.english,
+                          flags, severity, rid)
             return JSONResponse({"error": "could not verify you are a "
                                           "person — try again",
                                  "turnstile": why}, status_code=403)
@@ -459,8 +600,17 @@ def say(body: Say, request: Request, response: Response):
         with limiter.slot():
             result = speaker.turn(english, write_pairs, provoke_pairs)
     except G.Refused as exc:
+        _note_refusal("busy", exc.message, reader, trusted, body.english,
+                      flags, severity, rid)
         return _refused(exc)
     except SpeakerError as exc:
+        # ⛔ THE ONE ERROR A READER ACTUALLY MEETS, and until now it was
+        # returned and forgotten. A model that has started refusing everything
+        # looks, from outside, exactly like a model nobody is using.
+        logbook.record_error(kind="SpeakerError", detail=str(exc),
+                             reader=reader, ip_trusted=trusted, route="/say",
+                             method="POST", status=503, request_id=rid,
+                             traceback=_tb.format_exc())
         return JSONResponse({"error": str(exc)}, status_code=503)
 
     turn_no = store.next_turn(cid)
@@ -472,6 +622,21 @@ def say(body: Say, request: Request, response: Response):
                      surface=row.get("surface"), gloss=row.get("gloss"),
                      literary=row.get("literary"), refused=row.get("refused"))
         rows.append(_public({"turn": turn_no, "role": role, **row}))
+
+    # ⛔ WHAT WAS SAID AND WHAT CAME BACK — which is what an abuse report needs.
+    # ⛔⛔ `_tlon["surface"]` IS THE REPLY, AND `result["you"]["surface"]` IS
+    # DELIBERATELY NOT WRITTEN. That one is the reader's own line rendered into
+    # Tlön: the aligned pair `_public()` exists to withhold. The store keeps it
+    # because the translate button needs it; the log has no use for it, so the
+    # log does not get a copy.
+    _tlon = result.get("tlon") or {}
+    logbook.record_turn(
+        reader=reader, ip_trusted=trusted, request_id=rid,
+        conversation_id=cid, turn=turn_no, english=english,
+        surface=_tlon.get("surface"),
+        refused=result["you"].get("refused") or _tlon.get("refused"),
+        seconds=result.get("seconds"), flags=tripwire.flagline(flags),
+        severity=severity)
 
     out = JSONResponse({"conversation_id": cid, "messages": rows,
                         "seconds": result["seconds"]})
@@ -507,15 +672,28 @@ def verify(body: Verify, request: Request):
     door when their pass expired — locking out precisely the people who have
     been using it properly. The compute ceiling is still `guard.py`'s job.
     """
-    ip = G.client_ip(request, trust_proxy=TRUST_PROXY)
+    ip, trusted = G.client_ip_ex(request, trust_proxy=TRUST_PROXY)
+    reader = LB.reader_id(ip)
+    # ⛔ THE DOOR IS SHUT TOO. Leaving this out would let a banned reader keep
+    # a fresh pass in hand — harmless while `/say` refuses them, and exactly the
+    # kind of "the other door still worked" gap that outlives the reason for it.
+    if trusted and logbook.is_banned(reader):
+        logbook.record_event(kind="ban.blocked", reader=reader, ip_trusted=True,
+                             detail="/verify")
+        return JSONResponse({"error": "This bench is closed to you."},
+                            status_code=403)
     try:
         gate_limiter.check(ip)
     except G.Refused as exc:
+        logbook.record_event(kind="refused.gate", reader=reader,
+                             ip_trusted=trusted, detail=exc.message)
         return _refused(exc)
     if TS.has_pass(request, ip):
         return JSONResponse({"ok": True, "already": True})
     ok, why = TS.verify(body.turnstile, ip)
     if not ok:
+        logbook.record_event(kind="refused.turnstile", reader=reader,
+                             ip_trusted=trusted, detail=why)
         return JSONResponse({"ok": False, "error": "could not verify you are "
                                                    "a person — try again",
                              "turnstile": why}, status_code=403)
@@ -547,6 +725,94 @@ def reveal(body: Reveal, request: Request):
                 return {"gloss": row["gloss"], "literary": row["literary"]}
             return translate(row["surface"])
     return JSONResponse({"error": "no such line"}, status_code=404)
+
+
+# ── the operator's door ─────────────────────────────────────────────────────
+#
+# ⛔⛔⛔ IT WRITES, IT DOES NOT READ. There is no endpoint here that returns a
+# turn, a line of English or a Tlön surface, and there must never be one: this
+# app is reachable by anyone and its log is the puzzle's answer key. Reading is
+# done OFFLINE — `/admin/snapshot` settles a copy onto the volume, `modal volume
+# get` carries it home, `tools/bench_log.py` reads it there. That split is the
+# whole security design: the dangerous half never has a URL.
+#
+# ⛔ `/admin/stats` is the one read, and it returns COUNTS. Counts cannot
+# translate anything.
+
+class Ban(BaseModel):
+    reader: str = Field(min_length=1, max_length=64)
+    #: None means no expiry. ⭐ A dated ban is the better default in practice —
+    #: addresses are reassigned, and a permanent ban on a home connection
+    #: eventually lands on somebody who did nothing.
+    days: int | None = Field(default=None, ge=1, le=3650)
+    note: str = Field(default="", max_length=500)
+    #: ⛔ Overrides the untrusted-address refusal. It has to be typed.
+    force: bool = False
+
+
+class Unban(BaseModel):
+    reader: str = Field(min_length=1, max_length=64)
+
+
+def _admin(request: Request) -> bool:
+    """⛔ CONSTANT-TIME, and 404 rather than 403 at every call site. A 403 says
+    "this endpoint exists and you are close"; a 404 says nothing at all."""
+    token = os.environ.get(ADMIN_TOKEN_ENV, "")
+    if not token:
+        return False
+    header = request.headers.get("authorization", "")
+    offered = header[7:] if header[:7].lower() == "bearer " else ""
+    return hmac.compare_digest(offered, token)
+
+
+def _not_found() -> JSONResponse:
+    return JSONResponse({"detail": "Not Found"}, status_code=404)
+
+
+def _admin_denied(request: Request) -> JSONResponse:
+    # ⭐ Recorded. Somebody guessing at the admin door is exactly the kind of
+    # thing that is invisible until it worked.
+    logbook.record_event(kind="admin.denied", detail=request.url.path,
+                         **_who(request))
+    return _not_found()
+
+
+@app.post("/admin/ban")
+def admin_ban(body: Ban, request: Request):
+    if not _admin(request):
+        return _admin_denied(request)
+    result = logbook.ban(body.reader, days=body.days, note=body.note,
+                         force=body.force)
+    if not result.get("ok"):
+        # ⭐ 409, and the body says WHY. "untrusted address" is the refusal an
+        # operator must be able to read and understand in one line, because the
+        # alternative to understanding it is forcing it.
+        return JSONResponse(result, status_code=409)
+    return result
+
+
+@app.post("/admin/unban")
+def admin_unban(body: Unban, request: Request):
+    if not _admin(request):
+        return _admin_denied(request)
+    return logbook.unban(body.reader)
+
+
+@app.post("/admin/snapshot")
+def admin_snapshot(request: Request):
+    """⛔ `modal volume get` ON THE LIVE FILE CAN TEAR — it is in WAL mode and
+    being written to. This settles a single consistent copy beside it first."""
+    if not _admin(request):
+        return _admin_denied(request)
+    result = logbook.snapshot()
+    return result if result.get("ok") else JSONResponse(result, status_code=500)
+
+
+@app.get("/admin/stats")
+def admin_stats(request: Request):
+    if not _admin(request):
+        return _admin_denied(request)
+    return logbook.stats(full=True)
 
 
 # ── helpers ─────────────────────────────────────────────────────────────────
@@ -586,6 +852,30 @@ def _public(row: dict) -> dict:
     else:
         out["surface"] = row.get("surface")
     return out
+
+
+def _note_refusal(kind: str, message: str, reader: str, trusted: bool,
+                  english: str, flags, severity: int, rid) -> None:
+    """A turn that never ran, written down anyway.
+
+    ⛔⛔ A FLAGGED LINE IS RECORDED IN FULL EVEN WHEN IT WAS REFUSED. Otherwise
+    the cheapest way to attack this bench unobserved is to attack it past the
+    rate limit — the log would hold twelve innocent turns and nothing else.
+    ⭐ An UNflagged refusal gets a one-line event instead: there are thousands of
+    those and they are a rate, not a story.
+    """
+    try:
+        if severity >= tripwire.INJECTION:
+            logbook.record_turn(reader=reader, ip_trusted=trusted,
+                                request_id=rid, english=english,
+                                refused="refused:" + kind,
+                                flags=tripwire.flagline(flags),
+                                severity=severity)
+        else:
+            logbook.record_event(kind="refused." + kind, reader=reader,
+                                 ip_trusted=trusted, detail=message)
+    except Exception:                                             # noqa: BLE001
+        pass
 
 
 def _refused(exc: G.Refused) -> JSONResponse:

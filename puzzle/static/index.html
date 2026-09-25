@@ -33,7 +33,7 @@
 <script defer src="https://resolveresearcher.com/assets/bar.js"></script>
 <link rel="stylesheet" href="/static/chrome.css?v=2">
 <link rel="stylesheet" href="/static/oracle.css?v=19">
-<link rel="stylesheet" href="/static/puzzle.css?v=5">
+<link rel="stylesheet" href="/static/puzzle.css?v=6">
 <!-- ⛔⛔ `render=explicit`, AND THAT IS THE FIX, NOT A PREFERENCE.
      The widget used to render itself from the markup with `data-size=flexible`
      and `data-theme=auto`: a full-width WHITE slab, flush against the bottom of
@@ -267,6 +267,17 @@
         <i class="ph ph-arrow-up" aria-hidden="true"></i></button>
     </form>
     <p class="ask-note" id="ask-note" role="status"></p>
+    <!-- ⭐ SAID ON THE FACE, NOT BURIED IN A POLICY NOBODY OPENS. What is kept
+         is the line you typed; what is NOT kept is you. The address a request
+         arrives from is one-way hashed the moment it lands and the address
+         itself is never written down — which is what lets abuse be blocked
+         without anyone being identifiable, by us or by anyone who ever reads
+         the file. -->
+    <p class="ask-fine">
+      *Lines are kept anonymously &mdash; your address is one-way hashed on
+      arrival and never stored &mdash; so abuse can be shut out without anyone
+      being identified.
+    </p>
   </section>
 
   <!-- ⭐ The closing note stays BELOW the bench: it is the part you read after

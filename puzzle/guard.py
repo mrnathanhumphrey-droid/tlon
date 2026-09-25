@@ -82,7 +82,27 @@ class Refused(Exception):
 
 
 def client_ip(request, *, trust_proxy: bool) -> str:
-    """The caller's address.
+    """The caller's address. ⭐ See `client_ip_ex` for whether to believe it."""
+    return client_ip_ex(request, trust_proxy=trust_proxy)[0]
+
+
+def client_ip_ex(request, *, trust_proxy: bool) -> tuple[str, bool]:
+    """The caller's address, AND WHETHER WE CRYPTOGRAPHICALLY KNOW IT IS THEIRS.
+
+    ⛔⛔⛔ THE SECOND VALUE IS WHAT MAKES A BAN SAFE. Everything below the
+    signature check hands back a FALLBACK — behind Cloudflare that fallback is
+    the egress address, which is the same string for every reader on earth.
+    Rate-limiting on it merely degrades (one shared budget); BANNING on it takes
+    the bench off the internet for everybody, and looks exactly like a crash.
+    So the flag is `True` only when:
+
+      * there is no proxy in front at all, so the socket peer IS the reader; or
+      * the Worker signed the request and we checked the signature.
+
+    ⛔ `Fly-Client-IP` is deliberately NOT enough. Fly sets it itself, but the
+    `modal.run` URL stays publicly reachable, so anyone may send that header
+    directly and mint a clean identity. It is fine to rate-limit on — the worst
+    case is somebody evading their own limit — and not fine to ban on.
 
     ⛔⛔ `X-Forwarded-For` IS CLIENT-SUPPLIED AND FORGEABLE. Trusting it on a
     naked socket lets anyone mint a fresh identity per request and walk straight
@@ -112,7 +132,7 @@ def client_ip(request, *, trust_proxy: bool) -> str:
             claimed = (request.headers.get("x-tlon-client-ip") or "").strip()
             if claimed:
                 PROXY_TRUST["signed"] += 1
-                return claimed
+                return claimed, True
         if secret:
             # ⛔⛔⛔ THE SECRET IS CONFIGURED AND THE REQUEST DID NOT CARRY IT.
             # Everything below hands back CLOUDFLARE'S EGRESS ADDRESS, which is
@@ -132,13 +152,15 @@ def client_ip(request, *, trust_proxy: bool) -> str:
 
         fly = request.headers.get("fly-client-ip")
         if fly:
-            return fly.strip()
+            return fly.strip(), False
         xff = request.headers.get("x-forwarded-for")
         if xff:
             # ⛔ The LAST hop is the one our proxy appended; the leftmost entries
             # are whatever the client chose to claim.
-            return xff.split(",")[-1].strip()
-    return request.client.host if request.client else "unknown"
+            return xff.split(",")[-1].strip(), False
+    # ⭐ No proxy in front means the socket peer IS the reader, so this is
+    # the one fallback that is also the truth.
+    return (request.client.host if request.client else "unknown"), not trust_proxy
 
 
 def _const_eq(a: str, b: str) -> bool:
@@ -205,7 +227,14 @@ class Guard:
             while hits and hits[0] < cutoff:
                 hits.popleft()
             if len(hits) >= self.ip_turns:
-                wait = int(hits[0] + self.ip_window_s - now) + 1
+                # ⛔ `hits` CAN BE EMPTY HERE, AND `hits[0]` RAISED. With
+                # `ip_turns=0` — which is how an operator closes the bench
+                # without redeploying — every request died on an IndexError, so
+                # the app answered 500 where it meant 429. Found by a logging
+                # test that set the limit to 0 expecting a refusal; nothing
+                # else in the suite had ever passed that value.
+                wait = (int(hits[0] + self.ip_window_s - now) + 1 if hits
+                        else self.ip_window_s)
                 raise Refused(
                     429,
                     "You are speaking faster than it can answer. Wait a few "

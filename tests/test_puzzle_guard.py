@@ -128,3 +128,19 @@ def test_a_forged_chain_cannot_prepend_its_way_out():
     req = _Req(peer="5.5.5.5",
                headers={"x-forwarded-for": "evil, 6.6.6.6"})
     assert client_ip(req, trust_proxy=True) == "6.6.6.6"
+
+
+def test_closing_the_bench_refuses_rather_than_crashing():
+    """⛔⛤ `TLON_IP_TURNS=0` — the lever that closes the bench without a
+    redeploy — raised `IndexError` on an empty deque, so every request answered
+    500 instead of 429. The limiter WAS refusing everyone; it was just doing it
+    as a crash, which reads as an outage in every log and every status page.
+
+    ⭐ Found by a logging test that set the limit to 0 expecting a refusal.
+    Nothing in this file had ever passed that value, so a limiter configured to
+    refuse everything had never once been asked to."""
+    g = Guard(ip_turns=0)
+    with pytest.raises(Refused) as caught:
+        g.check("1.2.3.4")
+    assert caught.value.status == 429
+    assert caught.value.retry_after and caught.value.retry_after > 0

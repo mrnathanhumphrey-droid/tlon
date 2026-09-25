@@ -409,6 +409,20 @@ body[data-auth="out"] .bench-box #new-thread:not([hidden]) { display: inline-fle
 .ask-note.bad { color: var(--danger-text); }
 .ask-note.wait { color: var(--accent); }
 
+/* ⭐ The privacy line. Quiet on purpose — it is a reassurance, not a warning,
+   and a reader who is not worried should be able to slide past it. */
+.ask-fine {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.55;
+  letter-spacing: .04em;
+  color: var(--text-3);
+  opacity: .8;
+  margin: 0;
+  padding: 0 26px 18px;
+  max-width: 62ch;
+}
+
 /* ── the empty bench ─────────────────────────────────────────────────────── */
 /* ⛔⛤ THE `.onset` RULES ARE DELETED, NOT COMMENTED OUT, AND SO IS THE BOX
    THEY DREW. A crib stood inside the chat printing an English sentence, its
@@ -487,6 +501,7 @@ body[data-auth="out"] .bench-box #new-thread:not([hidden]) { display: inline-fle
   .bench-box .oracle-composer { padding: 14px 16px; }
   .ts-row:has(iframe) { padding: 14px 16px 0; }
   .ask-note { padding: 0 16px 14px; }
+  .ask-fine { padding: 0 16px 16px; }
   .onset { padding: 20px 18px; }
   .copy-deck { padding: 48px 16px 72px; gap: 48px; }
   .msg-tlon .msg-text,
