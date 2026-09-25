@@ -27,6 +27,17 @@ primary_region = "iad"             # Ashburn, Virginia — us-east, Nate's call
   # hash mismatch, and that check is what makes the failure loud regardless of
   # which of these two files someone edits.
   TLON_LEXICON = "lexicon_expanded.yaml"
+
+  # ⭐ THE TURNSTILE SITE KEY, AND IT IS PUBLIC BY DESIGN. It is substituted
+  # into the page and sits in the HTML of every site that uses Turnstile, so it
+  # belongs in config and not in secrets. `server.index()` renders it into
+  # `{{TURNSTILE_SITEKEY}}`.
+  # ⛔⛔ ITS PARTNER IS NOT HERE AND MUST NEVER BE. `TURNSTILE_SECRET_KEY` is set
+  # with `fly secrets set` and lives only on the machine. Without it a deployed
+  # app REFUSES TO BOOT — see `puzzle/turnstile.preflight` — because a public
+  # GPU endpoint with an unverified challenge in front of it would report
+  # perfectly healthy while protecting nothing.
+  TLON_TURNSTILE_SITEKEY = "0x4AAAAAAFCzgoZ1d8Y7fEc4"
   TLON_HOST = "0.0.0.0"
   TLON_TRUST_PROXY = "1"
   TLON_HTTPS = "1"

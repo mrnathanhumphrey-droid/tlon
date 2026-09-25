@@ -211,3 +211,30 @@ def test_the_puzzle_does_not_quietly_drop_to_the_frozen_lexicon(fly):
     owns this. Named here too because THIS file is what someone reads when they
     are about to deploy."""
     assert fly["env"]["TLON_LEXICON"] == "lexicon_expanded.yaml"
+
+
+# ── the challenge ───────────────────────────────────────────────────────────
+
+def test_fly_carries_a_turnstile_sitekey(fly):
+    """⛔ An empty sitekey renders no widget, so every reader would arrive with
+    no token and `/say` would refuse all of them — a puzzle that looks live and
+    answers nobody. The SITE key is public by design; it is config, not a
+    secret, and it belongs here where a deploy can see it."""
+    key = fly["env"].get("TLON_TURNSTILE_SITEKEY", "")
+    assert key, "⛔⛔ no TLON_TURNSTILE_SITEKEY — the widget cannot render"
+    assert key.startswith("0x"), (
+        "⛔ %r is not shaped like a Turnstile sitekey" % key)
+
+
+def test_fly_does_NOT_carry_the_turnstile_secret(fly):
+    """⛔⛔ THE SECRET LIVES ONLY IN `fly secrets`, NEVER IN THE REPO.
+    `fly.toml` is committed; anything in its `[env]` is public to everyone who
+    can read the repository. A secret here would be a secret no longer, and the
+    widget would have to be rebuilt to rotate it."""
+    body = FLY.read_text(encoding="utf-8")
+    assert "TURNSTILE_SECRET_KEY" not in fly["env"], (
+        "⛔⛔ the Turnstile SECRET is in fly.toml's [env] — it is committed")
+    # the name may appear in prose explaining where it does live
+    code = "\n".join(ln for ln in body.splitlines()
+                     if not ln.lstrip().startswith("#"))
+    assert "TURNSTILE_SECRET_KEY" not in code
