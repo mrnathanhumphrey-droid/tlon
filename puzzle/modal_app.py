@@ -75,18 +75,11 @@ image = (
         "pydantic>=2.7",
         "PyYAML>=6.0",
     )
-    # ⛔ THE SAME THREE TREES THE DOCKERFILE COPIES, AND FOR THE SAME REASON:
-    # `puzzle/speaker.py` imports the turn shape and the backend from `tools/`
-    # rather than re-spelling either, and that import is the guarantee that the
-    # served prompts are the trained prompts.
-    .add_local_dir(REPO / "tlon", remote_path="/app/tlon")
-    .add_local_dir(REPO / "tools", remote_path="/app/tools")
-    .add_local_dir(REPO / "puzzle", remote_path="/app/puzzle")
-    # ⭐ The adapter IS baked: 323 MB, ours, and a container that comes up
-    # without it serves the untuned base, which scored 0.0% on write and would
-    # answer every visitor in English while looking entirely healthy.
-    .add_local_dir(REPO / "runs" / "puzzle_speaker" / "dosed-s20624",
-                   remote_path="/app/speaker/dosed-s20624")
+    # ⛔⛔ `.env()` COMES BEFORE EVERY `add_local_*`, AND MODAL ENFORCES IT:
+    #   "An image tried to run a build step after using `image.add_local_*`"
+    # Local files are attached at container START, not baked, so that a code
+    # change does not rebuild the image — which means no build step may
+    # follow them. `.env()` is a build step. Ordering here is not style.
     .env({
         # ⛔⛔ THE LANGUAGE THIS ADAPTER SPEAKS. Without it the library default
         # is the FROZEN 156-root lexicon and the gate refuses 49.9% of the
@@ -109,6 +102,18 @@ image = (
         "TLON_PRELOAD": "0",
         "PYTHONUNBUFFERED": "1",
     })
+    # ⛔ THE SAME THREE TREES THE DOCKERFILE COPIES, AND FOR THE SAME REASON:
+    # `puzzle/speaker.py` imports the turn shape and the backend from `tools/`
+    # rather than re-spelling either, and that import is the guarantee that the
+    # served prompts are the trained prompts.
+    .add_local_dir(REPO / "tlon", remote_path="/app/tlon")
+    .add_local_dir(REPO / "tools", remote_path="/app/tools")
+    .add_local_dir(REPO / "puzzle", remote_path="/app/puzzle")
+    # ⭐ The adapter IS baked: 323 MB, ours, and a container that comes up
+    # without it serves the untuned base, which scored 0.0% on write and would
+    # answer every visitor in English while looking entirely healthy.
+    .add_local_dir(REPO / "runs" / "puzzle_speaker" / "dosed-s20624",
+                   remote_path="/app/speaker/dosed-s20624")
 )
 
 

@@ -357,5 +357,18 @@ def _refused(exc: G.Refused) -> JSONResponse:
 
 # ⛔ Mounted LAST. A StaticFiles mount at "/" would shadow every route declared
 # after it, and the failure mode is a 404 on an endpoint that is plainly there.
+#
+# ⛔⛤ AND THE DIRECTORY IS ENSURED, BECAUSE `StaticFiles` RAISES ON A MISSING
+# ONE AND TOOK THE WHOLE APP DOWN. `puzzle/static/assets/` held a stale fork of
+# apex's theme.css/theme.js until those were deleted in favour of apex's own
+# copies; what remains is `videos/`, which holds only placeholders and so is
+# EMPTY. Git does not track an empty directory and neither Modal's
+# `add_local_dir` nor a Docker COPY ships one — so the path existed on the
+# laptop and nowhere else, and the container crashed at IMPORT time, before a
+# single line of the app ran. The logs said only
+# `RuntimeError: Directory '/app/puzzle/static/assets' does not exist`.
+# ⭐ Ensuring it is right rather than conditional: the mount should exist even
+# when there is nothing in it yet, so dropping a video in needs no code change.
+(STATIC / "assets").mkdir(parents=True, exist_ok=True)
 app.mount("/assets", StaticFiles(directory=STATIC / "assets"), name="assets")
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
