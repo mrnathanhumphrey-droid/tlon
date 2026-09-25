@@ -1,0 +1,158 @@
+"""⛔⛔ THE BENCH, ON MODAL — because Fly no longer provisions GPUs.
+
+⛔⛤ THIS REPLACES A FLY DEPLOY THAT BUILT CLEAN AND COULD NOT RUN. `fly.toml`
+asked for `gpu_kind = "l40s"` on the strength of a Fly blog post that says GPU
+machines are not being retired. The provisioning API disagrees:
+
+    failed to launch VM: GPU machines are no longer supported:
+    config.guest.gpu_kind and config.guest.gpus must be unset
+
+A 5.5 GB image was built, pushed and IP-addressed before anything said so.
+⭐⭐ A DOCUMENT DESCRIBES INTENT; ONLY THE THING THAT CREATES MACHINES
+DESCRIBES REALITY. The GPU below was verified by asking Modal for one and
+running `nvidia-smi` on it — A10, 22.1 GiB, torch 2.14+cu130, 7.0s cold — not
+by reading that Modal has GPUs.
+
+⭐ THE APP ITSELF IS UNCHANGED. `puzzle.server:app` is imported and served as
+an ASGI app; the window, the store, the guard, Turnstile, the speaker and every
+prompt come across untouched. Modal supplies a card and a URL, nothing else.
+
+⛔⛔ "SNAPPY, LIKE SOMEONE WAITING ON A PARK BENCH" IS A COLD-START PROBLEM, AND
+ONLY ONE OF THE TWO OBVIOUS LEVERS ACTUALLY APPLIES.
+
+  ✅ `scaledown_window` keeps a warm container for minutes after the last
+     request. This is the one that matters: nobody mid-conversation ever waits
+     for a load, which is where the feeling of a live thing actually lives.
+
+  ⛔ MEMORY SNAPSHOT DOES NOT HELP HERE, and it is worth writing down so the
+     next person does not reach for it. Modal's snapshots capture host memory;
+     these weights live in VRAM, which a snapshot cannot carry. Hence
+     `@modal.enter(snap=False)`. A snapshot taken before the model loads saves
+     only interpreter startup — milliseconds against a multi-second load.
+
+⛔ `min_containers` is deliberately 0. An A10 held open costs roughly a dollar
+an hour, which against the account's credit is days, not months. The first
+arrival pays; everyone after them does not. ⭐ If the bench is ever mailed to a
+list and should be warm for a known hour, `min_containers=1` for that window is
+the lever — a decision with a price, not a default.
+
+⛔ THE FIRST-ARRIVAL COST IS NOT YET MEASURED. It is a container start plus a
+14 GB volume read plus the load; the 7.0s in the probe above was a trivial
+container and says nothing about this one.
+"""
+from __future__ import annotations
+
+import pathlib
+
+import modal
+
+REPO = pathlib.Path(__file__).resolve().parents[1]
+
+app = modal.App("tlon-bench")
+
+#: ⛔ The 14 GB base model lives on a VOLUME, not in the image. Baking it would
+#: make every code change re-push 14 GB, and Modal caches the volume between
+#: cold starts so the second boot does not re-download it.
+weights = modal.Volume.from_name("tlon-weights", create_if_missing=True)
+#: ⭐ The bench itself — one SQLite file, so a reader's conversation survives a
+#: scale-to-zero. It is the reason `max_containers` is 1 below.
+bench = modal.Volume.from_name("tlon-bench-db", create_if_missing=True)
+
+image = (
+    modal.Image.debian_slim(python_version="3.12")
+    # ⛔ torch FIRST and alone, from the CUDA index — the same reasoning the
+    # Dockerfile gives: letting a later resolver pick it drags in a wheel built
+    # against the wrong runtime and every generate() fails at import depth.
+    .pip_install("torch==2.8.0", index_url="https://download.pytorch.org/whl/cu128")
+    .pip_install(
+        "transformers==5.8.1",
+        "peft==0.19.1",
+        "bitsandbytes==0.50.1",
+        "accelerate==1.13.0",
+        "safetensors>=0.4",
+        "huggingface_hub>=0.34",
+        "fastapi==0.136.1",
+        "pydantic>=2.7",
+        "PyYAML>=6.0",
+    )
+    # ⛔ THE SAME THREE TREES THE DOCKERFILE COPIES, AND FOR THE SAME REASON:
+    # `puzzle/speaker.py` imports the turn shape and the backend from `tools/`
+    # rather than re-spelling either, and that import is the guarantee that the
+    # served prompts are the trained prompts.
+    .add_local_dir(REPO / "tlon", remote_path="/app/tlon")
+    .add_local_dir(REPO / "tools", remote_path="/app/tools")
+    .add_local_dir(REPO / "puzzle", remote_path="/app/puzzle")
+    # ⭐ The adapter IS baked: 323 MB, ours, and a container that comes up
+    # without it serves the untuned base, which scored 0.0% on write and would
+    # answer every visitor in English while looking entirely healthy.
+    .add_local_dir(REPO / "runs" / "puzzle_speaker" / "dosed-s20624",
+                   remote_path="/app/speaker/dosed-s20624")
+    .env({
+        # ⛔⛔ THE LANGUAGE THIS ADAPTER SPEAKS. Without it the library default
+        # is the FROZEN 156-root lexicon and the gate refuses 49.9% of the
+        # turns in the speaker's own training corpus — failing CLOSED, so the
+        # container comes up healthy and merely seems inarticulate.
+        # `speaker.py` refuses to load on a hash mismatch; this is what makes
+        # that check pass.
+        "TLON_LEXICON": "lexicon_expanded.yaml",
+        "TLON_ADAPTER": "/app/speaker/dosed-s20624",
+        "TLON_TURNSTILE_SITEKEY": "0x4AAAAAAFCzgoZ1d8Y7fEc4",
+        "TLON_DB": "/bench/bench.sqlite3",
+        "HF_HOME": "/weights/hf",
+        # ⭐ Modal terminates TLS and sets the forwarded headers, so the bench
+        # cookie may be Secure and the per-IP limit may trust the proxy.
+        "TLON_HTTPS": "1",
+        "TLON_TRUST_PROXY": "1",
+        # ⛔ OFF. `server._startup` warms on a thread for Fly's benefit; here
+        # the warm is owned by `@modal.enter()` below, which runs BEFORE the
+        # container is given any traffic. Two warms would load twice.
+        "TLON_PRELOAD": "0",
+        "PYTHONUNBUFFERED": "1",
+    })
+)
+
+
+@app.cls(
+    image=image,
+    gpu="A10",
+    volumes={"/weights": weights, "/bench": bench},
+    # ⛔⛔ THE TURNSTILE SECRET. Without it `turnstile.preflight()` refuses to
+    # start — which is the intended behaviour, because a public GPU endpoint
+    # with an unverified challenge in front of it reports perfectly healthy.
+    secrets=[modal.Secret.from_name("tlon-turnstile")],
+    # ⭐ Warm for five minutes after the last request. This is the number that
+    # makes the bench feel alive: nobody mid-conversation waits for a load.
+    scaledown_window=300,
+    # ⛔⛔ ONE. The bench is a SQLite file on a volume; two containers would not
+    # share it, so a reader's conversation would vanish whenever they were
+    # routed elsewhere — data loss that presents as a UI bug. It is also what
+    # `guard.MAX_CONCURRENT` already assumes: one process, one generation.
+    max_containers=1,
+    timeout=300,
+)
+class Bench:
+    @modal.enter(snap=False)
+    def load(self):
+        """⛔ BEFORE ANY TRAFFIC. `@modal.enter` runs while the container is
+        still being made ready, so the first reader meets a loaded model rather
+        than a queue. `snap=False` because the weights are on a GPU and a
+        memory snapshot cannot carry VRAM."""
+        import sys
+
+        sys.path.insert(0, "/app")
+        sys.path.insert(0, "/app/tools")
+        from puzzle.server import speaker
+
+        speaker.load()
+        print("tlön · speaker loaded in %.1fs" % (speaker.load_seconds or 0),
+              flush=True)
+
+    @modal.asgi_app()
+    def web(self):
+        import sys
+
+        sys.path.insert(0, "/app")
+        sys.path.insert(0, "/app/tools")
+        from puzzle.server import app as fastapi_app
+
+        return fastapi_app

@@ -30,6 +30,7 @@ import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tests"))
 
 DOCKERFILE = ROOT / "puzzle" / "Dockerfile"
 FLY = ROOT / "puzzle" / "fly.toml"
@@ -260,3 +261,45 @@ def test_a_refused_write_does_not_leak_its_bench_to_the_next_reader(
     assert backend.conversation == [], (
         "⛔⛔ the WRITE bench outlived a refused turn: %r"
         % (backend.conversation,))
+
+
+# ── the second deploy config ────────────────────────────────────────────────
+
+def test_the_modal_deploy_agrees_with_the_fly_one():
+    """⛔⛔ TWO DEPLOY CONFIGS IS TWO PLACES TO GET THE LANGUAGE WRONG.
+
+    `puzzle/fly.toml` and `puzzle/modal_app.py` both declare the environment a
+    container comes up in. The lexicon defect this file exists for was exactly
+    one config forgetting one variable — and it failed CLOSED, so everything
+    reported healthy while the gate refused half the speaker's vocabulary.
+    Adding a second deploy surface doubles that surface.
+
+    ⭐ The hash check in `speaker.py` still catches it at load either way. This
+    catches it at review, which is cheaper than catching it on a GPU.
+    """
+    import ast
+
+    src = (ROOT / "puzzle" / "modal_app.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    env = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and getattr(node.func, "attr", "") == "env":
+            for arg in node.args:
+                if isinstance(arg, ast.Dict):
+                    for k, v in zip(arg.keys, arg.values):
+                        if isinstance(k, ast.Constant) and isinstance(v, ast.Constant):
+                            env[k.value] = v.value
+    assert env, "could not read modal_app's .env() block"
+    assert env.get("TLON_LEXICON") == EXPANDED_FILE, (
+        "⛔⛔ the Modal deploy does not set the expanded lexicon (%r)"
+        % env.get("TLON_LEXICON"))
+    # ⛔ IMPORTED, NOT RE-SPELT.  owns the identity
+    # of v1; a second literal here would be a second place to get it wrong.
+    import importlib
+    V1_CELL = importlib.import_module("test_puzzle_serves_v1").V1_CELL
+    assert env.get("TLON_ADAPTER", "").endswith(V1_CELL), (
+        "⛔⛔ the Modal deploy points at %r, not v1 (%r)"
+        % (env.get("TLON_ADAPTER"), V1_CELL))
+    assert "TURNSTILE_SECRET_KEY" not in env, (
+        "⛔⛔ the Turnstile SECRET is in modal_app's env block — it is "
+        "committed. It belongs in a Modal Secret.")
