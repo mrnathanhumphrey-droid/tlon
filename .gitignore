@@ -88,3 +88,10 @@ runs/act2/ledger.jsonl
 runs/act2/corpus_bench_steered/
 runs/act2/corpus_bench/
 runs/act2/corpus_bench_rowmatch/
+
+# ⛔ Wrangler's local build cache. It appeared the first time the Worker was
+# deployed and is pure machine state — a rebuilt bundle, a dev-server sqlite
+# file and per-machine paths. Committing it to a PUBLIC repo would put local
+# absolute paths in the history and create a file that conflicts on every
+# deploy from a different machine.
+puzzle/worker/.wrangler/
