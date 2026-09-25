@@ -267,3 +267,17 @@ def test_the_closing_note_stays_below():
     html = _html()
     assert html.index('id="why"') > html.index('id="ask-form"'), (
         "the closing note belongs after you have talked to it, not before")
+
+
+def test_the_tab_has_an_icon():
+    """⛔ `/favicon.ico` WAS A 404 — checked against the live site during the v1
+    audit, so every tab showed the browser's blank-page mark. It is the one
+    piece of chrome a reader meets before they have read a word, and the one
+    that silently says whether anybody finished this.
+
+    ⭐ Apex's own logo, which the page's `img-src` already allows — so this
+    costs no CSP change and cannot be the thing that breaks the policy."""
+    html = (ROOT / "puzzle" / "static" / "index.html").read_text(encoding="utf-8")
+    assert re.search(r'<link[^>]+rel="icon"[^>]+href="[^"]+"', html), (
+        "⛔ the page declares no icon, so the tab falls back to /favicon.ico "
+        "and that path does not exist")

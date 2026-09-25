@@ -227,7 +227,7 @@ them.
 | `puzzle/` | the served puzzle — speaker, prompt shape, leak guard, log, deploy |
 | `tools/` | `chat.py`, corpus builders, fine-tune, evaluation gates, pipelines |
 | `docs/` | pre-registrations, deviations, decision records |
-| `tests/` | 2,470 tests |
+| `tests/` | 2,481 tests |
 
 ### Three things worth knowing before reading the code
 
@@ -267,7 +267,7 @@ to notice it.
 ## Reproducing it
 
 ```bash
-python -m pytest -q                              # 2,470 tests, no GPU needed
+python -m pytest -q                              # 2,481 tests, no GPU needed
 python tools/act2_build_corpus.py --n 40000      # deterministic, seed 20620
 python tools/act2_finetune.py --model <backbone> --dtype bf16 --seq 192 \
     --batch 16 --accum 1 --epochs 1 --out runs/act2/adapter

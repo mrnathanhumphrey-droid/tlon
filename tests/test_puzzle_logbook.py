@@ -151,22 +151,29 @@ def test_force_exists_but_has_to_be_typed(app):
 def test_a_ban_is_not_consulted_on_an_unsigned_request(app):
     """⛔⛔⛔ THE SECOND GUARD, AND IT IS NOT REDUNDANT WITH THE FIRST. Suppose
     the signature works today, a reader is banned properly, and the secret
-    breaks next month. Every reader now arrives wearing the egress identity —
+    breaks next month. Every reader now arrives wearing the egress identity --
     and if enforcement did not check the signature, the SIGNED ban would start
-    refusing everybody. The failure would arrive weeks after its cause."""
+    refusing everybody.
+
+    ⭐ SINCE THE AUDIT, UNSIGNED TRAFFIC IS REFUSED AT THE DOOR ANYWAY, so this
+    now asserts something sharper: the unsigned request is refused for ITS OWN
+    reason and never reaches the ban list. The two refusals are distinguishable
+    by their message, which is the only way to tell "the ban did not fire" from
+    "the ban fired and something else also refused them".
+    """
     from puzzle import logbook as LB
     c = _client(app)
-    # banned properly, while signed
     c.post("/say", json={"english": "first"}, headers=signed(SHARED_IP))
     assert app.logbook.ban(LB.reader_id(SHARED_IP))["ok"] is True
-    assert c.post("/say", json={"english": "again"},
-                  headers=signed(SHARED_IP)).status_code == 403
+    banned = c.post("/say", json={"english": "again"}, headers=signed(SHARED_IP))
+    assert banned.status_code == 403
+    assert "closed to you" in banned.json()["error"]
 
-    # the signature then breaks: the same address, now unsigned, must be served
     r = c.post("/say", json={"english": "everyone else"}, headers=unsigned())
-    assert r.status_code == 200, (
-        "⛔⛔⛔ a ban was applied to an unsigned request — behind a CDN that is "
-        "every reader on earth, and it would look like the bench crashing")
+    assert r.status_code == 403
+    assert "not reachable this way" in r.json()["error"], (
+        "⛔⛔⛔ an unsigned request was refused by the BAN -- behind a CDN "
+        "that is every reader on earth, and it would look like a crash")
 
 
 def test_a_banned_reader_is_refused_at_both_doors(app):
@@ -245,13 +252,41 @@ def test_a_turn_records_both_halves_and_who(app):
     assert rows[0]["conversation_id"]
 
 
-def test_an_unsigned_turn_is_marked_as_such(app):
-    """⛔⛔ THE DURABLE VERSION OF A COUNTER THAT DIES WITH THE CONTAINER.
-    `/healthz`'s `proxy_unsigned` resets every scaledown — five quiet minutes
-    and the evidence is gone. This row outlives it."""
+def test_an_unsigned_request_is_refused_and_recorded_against_its_reader(app):
+    """⛔⛔ THE `modal.run` URL IS PUBLIC AND BYPASSES THE WORKER -- measured
+    live during the v1 audit, and `/healthz`'s `proxy_unsigned` counted it. On
+    such a request `client_ip` believes a forged `X-Forwarded-For`, so the
+    per-IP limit can be walked around one claimed address at a time.
+
+    ⭐⭐ THE READER ID STILL GOES ON THE ROW. Once unsigned traffic is refused
+    here, no `turns` row can ever carry ip_trusted=0 again -- so if the event
+    did not name the reader, `ban()`'s untrusted-address guard would slowly lose
+    the evidence it reasons over and an id that ONLY ever arrived unsigned would
+    start looking bannable."""
+    from puzzle import logbook as LB
     c = _client(app)
-    c.post("/say", json={"english": "hello"}, headers=unsigned())
-    assert _turns(app)[0]["ip_trusted"] == 0
+    r = c.post("/say", json={"english": "hello"}, headers=unsigned())
+    assert r.status_code == 403
+    assert _turns(app) == [], "an unsigned request must not reach the model"
+
+    conn = app.logbook._conn()
+    try:
+        row = conn.execute("SELECT * FROM events WHERE kind='refused.unsigned'"
+                           ).fetchone()
+    finally:
+        conn.close()
+    assert row is not None
+    assert row["ip_trusted"] == 0
+    assert row["reader"] == LB.reader_id(SHARED_IP)
+
+
+def test_healthz_and_the_page_stay_open_when_the_signature_breaks(app):
+    """⭐ THE FAIL-CLOSED CHANGE MUST STILL BE DIAGNOSABLE FROM OUTSIDE. If the
+    Worker's secret breaks, refusing EVERYTHING would leave a blank domain and
+    no way to tell a broken signature from a dead machine."""
+    c = _client(app)
+    assert c.get("/healthz").status_code == 200
+    assert c.get("/").status_code == 200
 
 
 def test_a_flagged_line_is_kept_even_when_it_was_refused(app, monkeypatch):

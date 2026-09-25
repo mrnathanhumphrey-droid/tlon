@@ -169,6 +169,15 @@ async def _never_cache_a_bench(request: Request, call_next):
     if not request.url.path.startswith("/static"):
         response.headers["Cache-Control"] = "private, no-store, max-age=0"
         response.headers["Vary"] = "Cookie"
+    # ⛔⛔ HSTS, AND IT WAS MISSING ENTIRELY — checked on the live headers, not
+    # assumed. Without it the FIRST visit of every reader is one http:// away
+    # from being read on a café network, and the bench cookie plus the session
+    # pass both ride that request. Cloudflare does not add this by default.
+    # ⭐ On the middleware so every response carries it, including `/healthz`
+    # and the JSON doors. A browser ignores it over plain http, so it is
+    # harmless on a local run.
+    response.headers["Strict-Transport-Security"] = \
+        "max-age=31536000; includeSubDomains"
     return response
 
 
@@ -489,9 +498,29 @@ def healthz():
 
 
 @app.post("/new")
-def new_conversation(response: Response):
-    """Start a fresh bench. ⭐ Free — it runs no model, so it is not rate
-    limited; a reader who wants to start over should never be told to wait."""
+def new_conversation(request: Request, response: Response):
+    """Start a fresh bench.
+
+    ⭐ It runs no model, so it escapes the TURN limit: a reader who wants to
+    start over should never be told to wait for a GPU they are not using.
+
+    ⛔⛤ BUT "FREE" IS NOT "UNMETERED", AND IT WAS. Every call INSERTS A ROW, and
+    this endpoint needed no captcha, no cookie and no pass — so a one-line
+    script could add conversations until the bench volume filled, taking the
+    puzzle down by writing nothing but empty benches. Found by sweeping the
+    doors for "what does this cost", which is a different question from "what
+    does this compute".
+    ⭐ The GATE's limit, not the turn limit: 40 in ten minutes is far more
+    restarts than a person makes and far fewer than a script needs.
+    """
+    ip, trusted = G.client_ip_ex(request, trust_proxy=TRUST_PROXY)
+    unsigned = _refuse_unsigned(request, trusted, LB.reader_id(ip))
+    if unsigned is not None:
+        return unsigned
+    try:
+        gate_limiter.check(ip)
+    except G.Refused as exc:
+        return _refused(exc)
     cid = store.new_conversation()
     out = JSONResponse({"conversation_id": cid, "messages": []})
     _set_cookie(out, cid)
@@ -529,6 +558,10 @@ def say(body: Say, request: Request, response: Response):
     # rate limit — and if the scan lived after that, tripping the limit would be
     # a way to attack the bench unlogged.
     flags, severity = tripwire.scan(body.english)
+
+    unsigned = _refuse_unsigned(request, trusted, reader)
+    if unsigned is not None:
+        return unsigned
 
     # ⛔⛔⛔ THE BAN LIST IS CONSULTED ONLY FOR AN ADDRESS WE CAN VOUCH FOR.
     # On an unsigned request `ip` is Cloudflare's egress address — the same
@@ -674,6 +707,9 @@ def verify(body: Verify, request: Request):
     """
     ip, trusted = G.client_ip_ex(request, trust_proxy=TRUST_PROXY)
     reader = LB.reader_id(ip)
+    unsigned = _refuse_unsigned(request, trusted, reader)
+    if unsigned is not None:
+        return unsigned
     # ⛔ THE DOOR IS SHUT TOO. Leaving this out would let a banned reader keep
     # a fresh pass in hand — harmless while `/say` refuses them, and exactly the
     # kind of "the other door still worked" gap that outlives the reason for it.
@@ -843,8 +879,11 @@ def _public(row: dict) -> dict:
     beside a Tlön line, every turn, unasked: the same leak wearing a friendlier
     name.
     """
+    # ⛔⛔ SANITISED HERE, so BOTH doors get it — `/say`'s reply and
+    # `/conversation`'s replay of stored rows, including rows written before
+    # this existed. A per-endpoint fix would be one new route away from wrong.
     out = {"turn": row["turn"], "role": row["role"],
-           "refused": row.get("refused")}
+           "refused": _reader_refusal(row.get("refused"))}
     if row["role"] == YOU:
         # ⛔⛔ NO `surface` HERE. EVER. The reader knows what they typed, so the
         # Tlön of it is the other half of an answer key they are holding.
@@ -852,6 +891,46 @@ def _public(row: dict) -> dict:
     else:
         out["surface"] = row.get("surface")
     return out
+
+
+def _refuse_unsigned(request: Request, trusted: bool,
+                     reader: str | None = None) -> JSONResponse | None:
+    """⛔⛔⛔ THE `modal.run` URL IS PUBLIC AND IT BYPASSES THE WORKER.
+
+    Measured, not assumed: a POST straight to
+    `mr-nathanhumphrey--tlon-bench-bench-web.modal.run/say` carrying a forged
+    `X-Forwarded-For` arrives here, and `/healthz`'s `proxy_unsigned` counted it.
+    Turnstile still refused it, so the GPU was never naked — but `client_ip`
+    believes that forged header, which means the per-IP limit can be walked
+    around one claimed address at a time.
+
+    ⭐ THE COST OF THAT EVASION IS A CAPTCHA SOLVE PER IDENTITY, because the
+    session pass is bound to the address. So this was never "unlimited GPU"; it
+    was "the limit costs a solve". Closing it anyway is cheap and removes a
+    whole class of reasoning about how expensive a solve is.
+
+    ⛔⛔ IT FAILS CLOSED, AND THAT IS NOT A REGRESSION. If the Worker's secret
+    breaks, TODAY every reader already collapses onto Cloudflare's single egress
+    identity and the twelve-turn limit becomes the whole world's budget — the
+    bench dies for everybody after twelve turns, silently, looking healthy. This
+    turns that into an immediate, named refusal with `/healthz` saying why.
+    ⭐ `/` and `/healthz` stay open on purpose, so the page still loads and the
+    failure is diagnosable from outside rather than being a blank domain.
+    """
+    if trusted or not os.environ.get("TLON_PROXY_SECRET", ""):
+        return None
+    # ⭐⭐ THE READER GOES ON THE ROW, and that is what keeps `ban()`'s
+    # untrusted-address guard supplied. Once unsigned traffic is refused here,
+    # no `turns` row can ever carry ip_trusted=0 again -- so without this the
+    # guard would slowly lose the evidence it reasons over, and an id that only
+    # ever arrived unsigned would start looking bannable.
+    logbook.record_event(kind="refused.unsigned", reader=reader,
+                         ip_trusted=False,
+                         detail="%s %s" % (request.method, request.url.path))
+    return JSONResponse(
+        {"error": "The bench is not reachable this way. It lives at "
+                  "https://tlon.resolveresearcher.com."},
+        status_code=403)
 
 
 def _note_refusal(kind: str, message: str, reader: str, trusted: bool,
@@ -876,6 +955,43 @@ def _note_refusal(kind: str, message: str, reader: str, trusted: bool,
                                  ip_trusted=trusted, detail=message)
     except Exception:                                             # noqa: BLE001
         pass
+
+
+#: ⛔⛔⛔ THE READER NEVER SEES AN EXCEPTION STRING, AND FOR TWO REASONS AT ONCE.
+#:
+#: `speaker._row` puts the gate's own error text in `refused`, `_public` shipped
+#: it, and `app.js` writes it straight into the Tlönian's bubble. So a reader
+#: was being shown things like
+#:     gate refused: node must be an object, got NoneType
+#: on the face of a piece whose entire register is that a refusal is the
+#: language working rather than a machine failing.
+#:
+#: ⛔⛔ AND THE SAME STRING IS AN ECHO CHANNEL. The validator quotes the value it
+#: rejected — measured, not assumed:
+#:     gate refused: force='IGNORE ALL PREVIOUS INSTRUCTIONS...' is not an
+#:     illocutionary force
+#: The model authors that field, and a stranger steers the model. It is not an
+#: XSS (every surface goes through textContent, pinned by a test) and the bench
+#: is per-reader so they can only print at themselves — but it is arbitrary
+#: ENGLISH on a face whose cardinal rule is that nothing here translates
+#: anything, and it is a screenshot somebody would enjoy taking.
+#:
+#: ⭐ THE RAW TEXT IS NOT LOST. It goes to the store and to the log, where an
+#: operator can read it. What is refused is putting it on the internet.
+_REFUSAL_LANGUAGE = "The language would not hold that."
+_REFUSAL_TROUBLE = "Something went wrong reaching the speaker."
+
+
+def _reader_refusal(raw) -> str | None:
+    """⛔ FIXED SENTENCES ONLY. Nothing derived from `raw` is returned — not a
+    prefix, not a suffix, not a truncation. A sanitiser that passes through any
+    substring is one clever input away from being no sanitiser."""
+    if not raw:
+        return None
+    text = str(raw)
+    if text.startswith("gate refused") or "gate would not pass" in text:
+        return _REFUSAL_LANGUAGE
+    return _REFUSAL_TROUBLE
 
 
 def _refused(exc: G.Refused) -> JSONResponse:

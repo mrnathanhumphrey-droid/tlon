@@ -24,6 +24,18 @@ scheduler.pt
 # here where "publish everything" is the wrong default.
 puzzle/data/
 
+# ⛔⛔⛔ AND THE SNAPSHOT, WHEREVER IT LANDS. `/admin/snapshot` writes a
+# settled copy of the log and the operator pulls it home with `modal volume
+# get` -- so the one file in this repo that holds EVERY reader's conversation
+# arrives as a download, into whatever directory the operator happened to be
+# standing in. `puzzle/data/` above does not cover the repo root.
+# ⭐ A belt-and-braces rule, because the cost of the miss is publishing
+# strangers' words to a public MIT repository and it cannot be taken back.
+log-snapshot.sqlite3
+log.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
 # ── THE CORPUS ───────────────────────────────────────────────────────────
 # ⭐ 80,000 rows / ~36 MB, and FULLY REGENERABLE:
 #     python tools/act2_build_corpus.py --n 40000

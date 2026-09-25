@@ -198,3 +198,46 @@ def test_healthz_reports_the_proxy_trust(client):
     c, _ = client
     body = c.get("/healthz").json()
     assert "proxy_unsigned" in body and "proxy_signed" in body
+
+
+def test_the_page_demands_https_for_next_time(client):
+    """⛔⛔ HSTS WAS MISSING ENTIRELY, and it was found by reading the LIVE
+    headers rather than the code — nothing in this suite had ever asked.
+
+    Without it the first visit of every reader is one `http://` away from being
+    read on a café network, and both the bench cookie and the session pass ride
+    that request. Cloudflare does not add it by default; measured on the
+    deployed site during the v1 audit, where it was absent."""
+    c, _ = client
+    for path in ("/", "/healthz", "/conversation"):
+        hsts = c.get(path).headers.get("strict-transport-security", "")
+        assert "max-age=" in hsts, "⛔⛔ %s carries no HSTS" % path
+        assert int(hsts.split("max-age=")[1].split(";")[0]) >= 15552000, (
+            "⛔ an HSTS shorter than six months is treated as a rounding error "
+            "by the preload lists and barely protects a returning reader")
+
+
+def test_starting_a_new_bench_is_metered(client):
+    """⛔⛤ `/new` WAS FREE IN BOTH SENSES AND ONLY ONE WAS INTENDED. It runs no
+    model, so it rightly escapes the TURN limit — but every call INSERTS A ROW,
+    and it needs no captcha, no cookie and no pass. A one-line script could add
+    empty conversations until the bench volume filled, taking the puzzle down
+    without ever running a generation.
+
+    ⭐ Found by asking each door "what does this COST", which is a different
+    question from "what does this COMPUTE" — the question `guard.py` was
+    written to answer, and the reason this one slipped past it."""
+    c, _ = client
+    seen = {c.post("/new").status_code for _ in range(60)}
+    assert 429 in seen, (
+        "⛔⛔ /new never rate limits — 60 calls all inserted a conversation")
+
+
+def test_but_a_person_starting_over_is_never_told_to_wait(client):
+    """⭐ THE CONTROL. Metering it with the TURN limit would punish exactly the
+    reader who is using the bench properly: spend your twelve turns, want a
+    fresh start, and be refused the free thing too."""
+    from puzzle import server
+    assert server.gate_limiter.ip_turns > server.limiter.ip_turns
+    c, _ = client
+    assert c.post("/new").status_code == 200

@@ -13,13 +13,17 @@ THE OPERATOR'S ROUND TRIP
     curl -sX POST -H "Authorization: Bearer $TLON_ADMIN_TOKEN" \\
          https://tlon.resolveresearcher.com/admin/snapshot
 
-    # 2 · carry it home
-    modal volume get tlon-bench-db log-snapshot.sqlite3 .
+    # 2 · carry it home. ⛔ INTO puzzle/data/, WHICH IS GITIGNORED. This file is
+    #     every reader's conversation; landing it in the repo root and then
+    #     running `git add .` would publish strangers' words to a public MIT
+    #     repository, and that cannot be taken back. (The root is ignored too
+    #     now, belt and braces — but the habit is the real control.)
+    modal volume get tlon-bench-db log-snapshot.sqlite3 puzzle/data/
 
     # 3 · read it
-    python tools/bench_log.py log-snapshot.sqlite3 --flagged --since 7d
-    python tools/bench_log.py log-snapshot.sqlite3 --errors --since 24h
-    python tools/bench_log.py log-snapshot.sqlite3 --reader a1b2c3d4e5f60718
+    python tools/bench_log.py puzzle/data/log-snapshot.sqlite3 --flagged --since 7d
+    python tools/bench_log.py puzzle/data/log-snapshot.sqlite3 --errors --since 24h
+    python tools/bench_log.py puzzle/data/log-snapshot.sqlite3 --reader a1b2c3d4e5f60718
 
     # 4 · if it warrants one, ban the reader (30 days, with a note)
     curl -sX POST -H "Authorization: Bearer $TLON_ADMIN_TOKEN" \\
@@ -199,7 +203,8 @@ def show_stats(conn, args) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("path", nargs="?", default="log-snapshot.sqlite3",
+    ap.add_argument("path", nargs="?",
+                    default="puzzle/data/log-snapshot.sqlite3",
                     type=pathlib.Path)
     ap.add_argument("--since", default=None,
                     help="window, e.g. 7d / 24h / 30m (default: everything)")
