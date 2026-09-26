@@ -92,6 +92,15 @@ def main() -> int:
 
     battery = probes.build(seed=a.seed, n_prod=64, n_comp=64)
     seed_history = tuple(p.surface for p in battery.comprehension[:5])
+    # ⛔⛤ BOUND HERE, NOT 67 LINES LOWER. This was assigned below the arm
+    # construction that READS it, so every two-adapter run died with
+    # UnboundLocalError before generating a turn — the SHARED arm could not
+    # run at all. It arrived with e4b4560, whose subject is "the history
+    # window was silently truncating the shared store": the fix for the
+    # truncation crashed the arm it was fixing. `seed_history` is the only
+    # thing it needs and that is one line above, so the binding moves up
+    # rather than the use moving down.
+    history_limit = (a.turns + len(seed_history) + 8) if a.shared else None
 
     plan = None
     if not a.no_injections:
@@ -158,7 +167,8 @@ def main() -> int:
     # Algorithm 1's C. The asymmetric rule hands only ~41 at 80 turns, so this
     # limit has NEVER BOUND in any prior run and no earlier result changes.
     # ⭐ Raised only for the shared arm, to exactly what the store needs.
-    history_limit = (a.turns + len(seed_history) + 8) if a.shared else None
+    # ⛔ BOUND ABOVE, beside `seed_history` — see the note there. Assigning
+    # it again here is what put the binding below its own first use.
     out = {"arm_mode": arm_key, "null_mode": arm_key,
            "self_pair": bool(a.adapter_a == a.adapter_b),
            "turns": a.turns, "temperature": a.temperature, "seed": a.seed,

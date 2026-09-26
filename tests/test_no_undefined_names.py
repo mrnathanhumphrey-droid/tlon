@@ -30,17 +30,18 @@ PACKAGES = ("tlon", "tools", "puzzle", "tests")
 #: crash somebody has to decide about; an allowlist that nobody can read is
 #: how a suppression becomes permanent.
 #:
-#: `act2_two_speaker_probe.py` — `history_limit` is READ at line 128 inside
-#: the two-adapter branch and BOUND at line 161, so every shared-arm run dies
-#: with UnboundLocalError before it generates a turn. Introduced by e4b4560,
-#: whose subject is "the history window was silently truncating the shared
-#: store": the fix for the truncation crashes the arm it was fixing.
-#: `seed_history` is already bound at line 94, so moving the assignment above
-#: the branch is sufficient — but it is the RESEARCH track and the call is
-#: Nate's, so it is recorded here and not quietly patched.
-KNOWN_UNDEFINED = {
-    "tools/act2_two_speaker_probe.py": 3,
-}
+#: ✅ EMPTY, AND IT WAS NOT. `act2_two_speaker_probe.py` READ `history_limit`
+#: inside the two-adapter branch and BOUND it 33 lines later, so every
+#: shared-arm run died with UnboundLocalError before generating a turn — the
+#: arm could not run at all. Introduced by e4b4560, whose subject is "the
+#: history window was silently truncating the shared store": the fix for the
+#: truncation crashed the arm it was fixing. Fixed 2026-09-26 by moving the
+#: binding up beside `seed_history`, the only thing it depends on.
+#:
+#: ⭐ The entry is DELETED rather than left with a note, because
+#: `test_a_fixed_entry_must_be_removed_from_the_list` is what forced this edit:
+#: a register that keeps paid debts starts lying about what is outstanding.
+KNOWN_UNDEFINED: dict[str, int] = {}
 
 
 def _undefined_names():
