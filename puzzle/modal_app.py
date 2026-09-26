@@ -40,15 +40,38 @@ arrival pays; everyone after them does not. ⭐ If the bench is ever mailed to a
 list and should be warm for a known hour, `min_containers=1` for that window is
 the lever — a decision with a price, not a default.
 
-⭐ THE FIRST-ARRIVAL COST, MEASURED 2026-09-26 against the live URL: **~22 s
-cold, 0.13-0.37 s warm.** About 18 s of that is the load itself.
+⭐⭐ THE FIRST-ARRIVAL COST, AND THE FIX THAT MATTERED (2026-09-26):
 
-⛔ AND THE LOAD IS READ-BOUND, NOT QUANTISATION-BOUND — which rules out the
-obvious fix. bf16 and NF4 load in the SAME time (17.0 s vs 17.5 s, measured on
-`modal_force_probe.py`), so the cost is the ~15 GB of bf16 safetensors coming
-off the volume, not the 4-bit conversion. ⭐ The untried lever that follows from
-that is a PRE-QUANTISED checkpoint on the volume: ~4.5 GB instead of ~15 GB, a
-one-off save, no experimental platform features.
+    cold page   ~22 s  ->  4.5 s          steady page  0.17-0.27 s
+
+⛔⛤ AND IT WAS NOT A LOAD PROBLEM AT ALL. Three levers were measured against
+the ~18 s model load — a GPU snapshot (WORSE: 22 s -> 52 s), `HF_HUB_OFFLINE`
+(0.6 s, noise) and a pre-quantised checkpoint (3.76x on the load, real) — while
+the actual defect was that **the load was on the critical path in the first
+place.** `@modal.enter` gates a container from accepting ANY request, so 15 GB
+had to reach VRAM before one byte of HTML went out. `server.py` says plainly:
+"the page and the translate button both work without the model; only `/say`
+needs it." The page never needed the GPU.
+
+⭐ Even the 3.76x checkpoint would only have moved a BLANK TAB from 22 s to
+11 s. Taking the model off the door removes the whole term. The Fly deploy had
+this right — serve immediately, warm on a thread, `/healthz` reports
+`speaker_loaded` — and the Modal port broke it by moving the load into
+`@modal.enter` and setting `TLON_PRELOAD=0`. This restores it.
+
+⛔ THE TRADE, STATED: a reader who submits before the warm finishes (~30 s)
+waits at `/say` instead. That is the right place for it — Turnstile plus
+composing a sentence costs longer than the warm, so it happens in time that was
+previously thrown away, and a blank tab is the one moment a visitor has no
+evidence the site exists.
+
+⭐ STILL AVAILABLE, for the `/say` wait rather than the page: the pre-quantised
+NF4 checkpoint at `/weights/nf4/qwen2.5-7b-instruct-nf4` — built, committed,
+and verified to produce IDENTICAL greedy tokens (4/4). ⛔ It needs one fix
+first: `LocalBackend` passes an explicit `dtype` on the non-4bit branch, which
+DEQUANTISES an already-NF4 checkpoint back to bf16 and makes the load 32 s. The
+fix belongs in the puzzle's `BenchBackend` subclass — `LocalBackend` is the
+research campaign's measurement path and is subclassed, never edited.
 """
 from __future__ import annotations
 
@@ -122,10 +145,15 @@ image = (
         # cookie may be Secure and the per-IP limit may trust the proxy.
         "TLON_HTTPS": "1",
         "TLON_TRUST_PROXY": "1",
-        # ⛔ OFF. `server._startup` warms on a thread for Fly's benefit; here
-        # the warm is owned by `@modal.enter()` below, which runs BEFORE the
-        # container is given any traffic. Two warms would load twice.
-        "TLON_PRELOAD": "0",
+        # ⭐⭐ ON, AND THIS IS THE COLD-START FIX. `server._startup` warms the
+        # model on a BACKGROUND THREAD; `@modal.enter` below no longer loads it
+        # synchronously. See the note on `load()` — the page never needed the
+        # GPU, and blocking on it made every visitor wait ~22s for HTML that
+        # was ready in 0.2s.
+        # ⛔ `speaker.load()` is idempotent and locked, so a `/say` that
+        # arrives mid-warm blocks on the same single load rather than starting
+        # a second one.
+        "TLON_PRELOAD": "1",
         "PYTHONUNBUFFERED": "1",
     })
     # ⛔ THE SAME THREE TREES THE DOCKERFILE COPIES, AND FOR THE SAME REASON:
@@ -212,23 +240,38 @@ image = (
 class Bench:
     @modal.enter(snap=False)
     def load(self):
-        """⛔ BEFORE ANY TRAFFIC. `@modal.enter` runs while the container is
-        still being made ready, so the first reader meets a loaded model rather
-        than a queue.
+        """⛔⛤ THIS USED TO BLOCK ON `speaker.load()` AND THAT WAS THE WHOLE
+        COLD START. It read: "BEFORE ANY TRAFFIC ... so the first reader meets
+        a loaded model rather than a queue."
 
-        ⛔ `snap=False`. Memory snapshots CAN carry VRAM now, contrary to what
-        this docstring said for months — but measured on this app they cost 30
-        extra seconds of cold start rather than saving any. See `@app.cls`.
+        That optimised the wrong thing. `@modal.enter` gates the container from
+        accepting ANY request, so ~15 GB of weights had to reach VRAM before a
+        single byte of HTML went out — and `server.py` says in its own comment
+        that "the page and the translate button both work without the model;
+        only `/say` needs it". Every visitor paid ~22s of blank tab so that the
+        subset who type immediately would not wait at `/say`.
+
+        ⭐ Measured: HTML is 22.7 KB and renders in 0.24s once the container is
+        up; the other ~22s was this line. The reader then spends longer than
+        that solving Turnstile and composing a sentence — which is free warm
+        time that was being thrown away.
+
+        ⛔ So this now only prepares the import, and `TLON_PRELOAD=1` warms the
+        model on a background thread. A `/say` arriving before the warm
+        finishes blocks on `speaker.load()`, which is idempotent and locked —
+        one load, never two.
         """
         import sys
 
         sys.path.insert(0, "/app")
         sys.path.insert(0, "/app/tools")
-        from puzzle.server import speaker
+        # ⛔ Pre-importing here keeps the import cost off the first request.
+        # The WARM itself starts in `server._startup`, which is an ASGI startup
+        # hook — so it fires when `web()` brings the app up, not at import.
+        from puzzle import server as _server
 
-        speaker.load()
-        print("tlön · speaker loaded in %.1fs" % (speaker.load_seconds or 0),
-              flush=True)
+        print("tlön · container ready (preload=%s); model warms on a thread"
+              % _server.PRELOAD, flush=True)
 
     @modal.enter(snap=False)
     def after_restore(self):

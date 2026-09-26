@@ -135,7 +135,9 @@ PROVOCATIONS = [
 def probe(n: int = 128, retries: int = 3, cell: str = CELLS[0],
           four_bit: bool = True, mode: str = "english",
           dial: bool = False, legacy_split: bool = False,
-          ki_weight: float = 0.35) -> dict:
+          ki_weight: float = 0.35,
+          hub_offline: bool = False,
+          base_override: str = "") -> dict:
     """Run `n` first-exchange turns and tally the force the model chose.
 
     ⛔⛔ `retries` IS THE WHOLE EXPERIMENT, NOT A SETTING. On a first exchange
@@ -174,6 +176,34 @@ def probe(n: int = 128, retries: int = 3, cell: str = CELLS[0],
     # indicative and not comparable to the campaign's." Every force
     # reading here is off the app, so the quantisation is an ARM.
     os.environ["TLON_4BIT"] = "1" if four_bit else "0"
+    # ⛔⛔ SET AT RUNTIME, NOT IN THE IMAGE, AND THAT IS THE WHOLE POINT. Putting
+    # a flag in `.env()` rebuilds the image, so the first arm pays a fresh pull
+    # and the second does not — two things differ and the pull does the work.
+    # That confound is exactly how a GPU-snapshot "62.7s -> 10.8s" got deployed
+    # to the live bench and made it SLOWER (22s -> 52s). Here both arms run on
+    # one cached image and only this line moves.
+    # ⭐ THE PRE-QUANTISED CHECKPOINT, THROUGH THE SHIPPED PATH. The raw
+    # transformers comparison proved the WEIGHTS are identical (4/4 greedy);
+    # this proves `puzzle.speaker` -> `LocalBackend` can actually load them.
+    # ⛔ `TLON_4BIT=0` is REQUIRED with it: the checkpoint already carries its
+    # `quantization_config`, and asking bitsandbytes to quantise an
+    # already-quantised model is a different operation, not a no-op.
+    if base_override:
+        os.environ["TLON_BASE"] = base_override
+        os.environ["TLON_4BIT"] = "0"
+        # ⛔⛔ AND THE ARM LABEL MOVES WITH IT. `four_bit` describes whether
+        # bitsandbytes quantises AT LOAD; a pre-quantised checkpoint means it
+        # does not, so leaving the flag True would make the assert below fail
+        # on a disagreement that is really just a stale label — which is
+        # exactly what it did the first time this ran. The guard was right and
+        # the caller was wrong.
+        four_bit = False
+    if hub_offline:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
+    else:
+        os.environ.pop("HF_HUB_OFFLINE", None)
+        os.environ.pop("TRANSFORMERS_OFFLINE", None)
     # ⛔⛔ THE DIAL IS APPLIED BY `turn()` AND `speak_from()`, NOT BY
     # `reply_to()`. So a dial reading MUST run in `english` mode — which is
     # also the only honest place to take it, because that is the path a reader
@@ -296,10 +326,13 @@ def probe(n: int = 128, retries: int = 3, cell: str = CELLS[0],
             raise SystemExit("⛔ no stimuli built — refusing to report on none")
         _ = _json
 
+    print("hub       %s" % ("OFFLINE (cache only)" if hub_offline
+                            else "online (may round-trip)"), flush=True)
     sp = SP.Speaker()
     t0 = time.perf_counter()
     sp.load()
-    print("loaded in %.1fs" % (time.perf_counter() - t0), flush=True)
+    load_s = time.perf_counter() - t0
+    print("loaded in %.1fs" % load_s, flush=True)
 
     forces = collections.Counter()
     refused = 0
@@ -420,7 +453,9 @@ def probe(n: int = 128, retries: int = 3, cell: str = CELLS[0],
             if total else {},
             "temperature": SP.TEMPERATURE, "adapter": SP.ADAPTER,
             "cell": cell,
-            "four_bit": four_bit,
+            "four_bit": four_bit, "hub_offline": hub_offline,
+            "base": SP.BASE_MODEL,
+            "load_seconds": round(load_s, 2),
             "mode": mode,
             "dial": dial, "legacy_split": legacy_split,
             "ki_weight": ki_weight if legacy_split else None,
@@ -437,9 +472,11 @@ def probe(n: int = 128, retries: int = 3, cell: str = CELLS[0],
 def main(n: int = 128, retries: int = 3, cell: str = CELLS[0],
          four_bit: bool = True, mode: str = "english",
          dial: bool = False, legacy_split: bool = False,
-         ki_weight: float = 0.35):
+         ki_weight: float = 0.35, hub_offline: bool = False,
+         base_override: str = ""):
     out = probe.remote(n, retries, cell, four_bit, mode, dial,
-                       legacy_split, ki_weight)
+                       legacy_split, ki_weight, hub_offline,
+                       base_override)
     import json
     import pathlib as _p
     print("\n" + "=" * 62)
@@ -477,6 +514,8 @@ def main(n: int = 128, retries: int = 3, cell: str = CELLS[0],
         print("     what the MODEL chose underneath: %s"
               % "  ".join("%s %.0f%%" % (k, 100 * v / tm)
                           for k, v in sorted(ms.items(), key=lambda kv: -kv[1])))
+    print("  LOAD %.2fs   base=%s   ⭐ the cold-start term"
+          % (out.get("load_seconds", -1), out.get("base")))
     print("  draws taken: %s" % out["replies_drawn_hist"])
     for d in sorted(out["forces_by_replies_drawn"]):
         print("    served on draw %s: %s"
@@ -490,3 +529,239 @@ def main(n: int = 128, retries: int = 3, cell: str = CELLS[0],
     dest.write_text(json.dumps(out, ensure_ascii=False, indent=1),
                     encoding="utf-8", newline="\n")
     print("  written → %s" % dest)
+
+
+@app.function(image=image, gpu="A10", volumes={"/weights": weights},
+              timeout=1800)
+def load_breakdown() -> dict:
+    """⛔⛔ IS THE COLD START READ-BOUND? DECIDE IT, DO NOT INFER IT.
+
+    The evidence so far is that bf16 and NF4 load in the SAME time (17.0s vs
+    17.5s), which is CONSISTENT with a read-dominated load — and equally
+    consistent with quantisation simply being cheap while something else
+    dominates. Those imply opposite decisions: a pre-quantised checkpoint
+    (~4.5 GB instead of ~15 GB) is the whole fix under the first and worthless
+    under the second.
+
+    So this times the three terms separately on the same container:
+      1. raw bytes off the volume, no model construction at all;
+      2. `from_pretrained` on the base model;
+      3. attaching the LoRA.
+    """
+    import glob
+    import os
+    import sys
+    import time
+
+    sys.path.insert(0, "/app")
+    os.chdir("/app")
+    os.environ["TLON_LEXICON"] = "lexicon_expanded.yaml"
+
+    cache = "/weights/hf"
+    shards = sorted(glob.glob(cache + "/**/*.safetensors", recursive=True))
+    total = sum(os.path.getsize(f) for f in shards)
+    t0 = time.perf_counter()
+    read = 0
+    for f in shards:
+        with open(f, "rb", buffering=0) as fh:
+            while True:
+                b = fh.read(1 << 24)
+                if not b:
+                    break
+                read += len(b)
+    raw = time.perf_counter() - t0
+    print("RAW READ  %d shards · %.2f GB · %.1fs · %.0f MB/s"
+          % (len(shards), total / 1e9, raw, (read / 1e6) / max(raw, 1e-9)),
+          flush=True)
+
+    from puzzle import speaker as SP
+    t1 = time.perf_counter()
+    sp = SP.Speaker()
+    sp.load()
+    full = time.perf_counter() - t1
+    print("FULL LOAD %.1fs" % full, flush=True)
+    return {"shards": len(shards), "bytes": total,
+            "raw_read_seconds": round(raw, 2),
+            "raw_mb_per_s": round((read / 1e6) / max(raw, 1e-9), 1),
+            "full_load_seconds": round(full, 2),
+            "read_share": round(raw / full, 3) if full else None}
+
+
+@app.local_entrypoint()
+def breakdown():
+    out = load_breakdown.remote()
+    print("\n" + "=" * 58)
+    print("COLD-START LOAD BREAKDOWN")
+    print("  weights on volume   %.2f GB in %d shards"
+          % (out["bytes"] / 1e9, out["shards"]))
+    print("  raw read            %.1fs  (%.0f MB/s)"
+          % (out["raw_read_seconds"], out["raw_mb_per_s"]))
+    print("  full speaker load   %.1fs" % out["full_load_seconds"])
+    print("  read share          %.0f%%" % (100 * (out["read_share"] or 0)))
+    print("⭐ read share HIGH  => a pre-quantised (~4.5 GB) checkpoint is the fix")
+    print("⛔ read share LOW   => the time is construction; a smaller file buys")
+    print("                       nothing and this lever is dead")
+
+
+@app.function(image=image, gpu="A10", volumes={"/weights": weights},
+              timeout=3600)
+def build_nf4() -> dict:
+    """⭐ SAVE THE BASE MODEL ALREADY QUANTISED, ONCE.
+
+    Measured: the cold start is 90% raw read — 13.8s of a 15.3s load is 15.23 GB
+    of bf16 safetensors coming off the volume at 1100 MB/s. NF4 on disk is ~4.5
+    GB, so the read term should fall by ~3x and take the load with it.
+
+    ⛔ This writes to the SHARED `tlon-weights` volume under its own directory.
+    It does not touch the HF cache the current path reads, so the live bench is
+    unaffected until something is pointed at the new directory on purpose.
+    """
+    import os
+    import shutil
+    import sys
+    import time
+
+    sys.path.insert(0, "/app")
+    os.chdir("/app")
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+    base = os.environ.get("TLON_BASE", "Qwen/Qwen2.5-7B-Instruct")
+    dest = "/weights/nf4/qwen2.5-7b-instruct-nf4"
+
+    # ⛔ The EXACT quantisation the speaker serves under, or this is a different
+    # model wearing the same name. `act2_backends.LocalBackend` builds NF4 with
+    # double quant and a bf16 compute dtype.
+    qc = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_compute_dtype=torch.bfloat16,
+    )
+    t0 = time.perf_counter()
+    model = AutoModelForCausalLM.from_pretrained(
+        base, quantization_config=qc, dtype=torch.bfloat16, device_map={"": 0})
+    load_s = time.perf_counter() - t0
+    print("loaded+quantised in %.1fs" % load_s, flush=True)
+
+    if os.path.isdir(dest):
+        shutil.rmtree(dest)
+    os.makedirs(dest, exist_ok=True)
+    t1 = time.perf_counter()
+    model.save_pretrained(dest, safe_serialization=True)
+    AutoTokenizer.from_pretrained(base).save_pretrained(dest)
+    save_s = time.perf_counter() - t1
+
+    size = sum(os.path.getsize(os.path.join(dp, f))
+               for dp, _dn, fn in os.walk(dest) for f in fn)
+    print("saved %.2f GB in %.1fs -> %s" % (size / 1e9, save_s, dest), flush=True)
+    # ⛔⛔ COMMIT, OR IT IS NOT THERE. A Modal volume write is not visible to the
+    # next container until the volume is committed, and a silent loss here would
+    # look exactly like "the pre-quantised path did not help".
+    weights.commit()
+    print("volume committed", flush=True)
+    return {"dest": dest, "bytes": size, "gb": round(size / 1e9, 2),
+            "quantise_seconds": round(load_s, 1),
+            "save_seconds": round(save_s, 1)}
+
+
+@app.local_entrypoint()
+def nf4():
+    out = build_nf4.remote()
+    print("\n" + "=" * 58)
+    print("PRE-QUANTISED CHECKPOINT")
+    print("  path      %s" % out["dest"])
+    print("  size      %.2f GB   (was 15.23 GB bf16)" % out["gb"])
+    print("  quantise  %.1fs · save %.1fs  — ONE OFF" %
+          (out["quantise_seconds"], out["save_seconds"]))
+
+
+@app.function(image=image, gpu="A10", volumes={"/weights": weights},
+              timeout=3600)
+def verify_nf4() -> dict:
+    """⛔⛔ IS THE PRE-QUANTISED CHECKPOINT THE SAME SPEAKER?
+
+    Quantisation is deterministic, so NF4-on-disk and NF4-quantised-at-load
+    SHOULD produce identical logits. "Should" is why this exists: if they
+    diverge, the faster path is a different model, and every number measured
+    tonight stops describing what is served.
+
+    ⛔ GREEDY, and that is the point — at temperature 0.7 two identical models
+    disagree constantly and the comparison says nothing. `do_sample=False`
+    makes any difference in the weights show up as a difference in the tokens.
+    """
+    import os
+    import sys
+    import time
+
+    sys.path.insert(0, "/app")
+    os.chdir("/app")
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+    base = os.environ.get("TLON_BASE", "Qwen/Qwen2.5-7B-Instruct")
+    pre = "/weights/nf4/qwen2.5-7b-instruct-nf4"
+    qc = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                            bnb_4bit_use_double_quant=True,
+                            bnb_4bit_compute_dtype=torch.bfloat16)
+    tok = AutoTokenizer.from_pretrained(base)
+    prompts = ["The rain has stopped.", "I sat by the river.",
+               "Say something about thinning.", "What happens next?"]
+
+    def gen(model):
+        out = []
+        for p in prompts:
+            # ⛔ `apply_chat_template(return_tensors=...)` hands back a
+            # BatchEncoding in transformers 5.x, not a tensor. Render to text,
+            # then tokenise — one shape, no version guessing.
+            text = tok.apply_chat_template([{"role": "user", "content": p}],
+                                           add_generation_prompt=True,
+                                           tokenize=False)
+            enc = tok(text, return_tensors="pt").to(model.device)
+            n_in = enc["input_ids"].shape[-1]
+            with torch.no_grad():
+                y = model.generate(**enc, max_new_tokens=48, do_sample=False)
+            out.append(tok.decode(y[0][n_in:], skip_special_tokens=True))
+        return out
+
+    t0 = time.perf_counter()
+    m_old = AutoModelForCausalLM.from_pretrained(
+        base, quantization_config=qc, dtype=torch.bfloat16, device_map={"": 0})
+    t_old = time.perf_counter() - t0
+    g_old = gen(m_old)
+    del m_old
+    torch.cuda.empty_cache()
+
+    t1 = time.perf_counter()
+    m_new = AutoModelForCausalLM.from_pretrained(pre, device_map={"": 0})
+    t_new = time.perf_counter() - t1
+    g_new = gen(m_new)
+
+    same = sum(1 for a, b in zip(g_old, g_new) if a == b)
+    print("load  on-the-fly %.1fs   pre-quantised %.1fs" % (t_old, t_new),
+          flush=True)
+    print("identical greedy generations: %d/%d" % (same, len(prompts)),
+          flush=True)
+    for a, b in zip(g_old, g_new):
+        if a != b:
+            print("  ⛔ DIVERGED\n     old: %r\n     new: %r"
+                  % (a[:90], b[:90]), flush=True)
+    return {"load_on_the_fly": round(t_old, 2),
+            "load_pre_quantised": round(t_new, 2),
+            "identical": same, "n": len(prompts),
+            "speedup": round(t_old / t_new, 2) if t_new else None}
+
+
+@app.local_entrypoint()
+def verify():
+    out = verify_nf4.remote()
+    print("\n" + "=" * 58)
+    print("PRE-QUANTISED CHECKPOINT — VERIFICATION")
+    print("  load on-the-fly     %.1fs" % out["load_on_the_fly"])
+    print("  load pre-quantised  %.1fs   (%.2fx)"
+          % (out["load_pre_quantised"], out["speedup"] or 0))
+    print("  identical greedy    %d/%d" % (out["identical"], out["n"]))
+    if out["identical"] != out["n"]:
+        print("  ⛔⛔ NOT THE SAME SPEAKER — do not ship this path")
+    else:
+        print("  ✅ same weights, same tokens — safe to point the bench at it")
