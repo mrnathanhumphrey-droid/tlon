@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import random
 import sys
 import threading
 import time
@@ -60,6 +61,7 @@ for _p in (str(ROOT), str(ROOT / "tools")):
 # would also admit `falsify` and `weight_delta`. Narrow the import instead.
 from tlon.act2.schema_bridge import scene_to_proposal       # noqa: E402
 from tlon.grammar.gloss import gloss                        # noqa: E402
+from tlon.grammar import classes as C                       # noqa: E402
 from tlon.grammar.parse import ParseError, parse            # noqa: E402
 from tlon.product.chat import MAX_ENGLISH_CHARS             # noqa: E402
 from tlon.product.literary import literary                  # noqa: E402
@@ -123,6 +125,30 @@ ADAPTER = os.environ.get("TLON_ADAPTER",
 #: out of here would re-point their instrument silently.
 LEXICON_HASH = os.environ.get("TLON_LEXICON_HASH",
                               "08c03b0a81330e4ba42883fa8b08c873")
+
+#: ⭐⭐ A PRODUCT DIAL, OFF BY DEFAULT, AND THE RESEARCH TRACK NEVER READS IT.
+#:
+#: The served speaker answers with `ka` almost always — not a serving fault and
+#: not quantisation, but a faithful reproduction of what it was trained on:
+#: in `corpus_bench_dosed`, its own corpus, the Tlönian's reply force is
+#: **ka 99.7%**, and the conversation pools it was built from are 99.7% / 99.8%
+#: ka in voice T. The model is doing exactly what it saw.
+#:
+#: ⛔⛔ SO THIS DOES NOT FIX ANYTHING — IT DRESSES A SYMPTOM, and it is named
+#: that way on purpose. The real repair is a corpus where the Tlönian asks,
+#: wonders, urges and denies IN CONTENT rather than in its last particle, and
+#: that is a retrain, not a flag. A reply whose force was redrawn here says
+#: something its own scene was not painted to say.
+#:
+#: ⛔ Every number this project has published about force fidelity was measured
+#: with this OFF. Any reading taken with it on is a reading of the dial.
+FORCE_TABLE = os.environ.get("TLON_FORCE_TABLE", "0") not in (
+    "0", "", "false", "no")
+
+#: How much of a non-`ki` row goes to ASK. The other four forces share what is
+#: left, evenly. ⛔ Proposed at 0.35, not measured — R4 is what would justify
+#: any value at all.
+KI_WEIGHT = float(os.environ.get("TLON_KI_WEIGHT", "0.35"))
 
 TEMPERATURE = float(os.environ.get("TLON_TEMPERATURE", "0.7"))
 MAX_NEW_TOKENS = int(os.environ.get("TLON_MAX_NEW_TOKENS", "256"))
@@ -367,6 +393,7 @@ class Speaker:
         scene = parse(surface)          # raises if the caller passed a non-surface
         backend_t0 = time.perf_counter()
         reply = self.reply_to(surface, list(provoke_pairs))
+        was, sent = apply_force_dial(reply, surface)
         seconds = time.perf_counter() - backend_t0
         return {
             "you": {"english": english, "surface": surface,
@@ -377,6 +404,11 @@ class Speaker:
             "tlon": _row(reply) if reply is not None else None,
             "seconds": round(seconds, 2),
             "shape": SHAPE,
+            # ⭐ Recorded on EVERY turn, dial on or off, so a later comparison
+            # does not depend on the flag having been set when the row was
+            # written.
+            "force_model": was,
+            "force_sent": sent,
             "replies_drawn": 1,
             "context_turns": min(len(list(provoke_pairs)), CONTEXT_TURNS),
         }
@@ -459,13 +491,19 @@ class Speaker:
                 # longer than before.
                 if carries(yours.surface, candidates[-1]):
                     break
+            # ⛔ AFTER `pick_reply`, NEVER BEFORE. Selecting among candidates
+            # whose forces had already been redrawn would let the dial steer
+            # which reply is served, not just how it ends.
             reply = pick_reply(candidates, yours.surface)
+        was, sent = apply_force_dial(reply, yours.surface if yours.ok else "")
 
         seconds = time.perf_counter() - t0
         return {"you": _row(yours, english=english),
                 "tlon": _row(reply) if reply is not None else None,
                 "seconds": round(seconds, 2),
                 "shape": SHAPE,
+                "force_model": was,
+                "force_sent": sent,
                 # ⭐ Recorded so the bench can show what the retry actually
                 # cost in production rather than what it cost in a probe.
                 "replies_drawn": drawn,
@@ -503,6 +541,79 @@ def carries(provocation: str, turn) -> bool:
         # reply could satisfy, and every draw would be scored a failure.
         return True
     return scene_carry(prior, parsed_roots(turn.scene, roots)).ok
+
+
+#: ⛔ Its own stream. Sharing the module `random` would let a draw here shift
+#: every other sampler in the process, and the dial must not be able to move a
+#: number it is not supposed to touch.
+_force_rng = random.Random()
+
+
+def force_weights(prior: str, *, ki_weight: float = None) -> dict[str, float]:
+    """The reply-force distribution for a provocation carrying `prior`.
+
+    ⛔⛔ `ki` → `ka` STAYS FIXED. It is the single cell in the whole force map
+    that survived the mutation test — the only structure the corpus actually
+    carries — and an ask is answered with an assert. A dial that reweighted it
+    would be overwriting the one derived thing in the language with a product
+    preference.
+    """
+    lex = sorted(C.load()["classes"]["F"])
+    if prior == "ki":
+        return {f: (1.0 if f == "ka" else 0.0) for f in lex}
+    w = KI_WEIGHT if ki_weight is None else ki_weight
+    rest = (1.0 - w) / (len(lex) - 1)
+    return {f: (w if f == "ki" else rest) for f in lex}
+
+
+def draw_force(prior: str, *, rng=None, ki_weight: float = None) -> str:
+    """One force, drawn from `force_weights(prior)`."""
+    weights = force_weights(prior, ki_weight=ki_weight)
+    forms = sorted(weights)
+    r = (rng or _force_rng)
+    return r.choices(forms, weights=[weights[f] for f in forms])[0]
+
+
+def restamp(turn, force: str):
+    """Put `force` on an already-gated turn, surface and scene together.
+
+    ⛔ THE SCENE MOVES TOO. `_row` glosses from `turn.scene`, so changing only
+    the surface would put a reply on screen whose translation disagreed with
+    its own last word. `router.refocus` re-parses what it renders, so this
+    cannot introduce a surface the gate would have refused.
+    """
+    moved = router.refocus(turn.surface, force)
+    turn.surface = moved
+    turn.scene = parse(moved)
+    return turn
+
+
+def apply_force_dial(reply, provocation: str) -> tuple[str | None, str | None]:
+    """-> (the model's own force, the force actually served).
+
+    ⭐ BOTH ARE RETURNED EVEN WHEN THE DIAL IS OFF, so the log records what the
+    model said in every case and a later comparison does not depend on the flag
+    having been on when the row was written.
+    """
+    if reply is None or not getattr(reply, "ok", False):
+        return None, None
+    was = reply.scene.force
+    if not FORCE_TABLE:
+        return was, was
+    try:
+        prior = parse(provocation).force
+    except Exception:                                          # noqa: BLE001
+        return was, was
+    drawn = draw_force(prior)
+    if drawn == was:
+        return was, was
+    try:
+        restamp(reply, drawn)
+    except router.RouterError:
+        # ⛔ A dial that cannot re-render leaves the reply EXACTLY as the model
+        # made it. It must never be able to turn a good turn into a refusal.
+        return was, was
+    return was, drawn
 
 
 def pick_reply(candidates, provocation: str):

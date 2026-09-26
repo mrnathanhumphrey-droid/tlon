@@ -702,7 +702,9 @@ def say(body: Say, request: Request, response: Response):
         surface=_tlon.get("surface"),
         refused=result["you"].get("refused") or _tlon.get("refused"),
         seconds=result.get("seconds"), flags=tripwire.flagline(flags),
-        severity=severity, route=decision.route)
+        severity=severity, route=decision.route,
+        force_model=result.get("force_model"),
+        force_sent=result.get("force_sent"))
 
     out = JSONResponse({"conversation_id": cid, "messages": rows,
                         "seconds": result["seconds"]})

@@ -107,6 +107,10 @@ MAX_TRACEBACK = 8000
 _MIGRATIONS = (
     ("turns", "route", "ALTER TABLE turns ADD COLUMN route TEXT NOT NULL "
                        "DEFAULT ''"),
+    ("turns", "force_model", "ALTER TABLE turns ADD COLUMN force_model TEXT "
+                             "NOT NULL DEFAULT ''"),
+    ("turns", "force_sent", "ALTER TABLE turns ADD COLUMN force_sent TEXT "
+                            "NOT NULL DEFAULT ''"),
 )
 
 _POST_MIGRATION = (
@@ -147,7 +151,13 @@ CREATE TABLE IF NOT EXISTS turns (
     -- route, and `english.roots` is the only record of the rows a future write
     -- corpus needs. ⛔ Added to a table that already holds production turns —
     -- see `_MIGRATIONS`, which is what makes that safe.
-    route           TEXT NOT NULL DEFAULT ''
+    route           TEXT NOT NULL DEFAULT '',
+    -- ⭐ The force the MODEL chose and the force actually SERVED. They differ
+    -- only when the product force dial is on (`TLON_FORCE_TABLE`), and both
+    -- are written either way so a later comparison does not depend on the flag
+    -- having been set when the row was recorded.
+    force_model     TEXT NOT NULL DEFAULT '',
+    force_sent      TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS ix_turns_at ON turns (at);
 CREATE INDEX IF NOT EXISTS ix_turns_reader ON turns (reader, at);
@@ -295,15 +305,19 @@ class Logbook:
                     refused: str | None = None, conversation_id: str | None = None,
                     turn: int | None = None, seconds: float | None = None,
                     flags: str = "", severity: int = 0,
-                    request_id: str | None = None, route: str = "") -> None:
+                    request_id: str | None = None, route: str = "",
+                    force_model: str | None = None,
+                    force_sent: str | None = None) -> None:
         self._write(
             "INSERT INTO turns (at, request_id, reader, ip_trusted, "
             "conversation_id, turn, english, surface, refused, seconds, "
-            "flags, severity, route) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "flags, severity, route, force_model, force_sent) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (time.time(), request_id, reader, 1 if ip_trusted else 0,
              conversation_id, turn, _clip(english, MAX_TEXT),
              _clip(surface, MAX_TEXT), _clip(refused, 500), seconds,
-             flags, int(severity), route))
+             flags, int(severity), route, force_model or "",
+             force_sent or ""))
 
     def record_error(self, *, kind: str, detail: str, reader: str | None = None,
                      ip_trusted: bool | None = None, method: str | None = None,
