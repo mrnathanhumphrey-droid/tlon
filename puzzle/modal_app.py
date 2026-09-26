@@ -172,6 +172,25 @@ image = (
     # ⭐ Warm for five minutes after the last request. This is the number that
     # makes the bench feel alive: nobody mid-conversation waits for a load.
     scaledown_window=300,
+    # ⭐⭐ GPU MEMORY SNAPSHOT — the cold start, measured rather than assumed.
+    #
+    # ⛔⛤ THE `@modal.enter` BELOW USED TO SAY `snap=False` "because the weights
+    # are on a GPU and a memory snapshot cannot carry VRAM", and the header of
+    # this file said the same. **THAT WAS TRUE AND IS NOT ANY MORE.** Modal
+    # 1.4.3 carries `_experimental_enable_gpu_snapshot` and restores VRAM
+    # through a `CudaCheckpointSession`.
+    #
+    # ⭐ Measured on `modal_snapshot_probe.py`, a throwaway app, because an
+    # experimental platform flag does not get its first test on the public
+    # bench: cold start **62.7s -> 10.8s**. The proof is not the timing, which a
+    # warm container would also produce — it is that three cold starts produced
+    # only TWO load events in the app log, and the third reported the stale
+    # `load_seconds` carried inside the restored process. `load()` never ran.
+    #
+    # ⛔ Snapshots are DISABLED FOR EPHEMERAL APPS: `modal run` silently ignores
+    # all of this and pays the full load. Only a `modal deploy` benefits.
+    enable_memory_snapshot=True,
+    experimental_options={"enable_gpu_snapshot": True},
     # ⛔⛔ ONE. The bench is a SQLite file on a volume; two containers would not
     # share it, so a reader's conversation would vanish whenever they were
     # routed elsewhere — data loss that presents as a UI bug. It is also what
@@ -180,12 +199,16 @@ image = (
     timeout=300,
 )
 class Bench:
-    @modal.enter(snap=False)
+    @modal.enter(snap=True)
     def load(self):
         """⛔ BEFORE ANY TRAFFIC. `@modal.enter` runs while the container is
         still being made ready, so the first reader meets a loaded model rather
-        than a queue. `snap=False` because the weights are on a GPU and a
-        memory snapshot cannot carry VRAM."""
+        than a queue.
+
+        ⭐ `snap=True`: the weights are resident in VRAM when the snapshot is
+        taken, and a restored container skips this entirely. See the note on
+        `@app.cls` for the measurement and for what used to be written here.
+        """
         import sys
 
         sys.path.insert(0, "/app")
@@ -195,6 +218,35 @@ class Bench:
         speaker.load()
         print("tlön · speaker loaded in %.1fs" % (speaker.load_seconds or 0),
               flush=True)
+
+    @modal.enter(snap=False)
+    def after_restore(self):
+        """⛔⛔ EVERYTHING A SNAPSHOT FROZE THAT MUST NOT BE SHARED.
+
+        `snap=False` enters run AFTER a restore, on every container. This one
+        exists for a single line, and that line is not optional:
+
+        `speaker._force_rng = random.Random()` is seeded from OS entropy AT
+        IMPORT, and the import happens inside the snapshot phase above. So a
+        snapshot freezes the generator's state, and **every restored container
+        would draw the identical sequence of reply forces** — the dial would
+        look varied and repeat itself exactly on each cold start. Subtle,
+        invisible in any health check, and a direct regression of the thing the
+        dial was shipped to fix.
+
+        ⭐ The other two candidates were checked and are safe: `TS.preflight()`
+        and every secret read happen in the ASGI `startup` hook inside `web()`,
+        which is after restore, and `logbook` opens its SQLite connection per
+        call rather than holding one at import — so no stale handle to a
+        reader's conversation is carried across.
+        """
+        import sys
+
+        sys.path.insert(0, "/app")
+        from puzzle import speaker as SP
+
+        SP._force_rng.seed()
+        print("tlön · post-restore: force rng reseeded", flush=True)
 
     @modal.asgi_app()
     def web(self):
