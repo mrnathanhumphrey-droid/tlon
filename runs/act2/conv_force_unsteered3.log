@@ -1,0 +1,40 @@
+lexicon lexicon_expanded.yaml  08c03b0a81330e4ba42883fa8b08c873  218 roots
+root-steer: OFF  (the control arm)
+dialogues: 958 already on disk, reusing
+conversations: 0 done, 958 to do, budget left $120.00
+    50/958  full 39  trunc 2  drop 9  $2.81
+   100/958  full 74  trunc 9  drop 17  $5.27
+   150/958  full 109  trunc 13  drop 28  $7.75
+   200/958  full 143  trunc 17  drop 40  $10.07
+   250/958  full 181  trunc 21  drop 48  $12.52
+   300/958  full 214  trunc 24  drop 62  $14.67
+   350/958  full 249  trunc 30  drop 71  $17.06
+   400/958  full 286  trunc 34  drop 80  $19.27
+   450/958  full 323  trunc 36  drop 91  $21.97
+   500/958  full 358  trunc 41  drop 101  $24.22
+   550/958  full 393  trunc 46  drop 111  $26.63
+   600/958  full 428  trunc 50  drop 122  $28.65
+   650/958  full 459  trunc 57  drop 134  $30.86
+   700/958  full 492  trunc 63  drop 145  $33.12
+   750/958  full 533  trunc 66  drop 151  $35.63
+   800/958  full 565  trunc 72  drop 163  $37.89
+   850/958  full 595  trunc 78  drop 177  $40.32
+   900/958  full 634  trunc 84  drop 182  $42.74
+   950/958  full 673  trunc 87  drop 190  $45.06
+
+====================================================================
+conversations on disk: 768 · turns 5370 · full 680 · truncated 88 · dropped 190
+calls 6999 · $45.38 of $120.00 · 33 min wall
+
+ACCEPTANCE (pre-registered in tlon/act2/carry.py):
+  english_carry     0.0%   min  60.0%   ⛔ FAIL
+  echo              5.2%   max  10.0%   PASS
+  scene_band       44.4%   [42.6, 46.3] 95% CI on n=2765 pairs
+                 target 65% · CI floor 50% · needs n>=150
+  force variety   PASS   'ka' leads at 50.8% of 2685 turns, 5 forces present
+                  voice T: {'ka': 1364, 'ko': 387, 'ki': 615, 'ku': 276, 'kä': 43}
+  dialogue calls per accepted conversation: nan  ⭐ this is the cost model for the full build
+VERDICT: REJECTED — 44.4% [42.6, 46.3] lies entirely below the 50% floor
+⛔ DO NOT FUND THE FULL BUILD ON THIS.
+
+LEDGER (1 run on this corpus): $45.38 cumulative · pooled band 1229/2765 = 44.4%

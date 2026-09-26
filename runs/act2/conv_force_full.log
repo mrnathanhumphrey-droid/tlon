@@ -1,0 +1,44 @@
+lexicon lexicon_expanded.yaml  08c03b0a81330e4ba42883fa8b08c873  218 roots
+root-steer: ON — FORCED CARRY, PUZZLE CORPUS ONLY
+dialogues: have 0, want 1500 -> 1500 calls
+dialogues: 958 on disk (~$48.64 this stage)
+  CARRY GATE (stage 1, English): pairs 5447 · passed 3926 = 72.1%
+  calls 3235 · accepted 958 · regenerated 2277 · abandoned 542
+  calls per accepted conversation: 3.38
+    reason: no happening carried                   1521
+conversations: 0 done, 958 to do, budget left $111.36
+    50/958  full 32  trunc 5  drop 13  $51.44
+   100/958  full 54  trunc 12  drop 34  $53.59
+   150/958  full 77  trunc 24  drop 49  $55.96
+   200/958  full 103  trunc 31  drop 66  $58.09
+   250/958  full 125  trunc 39  drop 86  $60.28
+   300/958  full 153  trunc 45  drop 102  $62.53
+   350/958  full 172  trunc 57  drop 121  $64.93
+   400/958  full 191  trunc 62  drop 147  $66.97
+   450/958  full 214  trunc 72  drop 164  $69.13
+   500/958  full 245  trunc 80  drop 175  $71.77
+   550/958  full 271  trunc 89  drop 190  $73.96
+   600/958  full 296  trunc 96  drop 208  $76.17
+   650/958  full 320  trunc 101  drop 229  $78.27
+   700/958  full 351  trunc 108  drop 241  $80.66
+   750/958  full 378  trunc 119  drop 253  $83.15
+   800/958  full 411  trunc 125  drop 264  $85.64
+   850/958  full 435  trunc 137  drop 278  $88.17
+   900/958  full 470  trunc 140  drop 290  $90.64
+   950/958  full 505  trunc 147  drop 298  $92.94
+
+====================================================================
+conversations on disk: 659 · turns 4300 · full 511 · truncated 148 · dropped 299
+calls 6626 · $93.09 of $160.00 · 31 min wall
+
+ACCEPTANCE (pre-registered in tlon/act2/carry.py):
+  english_carry    72.1%   min  60.0%   PASS
+  echo              5.3%   max  10.0%   PASS
+  scene_band       94.5%   [93.5, 95.3] 95% CI on n=2455 pairs
+                 target 65% · CI floor 50% · needs n>=150
+  force variety   PASS   'ka' leads at 52.9% of 2150 turns, 5 forces present
+                  voice T: {'ka': 1137, 'ko': 309, 'ki': 490, 'ku': 175, 'kä': 39}
+  dialogue calls per accepted conversation: 3.38  ⭐ this is the cost model for the full build
+VERDICT: ACCEPTED — 94.5% [93.5, 95.3], CI floor 50% cleared
+
+LEDGER (1 run on this corpus): $93.09 cumulative · pooled band 2320/2455 = 94.5%

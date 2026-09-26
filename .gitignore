@@ -100,6 +100,11 @@ runs/act2/ledger.jsonl
 runs/act2/corpus_bench_steered/
 runs/act2/corpus_bench/
 runs/act2/corpus_bench_rowmatch/
+runs/act2/corpus_bench_dosed/
+runs/act2/corpus_bench_dose75/
+# ⭐ v2, same test: an exact function of `corpus_conv_force` +
+# `corpus_conv_force_unsteered` (both committed) at dose 0.50, seed 20624.
+runs/act2/corpus_bench_force/
 
 # ⛔ Wrangler's local build cache. It appeared the first time the Worker was
 # deployed and is pure machine state — a rebuilt bundle, a dev-server sqlite

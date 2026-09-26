@@ -519,6 +519,35 @@ def test_wilson_never_returns_a_bound_outside_zero_one():
         assert 0.0 <= lo <= hi <= 1.0, (hits, n, lo, hi)
 
 
+def test_an_unmeasured_english_carry_reports_MISSING_and_never_zero():
+    """⛔⛔ THE `except: -> 0` SHAPE, IN AN ACCEPTANCE LINE.
+
+    `_gate_report` is filled by the stage-1 English build. The control arm is
+    built by REUSING the dialogues the treatment arm wrote — that shared
+    population is the whole design, it is what retires the two-population
+    caveat — so stage 1 does not run and the counters are empty.
+
+    With `pairs_seen or 1` as the denominator that printed
+
+        english_carry     0.0%   min  60.0%   ⛔ FAIL
+
+    against a corpus whose English carry is 72.1%, measured by the run that
+    wrote those very dialogues. A FAIL on a quantity nobody measured reads as
+    a finding about the corpus, and it is a fact about the plumbing.
+    """
+    import pathlib
+    src = (pathlib.Path(__file__).resolve().parents[1] / "tools"
+           / "act2_build_conversations.py").read_text(encoding="utf-8")
+    block = src[src.index("the acceptance check, against thresholds"):
+                src.index("VERDICT: %s")]
+    assert '_gate_report["pairs_seen"] or 1' not in block, (
+        "the denominator-of-one is back; an unmeasured carry will read as 0%")
+    assert "MISSING" in block, "nothing in the block can report MISSING"
+    assert 'if seen' in block or 'if measured["english_carry"] is None' in block
+    # ⛔ And the nan beside it, for the same reason and from the same cause.
+    assert 'float("nan")' not in block
+
+
 def test_acceptance_thresholds_are_registered_not_chosen_later():
     """⭐ They live in the module the build imports, so the run cannot be read
     against a bar picked after seeing it."""

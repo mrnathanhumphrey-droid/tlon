@@ -1,0 +1,78 @@
+{
+ "counts": {
+  "full": 511,
+  "truncated": 148,
+  "dropped": 299,
+  "turns": 4300,
+  "steer_attempts": 2627,
+  "steer_landed_on_try_1": 2273,
+  "scene_pairs": 2455,
+  "scene_passed": 2320,
+  "truncated_by_scene_gate": 447,
+  "scene_failed": 135,
+  "scene_echo": 130,
+  "turns_saved_by_early_stop": 408,
+  "steer_landed_on_try_2": 47
+ },
+ "cost": {
+  "calls": 6626,
+  "input_tokens": 2026924,
+  "output_tokens": 1362266,
+  "cache_write_tokens": 88670,
+  "cache_read_tokens": 58664072,
+  "usd_total": 44.446496100000005,
+  "usd_per_message": 0.006707892559613644,
+  "prices_per_mtok": {
+   "input": 3.0,
+   "output": 15.0,
+   "cache_write": 3.75,
+   "cache_read": 0.3
+  }
+ },
+ "usd_this_run": 93.09054060000011,
+ "usd_cumulative": 93.09054060000011,
+ "runs_on_this_corpus": 1,
+ "pooled_scene_pairs": 2455,
+ "pooled_scene_passed": 2320,
+ "conversations": 659,
+ "lexicon": "08c03b0a81330e4ba42883fa8b08c873",
+ "wall_seconds": 1865.5,
+ "stopped_on_budget": false,
+ "carry_gate": {
+  "calls": 3235,
+  "pairs_seen": 5447,
+  "pairs_passed": 3926,
+  "reason: no happening carried": 1521,
+  "truncated_by_gate": 493,
+  "accepted": 958,
+  "accepted_on_attempt_1": 486,
+  "regenerated": 2277,
+  "accepted_on_attempt_2": 293,
+  "accepted_on_attempt_3": 179,
+  "abandoned": 542
+ },
+ "forced_root_carry": true,
+ "recipe": "puzzle_steered",
+ "scene_band_ci95": [
+  0.9352776056194437,
+  0.9533522272254212
+ ],
+ "acceptance": {
+  "thresholds": {
+   "english_carry_min": 0.6,
+   "scene_band_target": 0.65,
+   "scene_band_ci_floor": 0.5,
+   "min_pairs_to_decide": 150,
+   "echo_max": 0.1,
+   "force_top_share_max": 0.6,
+   "force_distinct_min": 3
+  },
+  "measured": {
+   "english_carry": 0.720763723150358,
+   "scene_band": 0.945010183299389,
+   "echo": 0.05295315682281059
+  },
+  "calls_per_conversation": 3.3768267223382047,
+  "passed": true
+ }
+}

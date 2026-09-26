@@ -1,0 +1,65 @@
+{
+ "counts": {
+  "full": 680,
+  "truncated": 88,
+  "dropped": 190,
+  "turns": 5370,
+  "steer_attempts": 2765,
+  "scene_pairs": 2765,
+  "scene_failed": 1536,
+  "turns_saved_by_early_stop": 4950,
+  "scene_passed": 1229,
+  "steer_landed_on_try_1": 1229,
+  "truncated_by_scene_gate": 278,
+  "scene_echo": 145
+ },
+ "cost": {
+  "calls": 6999,
+  "input_tokens": 1682580,
+  "output_tokens": 1427462,
+  "cache_write_tokens": 88670,
+  "cache_read_tokens": 61971463,
+  "usd_total": 45.3836214,
+  "usd_per_message": 0.006484300814402058,
+  "prices_per_mtok": {
+   "input": 3.0,
+   "output": 15.0,
+   "cache_write": 3.75,
+   "cache_read": 0.3
+  }
+ },
+ "usd_this_run": 45.3836214,
+ "usd_cumulative": 45.3836214,
+ "runs_on_this_corpus": 1,
+ "pooled_scene_pairs": 2765,
+ "pooled_scene_passed": 1229,
+ "conversations": 768,
+ "lexicon": "08c03b0a81330e4ba42883fa8b08c873",
+ "wall_seconds": 1976.1,
+ "stopped_on_budget": false,
+ "carry_gate": {},
+ "forced_root_carry": false,
+ "recipe": "puzzle_unsteered",
+ "scene_band_ci95": [
+  0.42605247304571814,
+  0.46307083397191695
+ ],
+ "acceptance": {
+  "thresholds": {
+   "english_carry_min": 0.6,
+   "scene_band_target": 0.65,
+   "scene_band_ci_floor": 0.5,
+   "min_pairs_to_decide": 150,
+   "echo_max": 0.1,
+   "force_top_share_max": 0.6,
+   "force_distinct_min": 3
+  },
+  "measured": {
+   "english_carry": 0.0,
+   "scene_band": 0.44448462929475585,
+   "echo": 0.05244122965641953
+  },
+  "calls_per_conversation": NaN,
+  "passed": false
+ }
+}

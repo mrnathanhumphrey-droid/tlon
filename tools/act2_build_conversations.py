@@ -627,20 +627,38 @@ def build(args) -> int:
     # ⛔ COMPUTED HERE, ABOVE THE VERDICT, from the run's own counters. A
     # threshold quoted in prose after the fact is a threshold chosen after
     # seeing the number.
-    seen = _gate_report["pairs_seen"] or 1
+    # ⛔⛤ `english_carry` USED TO READ `pairs_passed / (pairs_seen or 1)`, AND
+    # THAT DENOMINATOR-OF-ONE IS THE `except: -> 0` SHAPE THIS PROJECT HAS A
+    # RULE ABOUT. `_gate_report` is filled by the stage-1 English build. A run
+    # that REUSES dialogues already on disk — which is exactly how the control
+    # arm is built, on purpose, so both arms share one population — never runs
+    # that stage, so the counters are empty and the line printed
+    #
+    #     english_carry     0.0%   min  60.0%   ⛔ FAIL
+    #
+    # for a corpus whose English carry was 72.1%, measured on the very same
+    # 958 dialogues by the steered run. A FAIL that reads as a finding, on a
+    # quantity nobody measured in this run. MISSING is not zero.
+    seen = _gate_report["pairs_seen"]
     spairs = counts["scene_pairs"] or 1
     measured = {
-        "english_carry": _gate_report["pairs_passed"] / seen,
+        "english_carry": (_gate_report["pairs_passed"] / seen if seen
+                          else None),
         "scene_band": counts["scene_passed"] / spairs,
         "echo": counts["scene_echo"] / spairs,
     }
     lo, hi = wilson(counts["scene_passed"], counts["scene_pairs"])
     print("\nACCEPTANCE (pre-registered in tlon/act2/carry.py):")
-    print("  english_carry  %6.1f%%   min %5.1f%%   %s"
-          % (100 * measured["english_carry"],
-             100 * ACCEPTANCE["english_carry_min"],
-             "PASS" if measured["english_carry"]
-             >= ACCEPTANCE["english_carry_min"] else "⛔ FAIL"))
+    if measured["english_carry"] is None:
+        print("  english_carry  MISSING   min %5.1f%%   ⚠ NOT MEASURED — the "
+              "dialogues were reused, so stage 1 did not run. Read it off the "
+              "build that WROTE them." % (100 * ACCEPTANCE["english_carry_min"]))
+    else:
+        print("  english_carry  %6.1f%%   min %5.1f%%   %s"
+              % (100 * measured["english_carry"],
+                 100 * ACCEPTANCE["english_carry_min"],
+                 "PASS" if measured["english_carry"]
+                 >= ACCEPTANCE["english_carry_min"] else "⛔ FAIL"))
     print("  echo           %6.1f%%   max %5.1f%%   %s"
           % (100 * measured["echo"], 100 * ACCEPTANCE["echo_max"],
              "PASS" if measured["echo"] <= ACCEPTANCE["echo_max"]
@@ -668,10 +686,16 @@ def build(args) -> int:
         # ⛔ A corpus that teaches one speech act is not accepted however well
         # it carries. The carry gate cannot see this and did not.
         verdict, detail = "REJECTED", "force variety: %s" % f_detail
-    per_conv = (_gate_report["calls"] / _gate_report["accepted"]
-                if _gate_report["accepted"] else float("nan"))
-    print("  dialogue calls per accepted conversation: %.2f  "
-          "⭐ this is the cost model for the full build" % per_conv)
+    # ⛔ Same root cause as `english_carry` above, and it printed `nan`. A nan
+    # at least cannot be mistaken for a measurement, but it cannot say WHY
+    # either, and the reason is the one thing a reader needs.
+    if _gate_report["accepted"]:
+        print("  dialogue calls per accepted conversation: %.2f  "
+              "⭐ this is the cost model for the full build"
+              % (_gate_report["calls"] / _gate_report["accepted"]))
+    else:
+        print("  dialogue calls per accepted conversation: MISSING  "
+              "⚠ dialogues reused; stage 1 did not run this time")
     print("VERDICT: %s — %s" % (verdict, detail))
     if verdict != "ACCEPTED":
         print("⛔ DO NOT FUND THE FULL BUILD ON THIS.")
