@@ -24,11 +24,15 @@ ONLY ONE OF THE TWO OBVIOUS LEVERS ACTUALLY APPLIES.
      request. This is the one that matters: nobody mid-conversation ever waits
      for a load, which is where the feeling of a live thing actually lives.
 
-  ⛔ MEMORY SNAPSHOT DOES NOT HELP HERE, and it is worth writing down so the
-     next person does not reach for it. Modal's snapshots capture host memory;
-     these weights live in VRAM, which a snapshot cannot carry. Hence
-     `@modal.enter(snap=False)`. A snapshot taken before the model loads saves
-     only interpreter startup — milliseconds against a multi-second load.
+  ⛔ MEMORY SNAPSHOT DOES NOT HELP HERE — but NOT for the reason this said.
+     ⛔⛤ It used to read: "Modal's snapshots capture host memory; these weights
+     live in VRAM, which a snapshot cannot carry." **That is no longer true.**
+     modal 1.4.3 restores VRAM through a `CudaCheckpointSession`, and it was
+     tried on 2026-09-26: it works, and it is SLOWER. Cold page load, same app,
+     same image, only the flag moved: **22 s -> 52 s**. Restoring a multi-GB
+     snapshot out of Modal's storage costs more than reading the weights off
+     the volume. The conclusion survived; its reason did not, and a stale
+     reason is how the next person gets the wrong answer for a new question.
 
 ⛔ `min_containers` is deliberately 0. An A10 held open costs roughly a dollar
 an hour, which against the account's credit is days, not months. The first
@@ -36,9 +40,15 @@ arrival pays; everyone after them does not. ⭐ If the bench is ever mailed to a
 list and should be warm for a known hour, `min_containers=1` for that window is
 the lever — a decision with a price, not a default.
 
-⛔ THE FIRST-ARRIVAL COST IS NOT YET MEASURED. It is a container start plus a
-14 GB volume read plus the load; the 7.0s in the probe above was a trivial
-container and says nothing about this one.
+⭐ THE FIRST-ARRIVAL COST, MEASURED 2026-09-26 against the live URL: **~22 s
+cold, 0.13-0.37 s warm.** About 18 s of that is the load itself.
+
+⛔ AND THE LOAD IS READ-BOUND, NOT QUANTISATION-BOUND — which rules out the
+obvious fix. bf16 and NF4 load in the SAME time (17.0 s vs 17.5 s, measured on
+`modal_force_probe.py`), so the cost is the ~15 GB of bf16 safetensors coming
+off the volume, not the 4-bit conversion. ⭐ The untried lever that follows from
+that is a PRE-QUANTISED checkpoint on the volume: ~4.5 GB instead of ~15 GB, a
+one-off save, no experimental platform features.
 """
 from __future__ import annotations
 
@@ -172,25 +182,26 @@ image = (
     # ⭐ Warm for five minutes after the last request. This is the number that
     # makes the bench feel alive: nobody mid-conversation waits for a load.
     scaledown_window=300,
-    # ⭐⭐ GPU MEMORY SNAPSHOT — the cold start, measured rather than assumed.
+    # ⛔⛤ GPU MEMORY SNAPSHOT WAS TRIED HERE ON 2026-09-26 AND MADE THIS APP
+    # SLOWER. Kept as a note so it is not tried a third time without new
+    # information.
     #
-    # ⛔⛤ THE `@modal.enter` BELOW USED TO SAY `snap=False` "because the weights
-    # are on a GPU and a memory snapshot cannot carry VRAM", and the header of
-    # this file said the same. **THAT WAS TRUE AND IS NOT ANY MORE.** Modal
-    # 1.4.3 carries `_experimental_enable_gpu_snapshot` and restores VRAM
-    # through a `CudaCheckpointSession`.
+    #     enable_memory_snapshot=True,
+    #     experimental_options={"enable_gpu_snapshot": True},
     #
-    # ⭐ Measured on `modal_snapshot_probe.py`, a throwaway app, because an
-    # experimental platform flag does not get its first test on the public
-    # bench: cold start **62.7s -> 10.8s**. The proof is not the timing, which a
-    # warm container would also produce — it is that three cold starts produced
-    # only TWO load events in the app log, and the third reported the stale
-    # `load_seconds` carried inside the restored process. `load()` never ran.
+    # It DOES work — modal 1.4.3 restores VRAM through a `CudaCheckpointSession`,
+    # the logs show "Restoring Function from memory snapshot", and `load()` ran
+    # twice across three cold starts. It is simply slower for this workload:
+    # restoring a multi-GB snapshot out of Modal's storage costs more than
+    # reading the weights off the `tlon-weights` volume.
     #
-    # ⛔ Snapshots are DISABLED FOR EPHEMERAL APPS: `modal run` silently ignores
-    # all of this and pays the full load. Only a `modal deploy` benefits.
-    enable_memory_snapshot=True,
-    experimental_options={"enable_gpu_snapshot": True},
+    #     cold page load, same app, same image:   22 s  ->  52 s
+    #
+    # ⛔⛔ AND THE NUMBER THAT SOLD IT WAS A CONFOUND. A throwaway probe read
+    # "62.7 s -> 10.8 s", but its slow arm included a FIRST-EVER IMAGE PULL and
+    # its fast arm did not. Two things differed and the image caching was doing
+    # the work. The honest comparison is the one above: one app, one image,
+    # only the flag moved.
     # ⛔⛔ ONE. The bench is a SQLite file on a volume; two containers would not
     # share it, so a reader's conversation would vanish whenever they were
     # routed elsewhere — data loss that presents as a UI bug. It is also what
@@ -199,15 +210,15 @@ image = (
     timeout=300,
 )
 class Bench:
-    @modal.enter(snap=True)
+    @modal.enter(snap=False)
     def load(self):
         """⛔ BEFORE ANY TRAFFIC. `@modal.enter` runs while the container is
         still being made ready, so the first reader meets a loaded model rather
         than a queue.
 
-        ⭐ `snap=True`: the weights are resident in VRAM when the snapshot is
-        taken, and a restored container skips this entirely. See the note on
-        `@app.cls` for the measurement and for what used to be written here.
+        ⛔ `snap=False`. Memory snapshots CAN carry VRAM now, contrary to what
+        this docstring said for months — but measured on this app they cost 30
+        extra seconds of cold start rather than saving any. See `@app.cls`.
         """
         import sys
 
