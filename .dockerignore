@@ -13,7 +13,7 @@
 # ── everything under runs/, then the one cell the image serves back ─────────
 # ⛔ ORDER AND GRANULARITY BOTH MATTER. Docker cannot re-include a path whose
 # PARENT is excluded, so the directories are opened one level at a time rather
-# than with a single `!runs/puzzle_speaker/dosed-s20624/` after `runs/`.
+# than with a single `!runs/puzzle_speaker/force-s20624/` after `runs/`.
 # ⛔ The cell name is spelt here as well as in the Dockerfile and
 # `tests/test_puzzle_serves_v1.py`. `tests/test_puzzle_build_context.py` pins
 # them together, because an adapter swap that missed this file would exclude
@@ -23,7 +23,7 @@
 runs/*
 !runs/puzzle_speaker/
 runs/puzzle_speaker/*
-!runs/puzzle_speaker/dosed-s20624/
+!runs/puzzle_speaker/force-s20624/
 
 # ── the rest of the repository the image does not serve ────────────────────
 .git/

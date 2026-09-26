@@ -74,7 +74,25 @@ from . import router                                        # noqa: E402
 #: The one knowing exception is 4-bit — see `FOUR_BIT` below.
 BASE_MODEL = os.environ.get("TLON_BASE", "Qwen/Qwen2.5-7B-Instruct")
 
-#: ⭐⭐ v1 IS `dosed-s20624`, AND IT WAS CHOSEN ON THREE MEASURED AXES, not on
+#: ⭐⭐ v2 IS `force-s20624` (2026-09-26). It is v1's corpus rebuilt so voice T
+#: uses all five speech acts, retrained at the same shape — seq 1024, batch 2×8,
+#: 3 epochs, rank 32, seed 20624 — and it clears the gate as a native speaker:
+#:
+#:     F-LOCAL CLEAR   speak 98.4% (63/64) · render 93.8% (60/64)
+#:     carry  33.6% [28.1, 39.6]  86/256   ← v1 was 27.5% [22.3, 33.2]
+#:     choose 48.4%
+#:
+#: Same battery, same estimator, same n as v1's figures below, so the two are
+#: comparable. ⛔ Its corpus row counts are IDENTICAL to v1's — 15,225 rows,
+#: 8,181 natural + 2,466 contrastive + 4,578 conversation, dose 0.500 — so the
+#: speech-act distribution is the only live variable between them.
+#:
+#: ⛔⛔ AND IT DOES NOT FIX THE `ka` MONOCULTURE ON ITS OWN. See `FORCE_TABLE`
+#: below: v2 served `ka` 100% exactly as v1 did, and the dial is what changed it.
+#: v2 ships because it carries better and costs nothing to prefer — not because
+#: it moved the force.
+#:
+#: ⭐⭐ v1 WAS `dosed-s20624`, AND IT WAS CHOSEN ON THREE MEASURED AXES, not on
 #: legality alone. At n=256 on battery c0e011637df51c1b:
 #:
 #:     render 97.3% [94.5, 98.7]   legal Tlön, at the ceiling
@@ -101,7 +119,7 @@ BASE_MODEL = os.environ.get("TLON_BASE", "Qwen/Qwen2.5-7B-Instruct")
 #: deliberately to save $32 when it was an experiment. That caveat is now under
 #: a shipped v1; a single-population rebuild retires it and changes nothing else.
 ADAPTER = os.environ.get("TLON_ADAPTER",
-                         str(ROOT / "runs" / "puzzle_speaker" / "dosed-s20624"))
+                         str(ROOT / "runs" / "puzzle_speaker" / "force-s20624"))
 #: ⛔⛔⛔ THE LANGUAGE THIS ADAPTER SPEAKS, AND IT IS NOT THE PROCESS DEFAULT.
 #:
 #: `tlon/grammar/classes.py` makes the FROZEN 156-root lexicon the default and
@@ -126,28 +144,54 @@ ADAPTER = os.environ.get("TLON_ADAPTER",
 LEXICON_HASH = os.environ.get("TLON_LEXICON_HASH",
                               "08c03b0a81330e4ba42883fa8b08c873")
 
-#: ⭐⭐ A PRODUCT DIAL, OFF BY DEFAULT, AND THE RESEARCH TRACK NEVER READS IT.
+#: ⭐⭐ A PRODUCT DIAL. OFF in code, ON in the served image, and the research
+#: track never reads it.
 #:
-#: The served speaker answers with `ka` almost always — not a serving fault and
-#: not quantisation, but a faithful reproduction of what it was trained on:
-#: in `corpus_bench_dosed`, its own corpus, the Tlönian's reply force is
-#: **ka 99.7%**, and the conversation pools it was built from are 99.7% / 99.8%
-#: ka in voice T. The model is doing exactly what it saw.
+#: ⛔⛤ THIS BLOCK USED TO SAY "IT DRESSES A SYMPTOM ... the real repair is a
+#: corpus where the Tlönian asks, wonders, urges and denies IN CONTENT, and that
+#: is a retrain, not a flag." **THAT RETRAIN WAS BOUGHT AND IT DID NOT WORK.**
+#: RETRACTED 2026-09-26, and the retraction is kept here because the next reader
+#: will otherwise buy it again:
 #:
-#: ⛔⛔ SO THIS DOES NOT FIX ANYTHING — IT DRESSES A SYMPTOM, and it is named
-#: that way on purpose. The real repair is a corpus where the Tlönian asks,
-#: wonders, urges and denies IN CONTENT rather than in its last particle, and
-#: that is a retrain, not a flag. A reply whose force was redrawn here says
-#: something its own scene was not painted to say.
+#:   * the corpus was rebuilt from 99.7% `ka` to 52.6% in voice T, $138 of
+#:     hosted sampling plus a $6 retrain — `corpus_bench_force`, cell
+#:     `force-s20624`;
+#:   * on the transition the bench actually exercises, `prior ka -> ka` went
+#:     99.8% -> 54.6%;
+#:   * and the served force did not move AT ALL. Both adapters: `ka` 100%.
+#:     Not the decoder (sampled 0.7), not the quantisation (NF4 and bf16 both),
+#:     not the carry-retry selection (`CARRY_RETRIES` 0 and 3).
 #:
-#: ⛔ Every number this project has published about force fidelity was measured
-#: with this OFF. Any reading taken with it on is a reading of the dial.
+#: ⛔⛔ A MATCHED DESIGN SAYS WHY. 12 corpus prompts restamped to all five
+#: forces — same node, force the only difference, n=24 a cell — and every prior
+#: is answered `ka` 100%: `ki`->ka, `ko`->ka, `ku`->ka, `kä`->ka. The speaker
+#: does not condition on the provocation's force. `force_variety` gated voice T,
+#: the ANSWERS; every provoke row's PROMPT is the other voice and was never
+#: gated — **ka 2011 of 2241, 89.7%**. So the model never learned the prior's
+#: force exists, and the target's mode given `ka` is `ka`. A target that is
+#: varied but UNPREDICTABLE trains to its mode, which is why v1 and v2 have
+#: different distributions, the same argmax, and identical output.
+#:
+#: ⭐⭐⭐ SO THIS IS THE FIX, NOT A DRESSING. A speaker's choice of speech act is
+#: not a function of what it was told; no corpus can make it predictable. The
+#: draw is imposed here, and `apply_force_dial` returns BOTH the model's own
+#: force and the one served so `logbook` records what the speaker meant.
+#:
+#: ⛔ Every number this project published about force fidelity was measured with
+#: this OFF. Any reading taken with it on is a reading of the dial — which is
+#: now the point, and the probe prints which table it drew from.
 FORCE_TABLE = os.environ.get("TLON_FORCE_TABLE", "0") not in (
     "0", "", "false", "no")
 
-#: How much of a non-`ki` row goes to ASK. The other four forces share what is
-#: left, evenly. ⛔ Proposed at 0.35, not measured — R4 is what would justify
-#: any value at all.
+#: ⛔⛔ THE LEGACY TABLE, AND SETTING THIS AT ALL SELECTS IT. See
+#: `_KI_WEIGHT_EXPLICIT`: the switch is the variable's PRESENCE, not its value.
+#: Unset — the shipped case — the dial draws from `FORCE_MARGINAL_COUNTS`, the
+#: corpus's own measured distribution.
+#:
+#: ⛔⛤ It was proposed at 0.35 with the rest split evenly and never measured;
+#: R4 never ran. Measured on the bench at that default it served **ka 7.4% and
+#: ki 38.3%** — as false as the `ka` 100% it replaced, because most of what
+#: anyone says is a statement.
 KI_WEIGHT = float(os.environ.get("TLON_KI_WEIGHT", "0.35"))
 
 TEMPERATURE = float(os.environ.get("TLON_TEMPERATURE", "0.7"))

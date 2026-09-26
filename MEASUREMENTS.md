@@ -706,3 +706,84 @@ return, and a second quantity then grew into the same word.
 was never retired and was breached anyway. **A conditionally-retired rule needs
 something that watches its condition**; retiring the notation left the condition
 unwatched.
+
+---
+
+# J · THE PUZZLE SPEAKER'S FORCE — A CORPUS FIX THAT FIXED NOTHING
+
+## J1 · The finding
+
+The public bench ended every reply in `ka`. Its corpus was **99.7% `ka`** in
+voice T. Both true; the causal link between them was never tested before it was
+bought. Rebuilt corpus (`corpus_bench_force`, cell `force-s20624`, $138 of
+hosted sampling + $6 retrain), measured on the product's own speaker class, its
+prompts, temperature 0.7:
+
+| | corpus `prior ka →` | SERVED |
+|---|---|---|
+| v1 `dosed-s20624` | `ka` **99.8%** | `ka` 92/92 |
+| v2 `force-s20624` | `ka` **54.6%** · ki 22.9 · ko 12.7 · ku 8.6 · kä 1.2 | `ka` 93/93 |
+
+**45 points of corpus change, zero movement served.** Ruled out by ablation,
+every arm `ka` ≈ 100%: carry-retry selection (`CARRY_RETRIES` 0 vs 3), the
+quantisation (the bench serves NF4, the campaign measures bf16 — both), the
+decoder (sampled, 93 distinct surfaces, 0 stamp mismatches). The research path
+agrees independently: `f_local` greedy `ka` 64/64, `model_carry` greedy 255/256.
+
+## J2 · The mechanism, from a matched design
+
+12 real corpus prompts restamped to all five forces — same node, same roots,
+force the only difference, n=24 per cell:
+
+```
+prior ka → ka 100%    prior ki → ka 100%    prior ko → ka 100%
+prior ku → ka 100%    prior kä → ka 100%
+```
+
+The speaker does not condition its reply force on the provocation's force.
+
+⛔⛤ **`force_variety` gated voice T — the ANSWERS.** Every provoke row's PROMPT
+is the other voice and was never gated: **`ka` 2011 of 2241 = 89.7%**. The model
+never got the signal that the prior's force exists, and the target's mode given
+`ka` is `ka`. **A target that is varied but UNPREDICTABLE trains to its mode** —
+which is why v1 and v2 have different distributions, the same argmax, and
+identical output. The rebuild changed the variance and left the mode alone.
+
+## J3 · Why the dial is the fix and no corpus can be
+
+A speaker's choice of speech act is not a function of what it was told. A corpus
+can make the target varied; it cannot make it predictable. So the distribution
+is imposed at serve time from `FORCE_MARGINAL_COUNTS` — the raw counts of the
+2,241 provoke rows that taught this speaker — with `ki`→`ka` pinned at 1.0, the
+one derived cell. `force_model` and `force_sent` are both logged, so the page
+never misrepresents what the speaker meant.
+
+Served with the dial on, n=118, carry filter off:
+
+```
+ka 64.4%   ki 15.3%   ko 11.0%   ku 8.5%   kä 0.8%      (model underneath: ka 100%)
+```
+
+⭐ **NOT A TARGET.** The bar is "not a monoculture", not agreement with the
+corpus marginal, and single-sentence replies limit how much force variety is
+available at all. The `ka` share above the table is ~2.2σ on one run and is
+recorded, not chased. Two mechanisms proposed for it were refuted: restamp
+fallback (0 failures in 590 refocuses) and the `ki`→`ka` cell (0 `ki` priors).
+
+⛔ The legacy dial default — `ki_weight=0.35`, rest split evenly, never measured,
+R4 never ran — served `ka` 7.4% and `ki` 38.3%. As false as the 100% it
+replaced. **Setting `TLON_KI_WEIGHT` at all, even to its own default, selects
+it**: the switch is the variable's presence.
+
+## J4 · What v2 is for
+
+It is not the force fix. It ships because it carries better at the same cost:
+
+```
+carry (n=256, same estimator)    v2 33.6% [28.1, 39.6]    v1 27.5% [22.3, 33.2]
+F-LOCAL                          speak 98.4% · render 93.8%  ⇒ CLEAR
+```
+
+Its corpus row counts are identical to v1's — 15,225 rows, 8,181 natural + 2,466
+contrastive + 4,578 conversation, dose 0.500 — so the speech-act distribution
+was the only live variable between them.

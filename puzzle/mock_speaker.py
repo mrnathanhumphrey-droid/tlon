@@ -38,12 +38,18 @@ import time
 
 from .speaker import CONTEXT_TURNS, SHAPE, SpeakerError
 
-#: ⛔ The measured carry rate of the shipped v1 adapter, not a guess and not a
-#: target. `carrysweep` 2026-09-23, battery c0e011637df51c1b, n=256:
-#: dosed-s20624 = 70/255 = 27.5% [22.3, 33.2]. If v1 changes, this moves with
-#: it — a mock whose crib density has drifted from the speaker's is a UI built
+#: ⛔ The measured carry rate of the SHIPPED adapter, not a guess and not a
+#: target. A mock whose crib density has drifted from the speaker's is a UI built
 #: against a puzzle that does not exist.
-V1_CARRY_RATE = 0.275
+#:
+#: ⭐ v2 `force-s20624`, `act2_model_carry` 2026-09-26, battery 9b4d4e19b14244e5,
+#: n=256: **86/256 = 33.6% [28.1, 39.6]**.
+#: ⛔⛤ Was 0.275 — v1 `dosed-s20624`, 70/255 = 27.5% [22.3, 33.2], `carrysweep`
+#: 2026-09-23. RE-MEASURED rather than renamed when the cell moved: this is a
+#: property of the WEIGHTS, so carrying the old number under the new adapter
+#: would have been the stalest kind of green test. Same estimator, same n; the
+#: batteries differ, so treat the two as comparable-but-not-paired.
+V1_CARRY_RATE = 0.336
 
 #: ⛔ The gate refuses real English too, and a skeleton that never refuses hides
 #: the refusal copy from review entirely. `chat.py` and `server.py` both treat a

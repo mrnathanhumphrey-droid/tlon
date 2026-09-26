@@ -45,7 +45,12 @@ COPY puzzle/     /app/puzzle/
 
 # ⭐ The adapter is BAKED. 323 MB, ours, and a machine that boots without it
 # serves the untuned base — which answers in English and looks healthy.
-# ⛔⛤ v1 IS `dosed-s20624`, NOT `ct-s20624`. The old cell was the pick of
+# ⛔⛤ v2 IS `force-s20624`; v1 WAS `dosed-s20624`, and v0 `ct-s20624`. Each
+# was the pick of its day. v2 speaks all five of Tlon's speech acts on the
+# page; v1 answered `ka` 13 times out of 13. ⛔ THE CORPUS WAS NOT WHY — see
+# `speaker.FORCE_MARGINAL_COUNTS`; the dial is what fixes it, and it must be
+# ON in the ENV below or this cell serves the same monoculture v1 did.
+# The old cell was the pick of
 # 2026-09-15 and was never measured on carry; see `speaker.py` for the three
 # axes v1 was chosen on. This path and the ENV below must move TOGETHER — a
 # COPY of one cell with an ENV naming another boots a machine that cannot find
@@ -53,7 +58,7 @@ COPY puzzle/     /app/puzzle/
 # outcome. The bad one is a COPY that still works because the old directory is
 # also present: then the container serves last month's weights and nothing says
 # so.
-COPY runs/puzzle_speaker/dosed-s20624/ /app/speaker/dosed-s20624/
+COPY runs/puzzle_speaker/force-s20624/ /app/speaker/force-s20624/
 
 # ⛔⛔⛔ THE LEXICON IS NOT OPTIONAL AND ITS ABSENCE IS SILENT. `classes.py`
 # defaults to the FROZEN 156-root lexicon — correctly, so the research
@@ -65,7 +70,7 @@ COPY runs/puzzle_speaker/dosed-s20624/ /app/speaker/dosed-s20624/
 # hash mismatch; this line is what makes that check pass.
 # ⛔ The file ships via `COPY tlon/` above — it is `tlon/grammar/lexicon_expanded.yaml`.
 ENV TLON_LEXICON=lexicon_expanded.yaml \
-    TLON_ADAPTER=/app/speaker/dosed-s20624 \
+    TLON_ADAPTER=/app/speaker/force-s20624 \
     TLON_DB=/data/bench.sqlite3 \
     HF_HOME=/data/hf \
     TLON_TRUST_PROXY=1 \

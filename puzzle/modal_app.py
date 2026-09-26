@@ -88,7 +88,17 @@ image = (
         # `speaker.py` refuses to load on a hash mismatch; this is what makes
         # that check pass.
         "TLON_LEXICON": "lexicon_expanded.yaml",
-        "TLON_ADAPTER": "/app/speaker/dosed-s20624",
+        "TLON_ADAPTER": "/app/speaker/force-s20624",
+        # ⛔⛔ THE DIAL IS ON, AND WITHOUT IT THIS CELL SERVES THE SAME
+        # MONOCULTURE v1 DID. Measured: the speaker chooses `ka` 100% of
+        # the time whatever it is answering (12 nodes x 5 forces, n=24 a
+        # cell) because its corpus never varied the PROMPT's force, and a
+        # target that is varied but unpredictable trains to its mode. The
+        # corpus cannot fix that; the draw is imposed here.
+        # ⛔ `TLON_KI_WEIGHT` IS DELIBERATELY ABSENT. Setting it AT ALL —
+        # even to its own default — selects the legacy even-split table,
+        # which serves `ka` 7.4% and `ki` 38.3%.
+        "TLON_FORCE_TABLE": "1",
         "TLON_TURNSTILE_SITEKEY": "0x4AAAAAAFCzgoZ1d8Y7fEc4",
         "TLON_DB": "/bench/bench.sqlite3",
         # ⛔⛔ ON THE VOLUME, OR THERE IS NO LOG. `scaledown_window` is 300
@@ -118,8 +128,8 @@ image = (
     # ⭐ The adapter IS baked: 323 MB, ours, and a container that comes up
     # without it serves the untuned base, which scored 0.0% on write and would
     # answer every visitor in English while looking entirely healthy.
-    .add_local_dir(REPO / "runs" / "puzzle_speaker" / "dosed-s20624",
-                   remote_path="/app/speaker/dosed-s20624")
+    .add_local_dir(REPO / "runs" / "puzzle_speaker" / "force-s20624",
+                   remote_path="/app/speaker/force-s20624")
 )
 
 

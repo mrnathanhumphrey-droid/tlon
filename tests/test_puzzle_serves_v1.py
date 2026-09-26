@@ -27,7 +27,7 @@ DOCKERFILE = ROOT / "puzzle" / "Dockerfile"
 #: ⛔ The cell this product serves. Changing it is a product decision and must
 #: be made HERE as well as in the two files below, so it cannot be done by
 #: accident in one of them.
-V1_CELL = "dosed-s20624"
+V1_CELL = "force-s20624"
 
 
 def _uncommented(path: pathlib.Path) -> str:

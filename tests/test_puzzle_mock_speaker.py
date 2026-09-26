@@ -122,8 +122,9 @@ def _carry_rate(speaker, n=400):
 
 
 def test_the_mock_carries_at_v1s_MEASURED_rate():
-    """⭐⭐ THE WHOLE VALUE OF THE SKELETON. dosed-s20624 carries 27.5%
-    [22.3, 33.2] at n=256. A mock that carried every turn would make the puzzle
+    """⭐⭐ THE WHOLE VALUE OF THE SKELETON. The served adapter
+    `force-s20624` carries 33.6% [28.1, 39.6] at n=256 (v1 `dosed-s20624` was
+    27.5% [22.3, 33.2]). A mock that carried every turn would make the puzzle
     look solvable when it is not, and the first person to find out otherwise
     would be a stranger on the public URL.
     """
@@ -140,6 +141,12 @@ def test_the_carry_dial_is_NOT_VACUOUS_at_either_end():
 
 
 def test_the_rate_constant_matches_the_measured_number():
-    """⛔ Pinned to the run that produced it: carrysweep 2026-09-23, battery
-    c0e011637df51c1b, dosed-s20624 = 70/255."""
-    assert M.V1_CARRY_RATE == pytest.approx(70 / 255, abs=0.005)
+    """⛔ Pinned to the run that produced it: `act2_model_carry` 2026-09-26,
+    battery 9b4d4e19b14244e5, **force-s20624 = 86/256**.
+
+    ⛔⛤ Was `70/255` — v1 `dosed-s20624`, carrysweep 2026-09-23. This test is
+    the reason the constant could not be left behind when the served cell moved:
+    the rate is a property of the WEIGHTS, and a mock still generating v1's crib
+    density under v2 would be a UI built against a puzzle that no longer exists.
+    """
+    assert M.V1_CARRY_RATE == pytest.approx(86 / 256, abs=0.005)

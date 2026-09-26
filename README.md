@@ -55,6 +55,17 @@ Four things in one repository:
    answer key — and the only thing that brings meaning across is the
    **translate** button under each reply, which is yours to press or not.
 
+   ⛔ **The speaker will not vary its own speech act, and that is measured.**
+   Handed the same scene marked as a statement, a question, a wondering, an
+   urging and a denial in turn, it answers with a statement every time — 120 of
+   120. Rebuilding its corpus from 99.7% statements to 52.6% changed nothing:
+   a training target that is varied but unpredictable teaches a model the
+   *mode*, and the mode did not move. The five endings you see on the page are
+   therefore drawn at serve time from the corpus's own measured distribution,
+   and both the speaker's choice and the one served are recorded. `MEASUREMENTS.md`
+   §J has the numbers and the ablations that ruled out the decoder, the
+   quantisation and the retry.
+
 ---
 
 ## The language in ninety seconds
