@@ -106,6 +106,12 @@ runs/act2/corpus_bench_dose75/
 # `corpus_conv_force_unsteered` (both committed) at dose 0.50, seed 20624.
 runs/act2/corpus_bench_force/
 
+# ⛔ A LIVE BOX'S ADDRESS IS NOT PROVENANCE. The instance id is what identifies
+# a run and what terminates it; the IP is an SSH target that is reachable only
+# while the box exists, and the box holds a Lambda key and an HF write token.
+# Kept local, never published.
+**/BOX_IP.txt
+
 # ⛔ Wrangler's local build cache. It appeared the first time the Worker was
 # deployed and is pure machine state — a rebuilt bundle, a dev-server sqlite
 # file and per-machine paths. Committing it to a PUBLIC repo would put local

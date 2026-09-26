@@ -335,11 +335,20 @@ def generate_dialogues(client, model, want: int, out: pathlib.Path,
             # overrun was fiction. A DELTA, always.
             budget.add(cost)
     have = _read_jsonl(out)
-    pairs = gate_stats["pairs_seen"] or 1
     print("dialogues: %d on disk (~$%.2f this stage)" % (len(have), spent))
-    print("  CARRY GATE (stage 1, English): pairs %d · passed %d = %.1f%%"
-          % (gate_stats["pairs_seen"], gate_stats["pairs_passed"],
-             100 * gate_stats["pairs_passed"] / pairs))
+    # ⛔ Same `or 1` shape as the acceptance block below, in the stage that
+    # FEEDS it. A denominator guard decides what an absent numerator means,
+    # and `or 1` always decides "zero" — a stage that generated nothing would
+    # report a 0.0% carry gate rather than say it measured nothing.
+    if gate_stats["pairs_seen"]:
+        print("  CARRY GATE (stage 1, English): pairs %d · passed %d = %.1f%%"
+              % (gate_stats["pairs_seen"], gate_stats["pairs_passed"],
+                 100 * gate_stats["pairs_passed"]
+                 / gate_stats["pairs_seen"]))
+    else:
+        print("  CARRY GATE (stage 1, English): MISSING — no pairs were "
+              "seen, so nothing was measured (every dialogue reused or "
+              "refused)")
     # ⭐ Calls-per-accepted IS the cost model for the full build. It is printed
     # here rather than derived later because the number that prices a build
     # should come out of the build that measured it.
@@ -639,13 +648,17 @@ def build(args) -> int:
     # for a corpus whose English carry was 72.1%, measured on the very same
     # 958 dialogues by the steered run. A FAIL that reads as a finding, on a
     # quantity nobody measured in this run. MISSING is not zero.
+    # ⛔ `spairs` carried the same `or 1`. `decide()` protects the VERDICT at
+    # n < 150, so only the printed percentages were exposed — but a printed
+    # number that cannot be true teaches the reader to stop checking, and
+    # "scene_band 0.0%" on an empty run is a finding about nothing.
     seen = _gate_report["pairs_seen"]
-    spairs = counts["scene_pairs"] or 1
+    spairs = counts["scene_pairs"]
     measured = {
         "english_carry": (_gate_report["pairs_passed"] / seen if seen
                           else None),
-        "scene_band": counts["scene_passed"] / spairs,
-        "echo": counts["scene_echo"] / spairs,
+        "scene_band": (counts["scene_passed"] / spairs if spairs else None),
+        "echo": (counts["scene_echo"] / spairs if spairs else None),
     }
     lo, hi = wilson(counts["scene_passed"], counts["scene_pairs"])
     print("\nACCEPTANCE (pre-registered in tlon/act2/carry.py):")
@@ -659,12 +672,17 @@ def build(args) -> int:
                  100 * ACCEPTANCE["english_carry_min"],
                  "PASS" if measured["english_carry"]
                  >= ACCEPTANCE["english_carry_min"] else "⛔ FAIL"))
-    print("  echo           %6.1f%%   max %5.1f%%   %s"
-          % (100 * measured["echo"], 100 * ACCEPTANCE["echo_max"],
-             "PASS" if measured["echo"] <= ACCEPTANCE["echo_max"]
-             else "⛔ FAIL"))
-    print("  scene_band     %6.1f%%   [%.1f, %.1f] 95%% CI on n=%d pairs"
-          % (100 * measured["scene_band"], 100 * lo, 100 * hi,
+    if measured["echo"] is None:
+        print("  echo           MISSING   max %5.1f%%   ⚠ no scene pairs"
+              % (100 * ACCEPTANCE["echo_max"]))
+    else:
+        print("  echo           %6.1f%%   max %5.1f%%   %s"
+              % (100 * measured["echo"], 100 * ACCEPTANCE["echo_max"],
+                 "PASS" if measured["echo"] <= ACCEPTANCE["echo_max"]
+                 else "⛔ FAIL"))
+    print("  scene_band     %s   [%.1f, %.1f] 95%% CI on n=%d pairs"
+          % ("MISSING" if measured["scene_band"] is None
+             else "%6.1f%%" % (100 * measured["scene_band"]), 100 * lo, 100 * hi,
              counts["scene_pairs"]))
     print("                 target %.0f%% · CI floor %.0f%% · needs n>=%d"
           % (100 * ACCEPTANCE["scene_band_target"],
@@ -689,13 +707,19 @@ def build(args) -> int:
     # ⛔ Same root cause as `english_carry` above, and it printed `nan`. A nan
     # at least cannot be mistaken for a measurement, but it cannot say WHY
     # either, and the reason is the one thing a reader needs.
-    if _gate_report["accepted"]:
-        print("  dialogue calls per accepted conversation: %.2f  "
-              "⭐ this is the cost model for the full build"
-              % (_gate_report["calls"] / _gate_report["accepted"]))
-    else:
+    # ⛔⛔ `per_conv` IS BOUND ON BOTH BRANCHES AND THE REPORT BELOW READS IT.
+    # Rewriting this as a bare if/print left it undefined, which is a NameError
+    # raised at the ONE line that writes `build_report.json` — after every
+    # dollar of the run has been spent. Caught before it shipped; noted here
+    # because the next edit to this block will be tempted the same way.
+    per_conv = (_gate_report["calls"] / _gate_report["accepted"]
+                if _gate_report["accepted"] else None)
+    if per_conv is None:
         print("  dialogue calls per accepted conversation: MISSING  "
               "⚠ dialogues reused; stage 1 did not run this time")
+    else:
+        print("  dialogue calls per accepted conversation: %.2f  "
+              "⭐ this is the cost model for the full build" % per_conv)
     print("VERDICT: %s — %s" % (verdict, detail))
     if verdict != "ACCEPTED":
         print("⛔ DO NOT FUND THE FULL BUILD ON THIS.")

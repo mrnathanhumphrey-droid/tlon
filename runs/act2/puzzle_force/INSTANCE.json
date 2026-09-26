@@ -1,0 +1,38 @@
+{
+  "instance_id": "3ccc0b9fa6504185b3b0fb7bfc692f87",
+  "name": "tlon-puzzle_force",
+  "instance_type": "gpu_1x_a100_sxm4",
+  "region": "us-west-2",
+  "price_usd_per_hour": 1.99,
+  "launched_utc": "2026-09-26T03:53:00Z",
+  "code_sha": "83fb940",
+  "cell": "force-s20624",
+  "pipeline": "pipeline_puzzle.sh",
+  "purpose": "THE PUZZLE SPEAKER, v2. Same shape as the live adapter in every respect but one: the conversation pools use all five of Tlon's speech acts instead of only `ka`. corpus_bench_force is an exact function of corpus_conv_force + corpus_conv_force_unsteered at dose 0.50, seed 20624, train.jsonl sha b3eace04 (verified byte-identical on a clean local rebuild from a different output path). Row counts are identical to the incumbent corpus_bench_dosed -- 15,225 rows, 14,921 train, 8,181 natural + 2,466 contrastive + 4,578 conversation, write 12,936 / provoke 2,289 -- so the speech-act distribution is the only live variable.",
+  "reads_on_the_box": "f_local (n=64) and model_carry (CARRY_N=256), both of which now tally the FORCE the model itself chose. model_carry keeps the prior->reply table, which is the only thing that can distinguish a speaker that learned ki->ka from one that only says `ka`. ⛔ These run while the card is rented; measuring force later means buying a second box.",
+  "ip": "⛔ WITHHELD WHILE THE BOX IS LIVE. The other INSTANCE.json files in this repo carry an IP because those boxes are long dead. This one is billing as the commit lands, and ~/.tlon_env on it holds a Lambda key that can terminate any instance on the account plus an HF write token — so the repo does not advertise the SSH target. `orchestrate status` returns the IP for anyone who holds the key. Recorded locally in BOX_IP.txt, which is gitignored.",
+  "training_started_utc": "2026-09-26T03:57:36Z",
+  "observed": {
+    "force_gate_on_the_box": "ACCEPTED — 'ka' leads at 52.6% of 2289 turns, 5 forces present",
+    "corpus_sha": "rebuilt on the box from the two committed pools and VERIFIED against b3eace04 — the pin held across Windows and Linux",
+    "preflight": "lexicon 08c03b0a 218 roots · 200 rows sampled · 37 carry context · 0 exceed seq 1024",
+    "watchdog_pid": 3266,
+    "watchdog": "--deadline-h 8 --stall-min 45 --poll-s 300, armed BEFORE the cell guard",
+    "trainable_params": "80,740,352 of 7,696,356,864 (1.0491%)",
+    "steps": 2799,
+    "s_per_it": 3.2,
+    "eta_train_h": 2.5
+  },
+  "cost_estimate_usd": {
+    "expected_3h_all_stages": 6.0,
+    "watchdog_hard_cap_8h": 15.92
+  },
+  "other_instances_at_launch": [
+    "33be7dc0682a461bb22945db4bc94f4d nba-auction-market (NOT OURS)",
+    "96a7e478c4214789a1446213ebbfdf84 solar-filament-w48-effb0 (NOT OURS)",
+    "5ba8fcbd57614c21a2b21152dcb90a42 nba-auction-market-pos (NOT OURS)",
+    "bce5abdaae784f91b036da48f15c8736 prompt-inj-tpl02 (NOT OURS)"
+  ],
+  "ONE_BOX": "Exactly one instance was launched. runs/act2/retrain12_ct/INSTANCE.json records THREE boxes started by a loop that did not stop on first success; this launch was a single call and the id above is the whole of it.",
+  "terminate": "python tools/act2_retrain_orchestrate.py terminate --instance 3ccc0b9fa6504185b3b0fb7bfc692f87 --root puzzle_force"
+}
