@@ -549,6 +549,42 @@ def carries(provocation: str, turn) -> bool:
 _force_rng = random.Random()
 
 
+#: ⭐⭐ THE MEASURED SPEECH-ACT DISTRIBUTION OF THE CORPUS THE SPEAKER TRAINED
+#: ON — the dial's default table, and the reason it is no longer arbitrary.
+#:
+#: ⛔⛤ THE DIAL SHIPPED WITH `ki_weight=0.35` AND AN EVEN SPLIT OVER THE REST,
+#: and this module said of it: "Proposed at 0.35, not measured — R4 is what
+#: would justify any value at all." R4 never ran. Measured on the bench at that
+#: default (n=94, temperature 0.7, carry filter off) it served
+#:
+#:     ki 38.3%  ko 21.3%  ku 19.1%  kä 13.8%  ka 7.4%
+#:
+#: which is as false as the `ka` 100% it replaced: **most of what anyone says is
+#: a statement**, and a Tlönian that asks 38% of the time is an interrogator.
+#:
+#: ⭐ These are RAW COUNTS from `corpus_bench_force/train.jsonl`, direction
+#: `provoke` — the 2,241 rows that taught the speaker how to answer. Counts and
+#: not shares, so the normalisation is visible and the provenance is exact.
+#: `tests/test_puzzle_force_dial.py` recomputes them from the corpus and fails
+#: on drift, so the dial cannot quietly stop matching the language it claims to
+#: speak.
+FORCE_MARGINAL_COUNTS = {"ka": 1179, "ki": 508, "ko": 324, "ku": 196, "kä": 34}
+FORCE_MARGINAL_SOURCE = ("runs/act2/corpus_bench_force/train.jsonl · "
+                         "direction=provoke · 2241 rows · cell force-s20624")
+
+#: ⛔⛔ SETTING `TLON_KI_WEIGHT` AT ALL — EVEN TO ITS OWN DEFAULT — SELECTS THE
+#: LEGACY EVEN-SPLIT TABLE. That is deliberate (a caller who names the knob
+#: means it) and it is a FOOTGUN, so it is written down here rather than
+#: discovered: the force probe set this variable "harmlessly" to 0.35 on its
+#: way past, and the corpus table it was built to verify never ran. The served
+#: histogram came back `ki 26.5 · ku 21.4 · ko 21.4 · ka 17.1 · kä 13.7` and
+#: looked like a result.
+#:
+#: ⭐ So: nothing sets this unless it wants the old behaviour. Presence is the
+#: switch, and presence is easy to cause by accident.
+_KI_WEIGHT_EXPLICIT = "TLON_KI_WEIGHT" in os.environ
+
+
 def force_weights(prior: str, *, ki_weight: float = None) -> dict[str, float]:
     """The reply-force distribution for a provocation carrying `prior`.
 
@@ -557,13 +593,27 @@ def force_weights(prior: str, *, ki_weight: float = None) -> dict[str, float]:
     carries — and an ask is answered with an assert. A dial that reweighted it
     would be overwriting the one derived thing in the language with a product
     preference.
+
+    ⭐ `ki_weight=None` (the default) draws from `FORCE_MARGINAL_COUNTS`, the
+    corpus's own measured distribution. Passing a number keeps the original
+    behaviour — that weight to `ki`, the rest split evenly — because it is a
+    shipped knob and a caller who names a value means it.
     """
     lex = sorted(C.load()["classes"]["F"])
     if prior == "ki":
         return {f: (1.0 if f == "ka" else 0.0) for f in lex}
-    w = KI_WEIGHT if ki_weight is None else ki_weight
-    rest = (1.0 - w) / (len(lex) - 1)
-    return {f: (w if f == "ki" else rest) for f in lex}
+    if ki_weight is None:
+        # ⛔ NORMALISED OVER `lex`, NOT OVER THE DICT. If the lexicon ever
+        # carries a force the corpus never used, it belongs in the
+        # distribution at zero rather than silently inflating the others.
+        total = sum(FORCE_MARGINAL_COUNTS.get(f, 0) for f in lex)
+        if not total:
+            raise SpeakerError(
+                "the force marginal is empty against lexicon %s — refusing to "
+                "draw from nothing" % lex)
+        return {f: FORCE_MARGINAL_COUNTS.get(f, 0) / total for f in lex}
+    rest = (1.0 - ki_weight) / (len(lex) - 1)
+    return {f: (ki_weight if f == "ki" else rest) for f in lex}
 
 
 def draw_force(prior: str, *, rng=None, ki_weight: float = None) -> str:
@@ -604,7 +654,11 @@ def apply_force_dial(reply, provocation: str) -> tuple[str | None, str | None]:
         prior = parse(provocation).force
     except Exception:                                          # noqa: BLE001
         return was, was
-    drawn = draw_force(prior)
+    # ⛔ The env knob wins ONLY when it was actually set. Passing `KI_WEIGHT`
+    # unconditionally would hand `force_weights` its module default of 0.35 and
+    # the corpus table would be dead code that every test still passed.
+    drawn = draw_force(prior,
+                       ki_weight=KI_WEIGHT if _KI_WEIGHT_EXPLICIT else None)
     if drawn == was:
         return was, was
     try:

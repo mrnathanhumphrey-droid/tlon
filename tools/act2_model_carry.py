@@ -149,6 +149,20 @@ def main() -> int:
                          "this a different probe set and the carry number "
                          "stops being paired with that adapter's render.")
     ap.add_argument("--dtype", default="bfloat16")
+    # ⛔⛔ THE FORCE READ IS MEANINGLESS AT TEMPERATURE 0 AND THAT IS NOT
+    # OBVIOUS. `LocalBackend` defaults to 0.0, i.e. `do_sample=False`, i.e.
+    # ARGMAX — and the argmax of a 52.6%-`ka` posterior is `ka` every single
+    # time. The first v2 read came back "force ka 100% (64/64)" off a corpus
+    # measured at 52.6%, and the 100% was the decoder, not the speaker.
+    # ⭐ THE BENCH SAMPLES AT 0.7 (`puzzle/speaker.py`). A force distribution
+    # is only comparable to the served one if it was drawn the way the served
+    # one is drawn. Carry is fine greedy — it is a property of one reply, not
+    # of a distribution over replies — so 0.0 stays the default and nothing
+    # already published moves.
+    ap.add_argument("--temperature", type=float, default=0.0,
+                    help="0.0 = greedy (carry). Pass 0.7 — the bench's own "
+                         "setting — for any reading ABOUT THE DISTRIBUTION, "
+                         "such as force.")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
 
@@ -159,13 +173,24 @@ def main() -> int:
 
     roots = frozenset(C.load()["classes"]["R"])
     battery = probes.build(seed=a.seed, n_prod=a.n, n_comp=a.n)
-    back = LocalBackend(a.model, adapter=a.adapter, dtype=a.dtype)
+    back = LocalBackend(a.model, adapter=a.adapter, dtype=a.dtype,
+                        temperature=a.temperature)
     speaker = LLMSpeaker("native", back, card=False)
 
-    print("MODEL CARRY · %s · adapter=%s · battery %s · n=%d"
-          % (back.name, a.adapter or "NONE (baseline)", battery.digest, a.n))
+    print("MODEL CARRY · %s · adapter=%s · battery %s · n=%d · temp %.2f%s"
+          % (back.name, a.adapter or "NONE (baseline)", battery.digest, a.n,
+             a.temperature, " (GREEDY)" if not a.temperature else " (sampled)"))
     print("⛔ cardless — the same configuration F-LOCAL reads, on the same "
-          "battery, so this number is PAIRED with that adapter's render\n")
+          "battery, so this number is PAIRED with that adapter's render")
+    # ⛔⛔ THE FORCE LINE BELOW IS NOT A DISTRIBUTION AT TEMPERATURE 0. Said
+    # here, next to the number, because a reader who sees "ka 100%" and does
+    # not see the decoder will conclude something false about the speaker.
+    if not a.temperature:
+        print("⛔ GREEDY — the FORCE figures below are the argmax, NOT the "
+              "model's distribution. The bench samples at 0.7; re-read force "
+              "with --temperature 0.7 before comparing to it.\n")
+    else:
+        print("")
 
     rows = []
     for i in range(a.n):
@@ -235,7 +260,13 @@ def main() -> int:
         out.parent.mkdir(parents=True, exist_ok=True)
         tmp = out.with_suffix(".json.tmp")
         tmp.write_text(json.dumps(
-            {"summary": s, "force": ft, "adapter": a.adapter,
+            # ⛔⛔ `temperature` TRAVELS WITH THE FORCE TABLE OR THE TABLE IS
+            # UNREADABLE LATER. A greedy force histogram and a sampled one are
+            # different quantities that look identical on disk, and the file
+            # is the only thing that survives the box.
+            {"summary": s, "force": ft, "temperature": a.temperature,
+             "force_is_a_distribution": bool(a.temperature),
+             "adapter": a.adapter,
              "battery": battery.digest,
              "seed": a.seed, "n": a.n, "items": rows},
             ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")

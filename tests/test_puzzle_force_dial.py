@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import pathlib
 import random
+import re
 import sys
 
 import pytest
@@ -33,12 +34,59 @@ from tlon.grammar.parse import parse              # noqa: E402
 
 REPLY = "hlim hlux les nang axas les ka"
 
+#: ⛔ Gitignored (regenerable from the two committed pools at seed 20624), so
+#: the recompute test skips where it is absent rather than failing.
+CORPUS = ROOT / "runs" / "act2" / "corpus_bench_force" / "train.jsonl"
 
-def _reads_the_dial(path) -> bool:
-    """An env LOOKUP of either knob, not a mention of its name in prose."""
+
+#: A WRITE to the dial's environment — assignment, `pop`, or `del`. All three
+#: change the variable; none of them INTERPRET it, which is the thing the bar
+#: below keeps to one place. ⛔ `pop` is here because clearing a stale knob is
+#: how the probe stops itself from silently selecting the legacy table, and a
+#: guard that called that a "read" would push the fix back out of the harness.
+_DIAL_SET = re.compile(
+    r"(?:environ\[\s*[\"']TLON_(?:FORCE_TABLE|KI_WEIGHT)[\"']\s*\]\s*="
+    r"|environ\.pop\(\s*[\"']TLON_(?:FORCE_TABLE|KI_WEIGHT)[\"']"
+    r"|del\s+os\.environ\[\s*[\"']TLON_(?:FORCE_TABLE|KI_WEIGHT)[\"']\s*\])")
+
+#: ⛔⛔ FILES ALLOWED TO *SET* THE DIAL, AND THE REASON EACH ONE MAY.
+#: Setting is not interpreting: these write the variable and then assert that
+#: `speaker` agrees, so there is still exactly ONE place that decides what the
+#: flag MEANS — which is the whole point of the bar below. Each entry is also
+#: checked to contain no LOOKUP, so an allowlisted file cannot quietly become a
+#: second interpreter.
+_MAY_SET_THE_DIAL = {
+    # The off-line force probe. It runs both arms of the dial and refuses to
+    # report unless `SP.FORCE_TABLE` matches what it asked for.
+    "modal_force_probe.py",
+}
+
+
+def _touches_the_dial(path) -> bool:
     text = path.read_text(encoding="utf-8", errors="replace")
     return any(("environ" in line or "getenv" in line)
                and ("TLON_FORCE_TABLE" in line or "TLON_KI_WEIGHT" in line)
+               for line in text.splitlines())
+
+
+def _sets_the_dial(path) -> bool:
+    """An ASSIGNMENT into `os.environ`, not a lookup out of it."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return any(_DIAL_SET.search(line) for line in text.splitlines())
+
+
+def _reads_the_dial(path) -> bool:
+    """An env LOOKUP of either knob — the thing that must live in ONE place.
+
+    ⛔ A line that WRITES `os.environ[...]` is excluded: a harness that sets the
+    flag and then asserts the module agreed is not a second reader of it. The
+    bar is about two places INTERPRETING one flag, and that is preserved
+    literally — see `_MAY_SET_THE_DIAL`, which is audited by its own test.
+    """
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return any(("environ" in line or "getenv" in line)
+               and ("TLON_FORCE_TABLE" in line or "TLON_KI_WEIGHT" in line)
+               and not _DIAL_SET.search(line)
                for line in text.splitlines())
 
 
@@ -106,6 +154,74 @@ def test_an_ask_is_never_answered_with_an_ask(monkeypatch):
 
 
 # ── the weights are what the flag says they are ────────────────────────────
+
+def test_the_default_table_is_the_CORPUS_marginal_not_a_proposal():
+    """⛔⛔ THE DIAL SHIPPED WITH AN UNMEASURED DEFAULT AND IT SERVED A LIE.
+
+    `ki_weight=0.35` with the rest split evenly put `ka` — the assertion, the
+    thing most utterances are — at **7.4%** on the bench (n=94, temp 0.7), and
+    `ki` at 38.3%. That is as false as the `ka` 100% it was built to fix. The
+    default is now the corpus's own measured distribution, so the reader sees
+    the language as its corpus speaks it.
+    """
+    w = SP.force_weights("ka")
+    assert w["ka"] == pytest.approx(0.526, abs=0.01), w
+    assert w["ki"] == pytest.approx(0.227, abs=0.01), w
+    # ⭐ The ORDER is the claim that matters: statements dominate, then asks.
+    order = [f for f, _ in sorted(w.items(), key=lambda kv: -kv[1])]
+    assert order == ["ka", "ki", "ko", "ku", "kä"], order
+    assert sum(w.values()) == pytest.approx(1.0)
+
+
+@pytest.mark.skipif(not CORPUS.exists(), reason="corpus not on this machine")
+def test_the_default_table_still_matches_the_corpus_it_claims_to_come_from():
+    """⛔⛔ A TABLE COPIED OUT OF A CORPUS DRIFTS FROM IT SILENTLY. Recomputed
+    here from the rows themselves, so a rebuilt corpus cannot leave the dial
+    speaking the previous one's distribution."""
+    import collections
+    import json
+    got = collections.Counter()
+    with CORPUS.open(encoding="utf-8") as fh:
+        for line in fh:
+            r = json.loads(line)
+            if r.get("direction") == "provoke":
+                got[(r.get("scene") or {}).get("force")] += 1
+    assert dict(got) == SP.FORCE_MARGINAL_COUNTS, (
+        "the dial's table no longer matches %s — recompute it or say why it "
+        "should differ" % SP.FORCE_MARGINAL_SOURCE)
+
+
+def test_an_explicit_ki_weight_still_overrides_the_table():
+    """⭐ The knob was shipped, so a caller who names a value means it. Only the
+    DEFAULT moved."""
+    w = SP.force_weights("ka", ki_weight=0.35)
+    assert w["ki"] == pytest.approx(0.35)
+    assert w != SP.force_weights("ka")
+
+
+def test_the_env_knob_is_only_honoured_when_it_is_actually_SET():
+    """⛔⛔ THE TRAP THIS AVOIDS. `apply_force_dial` passing `KI_WEIGHT`
+    unconditionally would hand `force_weights` its module default of 0.35 —
+    the corpus table would be dead code and every other test here would still
+    pass. The read must be conditional on the variable existing."""
+    src = (ROOT / "puzzle" / "speaker.py").read_text(encoding="utf-8")
+    assert "_KI_WEIGHT_EXPLICIT" in src
+    assert 'KI_WEIGHT if _KI_WEIGHT_EXPLICIT else None' in src, (
+        "apply_force_dial no longer distinguishes a SET knob from its default")
+
+
+def test_the_draw_follows_the_corpus_table_by_default():
+    """⭐ A table whose weights nothing draws from is a comment."""
+    rng = random.Random(20624)
+    drawn = [SP.draw_force("ka", rng=rng) for _ in range(4000)]
+    ka = drawn.count("ka") / len(drawn)
+    ki = drawn.count("ki") / len(drawn)
+    assert 0.49 < ka < 0.56, "ka share %.3f is not near the corpus 0.526" % ka
+    assert 0.20 < ki < 0.26, "ki share %.3f is not near the corpus 0.227" % ki
+    # ⛔ And `kä` must actually appear — a 1.5% cell rounded out of existence
+    # would make the language four-way, which is the bug one level quieter.
+    assert "kä" in drawn
+
 
 def test_the_other_rows_give_ki_its_weight_and_split_the_rest_evenly():
     w = SP.force_weights("ka", ki_weight=0.35)
@@ -211,3 +327,28 @@ def test_only_the_speaker_reads_the_dial():
     seen = sorted(p.name for p in (ROOT / "puzzle").rglob("*.py")
                   if _reads_the_dial(p))
     assert seen == ["speaker.py"], seen
+
+
+def test_only_named_harnesses_may_SET_the_dial_and_they_may_not_read_it():
+    """⛔⛔ THE SECOND HALF OF THE SAME BAR. Setting the flag is legitimate for a
+    probe that then asserts the module agreed; becoming a second INTERPRETER of
+    it is not. So every setter is named with its reason, and each one is checked
+    to contain no lookup — otherwise the allowlist would be a hole rather than a
+    record."""
+    setters = {p.name for p in (ROOT / "puzzle").rglob("*.py")
+               if _sets_the_dial(p)}
+    unlisted = setters - _MAY_SET_THE_DIAL
+    assert not unlisted, (
+        "these set the dial without being named: %s — add them with a reason "
+        "or stop setting it" % sorted(unlisted))
+    for p in (ROOT / "puzzle").rglob("*.py"):
+        if p.name in _MAY_SET_THE_DIAL:
+            assert not _reads_the_dial(p), (
+                "%s is allowed to SET the dial but it also READS it, which "
+                "makes it a second interpreter" % p.name)
+    # ⛔ And the research track may not even set it.
+    offenders = [str(p.relative_to(ROOT))
+                 for sub in ("tlon", "tools")
+                 for p in (ROOT / sub).rglob("*.py")
+                 if _touches_the_dial(p)]
+    assert not offenders, offenders
