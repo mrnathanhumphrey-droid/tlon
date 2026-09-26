@@ -130,7 +130,7 @@ def client(tmp_path, monkeypatch):
 
     from puzzle import server
 
-    def fake_turn(english, write_pairs, provoke_pairs):
+    def fake_turn(english, write_pairs, provoke_pairs, force=None):
         return {"you": {"english": english, "surface": "mil prax ka",
                         "gloss": "g", "literary": "l", "let_go": [],
                         "refused": None, "seconds": 0.1},

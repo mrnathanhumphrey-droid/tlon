@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 
 from . import guard as G
 from . import logbook as LB
+from . import router
 from . import tripwire
 from . import turnstile as TS
 from .speaker import (BENCH_IDLE_MINUTES, CONTEXT_TURNS, MAX_ENGLISH_CHARS,
@@ -629,9 +630,41 @@ def say(body: Say, request: Request, response: Response):
     # turns and there is nothing for a reader to decode — the puzzle IS the
     # language, and a language is solvable only because it repeats.
     write_pairs, provoke_pairs = store.threads(cid, max_turns=CONTEXT_TURNS)
+
+    # ⭐⭐ WHICH DOOR, DECIDED BEFORE EITHER MODEL IS ASKED. A reader who says a
+    # Tlön word back is making an honest attempt at the puzzle, and the write
+    # step is the one thing that cannot read it — its training English holds the
+    # token `ka` in 0 of 12,680 rows. See `puzzle/router.py`.
+    # ⛔ `provoke_pairs[-1][1]` IS THE TLÖNIAN'S LAST LINE, which is what a bare
+    # force word is aimed at. The pairs are (your_surface, its_surface).
+    prior_surface = provoke_pairs[-1][1] if provoke_pairs else None
+    decision = router.classify(english, prior_surface)
+
+    if decision.route == router.NOTHING:
+        # ⛔ NOT A LANGUAGE REFUSAL, AND IT MUST NOT READ AS ONE. The reader's
+        # first line was a bare speech act. The language would hold it fine;
+        # there is simply nothing yet for it to be aimed at.
+        logbook.record_turn(
+            reader=reader, ip_trusted=trusted, request_id=rid,
+            conversation_id=cid, turn=store.next_turn(cid), english=english,
+            surface=None, refused="router: no prior line to answer",
+            seconds=0.0, flags=tripwire.flagline(flags), severity=severity,
+            route=decision.route)
+        return JSONResponse({"error": _NOTHING_TO_ANSWER}, status_code=400)
+
     try:
         with limiter.slot():
-            result = speaker.turn(english, write_pairs, provoke_pairs)
+            if decision.skips_write:
+                result = speaker.speak_from(decision.surface, provoke_pairs,
+                                            english=english)
+            else:
+                result = speaker.turn(decision.english, write_pairs,
+                                      provoke_pairs, force=decision.force)
+                # ⛔ THE BUBBLE SHOWS WHAT THEY TYPED. Route `tagged` hands the
+                # write step a stripped line; the reader never wrote that
+                # string and must not be shown it back as their own.
+                if result.get("you"):
+                    result["you"]["english"] = english
     except G.Refused as exc:
         _note_refusal("busy", exc.message, reader, trusted, body.english,
                       flags, severity, rid)
@@ -669,7 +702,7 @@ def say(body: Say, request: Request, response: Response):
         surface=_tlon.get("surface"),
         refused=result["you"].get("refused") or _tlon.get("refused"),
         seconds=result.get("seconds"), flags=tripwire.flagline(flags),
-        severity=severity)
+        severity=severity, route=decision.route)
 
     out = JSONResponse({"conversation_id": cid, "messages": rows,
                         "seconds": result["seconds"]})
@@ -978,8 +1011,37 @@ def _note_refusal(kind: str, message: str, reader: str, trusted: bool,
 #:
 #: ⭐ THE RAW TEXT IS NOT LOST. It goes to the store and to the log, where an
 #: operator can read it. What is refused is putting it on the internet.
-_REFUSAL_LANGUAGE = "The language would not hold that."
+#: Tlön genuinely has no way to say it — an invented form, a cap exceeded, a
+#: scene that will not render. The reader's own line can land here too.
+_REFUSAL_LANGUAGE = "There is no way to say that here."
+
+#: ⛔⛔ OURS, NOT THE LANGUAGE'S, AND IT USED TO BORROW THE SENTENCE ABOVE.
+#: Four of the five refusals in the 2026-09-25 bench test were this: the model
+#: emitted a malformed object — `node must be an object, got NoneType`,
+#: `refused_objects must be a list, got str`, and once JSON that would not even
+#: decode — and the bench told the reader the language would not hold their
+#: sentence. It would have held it fine. Saying so was the bench blaming Tlön
+#: for a 7B's bad afternoon, in the one interaction a curious reader reaches
+#: first.
+_REFUSAL_SPEAKER = "The speaker lost the thread."
+
+#: The backend could not be reached at all.
 _REFUSAL_TROUBLE = "Something went wrong reaching the speaker."
+
+#: A bare force word on the reader's FIRST line. A real speech act with nothing
+#: yet to be aimed at — not the language failing, and it must not borrow the
+#: sentence that says it did.
+_NOTHING_TO_ANSWER = "Nothing has happened here yet to answer."
+
+#: ⛔⛔ THE DISCRIMINATOR, AND IT IS A CONVENTION OF `tlon/product/schema.py`.
+#: That module reports a TYPE violation as "... got {type(x).__name__}" and a
+#: VALUE violation without it. The split is exactly the one that matters here:
+#: a wrong TYPE is the model handing us a malformed object, which is ours; a
+#: wrong VALUE is a well-formed proposal the language refuses, which is the
+#: language. ⭐ The coupling is asserted against schema.py's own source in
+#: `tests/test_puzzle_refusal_causes.py`, so drift fires a test rather than
+#: quietly re-misattributing the blame.
+_MALFORMED_MARK = ", got "
 
 
 def _reader_refusal(raw) -> str | None:
@@ -989,8 +1051,17 @@ def _reader_refusal(raw) -> str | None:
     if not raw:
         return None
     text = str(raw)
-    if text.startswith("gate refused") or "gate would not pass" in text:
+    if text.startswith("gate refused"):
+        # ⛔ THREE CAUSES WORE ONE SENTENCE. Split on the type/value line.
+        return (_REFUSAL_SPEAKER if _MALFORMED_MARK in text
+                else _REFUSAL_LANGUAGE)
+    if "gate would not pass" in text:
+        # The gate refused with no reason recorded. Attributed to the language,
+        # which is where the gate lives.
         return _REFUSAL_LANGUAGE
+    if text.startswith("malformed JSON"):
+        # `BackendError` — the model's output would not even decode. Ours.
+        return _REFUSAL_SPEAKER
     return _REFUSAL_TROUBLE
 
 

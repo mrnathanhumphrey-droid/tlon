@@ -56,7 +56,7 @@ def app(tmp_path, monkeypatch):
 
     from puzzle import server
 
-    def refusing_turn(english, write_pairs, provoke_pairs):
+    def refusing_turn(english, write_pairs, provoke_pairs, force=None):
         """A turn the gate would not pass, carrying the validator's real
         wording — including the value it quoted back."""
         return {
@@ -116,7 +116,10 @@ def test_the_reader_is_told_something_true_instead(app):
     c = _client(app)
     rows = c.post("/say", json={"english": "a dog barks"}).json()["messages"]
     tlon = [r for r in rows if r["role"] == "tlon"][0]
-    assert tlon["refused"] == "The language would not hold that."
+    # ⛔ THE CONSTANT, NOT THE COPY. Pinning the sentence here made a
+    # wording change look like a broken guard; the guard is that a
+    # refusal is SHOWN and SANITISED, not that it reads a certain way.
+    assert tlon["refused"] == app._REFUSAL_LANGUAGE
     assert tlon.get("surface") is None
 
 
@@ -130,7 +133,10 @@ def test_the_replayed_conversation_is_sanitised_too(app):
     assert EVIL not in body and "gate refused" not in body
     tlon = [r for r in c.get("/conversation").json()["messages"]
             if r["role"] == "tlon"][0]
-    assert tlon["refused"] == "The language would not hold that."
+    # ⛔ THE CONSTANT, NOT THE COPY. Pinning the sentence here made a
+    # wording change look like a broken guard; the guard is that a
+    # refusal is SHOWN and SANITISED, not that it reads a certain way.
+    assert tlon["refused"] == app._REFUSAL_LANGUAGE
 
 
 def test_the_raw_reason_is_still_kept_for_the_operator(app):
@@ -160,8 +166,8 @@ def test_the_sanitiser_returns_fixed_strings_and_not_slices(app):
                 EVIL,
                 "the gate would not pass it"):
         out = reader_refusal(raw)
-        assert out in ("The language would not hold that.",
-                       "Something went wrong reaching the speaker."), out
+        assert out in (app._REFUSAL_LANGUAGE, app._REFUSAL_SPEAKER,
+                       app._REFUSAL_TROUBLE), out
         assert EVIL not in out
     assert reader_refusal(None) is None
     assert reader_refusal("") is None

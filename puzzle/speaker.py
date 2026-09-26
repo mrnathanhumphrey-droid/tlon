@@ -65,6 +65,7 @@ from tlon.product.chat import MAX_ENGLISH_CHARS             # noqa: E402
 from tlon.product.literary import literary                  # noqa: E402
 
 from . import bench_prompt                                  # noqa: E402
+from . import router                                        # noqa: E402
 
 #: ⛔ Defaults match the configuration the speaker was READ in (temperature 0.7,
 #: max_new_tokens 256) so the thing on screen is the thing that was measured.
@@ -350,8 +351,44 @@ class Speaker:
             # raising generate would otherwise leave it set.
             backend.conversation = []
 
-    def turn(self, english: str, write_pairs, provoke_pairs) -> dict:
+    def speak_from(self, surface: str, provoke_pairs, *, english: str) -> dict:
+        """One exchange whose FIRST HALF NEEDS NO MODEL.
+
+        ⭐⭐ The reader already wrote Tlön — a pasted surface, or a bare force
+        word aimed at the Tlönian's last line and re-rendered by
+        `router.refocus`. There is nothing for the write step to render, and
+        asking it to would be the bug: its training English contains the token
+        `ka` in 0 of 12,680 rows, so a Tlön-shaped input is the one thing it
+        cannot read.
+
+        ⛔ The reader's bubble still shows what they TYPED. `english` is
+        carried through untouched; `surface` is the provocation.
+        """
+        scene = parse(surface)          # raises if the caller passed a non-surface
+        backend_t0 = time.perf_counter()
+        reply = self.reply_to(surface, list(provoke_pairs))
+        seconds = time.perf_counter() - backend_t0
+        return {
+            "you": {"english": english, "surface": surface,
+                    "gloss": gloss(scene), "literary": literary(scene),
+                    # ⭐ Nothing was let go: the reader wrote in Tlön, so no
+                    # object had to be refused out of an English sentence.
+                    "let_go": [], "refused": None, "seconds": 0.0},
+            "tlon": _row(reply) if reply is not None else None,
+            "seconds": round(seconds, 2),
+            "shape": SHAPE,
+            "replies_drawn": 1,
+            "context_turns": min(len(list(provoke_pairs)), CONTEXT_TURNS),
+        }
+
+    def turn(self, english: str, write_pairs, provoke_pairs,
+             force: str | None = None) -> dict:
         """One exchange, ON A BENCH. Returns rows for the store and the page.
+
+        ⭐ `force` stamps the reader's own speech act onto their rendered line —
+        the route for English with a force word hung off the end. It is the same
+        mechanism the write model already learned for `?`→`ki` (98.8% of 744
+        rows), applied where no tag exists for it.
 
         ⛔⛔ THIS IS `tlon_converse.exchange` WITH THE WINDOW ADDED, AND IT IS
         SPELLED OUT HERE ONLY BECAUSE THE CONVERSATION DIFFERS BETWEEN THE TWO
@@ -392,6 +429,19 @@ class Speaker:
             yours = generate(backend, WRITE, english, [], shape=SHAPE)
         finally:
             backend.conversation = []
+
+        # ⭐ The reader's speech act, stamped on their own rendered line.
+        # ⛔ AFTER THE GATE, NEVER INSTEAD OF IT. `refocus` re-parses what it
+        # renders and compares it to the scene it built, so a force override
+        # cannot smuggle through a surface the gate would have refused. If the
+        # write step was refused there is nothing to stamp and nothing to fix.
+        if force is not None and yours.ok:
+            moved = router.refocus(yours.surface, force)
+            yours.surface = moved
+            # ⛔ The SCENE moves too. `_row` glosses from `turn.scene`, so
+            # leaving it behind would put a reply on screen whose translation
+            # disagreed with its own last word.
+            yours.scene = parse(moved)
 
         # ⭐ THE FIRST EXCHANGE MAY DRAW AGAIN IF IT DOES NOT CARRY. See
         # `CARRY_RETRIES` for the measurement this rests on. `provoke_pairs`

@@ -94,6 +94,36 @@ _ID_CHARS = 16
 MAX_TEXT = 4000
 MAX_TRACEBACK = 8000
 
+#: ⛔⛔ `CREATE TABLE IF NOT EXISTS` DOES NOTHING TO A TABLE THAT ALREADY EXISTS.
+#: The production log is live and holds real turns, so a column added to
+#: `_SCHEMA` reaches a fresh database and no other — every existing bench would
+#: keep the old shape and every insert naming the new column would fail. These
+#: run after the schema, are guarded by what the table actually has, and are
+#: idempotent.
+#:
+#: ⭐ Each entry is (table, column, DDL). Index creation that depends on a
+#: migrated column belongs here too, AFTER the column exists — in `_SCHEMA` it
+#: would run first and raise "no such column" on every live database.
+_MIGRATIONS = (
+    ("turns", "route", "ALTER TABLE turns ADD COLUMN route TEXT NOT NULL "
+                       "DEFAULT ''"),
+)
+
+_POST_MIGRATION = (
+    "CREATE INDEX IF NOT EXISTS ix_turns_route ON turns (route)",
+)
+
+
+def _migrate(conn) -> None:
+    """Bring an existing database up to `_SCHEMA`'s shape. Idempotent."""
+    for table, column, ddl in _MIGRATIONS:
+        have = {r[1] for r in conn.execute("PRAGMA table_info(%s)" % table)}
+        if column not in have:
+            conn.execute(ddl)
+    for ddl in _POST_MIGRATION:
+        conn.execute(ddl)
+
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS turns (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -111,7 +141,13 @@ CREATE TABLE IF NOT EXISTS turns (
     refused         TEXT,
     seconds         REAL,
     flags           TEXT NOT NULL DEFAULT '',
-    severity        INTEGER NOT NULL DEFAULT 0
+    severity        INTEGER NOT NULL DEFAULT 0,
+    -- ⭐ Which door the line went through: tlon · force · tagged · english ·
+    -- english.roots · nothing. Without it a refusal cannot be attributed to a
+    -- route, and `english.roots` is the only record of the rows a future write
+    -- corpus needs. ⛔ Added to a table that already holds production turns —
+    -- see `_MIGRATIONS`, which is what makes that safe.
+    route           TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS ix_turns_at ON turns (at);
 CREATE INDEX IF NOT EXISTS ix_turns_reader ON turns (reader, at);
@@ -206,6 +242,7 @@ class Logbook:
             conn = self._conn()
             try:
                 conn.executescript(_SCHEMA)
+                _migrate(conn)
                 conn.commit()
             finally:
                 conn.close()
@@ -258,15 +295,15 @@ class Logbook:
                     refused: str | None = None, conversation_id: str | None = None,
                     turn: int | None = None, seconds: float | None = None,
                     flags: str = "", severity: int = 0,
-                    request_id: str | None = None) -> None:
+                    request_id: str | None = None, route: str = "") -> None:
         self._write(
             "INSERT INTO turns (at, request_id, reader, ip_trusted, "
             "conversation_id, turn, english, surface, refused, seconds, "
-            "flags, severity) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            "flags, severity, route) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (time.time(), request_id, reader, 1 if ip_trusted else 0,
              conversation_id, turn, _clip(english, MAX_TEXT),
              _clip(surface, MAX_TEXT), _clip(refused, 500), seconds,
-             flags, int(severity)))
+             flags, int(severity), route))
 
     def record_error(self, *, kind: str, detail: str, reader: str | None = None,
                      ip_trusted: bool | None = None, method: str | None = None,

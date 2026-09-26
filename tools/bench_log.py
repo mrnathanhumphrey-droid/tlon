@@ -99,8 +99,13 @@ def show_turns(conn, args, *, min_severity: int) -> None:
         return
     for r in rows:
         mark = "!" * r["severity"] if r["severity"] else " "
-        print("%s %-3s %s  turn %s  %s" % (
+        # ⭐ The ROUTE, because a refusal that cannot be attributed to a door is
+        # a refusal nobody can act on. `.get`-style guard: a snapshot taken
+        # before the column existed still reads.
+        route = (r["route"] if "route" in r.keys() else "") or ""
+        print("%s %-3s %s  turn %s  %s%s" % (
             when(r["at"]), mark, r["reader"], r["turn"],
+            ("[%s] " % route) if route else "",
             "" if r["ip_trusted"] else "⛔ADDRESS UNTRUSTED — NOT BANNABLE"))
         if r["flags"]:
             print("    flags : %s" % r["flags"])

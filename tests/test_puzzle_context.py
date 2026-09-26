@@ -254,7 +254,7 @@ def test_say_hands_the_window_to_the_speaker(tmp_path, monkeypatch):
 
     seen = []
 
-    def fake_turn(english, write_pairs, provoke_pairs):
+    def fake_turn(english, write_pairs, provoke_pairs, force=None):
         seen.append((english, list(write_pairs), list(provoke_pairs)))
         n = len(seen)
         return {"you": {"english": english, "surface": "you%d" % n,

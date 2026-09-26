@@ -61,7 +61,7 @@ def client(tmp_path, monkeypatch):
 
     from puzzle import server
 
-    def fake_turn(english, write_pairs, provoke_pairs):
+    def fake_turn(english, write_pairs, provoke_pairs, force=None):
         # ⛔ The fake returns gloss and literary EXACTLY as the real speaker
         # does. A stub that omitted them would make this test pass by having
         # nothing to leak — the mutant that rubber-stamps itself.

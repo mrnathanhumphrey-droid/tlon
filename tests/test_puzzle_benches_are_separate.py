@@ -42,7 +42,7 @@ def app(tmp_path, monkeypatch):
 
     from puzzle import server
 
-    def fake_turn(english, write_pairs, provoke_pairs):
+    def fake_turn(english, write_pairs, provoke_pairs, force=None):
         return {"you": {"english": english, "surface": "mil prax ka",
                         "gloss": "g", "literary": "l", "let_go": [],
                         "refused": None, "seconds": 0.1},
@@ -180,7 +180,7 @@ def test_concurrent_readers_never_see_each_others_context(app):
     lock = threading.Lock()
     real_turn = server.speaker.turn
 
-    def recording_turn(english, write_pairs, provoke_pairs):
+    def recording_turn(english, write_pairs, provoke_pairs, force=None):
         with lock:
             seen.append((english, list(write_pairs), list(provoke_pairs)))
         return real_turn(english, write_pairs, provoke_pairs)
@@ -229,11 +229,37 @@ def test_one_generation_at_a_time_is_what_makes_that_true(app):
         "⛔⛔⛔ MAX_CONCURRENT > 1 while the backend keeps conversation state on "
         "one process-wide object — readers' contexts can interleave")
 
+    # ⛔⛔ STRUCTURAL, NOT A CHARACTER DISTANCE. This measured `index("speaker.
+    # turn(") - index("with limiter.slot():") < 200`, which broke the moment the
+    # input router added a second generation entry point and some comments —
+    # while `turn` was still perfectly inside the slot. Worse, the old form
+    # could only ever see ONE call: `speak_from` skips the write step and is
+    # just as much a generation, so a heuristic that never looked at it would
+    # have let the new route escape the slot silently.
+    #
+    # ⭐ Now: take the indented block under `with limiter.slot():` and require
+    # EVERY generation entry point to be inside it.
     src = (ROOT / "puzzle" / "server.py").read_text(encoding="utf-8")
-    at_slot = src.index("with limiter.slot():")
-    at_turn = src.index("speaker.turn(", at_slot)
-    assert at_turn - at_slot < 200, (
-        "⛔⛔ speaker.turn is no longer inside the concurrency slot")
+    lines = src.splitlines()
+    at = next(i for i, ln in enumerate(lines) if "with limiter.slot():" in ln)
+    indent = len(lines[at]) - len(lines[at].lstrip())
+    block = []
+    for ln in lines[at + 1:]:
+        if ln.strip() and (len(ln) - len(ln.lstrip())) <= indent:
+            break
+        block.append(ln)
+    block = "\n".join(block)
+
+    for call in ("speaker.turn(", "speaker.speak_from("):
+        assert call in block, (
+            "⛔⛔ %s is not inside the concurrency slot — the backend keeps the "
+            "window on one process-wide object, so a generation outside the "
+            "slot can interleave with another reader's" % call)
+    # ⛔ And nowhere else in the module, or the guard above proves nothing about
+    # the call that actually ran.
+    for call in ("speaker.turn(", "speaker.speak_from("):
+        assert src.count(call) == block.count(call), (
+            "⛔⛔ %s is called somewhere OUTSIDE the slot as well" % call)
 
 
 def test_the_shared_window_is_cleared_even_when_a_turn_fails(app):
