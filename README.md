@@ -1,5 +1,21 @@
 # Tlön
 
+> ## ⛔ If you were sent the puzzle, stop here.
+>
+> **[tlon.resolveresearcher.com](https://tlon.resolveresearcher.com) is a
+> language you are meant to decode from the replies alone. This repository is
+> its answer key** — the full lexicon with every one of the 295 forms glossed in
+> English, the grammar, the parser, and worked examples a few lines below this
+> one.
+>
+> Nothing here is hidden and nothing is DRM: the repo is MIT and the key is a
+> plain YAML file, because the language has to be inspectable for the research
+> to mean anything. But the puzzle only happens once, and it is genuinely better
+> unspoiled. Go and play it first; the repo will still be here.
+>
+> If you would rather read about it than solve it, carry on — you are not doing
+> anything wrong, you are just choosing the other thing.
+
 **A working language with no nouns — and a 7B model that learned to speak it.**
 
 **Weights:** [`keyzersoze04/tlon-7b-lora`](https://huggingface.co/keyzersoze04/tlon-7b-lora)
