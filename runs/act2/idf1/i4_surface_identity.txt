@@ -1,0 +1,16 @@
+dose -1   train surfaces 4674   test rows 13329   test rows on a SEEN surface 86.9%
+   ALL        AUC 0.5944   chain-bootstrap 95% CI [0.5833, 0.6053]
+   seen       AUC 0.5857   chain-bootstrap 95% CI [0.5736, 0.5972]   n=11580
+   unseen     AUC 0.6463   chain-bootstrap 95% CI [0.6242, 0.6681]   n=1749
+
+dose 0    train surfaces 4623   test rows 12688   test rows on a SEEN surface 85.1%
+   ALL        AUC 0.6034   chain-bootstrap 95% CI [0.5930, 0.6133]
+   seen       AUC 0.5961   chain-bootstrap 95% CI [0.5847, 0.6069]   n=10795
+   unseen     AUC 0.6414   chain-bootstrap 95% CI [0.6181, 0.6650]   n=1893
+   → speaker persisted to runs/act2/idf1/ob4_dose0.pkl
+
+dose +1   train surfaces 4583   test rows 12612   test rows on a SEEN surface 84.8%
+   ALL        AUC 0.6099   chain-bootstrap 95% CI [0.5995, 0.6196]
+   seen       AUC 0.6037   chain-bootstrap 95% CI [0.5921, 0.6153]   n=10695
+   unseen     AUC 0.6445   chain-bootstrap 95% CI [0.6194, 0.6673]   n=1917
+

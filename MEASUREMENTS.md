@@ -24,13 +24,15 @@ Removals: [`RETIRED.md`](RETIRED.md).
 **F · Foreign metrics** — [F1 ROUGE](#f1) · [F2 TwoNN Id](#f2)
 **G · The measured axis** — [G1 force:ka](#g1) · [G2 the force simplex](#g2)
 **H · The F1–F5 falsifier scheme** — [remapped to its current estimators](#h), not retired
+**I · Release** — [I1 `release_ctx`](#i1) · [I2 `release_w`](#i2)
 
-⛔ **Three words that mean several things. Always disambiguate:**
+⛔ **Four words that mean several things. Always disambiguate:**
 | word | see |
 |---|---|
 | **drift** | [A1](#a1) (current estimand) · [A5](#a5) (departure, probe battery) · [B3](#b3) (capacity) — three different objects |
 | **`D`** | [A5](#a5) departure, *within*-speaker · vs `D(A,B)` distance, *between*-speaker in `SPEC_TWO_SPEAKER` §3 |
 | **MDE** | [D2](#d2) — two incompatible estimators in the record |
+| **release** | [I1](#i1) `release_ctx`, a harness property · [I2](#i2) `release_w`, a lag statistic — **two quantities that shared one word for the length of a campaign** |
 
 ---
 
@@ -623,3 +625,84 @@ scheme has been retired, and nothing in it has been cleared that the dictionary
 does not also clear.**
 
 Flagged item `RETIRED.md` A3, decided 2026-09-01: **remap, do not retire.**
+
+---
+
+<a name="i"></a>
+# I · RELEASE
+
+⛔⛔ **Until 2026-09-25 this dictionary contained the word `release` zero times,
+while two different quantities were being reported under it.** The entries below
+exist because IDF-1's prereg required them *whatever its verdict*, and that
+requirement stands independently of whether any verdict is ever declared.
+
+<a name="i1"></a>
+## I1 · `release_ctx` — the partner's older turns dropped from context
+
+**What it is.** A property of the **harness**: how much of a partner's earlier
+conversation is still present in a speaker's context window when it answers.
+Set by the conversation driver, not by anything the model learned.
+
+**Where it lives.** `act2_two_speaker.py`, the LIVE arm.
+
+**Level.** In-context. No weights are involved at any point.
+
+<a name="i2"></a>
+## I2 · `release_w` — lag-2 suppression in `read_lag` chains
+
+**What it is.** A property of the **weights**: the degree to which a trained
+speaker avoids re-echoing a root that its own previous turn inherited. Reported
+as the raw lag-2 profile, against `permutation_null`, by `lag_profile` in
+`tlon/discourse/transient.py`.
+
+⚠️ **Measured at window-1, and this is the load-bearing caveat.** `read_lag`
+generates each turn from the bare prior surface with `history=[]`. The model sees
+`t−1` and nothing else. **lag-1 is therefore carry from a turn the model can see;
+lag-2 is carry from a turn it cannot see at all** — carry *through* `t−1`, never
+attention to an own turn inside the window.
+
+**Anchors, from the two red-proofs at 5,000 × 10.** O-A blind (bars nothing)
+0.4456; O-C true (bars the real inherited set) 0.0285. Readings are usefully
+expressed as the fraction of that 0.4171 gap an arm closes.
+
+**D6 model values**, parsed from `runs/act2/retrain12_{cp,ct,ctw1}/model_lag_*.json`:
+
+| dose | lag-1 | lag-2 | closes |
+|---|---|---|---|
+| −1 | 1.0495 | 0.3371 | 26.0 % |
+| 0 | 1.0278 | 0.3854 | 14.5 % |
+| +1 | 1.0463 | 0.3333 | 26.9 % |
+
+⛔ **Never compare two speakers' lag-2 without matching their lag-1 first.** A
+speaker carrying less forward has less to suppress, so a lower lag-2 can be
+lower fidelity wearing release's clothes. See
+`docs/RESULTS_IDF1B_2026_09_25.md` §2, instrument 5.
+
+⛔ **A vacuous pass is not a release result.** IDF-1's O-B F1-threshold arm drove
+lag-1 to 0.0000 at z −42.911 and would otherwise have looked like the best
+release reading in the campaign. It perceived nothing.
+⭐ **And the z-floor built to catch that does not catch a partial collapse**: an
+arm at lag-1 0.4961, under half the model's fidelity, passed at z **+439**,
+because z scales with n. Read the raw profile.
+
+---
+
+## ⛔ I3 · The `_ctx` / `_w` subscript discipline is LIVE AGAIN, and its own
+## reactivation condition fired unnoticed
+
+[C8](#a5) retired the `D_ctx` / `D_w` subscripts on 2026-09-01 as *trivially
+satisfied*, on the stated ground that **"every Act-2 measurement to date is
+inference-only: no weights change in any arm of any run, so every number in the
+arc is `_ctx` by construction"**. It named its own trigger in the same breath:
+
+> **"The moment a fine-tune enters an Act-2 measurement, `D_w` becomes a live
+> category, §0.2 is back in force unamended, and the subscripts return."**
+
+**That moment has passed.** The D6 `retrain12` cells are fine-tunes, and
+`release_w` is read off trained weights. The trigger fired, the notation did not
+return, and a second quantity then grew into the same word.
+
+⭐ C8's underlying prohibition — *the two must never be reported under one word* —
+was never retired and was breached anyway. **A conditionally-retired rule needs
+something that watches its condition**; retiring the notation left the condition
+unwatched.

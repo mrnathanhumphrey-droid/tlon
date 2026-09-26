@@ -1,0 +1,25 @@
+O-B classifier fitted on the dose-0 TRAIN chains (n=29520 rows)
+
+STEP 2 — oracles, LARGE n (5000 chains x 10 turns)
+
+  O-C true   lag1 prof 0.9651 z  +947.818 | lag2 prof 0.0285 z   -16.565 | lag3 prof 0.0434 z    -4.213 | lag4 prof 0.0477 z    -0.796
+  O-A blind  lag1 prof 1.0357 z  +896.393 | lag2 prof 0.4456 z  +361.629 | lag3 prof 0.2127 z  +130.641 | lag4 prof 0.1163 z   +52.607
+  O-B clf    lag1 prof 0.9350 z  +896.300 | lag2 prof 0.4009 z  +313.186 | lag3 prof 0.1986 z  +120.621 | lag4 prof 0.1185 z   +55.052
+
+  model D6 lag-2 raw profile: dose−1 0.337 · dose0 0.385 · dose+1 0.333
+
+O-B threshold maximising held-out F1: 0.230  (F1=0.5276)
+
+O-B VARIANTS, large n (5000 x 10)
+
+  O-B top1       lag1 prof 0.9350 z  +896.300 | lag2 prof 0.4009 z  +313.186 | lag3 prof 0.1986 z  +120.621 | lag4 prof 0.1185 z   +55.052
+  O-B F1-thr     lag1 prof 0.0000 z   -42.911 | lag2 prof 0.0436 z    +0.993 | lag3 prof 0.0430 z    +0.523 | lag4 prof 0.0419 z    -0.539
+
+O-E — empirical Markov kernel per dose (fallback rate logged)
+
+  O-E dose -1    exact 99.4% · root-set 0.1% · blind 0.4%
+  O-E dose -1    lag1 prof 1.0331 z  +949.103 | lag2 prof 0.4498 z  +356.471 | lag3 prof 0.2165 z  +140.917 | lag4 prof 0.1197 z   +54.395
+  O-E dose 0     exact 99.4% · root-set 0.1% · blind 0.5%
+  O-E dose 0     lag1 prof 0.9580 z  +844.860 | lag2 prof 0.2600 z  +188.885 | lag3 prof 0.0995 z   +42.353 | lag4 prof 0.0638 z   +11.002
+  O-E dose +1    exact 99.5% · root-set 0.0% · blind 0.5%
+  O-E dose +1    lag1 prof 0.9571 z  +857.922 | lag2 prof 0.2427 z  +176.164 | lag3 prof 0.0903 z   +35.634 | lag4 prof 0.0575 z    +7.801

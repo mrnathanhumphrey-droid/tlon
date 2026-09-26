@@ -1,0 +1,23 @@
+STEP 1 — identifiability of inherited-ness from the t-1 surface alone
+(rows = one per root of a turn with a non-empty inherited set; split BY CHAIN)
+
+dose -1   rows  44305   positives 0.359   train chains 1011 / test 434
+   logreg AUC 0.5485   chain-bootstrap 95% CI [0.5372, 0.5589]
+   gbt    AUC 0.5623   chain-bootstrap 95% CI [0.5516, 0.5722]
+
+dose 0    rows  42208   positives 0.358   train chains 1011 / test 434
+   logreg AUC 0.5437   chain-bootstrap 95% CI [0.5351, 0.5518]
+   gbt    AUC 0.5511   chain-bootstrap 95% CI [0.5416, 0.5600]
+
+dose +1   rows  41969   positives 0.359   train chains 1011 / test 434
+   logreg AUC 0.5524   chain-bootstrap 95% CI [0.5436, 0.5610]
+   gbt    AUC 0.5645   chain-bootstrap 95% CI [0.5537, 0.5751]
+
+A4' — cross-draw stability: fit on the dose-0 rebuild (seed 20624),
+      evaluate on an INDEPENDENT rebuild at a different seed.
+
+draw A (seed 20624) rows 42208   draw B (seed 90210) rows 41548
+draw B lag profile: {1: 0.957219, 2: 0.028927, 3: 0.043983, 4: 0.049221}
+
+   logreg  in-sample(draw A) 0.5734   TRANSFER to draw B 0.5566   Δ -0.0168
+   gbt     in-sample(draw A) 0.6241   TRANSFER to draw B 0.5607   Δ -0.0634

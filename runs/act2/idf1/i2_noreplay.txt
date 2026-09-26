@@ -1,0 +1,14 @@
+INSTRUMENT 2 — O-E-noreplay, large n (5000 x 10)
+
+  noreplay -1        exact-other 92.1% · root-set-other 2.0% · reseed 6.0%
+  noreplay -1        lag1 prof 0.9765 z  +821.852 | lag2 prof 0.4031 z  +306.885 | lag3 prof 0.1857 z  +122.385 | lag4 prof 0.1028 z   +42.436
+            closes 10.2% of the blind-to-true gap
+
+  noreplay 0         exact-other 91.8% · root-set-other 2.0% · reseed 6.2%
+  noreplay 0         lag1 prof 0.8973 z  +855.884 | lag2 prof 0.3254 z  +256.996 | lag3 prof 0.1374 z   +76.728 | lag4 prof 0.0796 z   +26.283
+            closes 28.8% of the blind-to-true gap
+
+  noreplay +1        exact-other 92.0% · root-set-other 1.8% · reseed 6.2%
+  noreplay +1        lag1 prof 0.8942 z  +847.434 | lag2 prof 0.3128 z  +267.465 | lag3 prof 0.1366 z   +76.392 | lag4 prof 0.0786 z   +22.535
+            closes 31.8% of the blind-to-true gap
+

@@ -216,7 +216,8 @@ def chain_transient(pool, idx, *, turns: int, rng: random.Random,
                     responsiveness: float, lex_r,
                     seed_force: str | None = None, fmap=None,
                     rng_content: random.Random | None = None,
-                    suppression_window: int = 0) -> list[TTurn]:
+                    suppression_window: int = 0,
+                    barred_fn=None) -> list[TTurn]:
     """One exchange: force-connected AND content-responsive, without persistence.
 
     ⛔⛔ TWO RANDOM STREAMS, AND THAT IS A FACTORIAL REQUIREMENT, NOT TIDINESS.
@@ -263,7 +264,18 @@ def chain_transient(pool, idx, *, turns: int, rng: random.Random,
         # A curve needs a low end to have a slope, and -1 is the only direction
         # with room. It is NOT a valid content-transient recipe — `verify` will
         # refuse it — and it may only be built as a deliberate dose arm.
-        if suppression_window < 0:
+        # ⭐ `barred_fn` IS THE ORACLE HOOK (PREREG_IDF1 `413efed0` §6), AND IT IS
+        # ADDITIVE: `None` is every existing caller and takes the branch below,
+        # byte for byte. It exists so the IDF-1 oracles can vary THE ONE
+        # ARGUMENT — which roots are forbidden — through this generator rather
+        # than through a re-spelt copy of it, because a re-spelt generator is a
+        # second law that agrees with the first until it does not.
+        # ⛔ O-C (true inherited) must reproduce the dose-0 corpus and O-A (empty)
+        # the dose −1 corpus; those red-proofs are what certify this hook did not
+        # change the law.
+        if barred_fn is not None:
+            barred = frozenset(barred_fn(out, prev, lex_r))
+        elif suppression_window < 0:
             barred = frozenset()
         else:
             barred = prev.inherited
@@ -570,7 +582,7 @@ def verify_recipe(chains, recipe: str, *, lex_r, shuffles: int = 200,
 
 def build_transient(n_chains: int, *, turns: int, pairs, seed: int,
                     responsiveness: float, fmap=None, verify: bool = True,
-                    suppression_window: int = 0):
+                    suppression_window: int = 0, barred_fn=None):
     """Generate, then REFUSE if it is not actually transient — before writing."""
     from .multiturn import check_force_pair_fairness
     # ⛔ Derived, not two arbitrary seeds: the FORCE stream must depend only on
@@ -583,7 +595,8 @@ def build_transient(n_chains: int, *, turns: int, pairs, seed: int,
     chains = [chain_transient(pool, idx, turns=turns, rng=rng,
                               responsiveness=responsiveness, lex_r=lex_r,
                               fmap=fmap, rng_content=rng_content,
-                              suppression_window=suppression_window)
+                              suppression_window=suppression_window,
+                              barred_fn=barred_fn)
               for _ in range(n_chains)]
     # ⭐ The force gate is UNCHANGED and still runs. The recipes differ in one
     # variable; they do not differ in which invariants they must satisfy.

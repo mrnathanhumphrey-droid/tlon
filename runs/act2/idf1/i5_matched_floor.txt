@@ -1,0 +1,39 @@
+INSTRUMENT 5 — matched-fidelity floor (DESCRIPTIVE, GATES NOTHING)
+
+Each arm's knob is tuned so its lag-1 matches the D6 model's, then
+lag-2 is read at the model's own read size: 12 chains x 10 turns,
+500 independent reads.
+
+── dose -1 · model lag-1 1.0495 · model lag-2 0.3371
+  O-A           responsiveness 1.0000 -> lag-1 1.0303  ⛔ TARGET NOT REACHABLE — knob at its limit
+       matched-read lag-1 mean 1.0358 · lag-2 mean 0.4383 [0.3438, 0.5471]
+       the model's lag-2 0.3371 sits above 2.2% of this arm's reads
+  O-B(4)        bar-rate 0.0000 -> lag-1 1.0303  ⛔ TARGET NOT REACHABLE — knob at its limit
+       matched-read lag-1 mean 1.0358 · lag-2 mean 0.4383 [0.3438, 0.5471]
+       the model's lag-2 0.3371 sits above 2.2% of this arm's reads
+  O-E-noreplay  blind-mix 0.0000 -> lag-1 0.9695  ⛔ TARGET NOT REACHABLE — knob at its limit
+       matched-read lag-1 mean 0.9726 · lag-2 mean 0.4011 [0.2917, 0.5159]
+       the model's lag-2 0.3371 sits above 14.4% of this arm's reads
+
+── dose 0 · model lag-1 1.0278 · model lag-2 0.3854
+  O-A           responsiveness 0.9941 -> lag-1 1.0275
+       matched-read lag-1 mean 1.0304 · lag-2 mean 0.4363 [0.3333, 0.5471]
+       the model's lag-2 0.3854 sits above 16.6% of this arm's reads
+  O-B(4)        bar-rate 0.1270 -> lag-1 1.0250
+       matched-read lag-1 mean 1.0246 · lag-2 mean 0.4238 [0.3125, 0.5417]
+       the model's lag-2 0.3854 sits above 23.6% of this arm's reads
+  O-E-noreplay  blind-mix 0.0000 -> lag-1 0.9017  ⛔ TARGET NOT REACHABLE — knob at its limit
+       matched-read lag-1 mean 0.8996 · lag-2 mean 0.3235 [0.2188, 0.4375]
+       the model's lag-2 0.3854 sits above 83.8% of this arm's reads
+
+── dose +1 · model lag-1 1.0463 · model lag-2 0.3333
+  O-A           responsiveness 1.0000 -> lag-1 1.0303  ⛔ TARGET NOT REACHABLE — knob at its limit
+       matched-read lag-1 mean 1.0358 · lag-2 mean 0.4383 [0.3438, 0.5471]
+       the model's lag-2 0.3333 sits above 1.8% of this arm's reads
+  O-B(4)        bar-rate 0.0000 -> lag-1 1.0303  ⛔ TARGET NOT REACHABLE — knob at its limit
+       matched-read lag-1 mean 1.0358 · lag-2 mean 0.4383 [0.3438, 0.5471]
+       the model's lag-2 0.3333 sits above 1.8% of this arm's reads
+  O-E-noreplay  blind-mix 0.0000 -> lag-1 0.8992  ⛔ TARGET NOT REACHABLE — knob at its limit
+       matched-read lag-1 mean 0.8973 · lag-2 mean 0.3090 [0.2083, 0.4167]
+       the model's lag-2 0.3333 sits above 64.8% of this arm's reads
+
