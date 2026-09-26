@@ -95,8 +95,9 @@ for _s in (sys.stdout, sys.stderr):
 from act2_build_natural_corpus import (Budget, BudgetExceeded,   # noqa: E402
                                        _jsonl_append, _read_jsonl)
 from tlon.act2.carry import (ACCEPTANCE, decide, expand_roots,  # noqa: E402
-                             gate_dialogue, gloss_synonyms, scene_carry,
-                             scene_carry_soft, scene_roots, wilson)
+                             force_variety, gate_dialogue, gloss_synonyms,
+                             scene_carry, scene_carry_soft, scene_roots,
+                             wilson)
 
 
 def steer_mode(steer: bool, soft: bool):
@@ -141,7 +142,7 @@ Write the exchange as alternating lines:
 
 P: <what the person says - plain, natural, spoken English, one sentence>
 T: <the impression the thing answers with, written in plain English, one \
-sentence, present tense, describing something occurring or being perceived>
+sentence, present tense, naming something occurring or being perceived>
 
 RULES
 - The conversation is ONE moment. Each P line follows from the one before - the \
@@ -163,6 +164,28 @@ places, brands or objects-as-things; no numbers; no proper names. Prefer \
 weather, light, motion, texture, feeling, time passing.
 - P lines may mention ordinary life freely, but keep them spoken and plain.
 - Vary length and mood across the exchange. Some lines very short.
+- VARY WHAT THE T LINE IS DOING, not just what it names. Tlön marks five \
+speech acts and a corpus of nothing but statements teaches the speaker only \
+one of them. COUNT THEM AS YOU WRITE: in an exchange of five T lines, AT LEAST \
+TWO AND OFTEN THREE must not be statements. Asking for a proportion gets you \
+one line in five; counting gets you the corpus. ⛔ Do not try to use all four \
+in one exchange - there is not room, and forcing it produces lines that answer \
+nothing. Pick whichever fit this moment. The four:
+    ASK        - end it with a question mark. "Is it still thinning?"
+    WONDER     - hold it open rather than settle it. "Perhaps it is \
+thinning." / "It may be thinning."
+    URGE       - press toward it. "Let it thin." / "Thin, and keep thinning."
+    DENY       - say the happening is NOT so. "It is not thinning." / \
+"Nothing thins here." ⭐ WRITERS SKIP THIS ONE AND IT MUST NOT BE SKIPPED. The \
+trap is reading a denial as contradicting the person. It does not. It takes up \
+the happening they named and says that happening is not occurring - not here, \
+or not any more. P: "The rain finally stopped." T: "Nothing falls now, and the \
+cold stays." That denies a falling while taking the falling up.
+  ⛔ The speech act changes, the RULES ABOVE DO NOT. A question still takes up \
+the happening the P line named and still adds one of its own; a denial denies \
+THAT happening, not some other. Do not use these to change the subject, and \
+do not mark them with stage directions or parentheses - write them as the \
+plain English sentence they are.
 
 Emit ONLY the P: and T: lines. No numbering, no commentary, no blank lines."""
 
@@ -520,8 +543,23 @@ def build(args) -> int:
                                    "exchange": i // 2 + 1,
                                    "reason": verdict.reason,
                                    "turns": exchange}, lock)
-                    break
-                counts["scene_passed"] += 1
+                    # ⛔⛔ THE BAND FILTERS THE TREATMENT, NEVER THE CONTROL.
+                    # The scene band measures whether the STEER landed. Dropping
+                    # an UNSTEERED exchange for missing it keeps only the
+                    # unsteered conversations that happened to carry anyway —
+                    # which is not the control arm, it is the treatment arm
+                    # selected on the outcome. The dose would then blend two
+                    # populations that differ in nothing but luck.
+                    #
+                    # ⭐ MEASURED, 1,298 dialogues: gating the control kept 27
+                    # conversations and dropped 1,271. The pool the shipped
+                    # corpus actually used (`corpus_conversations`, 599) avoided
+                    # this only by predating the gate. The verdict is still
+                    # recorded above and still counted below; it simply does not
+                    # get to throw the row away.
+                    if steer:
+                        break
+                counts["scene_passed"] += verdict.ok
                 rendered.extend(exchange)
         except BudgetExceeded:
             stop.set()
@@ -614,7 +652,22 @@ def build(args) -> int:
           % (100 * ACCEPTANCE["scene_band_target"],
              100 * ACCEPTANCE["scene_band_ci_floor"],
              ACCEPTANCE["min_pairs_to_decide"]))
+    # ⛔⛔ FORCE VARIETY, AND IT GATES. `corpus_bench_dosed` reached production
+    # at 99.7% `ka` in voice T because nothing here ever counted the speech
+    # acts. Every reply on the public bench then ended in the same particle.
+    t_forces = [t.get("scene", {}).get("force")
+                for c in convs for t in c.get("turns", [])
+                if t.get("voice") == "T"]
+    f_ok, f_detail, f_counts = force_variety(t_forces)
+    print("  force variety   %s   %s"
+          % ("PASS" if f_ok else "⛔ FAIL", f_detail))
+    print("                  voice T: %s" % (f_counts or "{}"))
+
     verdict, detail = decide(counts["scene_passed"], counts["scene_pairs"])
+    if not f_ok and verdict == "ACCEPTED":
+        # ⛔ A corpus that teaches one speech act is not accepted however well
+        # it carries. The carry gate cannot see this and did not.
+        verdict, detail = "REJECTED", "force variety: %s" % f_detail
     per_conv = (_gate_report["calls"] / _gate_report["accepted"]
                 if _gate_report["accepted"] else float("nan"))
     print("  dialogue calls per accepted conversation: %.2f  "

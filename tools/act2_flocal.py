@@ -170,10 +170,28 @@ def _rate(speaker, stimuli, kind: str, histories=None) -> dict:
             sc = parse(raw.strip())
             f["is_valid_tlon"] = True
             f["round_trips"] = _render(sc) == raw.strip()
+            # ⭐ THE FORCE OF A BARE SURFACE COUNTS TOO. These emissions fail
+            # the gate for lacking the `{force, node}` envelope, but the
+            # speaker still CHOSE a speech act and dropping them would bias the
+            # force read by exactly the envelope-failure rate.
+            f["force"] = sc.force
             surf += 1
         except Exception:                                     # noqa: BLE001
             f["is_valid_tlon"] = False
+    # ⛔⛔ THE FORCE THE MODEL PICKED, COLLECTED WHERE THE EMISSIONS ALREADY
+    # ARE. Filtered to legal forms: a proposal can fail validation on its node
+    # and still have chosen a real speech act (counted), or carry a made-up
+    # particle (not a force, and imputing one would invent the measurement).
+    from tlon.grammar import classes as _C
+    _legal = set(_C.load()["classes"]["F"])
+    forces = [p["force"] for p in produced
+              if isinstance(p, dict) and p.get("force") in _legal]
+    # ⛔ No double count: `_rate` only reaches the parse above for rows whose
+    # proposal was None, so a row contributes through one list or the other.
+    forces += [f["force"] for f in failures if f.get("force") in _legal]
     return {"kind": kind, "n": n, "valid": ok, "rate": ok / n if n else 0.0,
+            # ⛔ see `main` — this is only a MODEL property for `speak`
+            "forces": forces,
             # the GATE number — wrapper required
             "failures": failures, "produced": produced,
             # ⛔ index-aligned with `produced`; see the note in _rate
@@ -245,6 +263,30 @@ def main() -> int:
     speak, render = read_rates(speaker, battery, a.n)
     print(f"  speak   {speak['rate']:.1%}  ({speak['valid']}/{a.n})")
     print(f"  render  {render['rate']:.1%}  ({render['valid']}/{a.n})")
+
+    # ══ WHICH SPEECH ACTS CAN IT USE? ═══════════════════════════════════
+    # ⛔⛔ `speak` ONLY, AND NEVER `render`. A render probe is handed a scene
+    # and the force comes WITH the stimulus — tallying it would measure
+    # `probes.build`, not the model, and the number would look like a healthy
+    # spread no matter what the weights learned. Only `speak` is a free choice.
+    #
+    # ⛔ THIS IS A READ, NOT A GATE. `force_variety`'s thresholds were set for
+    # accepting a CORPUS; the F-LOCAL verdict below is unchanged by this line.
+    # It is printed so a monoculture cannot reach production unobserved again:
+    # the live adapter answers `ka` 13 times out of 13 and nothing on the box
+    # was looking.
+    from tlon.act2 import carry as CARRY
+    ft = CARRY.force_transitions((None, f) for f in speak["forces"])
+    if ft["n"]:
+        spread = " · ".join(
+            "%s %.0f%%" % (k, 100 * v / ft["n"])
+            for k, v in sorted(ft["marginal"].items(), key=lambda kv: -kv[1]))
+        _ok, _detail, _ = CARRY.force_variety(speak["forces"])
+        print(f"  force   {spread}   ({ft['n']}/{a.n} readable)")
+        print(f"          {'✅' if _ok else '⛔'} {_detail}   ⭐ read, not a gate")
+    else:
+        print(f"  force   ⛔ NOT MEASURED — 0 of {a.n} speak emissions carried "
+              "a readable force. MISSING, not a monoculture.")
 
     # ⛔⛔ PER-ITEM OUTCOMES ARE RECORDED, NOT JUST THE ACCURACY. The battery is
     # byte-identical across runs, so the items ARE paired — but storing only the
@@ -340,6 +382,11 @@ def main() -> int:
              # retrain plots `dependence` against checkpoint step (Diagnosis C),
              # and a number that only ever reached a terminal cannot be plotted.
              diversity=(None if div is None else vars(div)),
+             # ⛔ LEDGERED, NOT ONLY PRINTED. A force histogram that reached a
+             # terminal and nothing else cannot be compared against the next
+             # adapter, and comparing adapters is the entire point of taking
+             # it. `speak` only — see the note beside the print.
+             force=ft,
              # ⛔ the pairing, recorded at write time — see the comment above
              comprehension_items=per_item,
              results={"speak": speak, "render": render},

@@ -524,7 +524,16 @@ def test_acceptance_thresholds_are_registered_not_chosen_later():
     against a bar picked after seeing it."""
     assert set(ACCEPTANCE) == {"english_carry_min", "scene_band_target",
                                "scene_band_ci_floor", "min_pairs_to_decide",
-                               "echo_max"}
+                               "echo_max",
+                               # ⛔ Added 2026-09-25 after the live bench was
+                               # found answering `ka` 13 times out of 13. Carry
+                               # and echo were gated; the speech act was never
+                               # counted, and the corpus reached production at
+                               # 99.7% `ka`. See `test_force_variety_gate.py`.
+                               "force_top_share_max", "force_distinct_min"}
+    # A corpus of one speech act teaches a speaker with one speech act.
+    assert 0.0 < ACCEPTANCE["force_top_share_max"] < 1.0
+    assert ACCEPTANCE["force_distinct_min"] >= 2
     assert 0.0 < ACCEPTANCE["scene_band_target"] < 1.0
     # ⛔ The band must not demand everything: 100% carry IS the echo.
     assert ACCEPTANCE["scene_band_target"] <= 0.90

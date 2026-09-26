@@ -86,6 +86,23 @@ ACCEPTANCE = {
     "scene_band_ci_floor": 0.50,  # and its 95% CI lower bound must clear this
     "min_pairs_to_decide": 150,  # below this the run reports UNDECIDED, always
     "echo_max": 0.10,            # pairs carrying every root and adding none
+    # ⛔⛔ THE GATE THAT DID NOT EXIST, AND THAT IS WHY THIS SHIPPED. Tlön marks
+    # five speech acts. `corpus_bench_dosed` — the corpus the LIVE adapter
+    # trained on — is **ka 99.7%** in voice T, because one clause in
+    # `DIALOGUE_SYSTEM` asked every T line to DESCRIBE something. The model
+    # learned it perfectly and every reply on the public bench ends in `ka`.
+    #
+    # Nothing caught it: carry was gated, echo was gated, force was not
+    # measured at all. It took a reader saying a Tlön word back to surface it.
+    # ⭐ The lesson is the shape of the fix, not the number: A CORPUS PROPERTY
+    # THAT NOTHING MEASURES IS A CORPUS PROPERTY THAT WILL BE WRONG.
+    #
+    # Read as: the most common force in voice T may not exceed this share.
+    # 0.60 is deliberately loose — statements SHOULD dominate — but it refuses
+    # a monoculture long before it reaches a GPU.
+    "force_top_share_max": 0.60,
+    # And at least this many distinct forces must actually appear.
+    "force_distinct_min": 3,
 }
 
 _WORD = re.compile(r"[a-z']+")
@@ -362,6 +379,99 @@ def wilson(hits: int, n: int, z: float = 1.96) -> tuple:
     centre = (p + z * z / (2 * n)) / d
     half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / d
     return (max(0.0, centre - half), min(1.0, centre + half))
+
+
+def force_variety(forces) -> tuple:
+    """-> (ok, detail, counts). Does voice T use more than one speech act?
+
+    ⛔⛔ THE MEASUREMENT THAT WAS MISSING. `forces` is every force the TLÖNIAN
+    used, in order. A corpus that answers everything with `ka` teaches a
+    speaker that can only assert, and the public bench then ends every single
+    reply with the same particle — 13 of 13 in production, against a corpus
+    that was itself 99.7% `ka`. The model was faithful; the corpus was not
+    varied; and nothing between the two ever looked.
+
+    ⭐ It reports counts on every call, pass or fail. A gate that returns only
+    a verdict gets debugged by rebuilding the corpus, which for this corpus
+    means paying the proposer again.
+    """
+    from collections import Counter
+    counts = Counter(f for f in forces if f)
+    total = sum(counts.values())
+    if not total:
+        return False, "no forces recorded at all", dict(counts)
+    top, n = counts.most_common(1)[0]
+    share = n / total
+    distinct = len(counts)
+    cap = ACCEPTANCE["force_top_share_max"]
+    need = ACCEPTANCE["force_distinct_min"]
+    problems = []
+    if share > cap:
+        problems.append("%r is %.1f%% of %d turns, cap is %.0f%%"
+                        % (top, 100 * share, total, 100 * cap))
+    if distinct < need:
+        problems.append("only %d distinct force(s), need %d"
+                        % (distinct, need))
+    if problems:
+        return False, "; ".join(problems), dict(counts)
+    return (True, "%r leads at %.1f%% of %d turns, %d forces present"
+            % (top, 100 * share, total, distinct), dict(counts))
+
+
+def force_transitions(pairs) -> dict:
+    """-> marginal counts and the prior->reply table. PURE — no model, no I/O.
+
+    ⛔⛤ `force_variety` ABOVE MEASURES A CORPUS, AND A CORPUS IS NOT A SPEAKER.
+    Every force number in this arc is a build-time property of text a hosted
+    proposer wrote. None of them says what the TRAINED model does, and the two
+    on-box reads that could have said — `act2_flocal.py` and
+    `act2_model_carry.py` — dropped the force on the floor: flocal mentioned it
+    once, in a comment about a scoring bug, and model_carry never touched it.
+    So "the corpus is 99.7% `ka`" and "the bench answers `ka` 13 times out of
+    13" were two separate observations with nothing measured in between.
+
+    ⭐ THE TABLE, NOT JUST THE MARGINAL, and the reason is `ki`->`ka`. That is
+    the ONE derived cell the language carries — an ask is answered with an
+    assert — and it survived the mutation test. A marginal alone cannot say
+    whether the model learned it or merely learned to say `ka`: those two
+    produce the same histogram and different languages.
+
+    `pairs` is an iterable of `(prior_force_or_None, reply_force)`. A reply
+    with no force is skipped and counted, never imputed.
+    """
+    from collections import Counter, defaultdict
+    marginal = Counter()
+    table = defaultdict(Counter)
+    n = no_prior = dropped = 0
+    for prior, reply in pairs:
+        if not reply:
+            # ⛔ A reply whose force could not be read is MISSING, not `ka`.
+            dropped += 1
+            continue
+        n += 1
+        marginal[reply] += 1
+        if prior:
+            table[prior][reply] += 1
+        else:
+            no_prior += 1
+    return {"n": n, "marginal": dict(marginal),
+            "table": {k: dict(v) for k, v in table.items()},
+            "no_prior": no_prior, "dropped_no_force": dropped}
+
+
+def derived_cell(table, prior: str = "ki", reply: str = "ka") -> tuple:
+    """-> (rate_or_None, k, n) for one cell of `force_transitions`'s table.
+
+    ⛔ None when the prior never occurred. A cell with no observations is not
+    a rate of 0.0, and returning one would let an absent probe read as a model
+    that refuses the structure.
+    """
+    row = (table or {}).get(prior) or {}
+    n = sum(row.values())
+    if not n:
+        return None, 0, 0
+    k = row.get(reply, 0)
+    return k / n, k, n
 
 
 def decide(scene_passed: int, scene_pairs: int) -> tuple:

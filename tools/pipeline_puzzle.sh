@@ -227,10 +227,32 @@ step corpus
 # unsteered pools to that fraction and points `$CONV` at the result, so the
 # only thing this pipeline ever trains on is something it built itself.
 if [ -n "${DOSE:-}" ]; then
+  # ⛔⛔ NO DEFAULT POOLS, AND THE REASON IS THE `ka` MONOCULTURE. These two
+  # paths were hardcoded to `corpus_conv_steered` and `corpus_conversations`.
+  # Both of those pools are **99.7% / 99.8% `ka` in voice T** — they are what
+  # trained the speaker that answers the public bench with the same particle
+  # 13 times out of 13. Pointed at v2 and left alone, this block would blend
+  # two monocultures, build a corpus, pass every existing gate and train the
+  # same speaker again, with a log that looked healthy throughout.
+  # ⭐ Same discipline as `CELL` above: a fixed default is a trap that fires
+  # every run, and "somebody remembers to pass it" is an instruction, not a
+  # guard. Named here, in the log below, or the run refuses.
+  if [ -z "${POOL_A:-}" ] || [ -z "${POOL_B:-}" ]; then
+    echo "⛔⛔ DOSE IS SET BUT THE POOLS ARE NOT. Name both: POOL_A (the "\
+"steered side) and POOL_B (the unsteered side). There is no default, because "\
+"the old defaults were the two 99.7% \`ka\` pools." | tee -a "$LOG"
+    exit 1
+  fi
+  for _p in "$POOL_A" "$POOL_B"; do
+    [ -f "$_p" ] || { echo "⛔ pool not on this box: $_p" | tee -a "$LOG"; \
+                      exit 1; }
+  done
+  echo "  pools    A=$POOL_A" | tee -a "$LOG"
+  echo "           B=$POOL_B" | tee -a "$LOG"
   DOSED_CONV="$ROOT/corpus_conv_dosed/conversations.jsonl"
   $PY tools/act2_build_dosed_corpus.py \
-      --steered runs/act2/corpus_conv_steered/conversations.jsonl \
-      --unsteered runs/act2/corpus_conversations/conversations.jsonl \
+      --steered "$POOL_A" \
+      --unsteered "$POOL_B" \
       --dose "$DOSE" --rows "${CONV_ROWS:-4578}" --seed "$SEED" \
       --out "$DOSED_CONV" 2>&1 | tee -a "$LOG"
   DOSE_RC=${PIPESTATUS[0]}
@@ -241,6 +263,25 @@ if [ -n "${DOSE:-}" ]; then
   ROWS_ARG=""
   echo "  ⭐ dosed pool built on the box · dose=$DOSE" | tee -a "$LOG"
 fi
+
+# ⛔⛔ THE FORCE GATE, HERE, ON WHATEVER `$CONV` NOW IS. The pool gate in
+# `act2_build_conversations.py` fires at BUILD time on ONE pool. This is a
+# different artefact: a blend of two, selected down to a row target, and a
+# dose can re-dilute the exact property the rebuild was bought for. A guard
+# beside its producer does not follow the artefact through a transform.
+#
+# ⛔ It gates the un-dosed path too, because `$CONV` is what gets trained on
+# however it got there. Reproducing a historical arm is still possible and
+# must be SAID: `ALLOW_FORCE_MONOCULTURE=1`, the same shape as
+# `ALLOW_CELL_OVERWRITE`. Deny by default.
+step force_gate
+FORCE_ARG=""
+[ -n "${ALLOW_FORCE_MONOCULTURE:-}" ] && FORCE_ARG="--allow-monoculture"
+$PY tools/act2_force_gate.py "$CONV" $FORCE_ARG 2>&1 | tee -a "$LOG"
+FORCE_RC=${PIPESTATUS[0]}
+[ "$FORCE_RC" -eq 0 ] || { echo "⛔ force gate rc=$FORCE_RC — refusing to "\
+"train a speaker that cannot use the language" | tee -a "$LOG"; exit 1; }
+
 $PY tools/act2_build_multiturn_rows.py \
     --conversations "$CONV" \
     --natural runs/act2/corpus_natural/pairs.jsonl \

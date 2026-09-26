@@ -49,6 +49,40 @@ for _s in (sys.stdout, sys.stderr):
         pass
 
 
+def _forces(prior_surface: str, proposal) -> dict:
+    """The speech act the model was ANSWERING and the one it chose. PURE.
+
+    ⛔⛤ THIS PROBE ALREADY HAD BOTH HALVES AND THREW THEM AWAY. It hands the
+    model a Tlön line and reads the reply — which is exactly a `ki`->? draw —
+    and scored only the roots. So when the bench started answering `ka` 13
+    times out of 13, nothing on the box could say whether the speaker had
+    learned the one derived cell the language carries or had simply learned
+    to say `ka`.
+
+    ⛔ Unreadable on either side is None, never a default force. A prior that
+    does not parse is a probe defect; a reply with no legal force is an
+    emission failure; imputing `ka` for either would manufacture the very
+    finding this is here to test.
+    """
+    out = {"prior_force": None, "reply_force": None}
+    try:
+        from tlon.grammar.parse import parse
+        out["prior_force"] = parse((prior_surface or "").strip()).force
+    except Exception:                                         # noqa: BLE001
+        pass
+    if isinstance(proposal, dict):
+        from tlon.grammar import classes as C
+        f = proposal.get("force")
+        # ⛔ `isinstance` FIRST. `schema.py` carries this same note twice: an
+        # unhashable force — a model emitting `["ka"]` — raises TypeError on
+        # the membership test instead of being refused as the non-force it is,
+        # and a diagnostic that crashes on a malformed emission destroys the
+        # measurement it was annotating.
+        if isinstance(f, str) and f in set(C.load()["classes"]["F"]):
+            out["reply_force"] = f
+    return out
+
+
 def score(prior_surface: str, proposal, roots) -> dict:
     """One probe's carry verdict. PURE — no model, no I/O, fully testable.
 
@@ -57,7 +91,8 @@ def score(prior_surface: str, proposal, roots) -> dict:
     """
     from tlon.act2.carry import scene_carry, scene_roots
     if proposal is None:
-        return {"parsed": False, "carried": None, "reason": "no proposal"}
+        return {"parsed": False, "carried": None, "reason": "no proposal",
+                **_forces(prior_surface, proposal)}
     prior = frozenset(w for w in (prior_surface or "").split() if w in roots)
     reply = scene_roots(proposal, roots)
     if not prior:
@@ -65,11 +100,16 @@ def score(prior_surface: str, proposal, roots) -> dict:
         # failure would charge the model for the probe's shape. Excluded, and
         # counted so the exclusion is visible rather than silent.
         return {"parsed": True, "carried": None, "reason": "prompt has no root",
-                "prior": sorted(prior), "reply": sorted(reply)}
+                "prior": sorted(prior), "reply": sorted(reply),
+                **_forces(prior_surface, proposal)}
     v = scene_carry(prior, reply)
+    # ⛔ THE FORCE READ IS NOT CONDITIONED ON THE CARRY VERDICT. A reply that
+    # changes the subject still picked a speech act, and excluding those would
+    # measure force only over the replies that already behaved.
     return {"parsed": True, "carried": bool(v.ok), "reason": v.reason,
             "prior": sorted(prior), "reply": sorted(reply),
-            "overlap": sorted(prior & reply), "added": sorted(reply - prior)}
+            "overlap": sorted(prior & reply), "added": sorted(reply - prior),
+            **_forces(prior_surface, proposal)}
 
 
 def summarise(rows) -> dict:
@@ -151,12 +191,52 @@ def main() -> int:
     print("  refused: non-sequitur %d · echo %d"
           % (s["refused_non_sequitur"], s["refused_echo"]))
 
+    # ══ THE SPEECH ACT, PROVOKED — THE PRODUCT-RELEVANT FORCE READ ══════
+    # ⛔⛔ THIS IS THE ONE TO COMPARE AGAINST THE BENCH. F-LOCAL's force line is
+    # the model speaking into a one-turn history; this is the model answering a
+    # provocation, which is the only thing the public page ever asks it to do.
+    # `dosed-s20624` answered `ka` 13 times out of 13 there.
+    from tlon.act2 import carry as CARRY
+    ft = CARRY.force_transitions(
+        (r.get("prior_force"), r.get("reply_force")) for r in rows)
+    print()
+    if not ft["n"]:
+        print("  FORCE             ⛔ NOT MEASURED — 0 of %d replies carried a "
+              "readable force. MISSING, not a monoculture." % len(rows))
+    else:
+        print("  FORCE (reply)     %s   (%d/%d readable)" % (
+            " · ".join("%s %.0f%%" % (k, 100 * v / ft["n"])
+                       for k, v in sorted(ft["marginal"].items(),
+                                          key=lambda kv: -kv[1])),
+            ft["n"], len(rows)))
+        # ⛔⛔ THE MARGINAL CANNOT ANSWER THIS AND THE TABLE CAN. `ki`->`ka` is
+        # the single derived cell the corpus carries; a speaker that says `ka`
+        # to everything produces the same histogram as one that learned it.
+        rate, k, nk = CARRY.derived_cell(ft["table"], "ki", "ka")
+        if rate is None:
+            print("  ki -> ka          ⛔ NO `ki` PROMPTS IN THE BATTERY — the "
+                  "derived cell was not probed, which is not the same as "
+                  "not learned")
+        else:
+            print("  ki -> ka          %.0f%%  (%d/%d)   ⭐ the one derived "
+                  "cell" % (100 * rate, k, nk))
+        for prior in sorted(ft["table"]):
+            row = ft["table"][prior]
+            tot = sum(row.values())
+            print("      %-3s n=%-4d %s" % (prior, tot, " ".join(
+                "%s %d" % (f, c) for f, c in sorted(row.items(),
+                                                    key=lambda kv: -kv[1]))))
+        if ft["no_prior"]:
+            print("      ⛔ %d replies had an UNPARSEABLE prompt and are in "
+                  "the marginal but not the table" % ft["no_prior"])
+
     if a.out:
         out = pathlib.Path(a.out)
         out.parent.mkdir(parents=True, exist_ok=True)
         tmp = out.with_suffix(".json.tmp")
         tmp.write_text(json.dumps(
-            {"summary": s, "adapter": a.adapter, "battery": battery.digest,
+            {"summary": s, "force": ft, "adapter": a.adapter,
+             "battery": battery.digest,
              "seed": a.seed, "n": a.n, "items": rows},
             ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
         tmp.replace(out)
