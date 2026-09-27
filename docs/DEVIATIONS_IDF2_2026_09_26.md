@@ -290,6 +290,80 @@ and no locked body was edited. **D2 above is closed by this entry.**
 
 ---
 
+## ✅ STEP P — RAN, PASSED, AND THE MARGIN IS THIN
+
+2026-09-27. Box `a6f08ed3a91b4eee8797493cdf9757cc`, A100-SXM4, pinned at
+`32d43cf`, total wall **13,034 s (3.6 h)**. The watchdog was armed before any
+GPU time, the box persisted all eleven artefacts to the hub and then
+**terminated itself on `~/DONE`**. Artefacts: `hf://…/stepP/`, local copies in
+`runs/act2/idf2/stepP/`.
+
+### The gate
+
+| | |
+|---|---|
+| reads | **8** (7 df), every one at `n_pairs` **384** except seed 20630 at 377 |
+| dropped chains | **0** across all eight |
+| mean `closes` | **9.98 points** |
+| between-seed SD | **5.79 points** |
+| **2 × SD** | **11.59** vs the 15-point boundary |
+| **verdict** | ✅ **PASS** — the table resolves its own boundaries |
+
+⚠️ **It passes at 1.29× the boundary, which is not comfortable**, and §3A's
+rule is met by the letter. The consequences are below and they are Nate's and
+Wilson's to rule on, not mine.
+
+### ⭐⭐ F1 · `closes(M) − closes(C1)` has good power for INSTALLS and MARGINAL power for FLOORS
+
+At 3 seeds per treatment arm and the measured SD:
+
+- `SE(difference) = 5.79 × √(2/3)` = **4.73 points**
+- 95 % CI half-width (t, 4 df) = **13.13 points**
+
+So if the marker's true effect is **zero**, the CI upper bound lands at
+**~13.1** against FLOORS' requirement of **< 15**. Reachable — by 1.9 points.
+A 35-point effect sits **7.4 SE** from zero, so INSTALLS is comfortable.
+
+⛔ **The branch with the least power is the informative one.** §0 says so in
+the prereg's own words: INSTALLS means "the model can follow an explicit
+avoid-list", while **FLOORS is the result that bears on the weights**. Any
+inflation of the treatment arms' variance over C0's — plausible, since M's
+marker introduces a source of variation C0 does not have — pushes that upper
+bound past 15 and makes the informative cell **undeclarable**.
+
+⭐ **This is exactly the decision §3A exists to place here.** Raising the
+treatment arms from 3 seeds to 5 gives `SE = 3.66` and a CI half-width of
+**8.4 points**, a comfortable margin, for **4 extra reads ≈ 1.9 GPU-h** on M
+and C1. Changing it now, before any treatment exists, is a **re-lock**;
+changing it after M has read is retrofitting. ⛔ Not taken unilaterally.
+
+### ⭐⭐ F2 · the published `0.3854` was one draw, and its spread is now measured
+
+C0 re-read at 48 × 10, eight seeds:
+
+    0.3750  0.3776  0.3854  0.3854  0.4193  0.4244  0.4271  0.4323
+    mean 0.4033 · SD 0.0245
+
+The **0.3854** carried through D6, IDF-1 and IDF-1b is a single read at 120
+turns. It sits **2nd-lowest of these eight** — inside the spread, on the low
+side, and not a central estimate.
+
+⚠️ At 120 turns the lag-2 cell holds 96 pairs against 384 here, so the
+single-read SD at that size is roughly **2 × 0.0245 ≈ 0.049**.
+`RESULTS_IDF1B` §5 reports *"model 0.3854 · best generalising window-1 speaker
+0.4238 … model-minus-floor is negative, by 0.0384."* **That difference is
+about 0.8 × the model's own single-read SD at the size it was measured at.**
+
+⭐ IDF-1b said the two were not distinguishable — *"0.3854 lies comfortably
+inside O-B(4)'s 95 % band"* — so this does not contradict it. What is new is
+that the **model's own** read-to-read spread is now measured rather than
+unknown, and it is of the same order as the difference that was reported.
+⛔ **No IDF-1b verdict is declared here.** This is a measurement that bears on
+one of its three conflicting facts; choosing among them remains Nate's and
+Wilson's.
+
+---
+
 ## ⏭ What Step 0 does NOT clear
 
 ⛔ **Step P has not run, and no GPU has been touched.** Step 0 was the CPU

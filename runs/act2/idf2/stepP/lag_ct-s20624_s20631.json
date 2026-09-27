@@ -1,0 +1,75 @@
+{
+  "chains_requested": 48,
+  "chains_used": 48,
+  "chains_dropped_too_short": 0,
+  "turns_total": 480,
+  "turns_requested_per_chain": 10,
+  "lag_profile": {
+    "1": 1.0208333333333333,
+    "2": 0.4270833333333333,
+    "3": 0.20833333333333334,
+    "4": 0.11458333333333333
+  },
+  "z": {
+    "1": 61.84847445658473,
+    "2": 21.137702377759204,
+    "3": 7.149020183051227,
+    "4": 1.41215347409334
+  },
+  "null": {
+    "1": {
+      "mean": 0.0944444444444445,
+      "sd": 0.014978362797601069
+    },
+    "2": {
+      "mean": 0.09319010416666668,
+      "sd": 0.015796098516269414
+    },
+    "3": {
+      "mean": 0.0903422619047619,
+      "sd": 0.016504509486251366
+    },
+    "4": {
+      "mean": 0.09015625,
+      "sd": 0.0172977539491708
+    }
+  },
+  "n_pairs": {
+    "1": 432,
+    "2": 384,
+    "3": 336,
+    "4": 288
+  },
+  "resolving_power": {
+    "1": 173.89281224025274,
+    "2": 166.05085910708374,
+    "3": 157.72114410404436,
+    "4": 149.95423887978933
+  },
+  "threshold_by_lag": {
+    "1": 6.0,
+    "2": 3.0,
+    "3": 3.0,
+    "4": 3.0
+  },
+  "seed": 20631,
+  "sampling_stream_seeded": true,
+  "unscoreable_lags": [],
+  "unscoreable_why": {},
+  "verdict": "REFUSED",
+  "refusal_reason": "CONTENT PERSISTS: lag(s) [2, 3] exceed the chance ceiling z=3.00 (lag2 z=21.14, lag3 z=7.15). Content is walking the chain, so the corpus trains persistence -- object permanence rebuilt from local choices. \u26d4 lag 2 is the speaker's OWN previous turn.",
+  "thresholds": {
+    "z_lag1_min": 6.0,
+    "z_lagn_max": 3.0
+  },
+  "temperature": 0.7,
+  "max_new_tokens": 256,
+  "decoder_sampled": true,
+  "marker_fn": null,
+  "adapter": "runs/act2/idf2/stepP/adapter_ct-s20624",
+  "object": "runs/act2/idf2/stepP/adapter_ct-s20624",
+  "object_kind": "adapter",
+  "measurement_category": "_ctx",
+  "four_bit": false,
+  "INSTRUMENT": "tlon.discourse.transient \u2014 the same functions the corpus was gated on, imported not re-spelt"
+}
