@@ -111,7 +111,18 @@ def main() -> int:
                          "dies at the end of the turn). content-persistent = "
                          "the DOSE ARM (bars nothing; content walks the chain "
                          "BY CONSTRUCTION). ⛔ A dose arm is a measurement "
-                         "probe, never a factorial cell.")
+                         "probe, never a factorial cell. content-transient-held "
+                         "= IDF-2's PROBE recipe, barred by `held` = "
+                         "roots(t-1) & roots(t-2) instead of the generator's "
+                         "`inherited`; quarantined out of RECIPES so its "
+                         "adapter can never pool with a factorial cell.")
+    ap.add_argument("--marker", action="store_true",
+                    help="IDF-2's M arm: every provoke row's input carries the "
+                         "annotation line naming the roots to let go. ⛔ Only "
+                         "meaningful with --recipe content-transient-held, and "
+                         "refused otherwise — a marker naming `held` on a "
+                         "corpus not barred by `held` would name roots the "
+                         "corpus never suppressed.")
     # ⛔⛔ THE DOSE, AND IT IS CHECKED AGAINST THE RECIPE IN BOTH DIRECTIONS.
     # A negative window bars nothing and therefore PERSISTS; a non-negative one
     # suppresses. Letting the two disagree would put a persisting corpus in the
@@ -177,6 +188,24 @@ def main() -> int:
             % (a.recipe, a.suppression_window, TR.CONTENT_PERSISTENT,
                TR.CONTENT_PERSISTENT))
 
+    # ⛔⛔ A MARKER MUST NAME A BAR THE CORPUS ACTUALLY APPLIED. Checked in BOTH
+    # directions, like the dose above, because each way round is its own bug:
+    #   * `--marker` without the held recipe writes an annotation naming
+    #     `roots(t−1) ∩ roots(t−2)` onto rows whose targets were suppressed by
+    #     the generator's `inherited` instead. The model would be trained that
+    #     the line predicts nothing — the marker's own red-proof, inverted, and
+    #     M would floor for a reason that has nothing to do with the weights.
+    #   * the held recipe is legal WITHOUT `--marker`: that is C1, and it is the
+    #     control the whole estimand rests on. So this is not symmetrical, and
+    #     only the first direction is refused.
+    if a.marker and a.recipe != TR.CONTENT_TRANSIENT_HELD:
+        raise SystemExit(
+            "⛔⛔ --marker names `held` (roots(t−1) ∩ roots(t−2)), but --recipe "
+            "%s does not bar `held`. The annotation would name roots this "
+            "corpus never suppressed, and the model would learn that the line "
+            "is noise. --marker is valid only with --recipe %s."
+            % (a.recipe, TR.CONTENT_TRANSIENT_HELD))
+
     pool_pairs = C1.build(a.pool_n, seed=a.seed)
     # ⛔⛔ ONE KNOB. Both arms run the SAME force map, the SAME seed and the SAME
     # pool; the only thing `--recipe` changes is whether the painting is drawn
@@ -200,12 +229,28 @@ def main() -> int:
     # content-transient build BY SEED but NOT by force sequence — an unbiased
     # contrast (same map, same stationary distribution) that is unpaired, so it
     # carries more variance. New builds on both arms are exactly paired.
+    # ⛔⛔ THE BAR IS SELECTED BY THE RECIPE, HERE, IN ONE EXPRESSION.
+    #
+    # ⛔⛤ WITHOUT THIS LINE `--recipe content-transient-held` WAS A MISLABEL
+    # THAT NOTHING COULD CATCH. `build_transient` was called with no
+    # `barred_fn`, so the chains would be barred by the generator's
+    # `inherited` — the factorial arm's rule — and `verify_recipe` would then
+    # stamp the manifest `content-transient-held` and PASS, because both
+    # recipes make the identical two claims: responsive at lag 1, at chance at
+    # every longer lag. Every IDF-2 adapter would have trained on the wrong bar
+    # while every artefact said otherwise.
+    #
+    # ⭐ This is the twin of the fall-through in `verify_recipe`: there the
+    # VERIFIER had no branch for the new recipe, here the BUILDER had none.
+    # Fixing one did not fix the other, and the second was the dangerous one —
+    # a verifier with no branch REFUSES, a builder with no branch PROCEEDS.
+    barred_fn = TR.held if a.recipe == TR.CONTENT_TRANSIENT_HELD else None
     chains = TR.build_transient(
         a.chains, turns=a.turns, pairs=pool_pairs, seed=a.seed,
         responsiveness=(0.0 if a.recipe == TR.CONTENT_FREE
                         else a.responsiveness),
         suppression_window=a.suppression_window,
-        fmap=fmap, verify=False)
+        fmap=fmap, verify=False, barred_fn=barred_fn)
     # refuses BEFORE writing
     fair = MT.check_force_pair_fairness(chains, fmap=fmap)
 
@@ -223,7 +268,15 @@ def main() -> int:
           f"{fair['worst_ratio']:.3f} of its row share "
           f"(floor {fair['floor']:.4f})")
 
-    mt = rows_from(chains)
+    # ⛔⛔ THE MARKER IS AN ARM, NOT A RECIPE PROPERTY, AND THAT IS WHY IT IS ITS
+    # OWN FLAG. IDF-2's M and C1 train on the SAME corpus under the SAME bar and
+    # differ only in whether the provoke row's input carries the annotation
+    # line. Folding it into `--recipe` would make them two recipes, and two
+    # recipes cannot be compared as one estimand.
+    mt = rows_from(chains, marker=a.marker)
+    if a.marker:
+        print("  ⭐ MARKED rows: every provoke input carries `%s …` (IDF-2 M arm)"
+              % TR.MARKER_PREFIX)
     # ⛔ THE MIX IS ON ROWS, AND THE TOKEN CHECK IS WHAT MAKES IT HONEST — a row
     # ratio is not a compute ratio, and only the counter can say which you got.
     # ⛔⛔ THE FRACTION IS BY COMPUTE, AND ROWS ARE SOLVED FOR. Asking the caller

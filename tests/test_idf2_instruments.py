@@ -173,6 +173,89 @@ def test_the_dispatch_check_can_actually_fail():
     assert "CONTENT_TRANSIENT_HELD" not in body
 
 
+# ── the builder's dispatch, which is the dangerous twin ────────────────────
+
+def test_the_BUILDER_selects_the_held_bar_from_the_recipe():
+    """⛔⛔ THE WORSE HALF OF THE SAME BUG, AND IT PROCEEDS RATHER THAN REFUSES.
+
+    `act2_build_multiturn` called `build_transient` with NO `barred_fn`, so
+    `--recipe content-transient-held` would have generated chains barred by the
+    generator's `inherited` — the factorial arm's rule — and then stamped the
+    manifest `content-transient-held`. Every IDF-2 adapter would have trained on
+    the wrong bar while every artefact said otherwise.
+
+    ⭐ A verifier with no branch REFUSES; a builder with no branch PROCEEDS.
+    That asymmetry is why this test exists separately from the verifier's.
+    """
+    import act2_build_multiturn as B
+    src = pathlib.Path(B.__file__).read_text(encoding="utf-8")
+    assert "barred_fn = TR.held if a.recipe == TR.CONTENT_TRANSIENT_HELD" in src
+    assert "barred_fn=barred_fn" in src, (
+        "the selected bar must actually reach build_transient")
+
+
+def test_verify_recipe_CANNOT_tell_the_two_bars_apart(lex_r):
+    """⛔⛔ THE REASON THE BUILDER'S DISPATCH IS LOAD-BEARING, MEASURED.
+
+    Both recipes make the identical two claims — responsive at lag 1, at chance
+    at every longer lag — so a corpus barred by `inherited` passes verification
+    AS `content-transient-held`. The label cannot police the bar; only the
+    builder can. This test asserts the weakness rather than pretending the
+    verifier is a second line of defence.
+    """
+    from tlon.act2 import corpus as C1
+    from tlon.discourse import force_map as FM
+    pool = C1.build(800, seed=7)
+    kw = dict(turns=8, pairs=pool, seed=7, responsiveness=1.0,
+              fmap=FM.DERIVED_v1, verify=False)
+    held = TR.build_transient(60, barred_fn=TR.held, **kw)
+    inherited = TR.build_transient(60, **kw)
+
+    # ⭐ They really are different corpora — so the risk is real, not notional.
+    assert (TR.lag_profile(held, max_lag=2, lex_r=lex_r)[2]
+            != TR.lag_profile(inherited, max_lag=2, lex_r=lex_r)[2])
+
+    # ⛔ And the verifier accepts BOTH under the held label.
+    for chains in (held, inherited):
+        rep = TR.verify_recipe(chains, TR.CONTENT_TRANSIENT_HELD, lex_r=lex_r)
+        assert rep["verdict"] == TR.CONTENT_TRANSIENT_HELD
+
+
+def test_a_marker_without_the_held_recipe_is_REFUSED():
+    """⛔⛔ A MARKER MUST NAME A BAR THE CORPUS APPLIED. `--marker` on a corpus
+    barred by `inherited` would annotate rows with roots that corpus never
+    suppressed — training the model that the line is noise, which is the
+    marker's own red-proof inverted. M would then floor for a reason that has
+    nothing to do with the weights."""
+    import act2_build_multiturn as B
+    src = pathlib.Path(B.__file__).read_text(encoding="utf-8")
+    assert "if a.marker and a.recipe != TR.CONTENT_TRANSIENT_HELD" in src
+    assert "raise SystemExit" in src.split("if a.marker")[1][:400]
+
+
+def test_the_held_recipe_WITHOUT_a_marker_is_legal():
+    """⭐ The check is deliberately ONE-DIRECTIONAL. Held-without-marker is C1,
+    the control the entire estimand rests on — refusing it would delete the
+    arm that makes `M − C1` the marker's effect."""
+    import act2_build_multiturn as B
+    src = pathlib.Path(B.__file__).read_text(encoding="utf-8")
+    # ⭐ Asserted on the CONDITION, not on the prose around it. The guard is a
+    # CONJUNCTION — it needs `a.marker` AND a recipe mismatch — so the held
+    # recipe on its own cannot trip it no matter what the comment says. A test
+    # that checked for a sentence would pass on a reworded comment guarding
+    # nothing.
+    assert "if a.marker and a.recipe != TR.CONTENT_TRANSIENT_HELD" in src
+    assert "if a.recipe != TR.CONTENT_TRANSIENT_HELD" not in src.replace(
+        "if a.marker and a.recipe != TR.CONTENT_TRANSIENT_HELD", ""), (
+        "a bare recipe check would refuse C1 — the control the estimand needs")
+    # ⛔ And the one-directional choice is justified in the block, wherever it
+    # sits relative to the condition.
+    region = src[max(0, src.index("if a.marker") - 1200):
+                 src.index("if a.marker") + 600]
+    assert "C1" in region, (
+        "the asymmetry must be explained where a reader will meet it")
+
+
 # ── §3-0f · the shard tripwire ─────────────────────────────────────────────
 
 def test_the_rms_tensor_count_is_asserted_not_trusted():
