@@ -472,6 +472,140 @@ CT_PATH = "ct-s20624/adapter_model.safetensors"
 CT_EXPECT_TENSORS = 28 * 7 * 2
 
 
+def dose_w(safetensors: str, adapter_config: str) -> dict:
+    """`delta_norm / sqrt(n_trainable)` for one LoRA adapter. -> a dict.
+
+    ⛔⛔ EXTRACTED SO THE GATE AND THE REFERENCE ARE THE SAME ARITHMETIC. 0f
+    recomputes `ct-s20624`'s dose from the hub; §4 then matches M and C1
+    against it. Two spellings of one formula is how a tolerance gets applied to
+    numbers that were never comparable — and this is exactly the quantity
+    `01_OUR_FRONTIER.md:222` says returns a plausible value when it is wrong.
+    """
+    import numpy as np
+    from safetensors.numpy import load_file
+
+    tensors = load_file(safetensors)
+    n_t = len(tensors)
+    if n_t != CT_EXPECT_TENSORS:
+        raise SystemExit(
+            "⛔⛔ %d LoRA tensors, expected %d. The shard hazard: an rms over a "
+            "subset is a plausible number nothing else detects."
+            % (n_t, CT_EXPECT_TENSORS))
+    cfg = json.loads(pathlib.Path(adapter_config).read_text(encoding="utf-8"))
+    scale = cfg["lora_alpha"] / cfg["r"]
+    a_of = {k[:-len("lora_A.weight")]: v for k, v in tensors.items()
+            if k.endswith("lora_A.weight")}
+    b_of = {k[:-len("lora_B.weight")]: v for k, v in tensors.items()
+            if k.endswith("lora_B.weight")}
+    if set(a_of) != set(b_of):
+        raise SystemExit("⛔ %d lora_A vs %d lora_B — pairing incomplete"
+                         % (len(a_of), len(b_of)))
+    sq, n_trainable, n_delta = 0.0, 0, 0
+    for mod, A in a_of.items():
+        B = b_of[mod]
+        d = scale * (B.astype(np.float64) @ A.astype(np.float64))
+        sq += float((d * d).sum())
+        n_trainable += A.size + B.size
+        n_delta += d.size
+    dn = sq ** 0.5
+    return {"tensors": n_t, "modules": len(a_of), "scale": scale,
+            "delta_norm": dn, "n_trainable": n_trainable, "n_delta": n_delta,
+            "dose_w": dn / (n_trainable ** 0.5)}
+
+
+#: ⛔ `ct-s20624`'s recomputed dose (0f, 2026-09-26) and §4's tolerance. The
+#: reference is a MEASURED value that was recorded nowhere before 0f, so it is
+#: pinned here rather than re-derived per run.
+CT_DOSE_W = 0.00544947
+DOSE_TOL = 0.05
+
+
+def cmd_unmark(a):
+    """Derive C1's corpus from M's by stripping the marker line. ⛔ NOT a second build.
+
+    ⛔⛤ THIS EXISTS BECAUSE TWO SEPARATE BUILDS ARE NOT THE SAME CORPUS, AND THE
+    CORPUS-DIFF GATE CAUGHT IT BEFORE ANY GPU TIME. `--multiturn-fraction` is
+    **by compute** and rows are solved for, so a marked provoke row costs more
+    tokens than an unmarked one, so the marked build needs FEWER singleturn rows
+    to hit the same compute split. Measured at 80 chains: **2,190 rows marked vs
+    2,168 unmarked.** M and C1 would have differed in how much `write`/`read`
+    training they saw — a structural difference in the training signal — and
+    `closes(M) − closes(C1)` would have carried it.
+
+    ⭐ SO C1 IS M WITH THE ANNOTATION REMOVED, ROW FOR ROW. The row mix, the
+    targets, the scenes and the forces are identical by construction rather than
+    by a determinism argument. What differs instead is total token count, which
+    is *exactly* what adding a marker unavoidably does — the confound that
+    cannot be removed, chosen over the one that can.
+
+    ⚠️ Recorded as a DEVIATION because the prereg says "build a new corpus
+    recipe"; C1's corpus is now DERIVED from M's rather than built beside it.
+    """
+    src, dst = pathlib.Path(a.marked), pathlib.Path(a.out)
+    dst.mkdir(parents=True, exist_ok=True)
+    stripped = kept = 0
+    for name in ("train.jsonl", "eval.jsonl"):
+        p = src / name
+        if not p.exists():
+            continue
+        lines = []
+        for line in p.read_text(encoding="utf-8").splitlines():
+            r = json.loads(line)
+            if r.get("direction") == "provoke":
+                pr = r.get("prompt", "")
+                if TR.MARKER_PREFIX in pr:
+                    r["prompt"] = pr.split("\n")[0]
+                    stripped += 1
+                else:
+                    raise SystemExit(
+                        "⛔ a provoke row in %s carries no marker — %s is not a "
+                        "marked corpus" % (name, src))
+            else:
+                kept += 1
+            lines.append(json.dumps(r, ensure_ascii=False, sort_keys=True))
+        tmp = (dst / name).with_suffix(".jsonl.tmp")
+        tmp.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+        tmp.replace(dst / name)
+    # ⛔ The manifest travels, with the derivation recorded in it. A corpus whose
+    # provenance is "somebody ran a script once" is the artefact class this
+    # campaign has already lost twice.
+    man = json.loads((src / "manifest.json").read_text(encoding="utf-8"))
+    man["DERIVED_FROM"] = str(src)
+    man["DERIVATION"] = ("marker line stripped from every provoke row; row set, "
+                         "targets, scenes and forces identical to the marked "
+                         "corpus by construction")
+    man["marker"] = False
+    (dst / "manifest.json").write_text(json.dumps(man, indent=2),
+                                       encoding="utf-8")
+    print("  ✅ unmarked %d provoke rows, %d others untouched -> %s"
+          % (stripped, kept, dst))
+    return 0
+
+
+def cmd_dose(a):
+    """§4's gate: is this adapter's dose within ±5 % of `ct-s20624`'s?"""
+    d = dose_w("%s/adapter_model.safetensors" % a.adapter,
+               "%s/adapter_config.json" % a.adapter)
+    lo, hi = CT_DOSE_W * (1 - DOSE_TOL), CT_DOSE_W * (1 + DOSE_TOL)
+    ok = lo <= d["dose_w"] <= hi
+    print("  adapter        %s" % a.adapter)
+    print("  delta_norm     %.6g" % d["delta_norm"])
+    print("  n_trainable    %d" % d["n_trainable"])
+    print("  dose_w         %.6g" % d["dose_w"])
+    print("  reference      %.6g   band [%.6g, %.6g]" % (CT_DOSE_W, lo, hi))
+    print("  %s" % ("✅ WITHIN BAND" if ok else "⛔ OUT OF BAND"))
+    if a.out:
+        d.update({"reference": CT_DOSE_W, "band": [lo, hi], "in_band": ok,
+                  "adapter": a.adapter})
+        pathlib.Path(a.out).write_text(json.dumps(d, indent=2),
+                                       encoding="utf-8")
+        print("  wrote %s" % a.out)
+    # ⛔ Non-zero on a miss so a pipeline HALTS. §4/D-handling: one retrain is
+    # permitted, and a second miss means the arm may describe but not decide —
+    # that is a decision, so it is not taken silently inside a loop.
+    return 0 if ok else 2
+
+
 def step_0f(report, *, local=None):
     """Recompute `ct-s20624`'s `dose_w`, because nothing recorded it.
 
@@ -556,8 +690,16 @@ def step_0f(report, *, local=None):
 
 def cmd_step0(a):
     OUT.mkdir(parents=True, exist_ok=True)
-    report = {"prereg": "docs/PREREG_IDF2_2026_09_26.md",
-              "LOCK": "37363296", "seed": SEED}
+    # ⛔⛔ MERGED, NOT OVERWRITTEN. This wrote a FRESH dict to a constant path,
+    # so re-running `step0` silently deleted `0f` — the dose the hub had to be
+    # queried for, which nothing else records. The steps write into one report
+    # and are separately runnable, which means each one must preserve the
+    # others' keys or the file means "whatever ran last".
+    p = OUT / "step0.json"
+    report = (json.loads(p.read_text(encoding="utf-8")) if p.exists()
+              else {})
+    report.update({"prereg": "docs/PREREG_IDF2_2026_09_26.md",
+                   "LOCK": "37363296", "seed": SEED})
     print("=" * 72)
     print("IDF-2 STEP 0 — CPU precondition gate · prereg LOCK 37363296")
     print("=" * 72)
@@ -605,8 +747,15 @@ def main(argv=None):
     sub.add_parser("step0", help="0a..0c, in order, one report")
     f = sub.add_parser("rms", help="0f — recompute ct-s20624's dose_w")
     f.add_argument("--local", help="a local safetensors, instead of the hub")
+    u = sub.add_parser("unmark", help="derive C1's corpus from M's, row for row")
+    u.add_argument("--marked", required=True)
+    u.add_argument("--out", required=True)
+    d = sub.add_parser("dose", help="§4 gate — is this adapter dose-matched?")
+    d.add_argument("--adapter", required=True)
+    d.add_argument("--out", default=None)
     a = ap.parse_args(argv)
-    return {"step0": cmd_step0, "rms": cmd_rms}[a.cmd](a)
+    return {"step0": cmd_step0, "rms": cmd_rms, "dose": cmd_dose,
+            "unmark": cmd_unmark}[a.cmd](a)
 
 
 if __name__ == "__main__":

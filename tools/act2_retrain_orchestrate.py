@@ -327,7 +327,12 @@ PIPELINES = ("pipeline_retrain.sh", "pipeline_solo_regen.sh",
              # ⛔ No training, no corpus, no new cell, and nothing persisted
              # over the object it reads; `tests/test_idf2_stepP.py` asserts
              # those absences the way `test_reread_pipeline` does.
-             "pipeline_idf2_stepP.sh")
+             "pipeline_idf2_stepP.sh",
+             # ⭐⭐ IDF-2's TREATMENT. Trains M and C1 on the same held corpus at
+             # the same dose, differing only in whether each provoke row's input
+             # carries the annotation line, then reads four arms. ⛔ W2 is NOT in
+             # it — its row shape and reader history do not exist yet.
+             "pipeline_idf2_train.sh")
 #: ⛔ The recipe is the FACTORIAL'S CORPUS AXIS, so it belongs to the pipeline
 #: that builds corpora and to no other. Requiring it everywhere would file a
 #: transcript re-run into an arm it is not in.

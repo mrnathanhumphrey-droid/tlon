@@ -105,6 +105,32 @@ def model_chain(backend, seed_surface: str, *, turns: int,
     return out
 
 
+#: ⛔ The four IDF-2 arms, named ONCE. A caller that spelt its own marker
+#: would be a fifth arm nobody declared.
+MARKERS = ("none", "held", "strip", "shuffle")
+
+
+def _marker_by_name(name, *, seed):
+    """-> a marker callable, or None for the bare-surface reader.
+
+    ⛔⛔ `none` RETURNS None, NOT A `(none)`-EMITTING MARKER. They are different
+    arms: `none` is every pre-IDF-2 read and sends the surface alone, while
+    `strip` sends `let go: (none)` and is IDF-2's M-strip control. Collapsing
+    them would make the control indistinguishable from the baseline.
+    """
+    if name in (None, "none"):
+        return None
+    import act2_idf2 as I
+    if name == "held":
+        return I.marker_held
+    if name == "strip":
+        return I.marker_none
+    if name == "shuffle":
+        return I.marker_shuffle(seed=seed)
+    raise SystemExit("⛔ unknown --marker %r; expected one of %s"
+                     % (name, ", ".join(MARKERS)))
+
+
 def _lag_lex():
     """The root set this module scores against, spelt ONCE.
 
@@ -412,6 +438,13 @@ def main() -> int:
     ap.add_argument("--max-lag", type=int, default=4)
     ap.add_argument("--shuffles", type=int, default=200)
     ap.add_argument("--seed", type=int, default=20620)
+    ap.add_argument("--marker", default="none", choices=MARKERS,
+                    help="IDF-2 arm. none = the bare surface (every pre-IDF-2 "
+                         "read). held = the M arm. strip = M-strip, the marker "
+                         "forced to (none). shuffle = M-shuffle, roots of t-1 "
+                         "that are NOT held. ⛔ Recorded in the result as "
+                         "`marker_fn`, so two arms can never differ only by "
+                         "filename.")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -446,8 +479,15 @@ def main() -> int:
     # in one function, which the mid-run curve calls too. Two spellings of one
     # measurement is the wiring class that has already cost this campaign four
     # instances and one halted run.
+    # ⛔⛔ THE ARM IS NAMED ON THE COMMAND LINE AND RECORDED IN THE RESULT.
+    # IDF-2's M, C1, M-strip and M-shuffle are the SAME weights-and-decoder
+    # read under four different markers; `--marker` is how a caller selects one
+    # and `read_lag` writes the choice into `marker_fn` so the row can never be
+    # mistaken for another arm's. ⭐ `none` (the default) is the historical
+    # reader and sends the bare surface, byte for byte.
+    marker_fn = _marker_by_name(a.marker, seed=a.seed)
     m = read_lag(backend, chains=a.chains, turns=a.turns, max_lag=a.max_lag,
-                 shuffles=a.shuffles, seed=a.seed,
+                 shuffles=a.shuffles, seed=a.seed, marker_fn=marker_fn,
                  temperature=a.temperature, max_new_tokens=a.max_new_tokens)
     if m["chains_used"] == 0:
         raise SystemExit("⛔⛔ " + m["refusal_reason"])
