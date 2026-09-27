@@ -318,7 +318,16 @@ PIPELINES = ("pipeline_retrain.sh", "pipeline_solo_regen.sh",
              # puzzle adapters overlaps, so the binding constraint stopped
              # being corpora and became the battery.
              # ⛔ It writes NO cell, so it marks done on its READ artifacts.
-             "pipeline_battery.sh")
+             "pipeline_battery.sh",
+             # ⭐⭐ IDF-2 STEP P — A POWER CHECK, AND THE CHEAPEST THING IN THE
+             # PROBE. It re-reads `ct-s20624` at eight seeds to measure the
+             # between-seed SD of `closes` BEFORE any adapter is trained,
+             # because §6 has a failure branch — the bands not resolving —
+             # that otherwise costs three adapters and ~20 GPU-h to discover.
+             # ⛔ No training, no corpus, no new cell, and nothing persisted
+             # over the object it reads; `tests/test_idf2_stepP.py` asserts
+             # those absences the way `test_reread_pipeline` does.
+             "pipeline_idf2_stepP.sh")
 #: ⛔ The recipe is the FACTORIAL'S CORPUS AXIS, so it belongs to the pipeline
 #: that builds corpora and to no other. Requiring it everywhere would file a
 #: transcript re-run into an arm it is not in.

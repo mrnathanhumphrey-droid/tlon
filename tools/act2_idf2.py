@@ -248,11 +248,20 @@ def step_0bc(report, corpus_lag2):
     marked = _speak(barred_held)
     mprof, mz, mn = _score(marked, "O-C held")
 
-    gap = bprof[2] - mprof[2]
+    # ⛔⛔ THE DENOMINATOR IS THE LOCKED ONE, AND IT IS THE CORPUS.
+    # §6: `closes(x) = (blind₀c − x) / (blind₀c − corpus₀c)`. The first
+    # implementation used `blind − marker_oracle` instead. Numerically it is
+    # 0.19 % of the gap — the bands move by 0.0001 and 0.0003 raw — so nothing
+    # material turns on it. It is corrected anyway, because a formula that is
+    # locked is not approximated, and Step P's SD is denominated in these
+    # units. ⭐ Conflating the two also mistakes 0b's ROLE: the oracle is the
+    # red-proof that the marker is sufficient, not the scale's endpoint.
+    gap = bprof[2] - corpus_lag2
     shortfall = mprof[2] - corpus_lag2
-    print("\n    blind lag-2        %.4f     (0 %% anchor)" % bprof[2])
-    print("    marker lag-2       %.4f     (100 %% anchor)" % mprof[2])
-    print("    corpus lag-2       %.4f" % corpus_lag2)
+    print("\n    blind lag-2        %.4f     (0 %% anchor, 0c)" % bprof[2])
+    print("    corpus lag-2       %.4f     (100 %% anchor, 0a)" % corpus_lag2)
+    print("    marker lag-2       %.4f     (0b red-proof, NOT the anchor)"
+          % mprof[2])
     print("    shortfall          %+.4f    (oracle − corpus)" % shortfall)
     print("    GAP                %.4f     ⭐ the ONE denominator (§6)"
           % gap)
@@ -262,7 +271,10 @@ def step_0bc(report, corpus_lag2):
     report["0b"] = {"marker_lag_profile": mprof, "z": mz, "n_pairs": mn,
                     "corpus_lag2": corpus_lag2, "shortfall": shortfall}
     report["gap"] = gap
-    return gap, bprof[2], mprof[2]
+    report["gap_definition"] = "blind_0c_lag2 - corpus_0a_lag2  (PREREG §6)"
+    report["blind_lag2"] = bprof[2]
+    report["corpus_lag2"] = corpus_lag2
+    return gap, bprof[2], corpus_lag2
 
 
 def closes(lag2, *, blind, corpus):
@@ -520,7 +532,7 @@ def cmd_step0(a):
     print("=" * 72)
 
     chains, prof = step_0a(report)
-    gap, blind2, marker2 = step_0bc(report, prof[2])
+    gap, blind2, corpus2 = step_0bc(report, prof[2])
     step_0d(report, chains)
 
     print("\n" + "=" * 72)
@@ -528,9 +540,11 @@ def cmd_step0(a):
     print("=" * 72)
     print("  0a corpus   %s · lag-1 %.4f · lag-2 %.4f"
           % (report["0a"]["verdict"], prof[1], prof[2]))
-    print("  0c blind    lag-2 %.4f" % blind2)
-    print("  0b marker   lag-2 %.4f · shortfall %+.4f"
-          % (marker2, report["0b"]["shortfall"]))
+    print("  0c blind    lag-2 %.4f     ← 0 %% anchor" % blind2)
+    print("  0a corpus   lag-2 %.4f     ← 100 %% anchor" % corpus2)
+    print("  0b oracle   lag-2 %.4f · shortfall %+.4f  (red-proof, NOT an "
+          "anchor)" % (report["0b"]["marker_lag_profile"][2],
+                       report["0b"]["shortfall"]))
     print("  gap         %.4f" % gap)
     print("\n  ⭐ In §6's units, 15 points = %.4f raw lag-2, 35 points = %.4f"
           % (blind2 - 0.15 * gap, blind2 - 0.35 * gap))
