@@ -206,6 +206,67 @@ def test_read_lag_INSTALLS_its_own_decoder_on_a_borrowed_backend(monkeypatch):
                     "max_new_tokens": ML.LAG_MAX_NEW_TOKENS}
     assert out["temperature"] == ML.LAG_TEMPERATURE
     assert out["max_new_tokens"] == ML.LAG_MAX_NEW_TOKENS
+    # ⛔ The marker is part of the config for the same reason the decoder is.
+    assert out["marker_fn"] is None
+
+
+# ── the marker is part of the measurement, exactly as the decoder is ───────
+#
+# ⛔⛔ IDF-2's M and M-strip arms are IDENTICAL in weights, seeds, chains and
+# decoder. They differ only in which `marker_fn` provoked each turn. Without
+# this field their rows are distinguishable only by the FILENAME they were
+# written to — which is precisely the failure `temperature` was added to
+# prevent, one argument along. *(Wilson, 2026-09-26.)*
+
+def _spy_inner(monkeypatch):
+    def spy(backend, **kw):
+        return {"verdict": "REFUSED", "z": {}, "lag_profile": {}}
+    monkeypatch.setattr(ML, "_read_lag_inner", spy)
+
+
+def test_a_reading_records_WHICH_marker_provoked_it(monkeypatch):
+    import sys
+    sys.path.insert(0, str(ROOT / "tools"))
+    import act2_idf2 as I
+    _spy_inner(monkeypatch)
+    out = ML.read_lag(_Backend(), marker_fn=I.marker_held)
+    assert out["marker_fn"] == "act2_idf2.marker_held"
+
+
+def test_the_M_and_M_STRIP_arms_are_DISTINGUISHABLE_in_the_row(monkeypatch):
+    """⛔⛔ THE WHOLE POINT. Two arms, one field apart, and §6 reads a
+    difference between them. Rows that cannot be told apart cannot be audited
+    for having been swapped."""
+    import sys
+    sys.path.insert(0, str(ROOT / "tools"))
+    import act2_idf2 as I
+    _spy_inner(monkeypatch)
+    m = ML.read_lag(_Backend(), marker_fn=I.marker_held)
+    strip = ML.read_lag(_Backend(), marker_fn=I.marker_none)
+    bare = ML.read_lag(_Backend())
+    assert len({m["marker_fn"], strip["marker_fn"], str(bare["marker_fn"])}) == 3
+
+
+def test_two_shuffle_seeds_do_not_write_the_same_name(monkeypatch):
+    """⭐ The same hazard one level deeper: two M-shuffle arms at different
+    seeds name different roots, so the seed rides in the recorded name."""
+    import sys
+    sys.path.insert(0, str(ROOT / "tools"))
+    import act2_idf2 as I
+    _spy_inner(monkeypatch)
+    a = ML.read_lag(_Backend(), marker_fn=I.marker_shuffle(seed=1))
+    b = ML.read_lag(_Backend(), marker_fn=I.marker_shuffle(seed=2))
+    assert a["marker_fn"] != b["marker_fn"]
+    assert "seed=1" in a["marker_fn"] and "seed=2" in b["marker_fn"]
+
+
+def test_MUTANT_a_reading_with_no_marker_field_is_CAUGHT(monkeypatch):
+    """⛔⛔ A GREEN CHECK PROVES NOTHING UNTIL IT HAS BEEN SEEN TO GO RED."""
+    _spy_inner(monkeypatch)
+    out = ML.read_lag(_Backend())
+    assert "marker_fn" in out, (
+        "read_lag stopped recording the marker; an M row and an M-strip row "
+        "are now distinguishable only by filename")
 
 
 def test_read_lag_PUTS_THE_BORROWED_DECODER_BACK(monkeypatch):

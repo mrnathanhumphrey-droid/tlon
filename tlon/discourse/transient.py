@@ -76,8 +76,22 @@ RECIPES = (CONTENT_FREE, CONTENT_TRANSIENT)
 #: arm: control, not data, structurally un-poolable rather than merely labelled.
 CONTENT_PERSISTENT = "content-persistent"
 DOSE_ARM_RECIPES = (CONTENT_PERSISTENT,)
+
+#: ⛔⛔ A PROBE RECIPE, QUARANTINED THE SAME WAY `content-persistent` IS.
+#: IDF-2's corpus (`PREREG_IDF2_2026_09_26.md`, LOCK `37363296` §1) bars `held`
+#: — `roots(t−1) ∩ roots(t−2)` — where the factorial's arm bars the generator's
+#: `inherited`. Those are DIFFERENT RULES, so a `content-transient-held` adapter
+#: must never be poolable with the `dd40e22f` / `16abeb8d` cells.
+#:
+#: ⭐ AND "MUST NEVER" IS SPELT AS ABSENCE FROM `RECIPES`, NOT AS A SENTENCE IN
+#: A PREREG. `tlon.act2.factorial` validates against `RECIPES`, so anything
+#: outside it cannot become a cell, be labelled, or be paired — the quarantine
+#: is structural. The prereg asked for "never pooled"; this is what enforces it.
+CONTENT_TRANSIENT_HELD = "content-transient-held"
+PROBE_RECIPES = (CONTENT_TRANSIENT_HELD,)
+
 #: Everything the corpus BUILDER will accept. ⛔ Strictly wider than `RECIPES`.
-ALL_RECIPES = RECIPES + DOSE_ARM_RECIPES
+ALL_RECIPES = RECIPES + DOSE_ARM_RECIPES + PROBE_RECIPES
 
 #: ⛔⛔ THE GENERATOR'S IDENTITY, VERSIONED, WRITTEN INTO EVERY MANIFEST. The
 #: legacy path (`multiturn.build`) draws force and content from ONE stream, so
@@ -210,6 +224,81 @@ def own_turn_roots(out, window: int, lex_r) -> set:
         if len(out) >= j:
             roots |= roots_of(out[-j].surface, lex_r)
     return roots
+
+
+def held(out, prev, lex_r) -> frozenset:
+    """IDF-2's bar: the roots `t−1` and `t−2` BOTH carry. -> a frozenset.
+
+    ⛔⛔ THE ONE DEFINITION, AND EVERY CONSUMER IMPORTS **THIS OBJECT**.
+    `PREREG_IDF2_2026_09_26.md` (LOCK `37363296`) §1 requires the corpus
+    builder, the row builder and the lag reader to call the same function, and
+    `tests/test_idf2_instruments.py` asserts identity (`is`), not that three
+    spellings happen to agree today. Three spellings of a bar is the drift that
+    has already voided one curve in this campaign.
+
+    ⭐ WHY IT IS NOT `prev.inherited`. The generator's bookkeeping cannot be
+    recomputed at read time — the model's turns carry none — so a probe that
+    trains on `inherited` is measuring a rule its reader cannot state. `held`
+    is the rule made observable: it is computable from two surfaces, by the
+    builder and the reader alike, which is what lets the marker be checked
+    against the truth instead of taken on trust.
+
+    ⛔ `held = ∅` WHEN THERE IS NO `t−2`, and that is turns 1 AND 2, not just
+    turn 1. `out[-1]` is `prev`, so generating the second turn leaves `out`
+    one element long and `t−2` is turn 0, which does not exist. The marker
+    reads `(none)` on exactly these turns in train and read alike; an
+    off-by-one here desynchronises the builder from the reader silently.
+
+    ⚠️ THIS BAR DOES NOT FULLY CONTROL LAG-2, ON PURPOSE. A root in
+    `roots(t−2)` but absent from `roots(t−1)` is not barred and still counts
+    toward the lag-2 profile, so a corpus built on `held` sits ABOVE one built
+    on `inherited` (0.0271 for `ct-s20624`). Prereg §1 carries the consequence:
+    the blind-to-true gap compresses, and §3A's resolvability check is made
+    against the gap this recipe actually has.
+    """
+    if len(out) < 2:
+        return frozenset()
+    return roots_of(prev.surface, lex_r) & roots_of(out[-2].surface, lex_r)
+
+
+#: ⛔⛔ THE MARKER'S SPELLING, DEFINED ONCE, BECAUSE BUILDER AND READER MUST
+#: AGREE BYTE-FOR-BYTE. IDF-2 trains on rows whose input carries this line and
+#: reads by regenerating it; a space, a separator or a sort order that differs
+#: between the two puts the model off-distribution at read time and the arm
+#: measures the mismatch instead of the marker. `PREREG_IDF2` §0d audits the
+#: row against these constants, not against a remembered format.
+MARKER_PREFIX = "let go:"
+MARKER_NONE = "(none)"
+
+
+def marker_line(roots) -> str:
+    """The annotation line for a set of roots. -> one line, no newline.
+
+    ⛔ SORTED. The bar is a set, and a set has no order; emitting insertion
+    order would make two runs of the same corpus produce different training
+    text for the same rule, which is a diff nobody would look for.
+
+    ⛔ `(none)` IS A REAL VALUE, NOT AN EMPTY LINE. `held` is empty on turns 1
+    and 2 of every chain (see `held`), so the model sees this token constantly
+    during training — which is exactly what lets M-strip force it everywhere
+    and stay IN-DISTRIBUTION. An empty marker would instead be a shape the
+    model never trained on, and the control would confound "no information"
+    with "no line".
+    """
+    rs = sorted(roots)
+    return "%s %s" % (MARKER_PREFIX, " ".join(rs) if rs else MARKER_NONE)
+
+
+def marker_stimulus(surface: str, line: str | None) -> str:
+    """The provoke payload: the Tlön surface, then the annotation. -> str.
+
+    ⛔ The surface is UNCHANGED and the marker is its own line, so it can be
+    stripped exactly — which is what makes M-strip a clean control rather than
+    a second edit to the input.
+    ⭐ `line is None` returns the surface untouched, byte-for-byte: that is the
+    path every pre-IDF-2 caller takes, and `tests/test_idf2_reader.py` pins it.
+    """
+    return surface if line is None else "%s\n%s" % (surface, line)
 
 
 def chain_transient(pool, idx, *, turns: int, rng: random.Random,
@@ -565,6 +654,30 @@ def verify_recipe(chains, recipe: str, *, lex_r, shuffles: int = 200,
     if recipe == CONTENT_TRANSIENT:
         return check_transience(chains, lex_r=lex_r, shuffles=shuffles,
                                 seed=seed)
+    if recipe == CONTENT_TRANSIENT_HELD:
+        # ⛔⛔ THIS BRANCH EXISTS BECAUSE ITS ABSENCE WAS NOT AN ERROR, IT WAS A
+        # MISLABEL. The fall-through below is the CONTENT-FREE verifier, which
+        # refuses when lag-1 z exceeds the chance ceiling — so a held corpus,
+        # responsive by construction at z in the hundreds, would have aborted
+        # 0a with "CONTROL IS CONTAMINATED": the treatment arm refused for
+        # being the treatment, under the control's name. Caught before the
+        # first build, by reading the fall-through rather than the branches.
+        #
+        # ⭐ IT IS VERIFIED EXACTLY AS `content-transient` IS. The bar differs
+        # (`held` vs the generator's `inherited`); the two claims the corpus
+        # must earn — responsive at lag 1, at chance at every longer lag — do
+        # not. Sharing the verifier is what makes "same claim, different bar"
+        # a fact about the code instead of an assertion in a prereg.
+        rep = check_transience(chains, lex_r=lex_r, shuffles=shuffles,
+                               seed=seed)
+        # ⛔⛔ AND THE VERDICT IS RESTAMPED. `check_transience` returns the
+        # string `content-transient`, which the builder writes into the
+        # manifest as `recipe_VERIFIED` — the exact label that must never
+        # attach to this corpus, because that label is what `factorial`
+        # matches on when it decides two cells are poolable. The quarantine in
+        # `PROBE_RECIPES` would be undone by a manifest field.
+        rep["verdict"] = CONTENT_TRANSIENT_HELD
+        return rep
     prof = lag_profile(chains, max_lag=2, lex_r=lex_r)
     rng = random.Random(seed)
     mu, sd = permutation_null(chains, lag=1, shuffles=shuffles, rng=rng,

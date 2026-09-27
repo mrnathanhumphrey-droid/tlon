@@ -52,6 +52,11 @@ from tlon.discourse.transient import (Z_LAG1_MIN, Z_LAGN_MAX,      # noqa: E402
                                       lag_pairs, lag_profile,
                                       permutation_null, resolving_power,
                                       threshold_for_lag)
+# ⭐ IDF-2's marker spelling is IMPORTED, never restated here. Builder and
+# reader must agree byte-for-byte or the read is off-distribution.
+from tlon.discourse.transient import (                             # noqa: E402
+    held as TRheld, marker_line as TRmarker_line,
+    marker_stimulus as TRmarker_stimulus)
 from tlon.discourse.multiturn import MultiturnError                # noqa: E402
 from tlon.discourse.provocation import DIRECTION as PROVOKE        # noqa: E402
 from tlon.grammar import classes as C                              # noqa: E402
@@ -69,21 +74,46 @@ class ModelTurn:
         self.seconds, self.refused = seconds, refused
 
 
-def model_chain(backend, seed_surface: str, *, turns: int) -> list[ModelTurn]:
+def model_chain(backend, seed_surface: str, *, turns: int,
+                marker_fn=None, lex_r=None) -> list[ModelTurn]:
     """Seed, then let the model paint each next turn from the one before it.
 
     ⛔ A REFUSED TURN ENDS THE CHAIN, IT IS NOT SKIPPED. Skipping would splice
     turn t-1 to turn t+1 and report an adjacency the model never produced --
     manufacturing lag-1 evidence out of a gap.
+
+    ⭐ `marker_fn` IS IDF-2'S ONE ADDITION AND IT IS ADDITIVE. `None` is every
+    pre-IDF-2 caller and takes the untouched path: `marker_stimulus` returns
+    the bare surface, so the payload is byte-identical to what this function
+    has always sent. Threading an argument through the existing fold is the
+    whole point -- `PREREG_IDF2` §0e asks for a reader that SHARES every guard,
+    and a second reader that re-implements the chain loop would be a second
+    instrument that agrees with the first until it does not. That failure class
+    has already cost this campaign a voided curve.
+
+    `marker_fn(out, lex_r) -> str | None`, called with the chain so far.
     """
     out = [ModelTurn(seed_surface)]
     for _ in range(turns - 1):
-        t = generate(backend, PROVOKE, out[-1].surface, [], shape=TRAINED)
+        line = None if marker_fn is None else marker_fn(out, lex_r)
+        payload = TRmarker_stimulus(out[-1].surface, line)
+        t = generate(backend, PROVOKE, payload, [], shape=TRAINED)
         if not t.ok:
             out.append(ModelTurn(None, seconds=t.seconds, refused=True))
             break
         out.append(ModelTurn(t.surface, seconds=t.seconds))
     return out
+
+
+def _lag_lex():
+    """The root set this module scores against, spelt ONCE.
+
+    ⛔ It was inlined as `C.load()["classes"]["R"]` at the scoring step only.
+    IDF-2's marker needs the same set at GENERATION time, and two inlined
+    copies of a lexicon lookup is how a reader ends up marking roots the
+    scorer does not count.
+    """
+    return C.load()["classes"]["R"]
 
 
 def usable(chain) -> list[ModelTurn]:
@@ -140,7 +170,8 @@ LAG_MAX_NEW_TOKENS = 256
 def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
              shuffles: int = 200, seed: int = 20624, verbose: bool = True,
              temperature: float = LAG_TEMPERATURE,
-             max_new_tokens: int = LAG_MAX_NEW_TOKENS) -> dict:
+             max_new_tokens: int = LAG_MAX_NEW_TOKENS,
+             marker_fn=None) -> dict:
     """⭐ THE WHOLE OF WHAT A RELEASE READ IS — ONE FOLD, CLI AND CURVE SHARE IT.
 
     The twin of `act2_flocal.read_rates`, and extracted for the same reason: a
@@ -202,7 +233,7 @@ def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
     try:
         m = _read_lag_inner(backend, chains=chains, turns=turns,
                             max_lag=max_lag, shuffles=shuffles, seed=seed,
-                            say=say)
+                            say=say, marker_fn=marker_fn)
     finally:
         if prior_t is not None:
             backend.temperature = prior_t
@@ -219,10 +250,36 @@ def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
     m["temperature"] = temperature
     m["max_new_tokens"] = max_new_tokens
     m["decoder_sampled"] = True
+    # ⛔⛔ THE MARKER IS PART OF THE MEASUREMENT, EXACTLY AS THE DECODER IS.
+    # IDF-2's M and M-strip arms differ ONLY in which `marker_fn` generated
+    # them; the weights, the seeds, the chains and the decoder are identical.
+    # Without this field the two produce rows that are distinguishable only by
+    # the FILENAME they were written to — which is the precise failure
+    # `temperature` was added to prevent, one argument along. A row that does
+    # not say how it was provoked is not a reading of the marker.
+    # *(Wilson, 2026-09-26.)*
+    m["marker_fn"] = _qualname(marker_fn)
     return m
 
 
-def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say):
+def _qualname(fn):
+    """-> "module.qualname" for a marker, or None for the unmarked reader.
+
+    ⭐ `None` IS A VALUE HERE, NOT A MISSING FIELD. It is the positive claim
+    "this was read with a bare surface", which is what every pre-IDF-2 row
+    means and what the historical reads must keep meaning.
+    """
+    if fn is None:
+        return None
+    mod = getattr(fn, "__module__", None)
+    name = getattr(fn, "__qualname__", None)
+    if name is None:                       # a closure factory's product
+        name = getattr(type(fn), "__qualname__", repr(fn))
+    return "%s.%s" % (mod, name) if mod else str(name)
+
+
+def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say,
+                    marker_fn=None):
     """The body of `read_lag`. Split out only so the decoder that `read_lag`
     installs is guaranteed to be restored on every exit path, including the
     refusals and the early `UNSCOREABLE` return."""
@@ -239,7 +296,8 @@ def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say):
     rng = random.Random(seed)
     built, dropped = [], 0
     for i, s in enumerate(seed_surfaces(chains, rng=rng), 1):
-        good = usable(model_chain(backend, s, turns=turns))
+        good = usable(model_chain(backend, s, turns=turns,
+                                  marker_fn=marker_fn, lex_r=_lag_lex()))
         if len(good) < MIN_USABLE_TURNS:
             dropped += 1
             say("  chain %2d: only %d usable turn(s) — dropped" % (i, len(good)))
@@ -268,7 +326,7 @@ def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say):
                 "thresholds": {"z_lag1_min": Z_LAG1_MIN,
                                "z_lagn_max": Z_LAGN_MAX}}
 
-    lex_r = C.load()["classes"]["R"]
+    lex_r = _lag_lex()
     prof = lag_profile(built, max_lag=max_lag, lex_r=lex_r)
     nrng = random.Random(seed)
     zs, nulls, npairs, unscoreable, powers, needs = {}, {}, {}, {}, {}, {}

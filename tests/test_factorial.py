@@ -95,7 +95,21 @@ def test_the_recipe_names_are_defined_ONCE_and_imported():
     # become a cell, be labelled, or be paired. That exclusion IS the quarantine
     # and it has to stay structural rather than conventional.
     assert TR.CONTENT_PERSISTENT not in TR.RECIPES
-    assert TR.ALL_RECIPES == TR.RECIPES + (TR.CONTENT_PERSISTENT,)
+    # ⛔⛔ AND SO IS THE PROBE ARM, FOR THE SAME REASON AND BY THE SAME
+    # MECHANISM. `content-transient-held` (IDF-2, `PREREG_IDF2_2026_09_26.md`
+    # LOCK `37363296` §1) bars `held` where the factorial's arm bars the
+    # generator's `inherited` — different rules, so its adapter must never be
+    # poolable with the `dd40e22f` / `16abeb8d` cells.
+    #
+    # ⭐ THIS ASSERTION IS WHY THE TUPLE IS SPELT OUT RATHER THAN LENGTH-
+    # CHECKED. Adding `PROBE_RECIPES` turned this test red, which is the guard
+    # working: widening the builder's accept-list is exactly the edit that
+    # could quietly widen the factorial's. `RECIPES` is unchanged above, and
+    # the widening is confined to `ALL_RECIPES` where it belongs.
+    assert TR.CONTENT_TRANSIENT_HELD not in TR.RECIPES
+    assert TR.PROBE_RECIPES == (TR.CONTENT_TRANSIENT_HELD,)
+    assert TR.ALL_RECIPES == (TR.RECIPES + (TR.CONTENT_PERSISTENT,)
+                              + TR.PROBE_RECIPES)
     builder = (_ROOT / "tools/act2_build_multiturn.py").read_text(encoding="utf-8")
     assert "TR.CONTENT_FREE" in builder and "TR.CONTENT_TRANSIENT" in builder
     assert 'choices=TR.ALL_RECIPES' in builder, \

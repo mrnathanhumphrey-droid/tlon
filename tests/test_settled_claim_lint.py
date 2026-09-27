@@ -18,6 +18,8 @@ import pytest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
 
 import lint_settled_claims as L  # noqa: E402
+import lock_prereg as LP         # noqa: E402
+import re                        # noqa: E402
 
 #: ⛔ The real sentence, verbatim from the doc as it stood. It nearly bought 13
 #: adapters on a parameter whose CI contains zero.
@@ -79,16 +81,115 @@ def test_hypothesis_TEST_is_a_different_and_legitimate_sense():
                             "a spread.")
 
 
+def _locked_exempt(path, text):
+    """-> True if this is a LOCKED prereg whose body still matches its hash.
+
+    ⛔⛔ THE SECOND TIME A LINT HIT A LOCKED BODY, THE PROCESS WAS FIXED
+    INSTEAD OF THE DOCUMENT. `PREREG_IDF1_2026_09_25.md` and
+    `PREREG_IDF2_2026_09_26.md` both trip the keyword rule, and in both cases
+    every available fix — rephrase, or an inline waiver — EDITS A LOCKED BODY
+    AFTER RESULTS EXIST. A pre-registration whose text can be adjusted once
+    the numbers are in is not a pre-registration, and "the change was only
+    cosmetic" is exactly the judgment the lock is built not to trust.
+
+    ⭐ THE EXEMPTION IS THE HASH, NOT THE FILENAME, SO NOTHING IS SILENTLY
+    WAIVED. A locked file is exempt only while it matches its own recorded
+    sha; the first later edit changes that sha and the lint fires again on the
+    edited text. An unlocked prereg is never exempt — which is what makes the
+    pre-lock gate in `tools/lock_prereg.py` the place the keywords actually
+    get caught, while they can still be rewritten.
+    *(Wilson, 2026-09-26.)*
+    """
+    if path.parent.name != "docs" or not path.name.startswith("PREREG_"):
+        return False
+    m = LP.LOCK_RE.search(text)
+    if m is None or "_(unset" in m.group(0):
+        return False
+    stamped = re.search(r"`([0-9a-f]{8})`", m.group(0))
+    return bool(stamped) and stamped.group(1) == LP.body_hash(text)
+
+
 def test_the_live_decision_documents_are_currently_clean():
     """The suite fails if a new unqualified settled claim lands in a live doc."""
     root = pathlib.Path(__file__).resolve().parents[1]
     bad = {}
     for g in L.LIVE_GLOBS:
         for f in root.glob(g):
-            v = L.violations(f.read_text(encoding="utf-8"))
+            text = f.read_text(encoding="utf-8")
+            if _locked_exempt(f, text):
+                continue
+            v = L.violations(text)
             if v:
                 bad[f.name] = [x[0] for x in v]
     assert not bad, bad
+
+
+def test_the_exemption_is_the_HASH_and_not_the_name(tmp_path):
+    """⛔⛔ An exemption keyed on a filename is a permanent waiver wearing a
+    condition. This one must survive the file being locked and die the moment
+    the body moves."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    p = docs / "PREREG_FAKE.md"
+    body = ("- **Status:** _(unset)_\n- **LOCK:** _(unset)_\n\n"
+            "The design is adapter-limited.\n")
+    p.write_text(body, encoding="utf-8")
+
+    # unlocked -> NOT exempt, and it really does violate
+    assert L.violations(p.read_text(encoding="utf-8"))
+    assert not _locked_exempt(p, p.read_text(encoding="utf-8"))
+
+    # ⛔ The pre-lock gate REFUSES this body — that is the point of it, and it
+    # is asserted here rather than worked around silently.
+    assert LP.main([str(p), "--lock"]) == 1
+    assert "_(unset" in p.read_text(encoding="utf-8"), (
+        "a refused lock must not have stamped anything")
+
+    # locked (over the gate, deliberately) -> exempt
+    assert LP.main([str(p), "--lock", "--force"]) == 0
+    text = p.read_text(encoding="utf-8")
+    assert _locked_exempt(p, text)
+    assert L.violations(text), "the fixture must still violate, or this is vacuous"
+
+    # edited after the lock -> the sha moves and the exemption is GONE
+    p.write_text(text + "\nAnd one more line.\n", encoding="utf-8")
+    assert not _locked_exempt(p, p.read_text(encoding="utf-8"))
+
+
+def test_the_pre_lock_gate_refuses_a_clean_looking_but_dirty_body(tmp_path):
+    """⛔⛔ THE PROCESS FIX'S OTHER HALF. The suite exempting locked bodies is
+    only safe because the words are caught BEFORE the hash exists. If this
+    gate were advisory, the exemption would become the permanent waiver it
+    was designed not to be."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    p = docs / "PREREG_GATE.md"
+    p.write_text("- **Status:** _(unset)_\n- **LOCK:** _(unset)_\n\n"
+                 "Identical speakers cannot converge — that's arithmetic.\n",
+                 encoding="utf-8")
+    assert LP.main([str(p), "--lock"]) == 1
+    assert "_(unset" in p.read_text(encoding="utf-8")
+
+
+def test_the_pre_lock_gate_passes_a_qualified_body(tmp_path):
+    """⭐ And it must not be a blanket refusal: a claim carrying its interval
+    locks normally. A gate that refuses everything is a gate nobody runs."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    p = docs / "PREREG_OK.md"
+    p.write_text("- **Status:** _(unset)_\n- **LOCK:** _(unset)_\n\n"
+                 "The effect is 0.42, CI [0.31, 0.54].\n", encoding="utf-8")
+    assert LP.main([str(p), "--lock"]) == 0
+    assert LP.main([str(p)]) == 0          # and it verifies afterwards
+
+
+def test_a_non_prereg_live_document_is_never_exempt(tmp_path):
+    """⭐ `MEASUREMENTS.md` is the document the rule exists for. It is live,
+    it is edited constantly, and no lock may ever excuse it."""
+    p = tmp_path / "MEASUREMENTS.md"
+    p.write_text("- **LOCK:** `deadbeef`\n\nThe design is adapter-limited.\n",
+                 encoding="utf-8")
+    assert not _locked_exempt(p, p.read_text(encoding="utf-8"))
 
 
 def test_the_check_can_FAIL_so_it_has_not_merely_been_consulted():

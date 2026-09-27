@@ -58,6 +58,31 @@ def main(argv: list[str]) -> int:
             print("Re-locking discards the guarantee. Pass --force if the body "
                   "genuinely changed before firing.")
             return 1
+        # ⛔⛔ THE LINT IS A PRE-LOCK GATE, AND THIS IS THE ONLY MOMENT IT CAN
+        # BE. Twice now a settled-claim keyword has been found in a body that
+        # was ALREADY LOCKED — PREREG_IDF1, then PREREG_IDF2 — and at that
+        # point every fix is an edit to a pre-registration after results
+        # exist, which is the one thing the hash is here to prevent. So the
+        # suite exempts a locked body that still matches its sha, and the
+        # catching moves HERE, where the words can still be rewritten.
+        # *(Wilson, 2026-09-26.)*
+        try:
+            import lint_settled_claims as _lint
+            bad = _lint.violations(LOCK_RE.sub("", STATUS_RE.sub("", text)))
+        except ImportError:                                # pragma: no cover
+            bad = []
+        if bad and "--force" not in argv:
+            print(f"{path.name}: ⛔ REFUSING TO LOCK — settled-claim "
+                  f"phrasing, {len(bad)} hit(s):")
+            for kw, ctx in bad[:5]:
+                print(f"    {kw}: …{ctx.strip()[:140]}…")
+            print("\nA claim shaped like a settled fact must carry an "
+                  "interval, a range, an explicit not-established marker, or "
+                  "an inline 'settled-claim-ok:' waiver naming why.")
+            print("⭐ Fix it NOW. After the lock the body cannot be edited, "
+                  "and the suite will exempt it by hash — so this is the last "
+                  "moment the wording is still free.")
+            return 1
         stamp = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M")
         line = (f"- **LOCK:** `{digest}` (sha256[:8] of draft body at lock, "
                 f"{stamp}Z)")

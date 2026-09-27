@@ -43,17 +43,33 @@ from tlon.grammar import classes as C                          # noqa: E402
 from tlon.grammar.parse import parse, render                   # noqa: E402
 
 
-def rows_from(chains) -> list[dict]:
+def rows_from(chains, *, marker: bool = False) -> list[dict]:
     """One training row per TRANSITION. The first turn of each chain seeds and
-    is not itself a target — a painting with no provocation is a cold start."""
+    is not itself a target — a painting with no provocation is a cold start.
+
+    ⭐ `marker=False` IS EVERY EXISTING CALLER AND IS BYTE-IDENTICAL. IDF-2
+    (`PREREG_IDF2_2026_09_26.md`, LOCK `37363296`) is the only caller that
+    passes True, and it gets `prompt = surface + "\\n" + marker_line(held)`.
+
+    ⛔⛔ THE SLICE IS THE WHOLE CORRECTNESS ARGUMENT. `ch[:i + 1]` is the chain
+    up to AND INCLUDING `prev` — precisely what `out` was inside
+    `chain_transient` at the moment `cur` was drawn. So the builder's marker
+    and the reader's marker are the same function applied to the same shape,
+    which is what §1 means by one definition. Pass `ch` itself and every row
+    would be marked with the whole chain's future; pass `ch[:i]` and every row
+    would be off by one turn. Neither would raise.
+    """
+    lex_r = TR._lex_roots() if marker else None
     out = []
     for ch in chains:
-        for prev, cur in zip(ch, ch[1:]):
+        for i, (prev, cur) in enumerate(zip(ch, ch[1:])):
             scene = parse(cur.surface)
             assert render(scene) == cur.surface     # the one-place oracle
+            line = (TR.marker_line(TR.held(ch[:i + 1], prev, lex_r))
+                    if marker else None)
             out.append({
                 "direction": PV.DIRECTION,
-                "prompt": prev.surface,
+                "prompt": TR.marker_stimulus(prev.surface, line),
                 "english": prev.surface,   # never used; `prompt` wins in the fold
                 "surface": cur.surface,
                 "scene": SB.scene_to_proposal(scene),
