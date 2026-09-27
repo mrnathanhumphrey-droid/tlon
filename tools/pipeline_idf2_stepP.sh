@@ -61,20 +61,32 @@ step adapter
 # exactly one place and it is not this box.
 ADAPTER=$ROOT/adapter_$CELL
 if [ ! -f "$ADAPTER/adapter_model.safetensors" ]; then
-  $PY - <<'PYEOF' 2>&1 | tee -a "$LOG"
-import os, pathlib, sys
+  # ⛔⛤ THESE ARE PASSED AS ARGV, NOT READ FROM THE ENVIRONMENT. The first
+  # version read `os.environ["CELL"]`, and `CELL`/`ROOT` are SHELL variables —
+  # never exported — so the child process raised `KeyError: 'CELL'` the moment
+  # it ran. It failed at the adapter step, before any GPU time, which is the
+  # only reason it cost nothing: the watchdog was already armed and the prereg
+  # lock already verified. ⭐ argv is explicit at the call site; an env read is
+  # a dependency on state the caller cannot see it needs.
+  $PY - "$ADAPTER" "$CELL" "$HF_REPO" <<'PYEOF' 2>&1 | tee -a "$LOG"
+import pathlib, sys
 sys.path.insert(0, "tools")
 from huggingface_hub import hf_hub_download
 from act2_provision import _hf_token
-root = pathlib.Path(os.environ["ROOT"]) / ("adapter_" + os.environ["CELL"])
-root.mkdir(parents=True, exist_ok=True)
+dest, cell, repo = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+dest.mkdir(parents=True, exist_ok=True)
 for f in ("adapter_model.safetensors", "adapter_config.json"):
-    p = hf_hub_download("keyzersoze04/tlon-act2-adapters",
-                        "%s/%s" % (os.environ["CELL"], f), token=_hf_token())
-    (root / f).write_bytes(pathlib.Path(p).read_bytes())
+    p = hf_hub_download(repo, "%s/%s" % (cell, f), token=_hf_token())
+    (dest / f).write_bytes(pathlib.Path(p).read_bytes())
     print("  pulled", f)
 PYEOF
 fi
+# ⛔ PROVED, NOT ASSUMED. A silently-empty pull would send `--adapter` at a
+# directory with no weights, and `act2_model_lag` would read the BARE BASE
+# MODEL and write a result file indistinguishable from a C0 read.
+[ -f "$ADAPTER/adapter_model.safetensors" ] || {
+  echo "⛔ no adapter weights at $ADAPTER — refusing to read a base model as C0" \
+      | tee -a "$LOG"; exit 1; }
 
 step reads
 # ⛔⛔ EACH SEED IS ITS OWN PROCESS AND ITS OWN FILE. A single process looping
