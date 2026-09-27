@@ -196,3 +196,54 @@ touched.
 | IDF-1 reproduced | `runs/act2/idf1/repro_step1.txt`, `repro_step2.txt` |
 | instruments 1-5 | `runs/act2/idf1/i1_replay.txt` … `i5_matched_floor.txt` |
 | the confounded instrument 3 | `runs/act2/idf1/i3_heldout_FREEPOOL_confounded.txt` |
+
+---
+
+## 8 · ADDENDUM 2026-09-27 — the model's own read-to-read spread, measured
+
+⛔ **Descriptive. No verdict is declared and §6 is unchanged** — the three
+conflicting facts remain open for Nate and Wilson. Nothing above this line has
+been edited.
+
+**Source:** IDF-2 Step P (`docs/PREREG_IDF2_2026_09_26.md`, LOCK `37363296`
+§3A; `runs/act2/idf2/stepP/power.json`). The D6 adapter `ct-s20624` was re-read
+at **48 × 10 across eight independent seeds** — 384 lag-2 pairs per read, no
+chains dropped — for a purpose unrelated to this document: to check that
+IDF-2's reading table could resolve its own bands.
+
+    0.3750  0.3776  0.3854  0.3854  0.4193  0.4244  0.4271  0.4323
+    mean 0.4033 · SD 0.0245 · 8 seeds
+
+**§2 and §5 cite `0.3854`. That was a single 120-turn read, and it ranks
+2nd-lowest of the eight.** It is inside the spread; it is not a central
+estimate.
+
+### What it does to §5, which is where it matters
+
+§5 reports *"model 0.3854 · best generalising window-1 speaker 0.4238 …
+model-minus-floor is negative, by 0.0384."*
+
+| | model | O-B(4) floor | difference |
+|---|---|---|---|
+| as reported (single draw) | 0.3854 | 0.4238 | **−0.0384** |
+| with the 8-seed mean | **0.4033** | 0.4238 | **−0.0205** |
+
+⭐ **§5's stated reading survives, and gets firmer rather than weaker.** It
+already said the two were *"not distinguishable"* and that the honest
+statement was *"the model is at or slightly past the matched window-1 floor,
+not that it beats it."* With the mean in place of the low draw the model is
+still at or below that floor, by half as much, and still well inside noise.
+**What is new is that the model's own read-to-read spread is now measured
+instead of assumed.**
+
+### It also corroborates a noise floor already on record
+
+Scaling the measured SD from 384 pairs to the 96 a 120-turn read holds gives
+**0.0490** for a single read at §5's size. The difference between two such
+reads is `√2 × 0.0490 =` **0.0693**, against the **0.073** same-object floor in
+`RESULTS_EPOCHS_LEVER_2026_09_17.md` — **94.9 % agreement**, reached by an
+unrelated route.
+
+⚠️ So the size of the spread is not news. What is new is that it is attached to
+the specific value this document quotes. **From 2026-09-27, cite
+`0.4033 ± 0.0245` wherever C0's lag-2 appears.**

@@ -673,6 +673,24 @@ expressed as the fraction of that 0.4171 gap an arm closes.
 | 0 | 1.0278 | 0.3854 | 14.5 % |
 | +1 | 1.0463 | 0.3333 | 26.9 % |
 
+⛔⛔ **THE DOSE-0 ROW IS ONE DRAW, AND THE 8-SEED MEAN SUPERSEDES IT FOR
+CITATION (2026-09-27).** IDF-2 Step P re-read `ct-s20624` at 48 × 10 across
+eight seeds — 384 lag-2 pairs each, none dropped:
+
+    0.3750 0.3776 0.3854 0.3854 0.4193 0.4244 0.4271 0.4323
+    → C0 lag-2 = 0.4033 ± 0.0245
+
+**`0.3854` ranks 2nd-lowest of the eight.** The table above is kept as the
+record of what was measured; ⭐ **cite `0.4033 ± 0.0245` wherever C0's lag-2
+is used as a quantity**, including as IDF-2's bridge.
+`runs/act2/idf2/stepP/power.json` · `RESULTS_IDF1B_2026_09_25.md` §8 ·
+`DEVIATIONS_IDF2_2026_09_26.md` D5.
+
+⭐ It also corroborates the same-object noise floor from an unrelated route:
+scaled to the 96 pairs of a 120-turn read the single-read SD is 0.0490, so two
+reads differ by `√2 × 0.0490 =` **0.0693** against the **0.073** on record —
+94.9 % agreement.
+
 ⛔ **Never compare two speakers' lag-2 without matching their lag-1 first.** A
 speaker carrying less forward has less to suppress, so a lower lag-2 can be
 lower fidelity wearing release's clothes. See

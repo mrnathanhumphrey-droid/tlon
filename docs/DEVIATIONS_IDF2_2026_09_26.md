@@ -364,6 +364,68 @@ Wilson's.
 
 ---
 
+## D4 · Five seeds per gating arm, not three — re-locked on Step P's measured SD
+
+**Wilson, 2026-09-27, on F1 above.** The prereg body says three seeds per
+object (§5, sign-off #4). ⛔ **The body is LOCKED and is not edited**; the
+change is recorded here and the operative constants live in
+`tools/act2_idf2.py` (`SEEDS_PER_GATING_ARM`), where a pipeline reads them
+rather than a default someone has to remember.
+
+| | 3 seeds | **5 seeds** |
+|---|---|---|
+| `SE(closes(M) − closes(C1))` | 4.73 points | **3.66** |
+| 95 % CI half-width | 13.13 (t, 4 df) | **~8.4** (t, 8 df) |
+| FLOORS' `< 15` margin at a true zero effect | **1.9 points** | ~6.6 points |
+
+⭐ **The reason is FLOORS specifically, not precision in general.** INSTALLS
+was never at risk — a 35-point effect is 7.4 SE from zero. But §0 says in the
+prereg's own words that INSTALLS only means *"the model can follow an explicit
+avoid-list"*, while **FLOORS is the branch that bears on the weights**. At
+three seeds a marker that does nothing would land within two points of being
+undeclarable, and any variance the marker adds over C0's — plausible, since it
+introduces a source of variation C0 does not have — pushes it over. ⛔ A design
+whose most informative branch is the one it cannot declare is exactly the
+"failure that teaches nothing" §3A was written to remove.
+
+**Applies to the arms that gate a cell: M, C1, M-strip.**
+⚠️ **W2 and M-shuffle stay at three** — my reading of *"keep W2 and M-shuffle
+at the same count"* as the count they already had. Both are descriptive and
+neither gates a cell. Flagged rather than absorbed; it is +4 reads if five was
+meant everywhere.
+
+⭐ **This is legitimate and the reason it is legitimate is the timing.** It is
+based on a measured SD, and it is made **before any treatment adapter exists**.
+§3A: widening after M has read is retrofitting. **Nothing in the reading table
+changes — only its power.**
+
+**Cost:** 21 reads instead of 15 → ≈ **+2.8 GPU-h**.
+
+---
+
+## D5 · C0's lag-2 is the 8-seed mean from now on, not the single draw
+
+**Wilson, 2026-09-27, on F2 above.** `0.3854` was one 120-turn read and it came
+in **2nd-lowest of eight**. The campaign cited it through D6, IDF-1 and IDF-1b
+as though it were central.
+
+> **C0 lag-2 = 0.4033 ± 0.0245** (8 seeds, 48 × 10, 384 pairs each)
+> — cite this wherever C0's lag-2 appears, including as IDF-2's bridge.
+
+⭐ **And it corroborates a floor already on record, from a different
+measurement.** Scaling the measured SD from 384 pairs to 96 gives **0.0490**
+for a single 120-turn read; the difference between two such reads is
+`√2 × 0.0490 =` **0.0693**, against the **0.073** same-object floor recorded in
+`RESULTS_EPOCHS_LEVER_2026_09_17.md`. **94.9 % agreement**, and the two were
+arrived at by unrelated routes.
+
+⚠️ So the spread is not news — what is new is that it is now attached to the
+specific numbers people quote. Recorded as a **dated descriptive addendum** to
+`RESULTS_IDF1B_2026_09_25.md` §5. ⛔ **No IDF-1b verdict is declared**, and its
+three conflicting facts remain open.
+
+---
+
 ## ⏭ What Step 0 does NOT clear
 
 ⛔ **Step P has not run, and no GPU has been touched.** Step 0 was the CPU

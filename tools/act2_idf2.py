@@ -52,6 +52,37 @@ LAG1_TOL = 0.05
 ORACLE_N = 5000
 ORACLE_TURNS = 10
 
+#: ⛔⛔ SEEDS PER ARM, RE-LOCKED 2026-09-27 ON STEP P'S MEASURED SD.
+#: `DEVIATIONS_IDF2_2026_09_26.md` D4. The prereg body says three; it is LOCKED
+#: and is not edited, so the change lives in DEVIATIONS and the operative
+#: numbers live HERE, where the pipeline reads them instead of a default
+#: someone has to remember.
+#:
+#: ⭐ THE REASON IS FLOORS, NOT PRECISION IN GENERAL. Step P measured the
+#: between-seed SD at 5.79 points. At 3 seeds `SE(M − C1) = 5.79·√(2/3) =
+#: 4.73` and the 95 % CI half-width is 13.13 — so a marker that does NOTHING
+#: would leave an upper bound of ~13.1 against FLOORS' `< 15`, inside two
+#: points of being undeclarable. INSTALLS was never at risk (35 points is
+#: 7.4 SE). ⛔ A design whose most informative branch is the one it cannot
+#: declare is the "failure that teaches nothing" §3A exists to remove.
+#: At 5 seeds: SE 3.66, half-width ~8.4 on 8 df.
+#:
+#: ⚠️ W2 AND M-SHUFFLE STAY AT THREE, and that is my reading of Wilson's
+#: "keep W2 and M-shuffle at the same count" — the count they already had.
+#: Both are descriptive and neither gates a cell, so neither needs the power.
+#: Say so if the intent was five everywhere; it is +4 reads.
+SEEDS_PER_GATING_ARM = 5      # M, C1, M-strip — these gate a §6 cell
+SEEDS_PER_DESCRIPTIVE_ARM = 3  # W2, M-shuffle — reported, never gating
+GATING_ARMS = ("M", "C1", "M-strip")
+DESCRIPTIVE_ARMS = ("W2", "M-shuffle")
+
+#: ⛔ C0's lag-2 is the 8-SEED MEAN from Step P, never the single 120-turn
+#: draw. `0.3854` was one read and it came in 2nd-lowest of eight; the
+#: campaign cited it through D6, IDF-1 and IDF-1b as though it were central.
+C0_LAG2_MEAN = 0.4033
+C0_LAG2_SD = 0.0245
+C0_LAG2_N_SEEDS = 8
+
 OUT = pathlib.Path("runs/act2/idf2")
 
 
