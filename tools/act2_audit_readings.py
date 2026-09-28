@@ -65,6 +65,12 @@ SCOPE_CONDITIONAL = {
     "vocab_coverage.json",
     "mapping_moved.json",
     "step_match_*.json",
+    # ⭐ IDF-2's artefacts. Every other pipeline in the campaign legitimately
+    # produces none of these, so their absence is scope, not a gap — the same
+    # reason `step_match_*` is here.
+    "lag_*.json",
+    "dose_*.json",
+    "corpus_diff*.json",
 }
 
 

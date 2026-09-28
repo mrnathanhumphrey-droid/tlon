@@ -688,6 +688,24 @@ FLUSH_PATTERNS = (
     "step_match_*.json",
     "base_audit.json",       # which base, verified — provenance, kilobytes
     "eos_guard.json",
+    # ⛔⛤ IDF-2's READS WERE NOT COVERED BY ANY PATTERN ABOVE, AND THAT WAS THE
+    # RUN-1 LOSS WEARING A NEW NAME. `model_lag_*.json` is the retrain
+    # pipeline's spelling; IDF-2 writes one file PER ARM PER SEED as
+    # `lag_<arm>_s<seed>.json`, so twenty-one reads — the entire measurement —
+    # matched nothing here and would have survived only inside the run log,
+    # exactly as run 1's eighteen did.
+    #
+    # ⭐ The flush is the LAST-WORDS path, so what belongs in it is anything a
+    # re-run cannot cheaply regenerate. Weights are persisted per cell before
+    # any read now; these files are what remains, and they cost kilobytes.
+    # ⛔ GLOBS, NOT NAMES. `test_the_patterns_are_patterns_not_names` refuses a
+    # literal filename here unless the pipeline writes it cell-independently,
+    # and it is right: a name cannot survive a rename, and every IDF-2 read
+    # carries its arm and seed. Step P's `power.json` and Step 0's `step0.json`
+    # are deliberately NOT added — both of those runs already persisted.
+    "lag_*.json",            # IDF-2: one read per arm per seed
+    "dose_*.json",           # IDF-2: §4's dose gate, per cell
+    "corpus_diff*.json",     # IDF-2: the marker-only proof for M vs C1
 )
 
 
