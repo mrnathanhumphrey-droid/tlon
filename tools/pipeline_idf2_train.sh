@@ -123,6 +123,27 @@ for ARM in M C1; do
   # so the pipeline halts rather than reading an arm whose dose is a confound.
   $PY tools/act2_idf2.py dose --adapter "$A" \
       --out "$ROOT/dose_$CELL.json" 2>&1 | tee -a "$LOG"
+
+  step persist_$CELL
+  # ⛔⛤ THE WEIGHTS GO UP HERE, BEFORE ANY READ, AND THE FIRST VERSION DID NOT.
+  # Run 1 of this pipeline put a single `persist` step AFTER all eighteen reads,
+  # and the call it used did not exist — `act2_box_persist.py` has no `persist`
+  # subcommand. So the run trained both adapters, took every read, and then died
+  # at rc=2 on a typo, and the watchdog terminated a box holding 7 GPU-h of
+  # weights that were never anywhere else. Only the log survived.
+  #
+  # ⭐ AND THE FIX FOR THE ORDERING WAS ALREADY WRITTEN DOWN, in
+  # `pipeline_retrain.sh` beside the same call: *"It runs AFTER persist_$CELL on
+  # purpose: the adapter is already durable, so a fault in the read costs the
+  # read and not the weights."* Had that ordering been copied along with the
+  # command, the bad invocation would have fired ~4 minutes after M finished
+  # training and cost minutes instead of two adapters.
+  #
+  # ⛔ `--solo-n 0` because this pipeline produces no solo transcripts, and
+  # `persist_cell` requires the count to MATCH exactly rather than default.
+  $PY tools/act2_box_persist.py --root "$ROOT" --repo "$HF_REPO" \
+      cell --cell "$CELL" --solo-n 0 \
+      --corpus-manifest "$C/manifest.json" 2>&1 | tee -a "$LOG"
 done
 
 step reads
@@ -145,13 +166,6 @@ read_arm M        "$ROOT/adapter_heldM-s$SEED"  held    "$GATING_SEEDS"
 read_arm C1       "$ROOT/adapter_heldC1-s$SEED" none    "$GATING_SEEDS"
 read_arm M-strip  "$ROOT/adapter_heldM-s$SEED"  strip   "$GATING_SEEDS"
 read_arm M-shuffle "$ROOT/adapter_heldM-s$SEED" shuffle "$DESC_SEEDS"
-
-step persist_cells
-# ⛔⛔ THE WEIGHTS GO UP BEFORE THE ANALYSIS RUNS. `s20620` was lost because
-# persistence waited for the end of a run. Two adapters at ~4.5 GPU-h each are
-# not re-derivable from anything on this box.
-$PY tools/act2_box_persist.py --root "$ROOT" --repo "$HF_REPO" \
-    persist --cells "heldM-s$SEED heldC1-s$SEED" 2>&1 | tee -a "$LOG"
 
 step persist
 tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" \

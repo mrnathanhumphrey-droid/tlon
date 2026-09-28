@@ -186,9 +186,21 @@ def test_flocal_and_dose_gate_before_any_read(script):
 
 
 def test_the_weights_are_persisted_before_the_analysis(script):
-    """⛔⛔ `s20620` was lost because persistence waited for the end of a run.
-    Two adapters at ~4.5 GPU-h each are not re-derivable from this box."""
-    assert script.index("persist --cells") < script.index("tlon_mark_done")
+    """⛔⛤ THIS TEST PINNED A TYPO AND CALLED IT A CONTRACT.
+
+    It asserted `script.index("persist --cells") < script.index(...)` — the
+    ORDERING of a string that could never run, because `act2_box_persist.py`
+    has no `persist` subcommand. Run 1 trained M and C1, took all eighteen
+    reads, and died at rc=2 on that line with the weights nowhere but the box.
+    A test that checks where a command sits has not checked that it exists.
+
+    ⭐ Now it asserts the ordering that MATTERS — durable before read, the rule
+    `pipeline_retrain.sh` already stated — and
+    `tests/test_pipeline_invocations_are_real.py` checks the command is real.
+    """
+    assert "persist --cells" not in script, "the invented subcommand is back"
+    assert script.index("act2_box_persist.py") < script.index("step reads"), (
+        "a fault in the reads must cost the reads, not the weights")
 
 
 def test_W2_is_absent_rather_than_half_present(script):
