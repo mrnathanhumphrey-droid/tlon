@@ -426,6 +426,82 @@ three conflicting facts remain open.
 
 ---
 
+## D7 · RUN 1 LOST ITS ADAPTERS TO A TYPO — and its numbers are FROZEN here as a prediction
+
+**2026-09-28.** Run 1 trained M and C1, cleared every gate, took all eighteen
+reads — and then died at `rc=2` on `act2_box_persist.py persist --cells`, a
+subcommand that does not exist. The watchdog correctly terminated a box holding
+~7 GPU-h of weights that were in no other place. **Only the log survived.**
+
+⛔ The correct call was already in `pipeline_retrain.sh:215`, and so was the
+ordering rule beside it — *"the adapter is already durable, so a fault in the
+read costs the read and not the weights."* Neither was copied. The single
+persist step sat AFTER all eighteen reads, so the failure landed at the
+most expensive possible moment instead of four minutes after M finished.
+
+### ⛔⛔ THESE NUMBERS ARE FROZEN BEFORE THE RE-RUN, SO THE RE-RUN IS A REPLICATION
+
+*(Wilson's condition. Recovered by regex from `pipeline_idf2_train.log` into
+`runs/act2/idf2/train/recovered_reads.json` — stdout, not artefacts.)*
+
+| arm | n | lag-1 | lag-2 | closes |
+|---|---|---|---|---|
+| **M** | 5 | 1.0305 | 0.0485 | **93.8 %** |
+| **C1** | 5 | 1.0370 | 0.4453 | **0.1 %** |
+| **M-strip** | 5 | 1.0606 | 0.4141 | **7.5 %** |
+| **M-shuffle** | 3 | 1.0293 | 0.6545 | **−49.4 %** |
+
+Per-seed `closes(M)`: 91.8 · 91.8 · 91.8 · 96.7 · 97.3.
+`M − C1` = **93.8** points, 95 % CI **[88.4, 99.1]**.
+`M − M-strip` = **86.4** points, CI **[79.7, 93.1]**.
+Perceive guard **0.994**. Between-seed SD **2.87 / 3.22** against Step P's 5.79.
+
+⛔⛔ **NO VERDICT IS DECLARED FROM THESE.** Three reasons, and the first is
+sufficient on its own:
+
+1. **§6's PARTIAL and FLOORS cells require the per-root readout**, which needs
+   the read transcripts, which needs the adapters. All gone.
+2. The provenance is a **regex over stdout** — no `marker_fn` field, no
+   `n_pairs`, no recorded decoder. The weakest evidence class in this campaign.
+3. **§0's own warning stands:** M closing 93.8 % means the model followed an
+   explicit avoid-list. The prereg calls that the near-trivial branch, and
+   FLOORS was always the informative one.
+
+⭐ **Their value is as a PREDICTION.** The re-run is now a replication against a
+frozen table rather than a fresh look, and a re-run that lands far from these
+numbers is itself a finding.
+
+---
+
+## D8 · W2 enters the re-run — it is now the arm that matters most
+
+**Wilson, 2026-09-28.** W2 was deferred under option (b) and is absent from all
+eighteen recovered reads. With M's result reading as *"the model can follow an
+explicit avoid-list"*, W2 — `t−2` and `t−1` as real chat turns, no marker, the
+model deriving the intersection itself — is the only arm in the design that
+asks the art piece's question. It goes in.
+
+---
+
+## D9 · Three mechanical enforcements, because writing the rule down did nothing
+
+**Wilson, 2026-09-28:** *"Writing the rule down again does nothing if nothing
+forces it."* The persist call had a rule, a working example and a test, and
+still shipped broken. So:
+
+1. **One `persist_cell()`, imported, never spelt.** Every pipeline calls one
+   function from one module. ⭐ There is no command string left to mistype and a
+   new pipeline cannot invent its own call.
+2. **The launcher refuses without a smoke receipt.** A CPU dry run writes a
+   file carrying the git sha and the exit code of every step; no receipt, or a
+   receipt for a different sha, and the launch aborts before a box exists.
+3. **The monitor alarms on STALENESS, not silence.** The box writes a heartbeat
+   timestamp; older than N minutes *or unreadable* is an alert. ⛔ Run 1's
+   monitor printed blank lines for two hours after the box died, and the last
+   number it ever saw was reported as live progress.
+
+---
+
 ## ⏭ What Step 0 does NOT clear
 
 ⛔ **Step P has not run, and no GPU has been touched.** Step 0 was the CPU

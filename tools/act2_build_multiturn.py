@@ -43,7 +43,8 @@ from tlon.grammar import classes as C                          # noqa: E402
 from tlon.grammar.parse import parse, render                   # noqa: E402
 
 
-def rows_from(chains, *, marker: bool = False) -> list[dict]:
+def rows_from(chains, *, marker: bool = False,
+              window2: bool = False) -> list[dict]:
     """One training row per TRANSITION. The first turn of each chain seeds and
     is not itself a target — a painting with no provocation is a cold start.
 
@@ -67,7 +68,7 @@ def rows_from(chains, *, marker: bool = False) -> list[dict]:
             assert render(scene) == cur.surface     # the one-place oracle
             line = (TR.marker_line(TR.held(ch[:i + 1], prev, lex_r))
                     if marker else None)
-            out.append({
+            row = {
                 "direction": PV.DIRECTION,
                 "prompt": TR.marker_stimulus(prev.surface, line),
                 "english": prev.surface,   # never used; `prompt` wins in the fold
@@ -75,7 +76,25 @@ def rows_from(chains, *, marker: bool = False) -> list[dict]:
                 "scene": SB.scene_to_proposal(scene),
                 "prior_force": prev.force,
                 "force": cur.force,
-                "source": "multiturn"})
+                "source": "multiturn"}
+            # ⭐⭐ W2: `t−2` AND `t−1` AS REAL CHAT TURNS, THROUGH THE MECHANISM
+            # THAT ALREADY EXISTS. `act2_finetune.row_text` renders a row's
+            # `context` as prior (user, assistant) pairs via `bench_train_text`
+            # — the same `bench_prompt` the reader now serves through — and a
+            # row WITHOUT `context` is byte-identical to before. So W2 needs no
+            # new row format and no second renderer.
+            #
+            # ⛔ THE PRIOR ASSISTANT TURN IS THE SCENE, not the surface: that is
+            # what `row_messages` puts there, and the reader's `_assistant_text`
+            # matches it. ⛔ And there is no context on the first transition,
+            # where `t−2` does not exist — the same off-by-one as the marker,
+            # and it has to agree with the reader or the arms diverge on their
+            # opening turns.
+            if window2 and i >= 1:
+                row["context"] = [{
+                    "prompt": ch[i - 1].surface,
+                    "scene": SB.scene_to_proposal(parse(prev.surface))}]
+            out.append(row)
     return out
 
 
@@ -116,6 +135,12 @@ def main() -> int:
                          "roots(t-1) & roots(t-2) instead of the generator's "
                          "`inherited`; quarantined out of RECIPES so its "
                          "adapter can never pool with a factorial cell.")
+    ap.add_argument("--window2", action="store_true",
+                    help="IDF-2's W2 arm: every provoke row carries t-2 and "
+                         "t-1 as real prior chat turns via `context`, and NO "
+                         "marker. ⛔ Mutually exclusive with --marker: W2 asks "
+                         "whether the model derives the intersection itself, "
+                         "and handing it the answer would make it M.")
     ap.add_argument("--marker", action="store_true",
                     help="IDF-2's M arm: every provoke row's input carries the "
                          "annotation line naming the roots to let go. ⛔ Only "
@@ -198,6 +223,20 @@ def main() -> int:
     #   * the held recipe is legal WITHOUT `--marker`: that is C1, and it is the
     #     control the whole estimand rests on. So this is not symmetrical, and
     #     only the first direction is refused.
+    # ⛔⛔ W2 AND THE MARKER ARE MUTUALLY EXCLUSIVE. W2 exists to ask whether
+    # the model can DERIVE `held` from two turns it can see; a marker naming
+    # `held` would hand it the answer, and the arm would silently become a
+    # second M with a longer prompt.
+    if a.window2 and a.marker:
+        raise SystemExit(
+            "⛔⛔ --window2 with --marker: W2 asks whether the model derives "
+            "held(t-1) = roots(t-1) & roots(t-2) from turns it can see. A "
+            "marker names that set outright, so the arm would be M wearing "
+            "W2's label and the comparison would mean nothing.")
+    if a.window2 and a.recipe != TR.CONTENT_TRANSIENT_HELD:
+        raise SystemExit(
+            "⛔ --window2 is IDF-2's arm and belongs to --recipe %s"
+            % TR.CONTENT_TRANSIENT_HELD)
     if a.marker and a.recipe != TR.CONTENT_TRANSIENT_HELD:
         raise SystemExit(
             "⛔⛔ --marker names `held` (roots(t−1) ∩ roots(t−2)), but --recipe "
@@ -273,7 +312,7 @@ def main() -> int:
     # differ only in whether the provoke row's input carries the annotation
     # line. Folding it into `--recipe` would make them two recipes, and two
     # recipes cannot be compared as one estimand.
-    mt = rows_from(chains, marker=a.marker)
+    mt = rows_from(chains, marker=a.marker, window2=a.window2)
     if a.marker:
         print("  ⭐ MARKED rows: every provoke input carries `%s …` (IDF-2 M arm)"
               % TR.MARKER_PREFIX)

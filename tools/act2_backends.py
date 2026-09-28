@@ -21,7 +21,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from tlon.act2.llm import BackendError                        # noqa: E402
-from tlon.act2.chat_shape import read_prompt             # noqa: E402
+from tlon.act2.chat_shape import (bench_prompt,          # noqa: E402
+                                  read_prompt)
 
 PRICES = {"claude-sonnet-5": (3.00, 15.00),
           "claude-haiku-4-5": (1.00, 5.00),
@@ -221,18 +222,30 @@ class LocalBackend:
         self.model = model
         return self
 
-    def _prompt(self, system: str, user: str) -> str:
+    def _prompt(self, system: str, user: str, pairs=None) -> str:
         # ⛔⛔ ONE FOLD WITH THE TRAINER. This construction was spelled here AND
         # (differently) in `row_to_text`, and the two disagreed on Mistral-7B:
         # the reader's shape carried the system message and the trainer's shape
         # dropped it, so the model was read out-of-distribution and F-LOCAL
         # scored a prompt the model had never been trained on. Byte-identical
         # behaviour for every base — `read_prompt` IS this code, moved.
-        return read_prompt(self.tok, system, user)
+        #
+        # ⭐ `pairs` IS IDF-2's W2 ARM AND IT CHANGES NOTHING WHEN EMPTY.
+        # `bench_prompt` with no pairs IS `read_prompt`, by its own contract and
+        # by `tests/test_bench_shape.py` — so every existing caller takes a
+        # byte-identical path. W2 needs the model to see `t−2` and `t−1` as real
+        # chat turns, and the trainer already renders exactly that through
+        # `bench_train_text = bench_prompt(...) + answer + eos`. Serving through
+        # the SAME function is what makes train-shape EQUAL read-shape instead
+        # of resembling it — the distinction that cost run 3a twice.
+        if not pairs:
+            return read_prompt(self.tok, system, user)
+        return bench_prompt(self.tok, system, pairs, user)
 
-    def call(self, *, system: str, user: str, schema: dict, kind: str) -> dict:
+    def call(self, *, system: str, user: str, schema: dict, kind: str,
+             pairs=None) -> dict:
         import torch
-        text = self._prompt(system, user)
+        text = self._prompt(system, user, pairs)
         ids = self.tok(text, return_tensors="pt").to(self.model.device)
         with torch.no_grad():
             out = self.model.generate(

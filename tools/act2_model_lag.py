@@ -75,7 +75,8 @@ class ModelTurn:
 
 
 def model_chain(backend, seed_surface: str, *, turns: int,
-                marker_fn=None, lex_r=None) -> list[ModelTurn]:
+                marker_fn=None, lex_r=None, window2: bool = False
+                ) -> list[ModelTurn]:
     """Seed, then let the model paint each next turn from the one before it.
 
     ⛔ A REFUSED TURN ENDS THE CHAIN, IT IS NOT SKIPPED. Skipping would splice
@@ -94,15 +95,54 @@ def model_chain(backend, seed_surface: str, *, turns: int,
     `marker_fn(out, lex_r) -> str | None`, called with the chain so far.
     """
     out = [ModelTurn(seed_surface)]
+    answers = [None]          # the raw assistant text for each turn, for W2
     for _ in range(turns - 1):
         line = None if marker_fn is None else marker_fn(out, lex_r)
         payload = TRmarker_stimulus(out[-1].surface, line)
-        t = generate(backend, PROVOKE, payload, [], shape=TRAINED)
+        # ⭐⭐ W2: `t−2` AND `t−1` AS REAL CHAT TURNS, THROUGH THE TRAINER'S OWN
+        # FUNCTION. `bench_prompt(tok, system, pairs, user)` is what
+        # `bench_train_text` is built from — `prompt + answer + eos` — so the
+        # text W2 trains on literally BEGINS with the text this sends. Serving
+        # a hand-built transcript instead would be train-shape RESEMBLING
+        # read-shape, which is what cost run 3a twice.
+        # ⛔ The prior ASSISTANT turn is the scene the model emitted, not its
+        # surface: that is what the trainer puts there, and a surface would be
+        # a shape the model has never answered under.
+        pairs = None
+        if window2 and len(out) >= 2 and answers[-1] is not None:
+            pairs = [(out[-2].surface, answers[-1])]
+        t = generate(backend, PROVOKE, payload, [], shape=TRAINED, pairs=pairs)
         if not t.ok:
             out.append(ModelTurn(None, seconds=t.seconds, refused=True))
+            answers.append(None)
             break
         out.append(ModelTurn(t.surface, seconds=t.seconds))
+        # ⛔⛤ ONLY UNDER W2. The first version called this on EVERY turn, so the
+        # default path — every pre-W2 read in the campaign — ran new code it did
+        # not need and broke on a scripted backend whose turns carry no scene.
+        # The rule I keep stating and keep breaking: an additive argument must
+        # leave the path it is not on untouched, including the work it does.
+        answers.append(_assistant_text(t) if window2 else None)
     return out
+
+
+def _assistant_text(turn) -> str:
+    """The assistant content for a prior W2 turn, spelt as the TRAINER spells it.
+
+    ⛔ `row_messages` puts the SCENE there, serialised — so this must too, or
+    W2's read prompt diverges from W2's training text on its second turn and
+    every turn after. ⭐ Falls back to the raw generation when the scene is
+    absent, which is the only other thing the model actually emitted.
+    """
+    import json as _json
+    scene = getattr(turn, "scene", None)
+    if scene is not None:
+        from tlon.act2 import schema as SB
+        try:
+            return _json.dumps(SB.scene_to_proposal(scene), ensure_ascii=False)
+        except Exception:
+            pass
+    return getattr(turn, "raw", None) or ""
 
 
 #: ⛔ The four IDF-2 arms, named ONCE. A caller that spelt its own marker
@@ -197,7 +237,7 @@ def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
              shuffles: int = 200, seed: int = 20624, verbose: bool = True,
              temperature: float = LAG_TEMPERATURE,
              max_new_tokens: int = LAG_MAX_NEW_TOKENS,
-             marker_fn=None) -> dict:
+             marker_fn=None, window2: bool = False) -> dict:
     """⭐ THE WHOLE OF WHAT A RELEASE READ IS — ONE FOLD, CLI AND CURVE SHARE IT.
 
     The twin of `act2_flocal.read_rates`, and extracted for the same reason: a
@@ -259,7 +299,8 @@ def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
     try:
         m = _read_lag_inner(backend, chains=chains, turns=turns,
                             max_lag=max_lag, shuffles=shuffles, seed=seed,
-                            say=say, marker_fn=marker_fn)
+                            say=say, marker_fn=marker_fn,
+                            window2=window2)
     finally:
         if prior_t is not None:
             backend.temperature = prior_t
@@ -285,6 +326,10 @@ def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
     # not say how it was provoked is not a reading of the marker.
     # *(Wilson, 2026-09-26.)*
     m["marker_fn"] = _qualname(marker_fn)
+    # ⛔ W2 IS A DIFFERENT INPUT SHAPE, so a row that does not say which shape
+    # it was read under is not comparable to one that does — the same argument
+    # that put `temperature` and `marker_fn` here.
+    m["window2"] = bool(window2)
     return m
 
 
@@ -305,7 +350,7 @@ def _qualname(fn):
 
 
 def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say,
-                    marker_fn=None):
+                    marker_fn=None, window2=False):
     """The body of `read_lag`. Split out only so the decoder that `read_lag`
     installs is guaranteed to be restored on every exit path, including the
     refusals and the early `UNSCOREABLE` return."""
@@ -323,7 +368,8 @@ def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say,
     built, dropped = [], 0
     for i, s in enumerate(seed_surfaces(chains, rng=rng), 1):
         good = usable(model_chain(backend, s, turns=turns,
-                                  marker_fn=marker_fn, lex_r=_lag_lex()))
+                                  marker_fn=marker_fn, lex_r=_lag_lex(),
+                                  window2=window2))
         if len(good) < MIN_USABLE_TURNS:
             dropped += 1
             say("  chain %2d: only %d usable turn(s) — dropped" % (i, len(good)))

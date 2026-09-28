@@ -40,9 +40,12 @@ def test_C1_is_derived_from_M_not_built_separately(script):
     split — 2,190 vs 2,168 at 80 chains. The arms would have differed in how
     much write/read training they saw."""
     assert "act2_idf2.py unmark" in script
-    # ⛔ Exactly ONE corpus is built by the generator; the other is derived.
-    assert script.count("act2_build_multiturn.py") == 1, (
-        "a second build reintroduces the row-count divergence")
+    # ⛔ C1 is DERIVED. M and W2 are built — W2's row shape differs, so it
+    # cannot be stripped out of M — but C1 never is, because a second build of
+    # the SAME shape reintroduces the row-count divergence.
+    assert script.count("act2_build_multiturn.py") == 2, (
+        "M and W2 are built; C1 must be derived from M")
+    assert "--marker" in script and "--window2" in script
 
 
 def test_the_corpus_diff_gate_runs_before_any_training(script):
@@ -199,16 +202,48 @@ def test_the_weights_are_persisted_before_the_analysis(script):
     `tests/test_pipeline_invocations_are_real.py` checks the command is real.
     """
     assert "persist --cells" not in script, "the invented subcommand is back"
-    assert script.index("act2_box_persist.py") < script.index("step reads"), (
+    # ⛔ The command now lives ONLY in `pipeline_lib.sh`'s helper — there is no
+    # string here to mistype — so the ordering is asserted on the CALL.
+    assert "act2_box_persist.py" not in script, (
+        "this pipeline must not spell the persist command itself")
+    assert script.index("tlon_persist_cell") < script.index("step reads"), (
         "a fault in the reads must cost the reads, not the weights")
 
 
-def test_W2_is_absent_rather_than_half_present(script):
-    """⛔ Nathan chose (b): M and C1 now, W2 on a later box. A pipeline with a
-    W2 label and no W2 row builder would produce an arm that looks read."""
-    assert "W2" not in script.replace("# ⛔ W2 IS NOT IN THIS RUN", "").replace(
-        "# it — its row shape and reader history do not exist yet.", "") or \
-        "NOT IN THIS RUN" in script
+def test_W2_is_present_and_read_under_its_own_shape(script):
+    """⭐⭐ W2 went in on 2026-09-28 (DEVIATIONS D8) and is the arm that matters
+    most: no marker, `t−2` and `t−1` as real chat turns, so it asks whether the
+    model DERIVES the intersection instead of following a handed list.
+
+    ⛔ It must read with `--window2` AND `--marker none`. Either flag wrong and
+    the read is off-distribution against its own corpus — and W2 with a marker
+    would simply be M with a longer prompt."""
+    assert "--window2" in script
+    assert "corpus_heldW2" in script
+    assert "for ARM in M C1 W2" in script, "W2 must train, gate and persist too"
+    w2 = script.split("── W2 ·", 1)[1][:600]
+    assert "--marker none" in w2 and "--window2" in w2
+    assert "adapter_heldW2" in w2
+
+
+def test_W2s_corpus_is_built_not_derived(script):
+    """⛔ C1 is M with a line removed, so stripping is exact. W2 carries
+    `context` — a different row SHAPE, not a substring — so deriving it would
+    mean re-implementing the builder."""
+    assert script.count("act2_build_multiturn.py") == 2, (
+        "M and W2 are built; C1 is derived")
+    assert "unmark --marked" in script
+
+
+def test_the_watchdog_deadline_covers_three_arms(script):
+    """⛔⛔ A WATCHDOG THAT CUTS A JOB SHORT IS THE SAME LOSS AS ONE THAT NEVER
+    FIRED. The 26 h deadline was sized for two arms; three trains and 21 reads
+    is ≈ 20.5 h at run 1's measured rates, which would have left 1.27×."""
+    line = [l for l in script.splitlines() if "tlon_arm_watchdog" in l
+            and not l.lstrip().startswith("#")][0]
+    hours = int(line.split()[-3])
+    assert hours >= 30, "deadline %d h is too tight for three arms" % hours
+
 
 
 def test_the_pipeline_is_allowlisted():

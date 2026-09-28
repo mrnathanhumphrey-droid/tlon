@@ -110,10 +110,14 @@ def test_idf2_train_persists_each_cell_BEFORE_its_reads():
     all eighteen reads, so the failure landed with 7 GPU-h of weights on a box
     and nothing in durable storage."""
     s = (TOOLS / "pipeline_idf2_train.sh").read_text(encoding="utf-8")
-    assert s.index("act2_box_persist.py") < s.index("step reads"), (
+    # ⭐ The command itself now lives ONLY in `pipeline_lib.sh` — that is the
+    # enforcement — so the ordering is asserted on the HELPER CALL.
+    assert "act2_box_persist.py" not in s, (
+        "the pipeline must not spell the persist command itself")
+    assert s.index("tlon_persist_cell") < s.index("step reads"), (
         "the cells must be durable before a single read is taken")
     assert "persist --cells" not in s, "the invented subcommand is back"
-    assert "--solo-n 0" in s, (
+    assert "tlon_persist_cell \"$PY\" \"$ROOT\" \"$HF_REPO\" \"$CELL\" 0" in s, (
         "persist_cell requires an EXACT solo count and this pipeline makes none")
 
 
@@ -124,10 +128,14 @@ def test_idf2_train_persist_call_has_every_required_argument():
     # ⛔ Taken from the EXTRACTED invocation, not from a text slice. The first
     # version sliced after the first occurrence of the tool name — which now
     # lands in the comment explaining the bug, so it was reading prose.
+    # ⛔ Read from `pipeline_lib.sh`, which is where the one invocation lives
+    # now. ⭐ The smoke receipt follows the same path — a gate that stopped
+    # seeing the command when it moved would be worse than no gate.
     calls = _invocations(
-        (TOOLS / "pipeline_idf2_train.sh").read_text(encoding="utf-8"),
+        (TOOLS / "pipeline_lib.sh").read_text(encoding="utf-8"),
         "act2_box_persist.py")
-    assert calls, "no persist invocation found"
+    calls = [c for c in calls if "cell" in c]
+    assert calls, "no persist-cell invocation found in pipeline_lib.sh"
     argv = calls[0]
     assert "cell" in argv
     for flag in ("--cell", "--solo-n", "--corpus-manifest"):

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ═══ IDF-2 — TRAIN M AND C1, THEN READ FOUR ARMS ═══════════════════════════
+# ═══ IDF-2 — TRAIN M, C1 AND W2, THEN READ FIVE ARMS ══════════════════════
 #
 # `docs/PREREG_IDF2_2026_09_26.md`, LOCK `37363296`. Step 0 and Step P have both
 # passed; this is the treatment.
@@ -10,10 +10,15 @@
 # what makes the difference the marker's effect rather than a corpus rebuild —
 # §2, and the reason C1 exists at all.
 #
-# ⛔ W2 IS NOT IN THIS RUN. Its input is `t−2` and `t−1` as real chat turns,
-# which needs a row shape and a reader history that do not exist yet. Nathan
-# chose (b): the two primary arms now, W2 on a later box. `tests/…` asserts W2
-# is absent here rather than half-present.
+# ⭐⭐ W2 IS IN, AND IT IS THE ARM THAT MATTERS MOST. Its input is `t−2` and
+# `t−1` as real chat turns with NO marker, so it asks whether the model can
+# DERIVE the intersection rather than follow a list it was handed — the only
+# arm here shaped like the art piece. Run 1's recovered M closed 93.8 %, which
+# §0 calls the near-trivial branch; W2 is the one that is not.
+#
+# ⛔ Its reads serve through `bench_prompt`, the SAME function
+# `bench_train_text` is built from, so train-shape EQUALS read-shape rather
+# than resembling it. `tests/test_idf2_w2_shape.py` asserts prefix-identity.
 #
 #   bash tools/pipeline_idf2_train.sh
 #
@@ -50,11 +55,46 @@ RTURNS=${RTURNS:-10}
 GATING_SEEDS=${GATING_SEEDS:-"30624 30625 30626 30627 30628"}
 DESC_SEEDS=${DESC_SEEDS:-"30624 30625 30626"}
 
+step smoke_receipt
+# ⛔⛔ THE RUN REFUSES TO START WITHOUT A RECEIPT FOR ITS OWN COMMIT.
+# `act2_smoke_receipt.py check` fails on missing, on a receipt written at a
+# different git sha, on an uncommitted edit to this script, and on a receipt
+# whose verdict is FAIL. The box is pinned to a sha, the receipt is committed
+# at a sha, and they must be the same sha.
+#
+# ⭐ IT IS THE FIRST STEP, BEFORE THE WATCHDOG, because a refusal here should
+# cost nothing at all — not even an armed watchdog. Run 1 died on a command
+# that does not exist AFTER two adapters and eighteen reads; this check runs
+# the same class of validation in under a second, and it is the only thing in
+# this file that cannot be skipped by forgetting to do it.
+$PY tools/act2_smoke_receipt.py check --pipeline pipeline_idf2_train.sh \
+    2>&1 | tee -a "$LOG"
+
+step heartbeat
+# ⛔⛔ THE MONITOR ALARMS ON STALENESS, NOT ON SILENCE. Run 1's laptop poller
+# printed blank lines for two hours after the box had terminated, because an
+# empty ssh result matched neither DONE nor FAILED — and the last number it
+# ever saw got reported as live progress. A heartbeat makes "no news" a
+# READABLE state: the file's age is the signal, and an unreadable file is an
+# alert rather than a non-event.
+#
+# ⛔ NO `trap … EXIT` HERE. Setting one would REPLACE `tlon_trap_init`'s
+# handler — the thing that reports which stage failed and writes ~/FAILED — so
+# the heartbeat would have silenced the failure reporting it exists to support.
+# The writer is a background subshell; it dies with the box, which terminates
+# itself, and an orphaned 60-second `date` costs nothing.
+( while :; do date +%s > "$ROOT/heartbeat"; sleep 60; done ) &
+echo "  ✅ heartbeat armed (pid $!), $ROOT/heartbeat" | tee -a "$LOG"
+
 step watchdog
-# ⛔⛔ FIRST, BEFORE ANY GPU TIME. 2 trains (~4.5 h each) + 18 reads (~28 min
-# each) ≈ 17.5 h, so a 26 h deadline is ~1.5× headroom. The stall window is
-# 90 min because a training leg's log gaps are longer than a read's.
-tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_idf2_train.sh 26 90 $$
+# ⛔⛔ FIRST, BEFORE ANY GPU TIME. ⛔ AND RESIZED WHEN W2 WENT IN: run 1 measured
+# a train at ~3.6 h and a 480-turn read at ~28 min, so 3 trains + 21 reads is
+# ≈ 20.5 h. The 26 h deadline sized for TWO arms would have left 1.27× headroom
+# and killed the run near its last reads — a watchdog cutting a job short is
+# the same loss as one that never fired, arriving from the other side.
+# 36 h is ~1.75×. The stall window stays 90 min: a training leg's log gaps are
+# longer than a read's.
+tlon_arm_watchdog "$PY" "$ROOT" "$HF_REPO" pipeline_idf2_train.sh 36 90 $$
 
 step prereg_lock
 $PY tools/lock_prereg.py docs/PREREG_IDF2_2026_09_26.md | tee -a "$LOG"
@@ -89,6 +129,15 @@ if [ ! -f "$CC/train.jsonl" ]; then
   step corpus_C1_derived
   $PY tools/act2_idf2.py unmark --marked "$CM" --out "$CC" 2>&1 | tee -a "$LOG"
 fi
+# ⛔ W2 IS BUILT, NOT DERIVED. C1 is M with a line removed, so stripping is
+# exact. W2 carries `context` — prior chat TURNS — which is a different row
+# SHAPE, not a substring, and deriving it would mean rebuilding the very thing
+# the builder already knows how to make. Same seed, same chains, same bar.
+CW=$ROOT/corpus_heldW2-s$SEED
+if [ ! -f "$CW/train.jsonl" ]; then
+  step corpus_W2
+  $PY tools/act2_build_multiturn.py       --recipe content-transient-held --window2       --chains "$CHAINS" --turns "$TURNS" --multiturn-fraction "$MTFRAC"       --responsiveness "$RESP" --seed "$SEED" --map derived       --out "$CW" 2>&1 | tee -a "$LOG"
+fi
 
 step corpus_diff
 # ⛔⛔ THE ONE DIFFERENCE, PROVED. If M's and C1's corpora differed anywhere but
@@ -99,7 +148,7 @@ $PY tools/act2_idf2_corpus_diff.py --marked "$CM" --unmarked "$CC" \
     --out "$ROOT/corpus_diff.json" 2>&1 | tee -a "$LOG"
 
 # ── train, gate, read ──────────────────────────────────────────────────────
-for ARM in M C1; do
+for ARM in M C1 W2; do
   CELL=held$ARM-s$SEED
   A=$ROOT/adapter_$CELL
   C=$ROOT/corpus_$CELL
@@ -124,26 +173,11 @@ for ARM in M C1; do
   $PY tools/act2_idf2.py dose --adapter "$A" \
       --out "$ROOT/dose_$CELL.json" 2>&1 | tee -a "$LOG"
 
-  step persist_$CELL
-  # ⛔⛤ THE WEIGHTS GO UP HERE, BEFORE ANY READ, AND THE FIRST VERSION DID NOT.
-  # Run 1 of this pipeline put a single `persist` step AFTER all eighteen reads,
-  # and the call it used did not exist — `act2_box_persist.py` has no `persist`
-  # subcommand. So the run trained both adapters, took every read, and then died
-  # at rc=2 on a typo, and the watchdog terminated a box holding 7 GPU-h of
-  # weights that were never anywhere else. Only the log survived.
-  #
-  # ⭐ AND THE FIX FOR THE ORDERING WAS ALREADY WRITTEN DOWN, in
-  # `pipeline_retrain.sh` beside the same call: *"It runs AFTER persist_$CELL on
-  # purpose: the adapter is already durable, so a fault in the read costs the
-  # read and not the weights."* Had that ordering been copied along with the
-  # command, the bad invocation would have fired ~4 minutes after M finished
-  # training and cost minutes instead of two adapters.
-  #
-  # ⛔ `--solo-n 0` because this pipeline produces no solo transcripts, and
-  # `persist_cell` requires the count to MATCH exactly rather than default.
-  $PY tools/act2_box_persist.py --root "$ROOT" --repo "$HF_REPO" \
-      cell --cell "$CELL" --solo-n 0 \
-      --corpus-manifest "$C/manifest.json" 2>&1 | tee -a "$LOG"
+  # ⛔⛔ DURABLE BEFORE READ, THROUGH THE SHARED HELPER. This pipeline spelt its
+  # own persist command once and it cost two adapters; there is no command
+  # string here now. `0` solo transcripts because this pipeline produces none
+  # and `persist_cell` requires an exact match rather than a default.
+  tlon_persist_cell "$PY" "$ROOT" "$HF_REPO" "$CELL" 0 "$C/manifest.json"
 done
 
 step reads
@@ -166,9 +200,18 @@ read_arm M        "$ROOT/adapter_heldM-s$SEED"  held    "$GATING_SEEDS"
 read_arm C1       "$ROOT/adapter_heldC1-s$SEED" none    "$GATING_SEEDS"
 read_arm M-strip  "$ROOT/adapter_heldM-s$SEED"  strip   "$GATING_SEEDS"
 read_arm M-shuffle "$ROOT/adapter_heldM-s$SEED" shuffle "$DESC_SEEDS"
+# ⛔ W2 READS WITH `--window2` AND `--marker none`. It never trained with a
+# marker, and its input shape is the prior two turns — so both flags must match
+# how its corpus was built or the read is off-distribution.
+for S in $DESC_SEEDS; do
+  O=$ROOT/lag_W2_s$S.json
+  [ -f "$O" ] && { echo "  W2 seed $S done — skipping" | tee -a "$LOG"; continue; }
+  echo "  ── W2 · window2 · seed $S ──" | tee -a "$LOG"
+  $PY tools/act2_model_lag.py --model $MODEL       --adapter "$ROOT/adapter_heldW2-s$SEED" --object-kind adapter       --marker none --window2       --chains $RCHAINS --turns $RTURNS --seed "$S"       --temperature 0.7 --max-new-tokens 256 --out "$O" 2>&1 | tee -a "$LOG"
+done
 
 step persist
 tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" \
     "$ROOT/corpus_diff.json" $ROOT/dose_*.json $ROOT/lag_*.json
 
-tlon_mark_done "$HF_REPO" "IDF-2 M + C1 adapters, 18 reads, dose + corpus-diff gates"
+tlon_mark_done "$HF_REPO" "IDF-2 M + C1 + W2 adapters, 21 reads, dose + corpus-diff gates"

@@ -150,7 +150,7 @@ class Turn:
 
 def generate(backend, direction: str, payload: str, history, *,
              shape: str = TRAINED, history_limit: int = 60,
-             system: str | None = None) -> Turn:
+             system: str | None = None, pairs=None) -> Turn:
     """One direction, one generation, through the product's own gate.
 
     ⛔ The gate is `PS.validate`, which proves `parse(render(scene)) == scene`
@@ -175,9 +175,13 @@ def generate(backend, direction: str, payload: str, history, *,
                         history_limit=history_limit)
     t0 = time.perf_counter()
     try:
+        # ⭐ `pairs` IS IDF-2's W2 ARM. Passed only when non-empty, so every
+        # existing caller reaches a `call()` with the same arguments it always
+        # had and backends that never learned the keyword are untouched.
+        kw = {"pairs": pairs} if pairs else {}
         proposal = backend.call(system=system or TRAINED_SYSTEM[direction],
                                 user=sent,
-                                schema=SB.scene_schema(), kind=direction)
+                                schema=SB.scene_schema(), kind=direction, **kw)
     except BackendError as exc:
         return Turn(direction, shape, seconds=time.perf_counter() - t0,
                     raw=exc.raw, error=str(exc), sent=sent)

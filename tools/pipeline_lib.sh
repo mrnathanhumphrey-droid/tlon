@@ -104,6 +104,36 @@ tlon_persist_run_files() {
       file --path "$LOG" --subdir "$(basename "$root")" 2>&1 | tee -a "$LOG"
 }
 
+tlon_persist_cell() {
+  # $1 py  $2 root  $3 hf_repo  $4 cell  $5 solo_n  $6 corpus_manifest
+  #
+  # ⛔⛤ THE ONE PLACE THIS COMMAND IS SPELT, AND IT COST TWO ADAPTERS TO LEARN.
+  # `pipeline_idf2_train.sh` wrote its own invocation — `act2_box_persist.py …
+  # persist --cells "…"` — and there is no `persist` subcommand. The run trained
+  # M and C1, took all eighteen reads, then died at rc=2 on that line, and the
+  # watchdog terminated a box holding ~7 GPU-h of weights that existed nowhere
+  # else. The CORRECT call was already in `pipeline_retrain.sh`, twelve lines
+  # of another file away.
+  #
+  # ⭐⭐ A RULE WITH A WORKED EXAMPLE AND A TEST STILL SHIPPED BROKEN, so the
+  # fix is not another rule: there is now no command string for a pipeline to
+  # mistype. A new pipeline calls this or it does not persist, and
+  # `tests/test_pipeline_invocations_are_real.py` refuses a hand-rolled call.
+  #
+  # ⛔ AND IT IS CALLED BEFORE THE READS, ALWAYS. `pipeline_retrain.sh` states
+  # why beside its own call: "the adapter is already durable, so a fault in the
+  # read costs the read and not the weights." Run 1 persisted last, which is
+  # what turned a typo into a loss.
+  local py="$1" root="$2" repo="$3" cell="$4" solo_n="$5" manifest="$6"
+  step persist_"$cell"
+  [ -f "$manifest" ] || {
+    echo "⛔ no corpus manifest at $manifest — refusing to persist an adapter" \
+        "with no measurement behind it" | tee -a "$LOG"; return 1; }
+  "$py" tools/act2_box_persist.py --root "$root" --repo "$repo" \
+      cell --cell "$cell" --solo-n "$solo_n" \
+      --corpus-manifest "$manifest" 2>&1 | tee -a "$LOG"
+}
+
 tlon_verify_cells() {
   # $1 py  $2 root  $3 hf_repo  $4 cells
   local py="$1" root="$2" repo="$3" cells="$4"
