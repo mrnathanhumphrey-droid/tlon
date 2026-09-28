@@ -160,6 +160,41 @@ for ARM in M C1 W2; do
         --seed $SEED 2>&1 | tee -a "$LOG"
   fi
 
+  step factorial_$CELL
+  # ⛔⛤ WITHOUT THIS, PERSIST REFUSES — AND IT DID, AFTER 3.7 GPU-h OF M.
+  # `persist_cell` requires `factorial.json` among CELL_FILES, because an
+  # adapter that survives without its cell label is an adapter in no cell of
+  # anything. Run 2 copied the persist CALL from `pipeline_retrain.sh` and not
+  # the step beside it that writes this file, so M trained, cleared F-LOCAL,
+  # passed the dose gate, and died at persist with the weights nowhere else.
+  # ⭐ `probe_entry`, not `entry`: the latter validates against `RECIPES` and
+  # `content-transient-held` is quarantined out of it deliberately, so an IDF-2
+  # adapter carries NO cell and NO pair key and cannot be pooled.
+  $PY -c "import json,sys; sys.path.insert(0,'.'); \
+from tlon.act2 import factorial as F; \
+print(json.dumps(F.probe_entry('$CELL', recipe='content-transient-held', \
+seed=$SEED, arm='$ARM', manifest=json.load(open('$C/manifest.json'))), \
+indent=2))" > "$A/factorial.json"
+  echo "  ✅ factorial.json (probe, arm $ARM, no cell, no pair key)" | tee -a "$LOG"
+
+  # ⛔⛔ DURABLE BEFORE EVERY GATE, NOT JUST BEFORE THE READS.
+  #
+  # ⛔⛤ RUN 2 PERSISTED AFTER F-LOCAL AND THE DOSE GATE, AND THAT IS THE SAME
+  # LOSS ONE STEP LATER. The dose gate exits NON-ZERO by design, and W2's rows
+  # carry a prior turn each — more tokens, so a genuinely different training
+  # trajectory and an rms that may legitimately miss the ±5 % band. A gate
+  # about whether a reading may be INTERPRETED must not decide whether 3.7
+  # GPU-h of weights survive.
+  #
+  # ⭐ So the order is train → factorial.json → PERSIST → F-LOCAL → dose. Every
+  # gate after this point costs the gate and not the adapter, which is the rule
+  # `pipeline_retrain.sh` states beside its own call and the one this pipeline
+  # has now broken twice in two different places.
+  #
+  # `0` solo transcripts because this pipeline produces none and `persist_cell`
+  # requires an exact match rather than a default.
+  tlon_persist_cell "$PY" "$ROOT" "$HF_REPO" "$CELL" 0 "$C/manifest.json"
+
   step flocal_$CELL
   # ⛔ F-LOCAL is the fluency gate. §4: it must clear before any lag read of
   # this adapter is INTERPRETED. A build that does not speak is not a release
@@ -173,11 +208,6 @@ for ARM in M C1 W2; do
   $PY tools/act2_idf2.py dose --adapter "$A" \
       --out "$ROOT/dose_$CELL.json" 2>&1 | tee -a "$LOG"
 
-  # ⛔⛔ DURABLE BEFORE READ, THROUGH THE SHARED HELPER. This pipeline spelt its
-  # own persist command once and it cost two adapters; there is no command
-  # string here now. `0` solo transcripts because this pipeline produces none
-  # and `persist_cell` requires an exact match rather than a default.
-  tlon_persist_cell "$PY" "$ROOT" "$HF_REPO" "$CELL" 0 "$C/manifest.json"
 done
 
 step reads
@@ -211,6 +241,12 @@ for S in $DESC_SEEDS; do
 done
 
 step persist
+# ⛔ nullglob: an unmatched glob would otherwise be passed through as a LITERAL
+# path, `file --path` would fail on it, and `set -e` would kill the run at its
+# very last step — leaving ~/DONE unwritten and the box billing until the
+# watchdog stall fires. With nullglob an absent class simply contributes no
+# arguments. (The flush now covers these files too, so this is belt and braces.)
+shopt -s nullglob
 tlon_persist_run_files "$PY" "$ROOT" "$HF_REPO" \
     "$ROOT/corpus_diff.json" $ROOT/dose_*.json $ROOT/lag_*.json
 

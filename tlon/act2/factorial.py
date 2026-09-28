@@ -106,6 +106,53 @@ def adapter_label(recipe: str, seed: int,
     return "%s%s-s%d" % (RECIPE_CODE[recipe], tag, seed)
 
 
+def probe_entry(name: str, *, recipe: str, seed: int, arm: str,
+                manifest=None) -> dict:
+    """The fields that ride with a PROBE cell. ⛔⛔ IT IS NOT A CELL EITHER.
+
+    ⛔⛤ THIS EXISTS BECAUSE ITS ABSENCE COST 3.7 GPU-h. `persist_cell` REQUIRES
+    `factorial.json` — an adapter that survives without its cell label is an
+    adapter in no cell of anything — and `pipeline_idf2_train.sh` never wrote
+    one. The run trained M, cleared F-LOCAL, passed the dose gate, and was
+    refused at persist: *"refusing to persist an incomplete cell — missing
+    factorial.json"*. The guard was right; the pipeline had copied the persist
+    CALL from `pipeline_retrain.sh` without the step that satisfies its
+    precondition.
+    ⭐ The same shape as the typo before it: using the existing harness's
+    function without the existing harness's surrounding steps.
+
+    ⛔ And `entry()` cannot be used here, correctly: it validates against
+    `RECIPES`, and `content-transient-held` is quarantined out of that tuple on
+    purpose. So this is `dose_arm_entry`'s sibling — no `cell`, no
+    `factorial_pair_key`, no `pairing_capability_side`, the three fields every
+    pooling and pairing routine reads. An IDF-2 adapter cannot be pooled with a
+    factorial cell whether or not a later analysis remembers.
+
+    `arm` is the IDF-2 arm — M, C1 or W2 — because three adapters share one
+    recipe here and only the arm distinguishes them.
+    """
+    if recipe in RECIPES:
+        raise FactorialError(
+            "%r is a factorial recipe, not a probe — build it with `entry()` "
+            "so it gets a cell and a pair key" % (recipe,))
+    return {
+        "name": name,
+        "recipe": recipe,
+        "seed": seed,
+        "arm": arm,
+        "PROBE": True,
+        "prereg": "docs/PREREG_IDF2_2026_09_26.md",
+        "LOCK": "37363296",
+        "cell": None,
+        "factorial_cell": None,
+        "generator": generator_of(manifest or {}),
+        "NOT_A_FACTORIAL_MEMBER": (
+            "IDF-2 probe arm: barred by `held` = roots(t-1) & roots(t-2), not "
+            "by the generator's `inherited`. Different rule, so it has no cell "
+            "and no pair key on purpose and must never enter the population"),
+    }
+
+
 def dose_arm_entry(name: str, *, recipe: str, seed: int,
                    suppression_window: int, manifest=None) -> dict:
     """The fields that ride with a DOSE ARM. ⛔⛔ IT IS NOT A CELL.

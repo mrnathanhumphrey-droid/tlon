@@ -169,6 +169,71 @@ def inputs_sha(script: pathlib.Path, calls) -> str:
     return h.hexdigest()
 
 
+def check_persist_preconditions() -> tuple[bool, str]:
+    """Would `persist_cell` actually accept a cell this pipeline produces?
+
+    ⛔⛤ THE RECEIPT PROVED THE COMMAND EXISTED AND THE RUN STILL DIED ON IT.
+    `act2_box_persist.py cell --cell X --solo-n 0 --corpus-manifest Y` parses
+    perfectly; `persist_cell` then refuses at RUN TIME unless the adapter
+    directory holds every one of `CELL_FILES` — and `factorial.json` was not
+    among what the pipeline wrote. M trained for 3.7 GPU-h, cleared F-LOCAL,
+    passed the dose gate, and was refused with the weights nowhere else.
+
+    ⭐ SO THE GATE GREW A SECOND QUESTION. "Does the command parse?" is not
+    "will the command succeed?", and the second one is the one that costs
+    GPU-hours. This builds a fake cell in a temp directory, omits each required
+    file in turn, and asserts the refusal — proving the precondition list this
+    check reads is the one `persist_cell` enforces, rather than a copy of it.
+    """
+    import tempfile
+    sys.path.insert(0, str(TOOLS))
+    try:
+        import act2_box_persist as BP
+    except Exception as exc:                                # pragma: no cover
+        return False, "cannot import act2_box_persist: %s" % exc
+
+    required = list(BP.CELL_FILES)
+    with tempfile.TemporaryDirectory() as td:
+        root = pathlib.Path(td)
+        d = root / "adapter_probe"
+        d.mkdir(parents=True)
+        for f in required:
+            (d / f).write_text("{}", encoding="utf-8")
+        missing = BP.missing_cell_files(root, "probe")
+        if missing:
+            return False, ("a complete cell still reports missing %s — the "
+                           "required set is not what this check builds"
+                           % missing)
+        # ⛔ And each one really is required: drop it and the refusal must name
+        # it. A precondition list that is not enforced is documentation.
+        for f in required:
+            (d / f).unlink()
+            if f not in (BP.missing_cell_files(root, "probe") or []):
+                return False, ("%s is in CELL_FILES but its absence is not "
+                               "detected — the guard is advisory" % f)
+            (d / f).write_text("{}", encoding="utf-8")
+    return True, "persist_cell preconditions: %s" % ", ".join(required)
+
+
+def check_pipeline_writes_cell_files(script: pathlib.Path) -> tuple[bool, str]:
+    """Does the pipeline actually PRODUCE every file persist will demand?
+
+    ⛔ `adapter_model.safetensors` and `adapter_config.json` come from the
+    trainer; `factorial.json` does not, and that is the one that was missing.
+    """
+    sys.path.insert(0, str(TOOLS))
+    import act2_box_persist as BP
+    text = script.read_text(encoding="utf-8")
+    from_trainer = {"adapter_model.safetensors", "adapter_config.json"}
+    owed = [f for f in BP.CELL_FILES if f not in from_trainer]
+    absent = [f for f in owed if f not in text]
+    if absent:
+        return False, ("the pipeline persists cells but never writes %s — "
+                       "persist_cell will refuse after the GPU time is spent"
+                       % ", ".join(absent))
+    return True, "pipeline writes the non-trainer cell files: %s" % ", ".join(owed)
+
+
 def receipt_path(pipeline: str) -> pathlib.Path:
     return RECEIPTS / ("%s.receipt.json" % pipeline)
 
@@ -189,6 +254,19 @@ def cmd_write(a):
             print("  ⛔ %s" % detail)
         else:
             print("  ✅ %s" % detail)
+    # ⛔⛤ THE SECOND CLASS OF CHECK, ADDED AFTER THE FIRST ONE PASSED AND THE
+    # RUN DIED ANYWAY. Commands that parse can still fail on preconditions, and
+    # a precondition failure lands AFTER the GPU-hours that produced the thing
+    # it refuses.
+    if any(t == "act2_box_persist.py" and "cell" in argv for t, argv in calls):
+        for fn in (check_persist_preconditions,
+                   lambda: check_pipeline_writes_cell_files(script)):
+            ok, detail = fn()
+            rows.append({"tool": "precondition", "argv": [], "ok": ok,
+                         "detail": detail})
+            print(("  ✅ %s" if ok else "  ⛔ %s") % detail)
+            if not ok:
+                bad += 1
     RECEIPTS.mkdir(parents=True, exist_ok=True)
     body = {"pipeline": a.pipeline,
             # ⭐ Recorded for PROVENANCE — which commit this was proved at —

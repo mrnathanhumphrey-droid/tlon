@@ -1,7 +1,7 @@
 {
   "pipeline": "pipeline_idf2_train.sh",
-  "git_sha_at_write": "64676d7677f3e32cffc7c76cb3071d34bf5eef9d",
-  "inputs_sha256": "0c6af3a029ae6fefd3aee1b5039e17481a55ad99571d658ff649d8ed281a682d",
+  "git_sha_at_write": "3e6f0ec584c137bdd336b1331e274250d8c27419",
+  "inputs_sha256": "33cbbd134a3a5fde83062af623b7ae431cf9f5c6975d25ad708b9dd2ad76b65c",
   "checks": [
     {
       "tool": "act2_smoke_receipt.py",
@@ -305,9 +305,21 @@
       ],
       "ok": true,
       "detail": "act2_box_persist.py verify"
+    },
+    {
+      "tool": "precondition",
+      "argv": [],
+      "ok": true,
+      "detail": "persist_cell preconditions: adapter_model.safetensors, adapter_config.json, factorial.json"
+    },
+    {
+      "tool": "precondition",
+      "argv": [],
+      "ok": true,
+      "detail": "pipeline writes the non-trainer cell files: factorial.json"
     }
   ],
-  "n_checks": 17,
+  "n_checks": 19,
   "n_failed": 0,
   "verdict": "PASS"
 }

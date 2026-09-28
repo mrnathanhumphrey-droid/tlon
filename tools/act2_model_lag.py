@@ -133,15 +133,21 @@ def _assistant_text(turn) -> str:
     W2's read prompt diverges from W2's training text on its second turn and
     every turn after. ⭐ Falls back to the raw generation when the scene is
     absent, which is the only other thing the model actually emitted.
+
+    ⛔⛤ AND THE FALLBACK NEARLY HID A BROKEN IMPORT. This read
+    `from tlon.act2 import schema as SB` — there is no such module; it is
+    `schema_bridge` — inside a bare `except Exception: pass`. So the scene
+    branch would have raised on EVERY W2 turn, been swallowed, and silently
+    fallen through to raw text: W2 read off-distribution from its own training
+    shape, with no error anywhere. The fallback is for a turn that genuinely
+    carries no scene, not for a module that does not exist, so the import is
+    now at the top and outside the guard.
     """
     import json as _json
+    from tlon.act2 import schema_bridge as SB
     scene = getattr(turn, "scene", None)
     if scene is not None:
-        from tlon.act2 import schema as SB
-        try:
-            return _json.dumps(SB.scene_to_proposal(scene), ensure_ascii=False)
-        except Exception:
-            pass
+        return _json.dumps(SB.scene_to_proposal(scene), ensure_ascii=False)
     return getattr(turn, "raw", None) or ""
 
 
@@ -491,6 +497,13 @@ def main() -> int:
                          "that are NOT held. ⛔ Recorded in the result as "
                          "`marker_fn`, so two arms can never differ only by "
                          "filename.")
+    ap.add_argument("--window2", action="store_true",
+                    help="IDF-2's W2 arm: serve t-2 and t-1 as real prior chat "
+                         "turns through `bench_prompt` — the same function the "
+                         "trainer's `bench_train_text` is built from, so "
+                         "train-shape EQUALS read-shape. ⛔ Only meaningful "
+                         "against a W2 adapter, whose corpus was built with "
+                         "`--window2`. Recorded in the result as `window2`.")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -534,6 +547,7 @@ def main() -> int:
     marker_fn = _marker_by_name(a.marker, seed=a.seed)
     m = read_lag(backend, chains=a.chains, turns=a.turns, max_lag=a.max_lag,
                  shuffles=a.shuffles, seed=a.seed, marker_fn=marker_fn,
+                 window2=a.window2,
                  temperature=a.temperature, max_new_tokens=a.max_new_tokens)
     if m["chains_used"] == 0:
         raise SystemExit("⛔⛔ " + m["refusal_reason"])
