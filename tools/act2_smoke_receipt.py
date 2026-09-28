@@ -151,12 +151,21 @@ def inputs_sha(script: pathlib.Path, calls) -> str:
     strictly better than a git sha — invariant to commits that touch nothing
     here, and sensitive to an UNCOMMITTED edit to any of them, which a sha
     comparison would miss entirely.
+
+    ⛔⛤ LINE ENDINGS ARE NORMALISED, AND THE GATE CAUGHT ITSELF ON THIS. The
+    receipt is written on Windows, where the repo checks out CRLF, and verified
+    on a Linux box, where it checks out LF — so the identical files hashed
+    differently and the run refused for a difference that means nothing. The
+    refusal was correct behaviour on a wrong input; a gate this strict has to
+    compare CONTENT rather than bytes-as-stored, or it is unusable across the
+    only two machines this project runs on.
     """
     h = hashlib.sha256()
     for f in [script, script.parent / "pipeline_lib.sh"] + sorted(
             {TOOLS / t for t, _ in calls}):
         h.update(f.name.encode())
-        h.update(f.read_bytes() if f.exists() else b"<missing>")
+        body = f.read_bytes() if f.exists() else b"<missing>"
+        h.update(body.replace(b"\r\n", b"\n"))
     return h.hexdigest()
 
 
