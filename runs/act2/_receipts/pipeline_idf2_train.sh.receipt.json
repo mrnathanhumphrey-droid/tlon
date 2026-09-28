@@ -1,0 +1,313 @@
+{
+  "pipeline": "pipeline_idf2_train.sh",
+  "git_sha_at_write": "378da9b0cda619d50868c315009695f191658d27",
+  "inputs_sha256": "bea68b18418fdcea110539b478c980b6182c51335ac146078a8d05d001b47bd1",
+  "checks": [
+    {
+      "tool": "act2_smoke_receipt.py",
+      "argv": [
+        "check",
+        "--pipeline",
+        "pipeline_idf2_train.sh"
+      ],
+      "ok": true,
+      "detail": "act2_smoke_receipt.py "
+    },
+    {
+      "tool": "lock_prereg.py",
+      "argv": [
+        "docs/PREREG_IDF2_2026_09_26.md"
+      ],
+      "ok": true,
+      "detail": "lock_prereg.py (no argparse \u2014 existence only)"
+    },
+    {
+      "tool": "act2_build_multiturn.py",
+      "argv": [
+        "--recipe",
+        "content-transient-held",
+        "--marker",
+        "--chains",
+        "X",
+        "--turns",
+        "X",
+        "--multiturn-fraction",
+        "X",
+        "--responsiveness",
+        "X",
+        "--seed",
+        "X",
+        "--map",
+        "derived",
+        "--out",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_build_multiturn.py "
+    },
+    {
+      "tool": "act2_idf2.py",
+      "argv": [
+        "unmark",
+        "--marked",
+        "X",
+        "--out",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_idf2.py unmark"
+    },
+    {
+      "tool": "act2_build_multiturn.py",
+      "argv": [
+        "--recipe",
+        "content-transient-held",
+        "--window2",
+        "--chains",
+        "X",
+        "--turns",
+        "X",
+        "--multiturn-fraction",
+        "X",
+        "--responsiveness",
+        "X",
+        "--seed",
+        "X",
+        "--map",
+        "derived",
+        "--out",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_build_multiturn.py "
+    },
+    {
+      "tool": "act2_idf2_corpus_diff.py",
+      "argv": [
+        "--marked",
+        "X",
+        "--unmarked",
+        "X",
+        "--out",
+        "X/corpus_diff.json"
+      ],
+      "ok": true,
+      "detail": "act2_idf2_corpus_diff.py "
+    },
+    {
+      "tool": "act2_finetune.py",
+      "argv": [
+        "--model",
+        "X",
+        "--out",
+        "X",
+        "--corpus",
+        "X",
+        "--seq",
+        "X",
+        "--batch",
+        "X",
+        "--accum",
+        "X",
+        "--seed",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_finetune.py "
+    },
+    {
+      "tool": "act2_flocal.py",
+      "argv": [
+        "--model",
+        "X",
+        "--adapter",
+        "X",
+        "--n",
+        "64",
+        "--n-comp",
+        "64"
+      ],
+      "ok": true,
+      "detail": "act2_flocal.py "
+    },
+    {
+      "tool": "act2_idf2.py",
+      "argv": [
+        "dose",
+        "--adapter",
+        "X",
+        "--out",
+        "X/dose_X.json"
+      ],
+      "ok": true,
+      "detail": "act2_idf2.py dose"
+    },
+    {
+      "tool": "act2_model_lag.py",
+      "argv": [
+        "--model",
+        "X",
+        "--adapter",
+        "$2",
+        "--object-kind",
+        "adapter",
+        "--marker",
+        "$3",
+        "--chains",
+        "X",
+        "--turns",
+        "X",
+        "--seed",
+        "X",
+        "--temperature",
+        "0.7",
+        "--max-new-tokens",
+        "256",
+        "--out",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_model_lag.py "
+    },
+    {
+      "tool": "act2_model_lag.py",
+      "argv": [
+        "--model",
+        "X",
+        "--adapter",
+        "X/adapter_heldW2-sX",
+        "--object-kind",
+        "adapter",
+        "--marker",
+        "none",
+        "--window2",
+        "--chains",
+        "X",
+        "--turns",
+        "X",
+        "--seed",
+        "X",
+        "--temperature",
+        "0.7",
+        "--max-new-tokens",
+        "256",
+        "--out",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_model_lag.py "
+    },
+    {
+      "tool": "act2_watchdog.py",
+      "argv": [
+        "--pid",
+        "X",
+        "--marker",
+        "X",
+        "--log",
+        "X",
+        "--done",
+        "X/DONE",
+        "--deadline-h",
+        "X",
+        "--stall-min",
+        "X",
+        "--poll-s",
+        "300",
+        "--flush-cmd",
+        "X",
+        "tools/act2_box_persist.py",
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "flush",
+        ">",
+        "X/watchdog.log"
+      ],
+      "ok": true,
+      "detail": "act2_watchdog.py "
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "flush",
+        ">",
+        "X/watchdog.log"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py flush"
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "file",
+        "--path",
+        "X",
+        "--subdir",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py file"
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "file",
+        "--path",
+        "X",
+        "--subdir",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py file"
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "cell",
+        "--cell",
+        "X",
+        "--solo-n",
+        "X",
+        "--corpus-manifest",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py cell"
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "verify",
+        "--cells",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py verify"
+    }
+  ],
+  "n_checks": 17,
+  "n_failed": 0,
+  "verdict": "PASS"
+}

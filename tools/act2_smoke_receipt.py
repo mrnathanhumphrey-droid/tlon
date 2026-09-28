@@ -137,6 +137,29 @@ def check_one(tool: str, argv: list[str]) -> tuple[bool, str]:
     return True, "%s %s" % (tool, named[0] if named else "")
 
 
+def inputs_sha(script: pathlib.Path, calls) -> str:
+    """A hash of EVERY file this receipt's verdict depends on.
+
+    ⛔⛤ THE RECEIPT CANNOT BE GATED ON `HEAD`, AND FINDING OUT WHY TOOK A
+    ROUND TRIP: the receipt has to be committed so the box can read it, and
+    committing it MOVES HEAD — so a receipt written at the sha it checked is
+    stale the instant it is stored. A gate that invalidates itself on being
+    saved is not a gate.
+
+    ⭐ SO THE IDENTITY IS THE INPUTS, NOT THE COMMIT: the pipeline, the shared
+    library it sources, and every tool whose argparse was consulted. That is
+    strictly better than a git sha — invariant to commits that touch nothing
+    here, and sensitive to an UNCOMMITTED edit to any of them, which a sha
+    comparison would miss entirely.
+    """
+    h = hashlib.sha256()
+    for f in [script, script.parent / "pipeline_lib.sh"] + sorted(
+            {TOOLS / t for t, _ in calls}):
+        h.update(f.name.encode())
+        h.update(f.read_bytes() if f.exists() else b"<missing>")
+    return h.hexdigest()
+
+
 def receipt_path(pipeline: str) -> pathlib.Path:
     return RECEIPTS / ("%s.receipt.json" % pipeline)
 
@@ -158,9 +181,11 @@ def cmd_write(a):
         else:
             print("  ✅ %s" % detail)
     RECEIPTS.mkdir(parents=True, exist_ok=True)
-    body = {"pipeline": a.pipeline, "git_sha": sha,
-            "script_sha256": hashlib.sha256(
-                script.read_bytes()).hexdigest(),
+    body = {"pipeline": a.pipeline,
+            # ⭐ Recorded for PROVENANCE — which commit this was proved at —
+            # but NOT what the gate compares; see `inputs_sha`.
+            "git_sha_at_write": sha,
+            "inputs_sha256": inputs_sha(script, calls),
             "checks": rows, "n_checks": len(rows), "n_failed": bad,
             "verdict": "PASS" if bad == 0 else "FAIL"}
     receipt_path(a.pipeline).write_text(json.dumps(body, indent=2),
@@ -183,26 +208,25 @@ def cmd_check(a):
             "A GPU launch without one is how `persist --cells` reached a box."
             % (a.pipeline, a.pipeline))
     r = json.loads(p.read_text(encoding="utf-8"))
-    sha = git_sha()
-    if r.get("git_sha") != sha:
-        raise SystemExit(
-            "⛔⛔ STALE RECEIPT: checked at %s, HEAD is %s. The pipeline may "
-            "have changed since it was proved. Re-run `write`."
-            % (str(r.get("git_sha"))[:12], sha[:12]))
     script = TOOLS / a.pipeline
-    now = hashlib.sha256(script.read_bytes()).hexdigest()
-    if r.get("script_sha256") != now:
+    now = inputs_sha(script, invocations(script))
+    if r.get("inputs_sha256") != now:
         raise SystemExit(
-            "⛔⛔ THE SCRIPT CHANGED since its receipt, even at the same commit "
-            "(uncommitted edit). Re-run `write`.")
+            "⛔⛔ STALE RECEIPT. The pipeline, its shared library, or one of "
+            "the tools it calls has changed since this was proved.\n"
+            "    receipt %s\n    now     %s\n"
+            "Re-run `write`. ⭐ This compares the FILES, not the commit, so it "
+            "also catches an uncommitted edit."
+            % (str(r.get("inputs_sha256"))[:16], now[:16]))
     if r.get("verdict") != "PASS":
         raise SystemExit(
             "⛔⛔ RECEIPT SAYS FAIL — %d of %d checks did not pass:\n%s"
             % (r["n_failed"], r["n_checks"],
                "\n".join("    " + c["detail"] for c in r["checks"]
                          if not c["ok"])))
-    print("✅ smoke receipt OK — %s, %d checks, sha %s"
-          % (a.pipeline, r["n_checks"], sha[:12]))
+    print("✅ smoke receipt OK — %s, %d checks, inputs %s (proved at %s)"
+          % (a.pipeline, r["n_checks"], now[:12],
+             str(r.get("git_sha_at_write"))[:12]))
     return 0
 
 
