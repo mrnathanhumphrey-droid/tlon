@@ -1,0 +1,203 @@
+{
+  "pipeline": "pipeline_idf2_reads.sh",
+  "git_sha_at_write": "7137e85cde2b2a0ed062033b15b16f8db4c56df8",
+  "inputs_sha256": "712fe4feba2e2e1ef942743629058a6d1dcb577799e34fc18c59c555cb015ce2",
+  "checks": [
+    {
+      "tool": "act2_smoke_receipt.py",
+      "argv": [
+        "check",
+        "--pipeline",
+        "pipeline_idf2_reads.sh"
+      ],
+      "ok": true,
+      "detail": "act2_smoke_receipt.py "
+    },
+    {
+      "tool": "lock_prereg.py",
+      "argv": [
+        "docs/PREREG_IDF2_2026_09_26.md"
+      ],
+      "ok": true,
+      "detail": "lock_prereg.py (no argparse \u2014 existence only)"
+    },
+    {
+      "tool": "act2_idf2.py",
+      "argv": [
+        "dose",
+        "--adapter",
+        "X",
+        "--out",
+        "X/dose_X.json"
+      ],
+      "ok": true,
+      "detail": "act2_idf2.py dose"
+    },
+    {
+      "tool": "act2_model_lag.py",
+      "argv": [
+        "--model",
+        "X",
+        "--adapter",
+        "X/hub/$2",
+        "--object-kind",
+        "adapter",
+        "--marker",
+        "$3",
+        "$5",
+        "--chains",
+        "X",
+        "--turns",
+        "X",
+        "--seed",
+        "X",
+        "--temperature",
+        "0.7",
+        "--max-new-tokens",
+        "256",
+        "--save-transcripts",
+        "--out",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_model_lag.py "
+    },
+    {
+      "tool": "act2_idf2_per_root.py",
+      "argv": [
+        "--marked",
+        "X/lag_M_s30624.json",
+        "--baseline",
+        "X/lag_C1_s30624.json",
+        "--out",
+        "X/per_root_s30624.json"
+      ],
+      "ok": true,
+      "detail": "act2_idf2_per_root.py "
+    },
+    {
+      "tool": "act2_watchdog.py",
+      "argv": [
+        "--pid",
+        "X",
+        "--marker",
+        "X",
+        "--log",
+        "X",
+        "--done",
+        "X/DONE",
+        "--deadline-h",
+        "X",
+        "--stall-min",
+        "X",
+        "--poll-s",
+        "300",
+        "--flush-cmd",
+        "X",
+        "tools/act2_box_persist.py",
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "flush",
+        ">",
+        "X/watchdog.log"
+      ],
+      "ok": true,
+      "detail": "act2_watchdog.py "
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "flush",
+        ">",
+        "X/watchdog.log"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py flush"
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "file",
+        "--path",
+        "X",
+        "--subdir",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py file"
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "file",
+        "--path",
+        "X",
+        "--subdir",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py file"
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "cell",
+        "--cell",
+        "X",
+        "--solo-n",
+        "X",
+        "--corpus-manifest",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py cell"
+    },
+    {
+      "tool": "act2_box_persist.py",
+      "argv": [
+        "--root",
+        "X",
+        "--repo",
+        "X",
+        "verify",
+        "--cells",
+        "X"
+      ],
+      "ok": true,
+      "detail": "act2_box_persist.py verify"
+    },
+    {
+      "tool": "precondition",
+      "argv": [],
+      "ok": true,
+      "detail": "persist_cell preconditions: adapter_model.safetensors, adapter_config.json, factorial.json"
+    },
+    {
+      "tool": "precondition",
+      "argv": [],
+      "ok": true,
+      "detail": "pipeline writes the non-trainer cell files: factorial.json"
+    }
+  ],
+  "n_checks": 13,
+  "n_failed": 0,
+  "verdict": "PASS"
+}

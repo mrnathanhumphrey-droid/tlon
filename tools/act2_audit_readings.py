@@ -71,6 +71,14 @@ SCOPE_CONDITIONAL = {
     "lag_*.json",
     "dose_*.json",
     "corpus_diff*.json",
+    # ⭐ §7's per-root readout, and narrower in scope than the three above: only
+    # the IDF-2 READS pipeline writes it, not even the train pipeline that made
+    # the adapters. ⛔ It is also the only flush pattern that is REGENERABLE —
+    # it is computed from the transcripts inside `lag_*.json`, which are flushed
+    # already — so its absence costs a recomputation rather than a measurement.
+    # It is carried anyway because it is the analysis that had no input at all
+    # until DEVIATIONS D11, and kilobytes are not the constraint on this path.
+    "per_root_*.json",
 }
 
 

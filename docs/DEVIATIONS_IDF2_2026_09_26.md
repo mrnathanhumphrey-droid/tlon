@@ -502,6 +502,256 @@ still shipped broken. So:
 
 ---
 
+## ⛔⛔ D10 · THE ESTIMAND'S TWO HALVES SPLIT ON F-LOCAL — M CLEARS, C1 FIRES
+
+**Run 3, 2026-09-28.** Both gating adapters trained, dose-matched and persisted.
+Their F-LOCAL gates disagree, and the disagreement lands on the estimand.
+
+### What the gate reported, both arms, verbatim
+
+Same battery `d9ecdf9fbf2caa8a`, `n=64`, cardless and unconstrained — the only
+configuration the gate accepts.
+
+| | **M** (marked) `20:47:46` | **C1** (unmarked) `00:32:27` |
+|---|---|---|
+| speak | 100.0 % (64/64) | 100.0 % (64/64) |
+| **render** | **92.2 %** (59/64) | **65.6 %** (42/64) |
+| **verdict vs 0.90** | **CLEAR** | **FIRED** |
+| force | `ka` 83 % · `kä` 17 % | `kä` 50 % · `ka` 31 % · `ku` 19 % |
+| force read | ⛔ `ka` is 82.8 % of 64, cap 60 %; 2 distinct, need 3 | ✅ `kä` leads at 50.0 %, 3 forces present |
+| choose | 35.9 % (23/64) | 45.3 % (29/64), 0 unanswered |
+| render confusions | 2 · `{'D→M': 1, 'D→Q': 1}` | 1 · `{'A→Q': 1}` |
+| diversity | distinct 12/12 · repeat 1.00 · response 1.00 · dependence +1.00 ⇒ input-dependent | identical |
+| Amendment A (0.35–0.95) | 35.9 % ⇒ clear | 45.3 % ⇒ clear |
+
+- **M:** *"render 0.922, speak 1.000 vs threshold 0.90 — clear; drift is
+  measurable on a native speaker."*
+- **C1:** *"render 0.656, speak 1.000 vs threshold 0.90 — the class system is
+  not internalised at this scale; drift would be confounded with
+  validity-failure."*
+
+### What it changes
+
+§4 of the locked prereg: **"F-LOCAL must clear on each new adapter before any
+lag read of it is interpreted."** C1's did not clear. The estimand is
+`closes(M) − closes(C1)`, so **the pre-registered consequence falls on the
+estimand itself, not on one arm's side reading.**
+
+⛔ **THIS IS NOT RESOLVED HERE.** Whether C1's reads may be interpreted, and on
+what terms, is Nate's and Wilson's call. The run continues — the reads are
+taken and recorded either way, because a reading that may not *decide* can
+still *describe*, and both adapters are already durable on the hub.
+
+The prereg named the recovery set before it could be needed: (1) more
+contrastive negatives · (2) curriculum fine-tune · (3) bigger backbone. ⛔ The
+third is a sign-off item and never mine.
+
+### What it does NOT change — checked, not assumed
+
+- ⭐ **This is not the dose confound.** `dose_w` M `0.00556983`, C1
+  `0.00548976`, **both ✅ WITHIN BAND**, and they sit closer to each other than
+  the band's width. §4's "M and C1 must match each other at least as closely as
+  either matches `ct-s20624`" is satisfied. The spread the C1 redesign existed
+  to remove is not what fired.
+- **Neither adapter is at risk.** Both persisted to the hub *before* F-LOCAL
+  ran — the red team's reordering, working as intended on its first live
+  outing. A gate about whether a reading may be interpreted no longer decides
+  whether weights survive.
+- **W2 is untouched by this.** It trains after C1 and carries its own F-LOCAL.
+
+### ⭐ The two readouts point opposite ways
+
+M renders the class system well and collapses onto one force (`ka`, 82.8 %, two
+forces where three are wanted). C1 spreads all three forces and renders poorly.
+Both force lines are stamped **"⭐ read, not a gate"** in the instrument, and
+neither is a result. ⛔ **No direction is inferred here** — it is recorded so
+that whoever reads the lag numbers has both diagnostics in front of them.
+
+---
+
+## ⛔⛔ D11 · §7'S PER-ROOT READOUT HAD NEITHER A TOOL NOR AN INPUT — FOUND BEFORE THE READS, NOT AFTER
+
+**2026-09-28, during a pre-read audit of the analysis path.** §7 defines it:
+
+> `P(root of t−1 reappears in t | marked)` vs `P(… | unmarked)`, with a CI,
+> **computed from the M read transcripts** (no extra generation).
+
+Two independent failures, both verified before anything was changed:
+
+1. **No implementation.** `grep -rn "per_root|per-root" --include=*.py` returns
+   nothing outside `runs/`. Checked under `reappear`, `avoidance`, `by_root`
+   and `root_level` as well — the readout was never written.
+2. **No input, and unrecoverable after the fact.** `_read_lag_inner` returned
+   aggregates only — `lag_profile`, `z`, `null`, `n_pairs`, `resolving_power`,
+   counts, verdict. The chains it built were **never serialised**; the pipeline
+   persisted `corpus_diff.json`, `dose_*.json`, `lag_*.json` and nothing else.
+   The generated surfaces existed only inside the process that made them.
+
+⭐ **Why it survived the whole campaign: runs 1 and 2 died before the read
+phase.** A defect at the END of a pipeline is invisible to every run that never
+reaches the end. This is [[feedback_use_the_harness_whole]]'s shape again — a
+precondition that only fails after the expensive part — arriving this time in
+the analysis rather than in the persist.
+
+### ⛔ §6 AND §7 DISAGREE ABOUT WHICH CELLS NEED IT
+
+§7 says it *"appears as a conjunct in all three cells of §6."* **It does not.**
+§6's INSTALLS lists four conjuncts — `closes(M)` ≥ 35 on all seeds, the
+difference CI, M-strip's drop, the perceive guard — and this is not among them.
+PARTIAL and FLOORS both name it. **Two of three.** Recorded, not resolved: the
+discrepancy is inside a locked body.
+
+⇒ Without transcripts a completed run can decide **INSTALLS** and cannot decide
+**PARTIAL or FLOORS** — the two branches a null lands in.
+
+### The decision, and why the instrument was NOT changed mid-run
+
+**Nate, 2026-09-28: option 2.** Run 3 finishes on its pinned commit, untouched.
+The capture read is taken afterwards against the adapters, which are already
+durable on the hub, so it costs generation and no retraining.
+
+⛔ **The rejected option was patching the reader and pushing to the box before
+the read phase began** — a change to the measuring instrument, mid-flight, on a
+pinned commit, unreceipted, against a ~2-hour clock. Those are the exact
+conditions that produced both previous losses, and the smoke receipt exists to
+refuse precisely that launch.
+
+### What was built instead
+
+- **`--save-transcripts` on `act2_model_lag.py`.** Off by default, so no
+  historical row changes shape (`C2` is the record of what a silent payload
+  change costs). ⭐ It records the **marker line shown at each turn**, not just
+  the surfaces: `held` is recoverable from two surfaces, but **`marker_shuffle`
+  is not** — it draws non-held roots from an RNG, so what the M-shuffle arm
+  actually showed the model exists nowhere else. Surfaces alone would have left
+  one arm permanently unreadable.
+- **`tools/act2_idf2_per_root.py`** — §7's quantity, with §8's requirement met
+  (a committed tool, never a heredoc).
+- **`tests/test_idf2_per_root.py`** — 13 tests.
+
+### ⛔⛔ THE INTERVAL IS MEASURED LIBERAL, AND THE NUMBER TRAVELS WITH IT
+
+The CI is a **cluster bootstrap over chains, not roots** — the chain is what the
+experiment re-rolls ([[feedback_find_the_real_unit_of_independence]]). That was
+not enough. Simulated against a **true null** (independent `reappears`, no
+marker effect at all), 300 trials per cell:
+
+| chains | percentile | t-corrected |
+|---|---|---|
+| 12 | **9.0 %** | 6.3 % |
+| 24 | 8.7 % | 7.3 % |
+| **48** — the pipeline's `RCHAINS` | **7.3 %** | **7.0 %** |
+
+Against a nominal **5 %**. ⛔ `USES-MARKER-PARTIAL` fires on *"CI excludes 0"*,
+so a liberal interval **manufactures the very cell it is a conjunct of.** The
+t-correction is applied — never worse, much better at small n — and it does
+**not** reach nominal at 48 chains. So the measured rate is **printed beside
+every number the tool emits** and pinned by a test, because calling it a "95 %
+CI" without that is [[feedback_the_numbers_resolution_must_match_the_decisions]].
+
+⭐ On a fixture with a planted effect (marked roots kept at 0.15, unmarked at
+0.50, 48 chains) it recovers `−0.3627`, CI `[−0.4116, −0.3139]`.
+
+### Two smaller findings from the same pass
+
+- **`sys.stdout.encoding` is `cp1252` on the laptop**, so the tool's own
+  refusal message — the one that says *"re-read with `--save-transcripts`"* —
+  raised `UnicodeEncodeError` on being printed. Every other analysis in the
+  campaign runs on the box where stdout is UTF-8; this one needs no GPU, so it
+  is the one that gets run on Windows. ⭐ A refusal that cannot be printed is a
+  refusal nobody receives.
+- ⛔ **A full-suite run reported `exit code 0` having executed zero tests.**
+  `pytest --timeout=…` is rejected by an installed `seleniumbase` plugin during
+  `pytest_addoption`; pytest aborts before collection **and still exits 0**.
+  Reading the status line rather than the output would have produced a "full
+  gate green" claim on a run that never happened —
+  [[feedback_summary_fields_must_be_checked_against_their_run]] through a
+  plugin nobody knew was in the environment.
+
+---
+
+## ⛔⛔ D12 · RUN 3 TOOK ZERO OF ITS 21 READS — W2's DOSE GATE ABORTED THE WHOLE RUN
+
+**2026-09-29, 04:57:52 UTC.** All three arms trained, persisted and gated.
+Then, on the last per-arm step of the last arm:
+
+```
+=== [dose_heldW2-s20624] 04:57:52 ===
+  dose_w         0.0058099
+  reference      0.00544947   band [0.005177, 0.00572194]
+  ⛔ OUT OF BAND
+⛔ FAILED at stage: dose_heldW2-s20624 (rc=2)
+```
+
+`set -e`, and `step reads` sits **after** the arm loop. The watchdog then did
+its job exactly right — `KILL · process 2932 is gone and the run did not
+complete` — flushed the run log, the watchdog log, all three `factorial.json`
+and all three `dose_*.json` to the hub, and terminated the box.
+
+### ⛔ THE PREREG DECLARED THE OPPOSITE, IN ADVANCE
+
+§4: *"If the second attempt also misses, the arm **trains anyway and reads
+anyway**, and its rows are reported with the miss stated beside every number —
+but `dose_w` joins the confound list and no §6 cell may be declared on that
+arm."*
+
+That is a rule about **one arm's interpretation**. It was implemented as a
+non-zero exit under `set -e`, which is a rule about **the whole run** — and it
+stopped M and C1, whose doses were fine, from being read at all.
+
+### ⛔⛤ THE MISS WAS PREDICTED IN WRITING AND HALF-MITIGATED
+
+`pipeline_idf2_train.sh` says, at the persist reorder: *"The dose gate exits
+NON-ZERO by design, and **W2's rows carry a prior turn each — more tokens, so a
+genuinely different training trajectory and an rms that may legitimately miss
+the ±5 % band.**"*
+
+⭐ That foresight moved PERSIST ahead of the gates, which is the only reason all
+three adapters survived. It never stopped the gate from **aborting the run**.
+The blast radius was shrunk from the weights to the reads and the job was
+called done — [[feedback_a_named_confound_must_be_guarded_at_the_point_of_use]]
+with the guard placed one step short of where it fires, for the second time in
+the same file.
+
+### What run 3 actually produced
+
+| arm | render | F-LOCAL | forces | dose vs reference |
+|---|---|---|---|---|
+| **M** | 0.922 | CLEAR | 2 (`ka` 83 %) | **+2.2 %** ✅ |
+| **C1** | 0.656 | **FIRED** (D10) | 3 (`kä` 50 %) | **+0.7 %** ✅ |
+| **W2** | **0.953** | CLEAR | **4** (`ku` 39 %) | **+6.6 %** ⛔ |
+
+⭐ **W2 is the healthiest speaker of the three** — best render, four forces
+present, `choose` 54.7 %. The arm D8 called *"the only arm in the design that
+asks the art piece's question"* trained well and cleared its validity gate.
+
+⭐ §4's cross-condition holds: M and C1 sit **1.5 points apart**, closer to each
+other than M is to the reference. The spread the C1 redesign existed to remove
+is not present.
+
+### The fix: `tools/pipeline_idf2_reads.sh`
+
+The adapters are durable, so the reads cost generation and no retraining.
+
+- **The dose gate is RECORDED, NEVER FATAL.** It still runs on every arm and
+  writes `dose_confounds.txt`; it cannot stop a read.
+- ⛔ **And the swallowed exit is guarded.** `cmd_dose`'s own comment says the
+  non-zero exit exists so *"that is a decision, so it is not taken silently
+  inside a loop"* — which is precisely what `|| true` would be. So the expected
+  confound set is **pinned** (`heldW2-s20624`); any other arm going out of band
+  raises a banner and marks the run `UNEXPECTED`. Still not fatal, because
+  twenty-one readings must not die for a gate about interpretation.
+- ⛔⛤ **Reads persist PER ARM, not at the end.** `pipeline_idf2_train.sh` ran
+  `step persist` once after all 21, so a death at read 20 would have lost 20
+  paid-for readings — the same "durable only at the end" shape that cost run 2
+  its adapter, surviving in the one place the fix did not reach.
+- **`--save-transcripts` on every read**, so D11's per-root readout has an input.
+- W2 **reads anyway**, per §4, with `dose_w` on the confound list and **no §6
+  cell declarable on that arm**. The retrain §4 permits is *permitted*, not
+  required, and remains Nate's and Wilson's call.
+
+---
+
 ## ⏭ What Step 0 does NOT clear
 
 ⛔ **Step P has not run, and no GPU has been touched.** Step 0 was the CPU

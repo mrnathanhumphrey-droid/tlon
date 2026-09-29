@@ -67,11 +67,21 @@ class ModelTurn:
     """⭐ Duck-types the corpus `Turn` for the shared instrument: it only ever
     reads `.surface`. Deliberately the same shape so one function serves both."""
 
-    __slots__ = ("surface", "force", "seconds", "refused")
+    __slots__ = ("surface", "force", "seconds", "refused", "marker")
 
-    def __init__(self, surface, force=None, seconds=0.0, refused=False):
+    def __init__(self, surface, force=None, seconds=0.0, refused=False,
+                 marker=None):
         self.surface, self.force = surface, force
         self.seconds, self.refused = seconds, refused
+        # ⛔⛤ THE MARKER LINE THAT PRODUCED THIS TURN, AND WITHOUT IT THE
+        # M-SHUFFLE ARM'S PER-ROOT READOUT CANNOT BE COMPUTED AT ALL.
+        # `held` is recoverable from the surfaces — it is roots(t-1) ∩
+        # roots(t-2), a pure function of the transcript. `marker_shuffle` is
+        # NOT: it draws roots that are *not* held from an RNG, so what the
+        # model was actually shown exists nowhere but here. Recording only the
+        # surfaces would leave one arm's readout permanently unrecoverable,
+        # which is the same shape as the loss this capture exists to prevent.
+        self.marker = marker
 
 
 def model_chain(backend, seed_surface: str, *, turns: int,
@@ -113,10 +123,14 @@ def model_chain(backend, seed_surface: str, *, turns: int,
             pairs = [(out[-2].surface, answers[-1])]
         t = generate(backend, PROVOKE, payload, [], shape=TRAINED, pairs=pairs)
         if not t.ok:
-            out.append(ModelTurn(None, seconds=t.seconds, refused=True))
+            out.append(ModelTurn(None, seconds=t.seconds, refused=True,
+                                 marker=line))
             answers.append(None)
             break
-        out.append(ModelTurn(t.surface, seconds=t.seconds))
+        # ⭐ `line` is the marker computed from the chain BEFORE this turn was
+        # generated, so it is the stimulus that produced THIS turn. Stored on
+        # the turn it caused, not the turn it was derived from.
+        out.append(ModelTurn(t.surface, seconds=t.seconds, marker=line))
         # ⛔⛤ ONLY UNDER W2. The first version called this on EVERY turn, so the
         # default path — every pre-W2 read in the campaign — ran new code it did
         # not need and broke on a scripted backend whose turns carry no scene.
@@ -243,7 +257,8 @@ def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
              shuffles: int = 200, seed: int = 20624, verbose: bool = True,
              temperature: float = LAG_TEMPERATURE,
              max_new_tokens: int = LAG_MAX_NEW_TOKENS,
-             marker_fn=None, window2: bool = False) -> dict:
+             marker_fn=None, window2: bool = False,
+             save_transcripts: bool = False) -> dict:
     """⭐ THE WHOLE OF WHAT A RELEASE READ IS — ONE FOLD, CLI AND CURVE SHARE IT.
 
     The twin of `act2_flocal.read_rates`, and extracted for the same reason: a
@@ -306,7 +321,8 @@ def read_lag(backend, *, chains: int = 12, turns: int = 10, max_lag: int = 4,
         m = _read_lag_inner(backend, chains=chains, turns=turns,
                             max_lag=max_lag, shuffles=shuffles, seed=seed,
                             say=say, marker_fn=marker_fn,
-                            window2=window2)
+                            window2=window2,
+                            save_transcripts=save_transcripts)
     finally:
         if prior_t is not None:
             backend.temperature = prior_t
@@ -355,8 +371,25 @@ def _qualname(fn):
     return "%s.%s" % (mod, name) if mod else str(name)
 
 
+def _serialise_chains(built) -> list:
+    """The generated chains, as data, for an analysis that runs LATER.
+
+    ⛔⛔ THE READ USED TO THROW THESE AWAY. `_read_lag_inner` returned only
+    aggregates — the lag profile, the z's, the pair counts — and the surfaces
+    the model actually produced died with the process. `PREREG_IDF2` §7 defines
+    the per-root readout as *"computed from the M read transcripts (no extra
+    generation)"*, and it is a conjunct in the PARTIAL and FLOORS cells of §6.
+    So two of the three branches were unreadable from a completed run, and the
+    two runs that died early are the only reason nobody found out.
+
+    ⭐ Surfaces AND the marker shown at each turn. See `ModelTurn.marker`.
+    """
+    return [[{"surface": t.surface, "marker": t.marker,
+              "refused": bool(t.refused)} for t in chain] for chain in built]
+
+
 def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say,
-                    marker_fn=None, window2=False):
+                    marker_fn=None, window2=False, save_transcripts=False):
     """The body of `read_lag`. Split out only so the decoder that `read_lag`
     installs is guaranteed to be restored on every exit path, including the
     refusals and the early `UNSCOREABLE` return."""
@@ -388,6 +421,10 @@ def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say,
         # every reading taken before it; the CLI can still choose to exit.
         return {"lag_profile": {}, "z": {}, "null": {}, "n_pairs": {},
                 "resolving_power": {}, "threshold_by_lag": {},
+                # ⭐ Same shape on the empty path: a consumer that branches on
+                # `transcripts_saved` must not have to branch on the verdict too.
+                **({"transcripts": []} if save_transcripts else {}),
+                "transcripts_saved": bool(save_transcripts),
                 "chains_requested": chains, "chains_used": 0,
                 "chains_dropped_too_short": dropped, "turns_total": 0,
                 "turns_requested_per_chain": turns,
@@ -452,6 +489,11 @@ def _read_lag_inner(backend, *, chains, turns, max_lag, shuffles, seed, say,
             verdict, why = "REFUSED", str(exc)
 
     return {
+        # ⭐ OPT-IN, SO NO HISTORICAL ROW CHANGES SHAPE. Every reading already
+        # taken stays byte-comparable to every other; `C2` in DEVIATIONS is the
+        # record of what a silent change to this payload costs.
+        **({"transcripts": _serialise_chains(built)} if save_transcripts else {}),
+        "transcripts_saved": bool(save_transcripts),
         "chains_requested": chains, "chains_used": len(built),
         "chains_dropped_too_short": dropped,
         "turns_total": sum(len(c) for c in built),
@@ -504,6 +546,14 @@ def main() -> int:
                          "train-shape EQUALS read-shape. ⛔ Only meaningful "
                          "against a W2 adapter, whose corpus was built with "
                          "`--window2`. Recorded in the result as `window2`.")
+    ap.add_argument("--save-transcripts", action="store_true",
+                    help="write the generated chains into the result, with the "
+                         "marker line shown at each turn. ⛔ REQUIRED BY THE "
+                         "PER-ROOT READOUT: PREREG_IDF2 §7 computes it from the "
+                         "read transcripts, and without this the run yields "
+                         "aggregates only and the PARTIAL and FLOORS cells of "
+                         "§6 cannot be decided. Off by default so no historical "
+                         "row changes shape.")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -547,7 +597,7 @@ def main() -> int:
     marker_fn = _marker_by_name(a.marker, seed=a.seed)
     m = read_lag(backend, chains=a.chains, turns=a.turns, max_lag=a.max_lag,
                  shuffles=a.shuffles, seed=a.seed, marker_fn=marker_fn,
-                 window2=a.window2,
+                 window2=a.window2, save_transcripts=a.save_transcripts,
                  temperature=a.temperature, max_new_tokens=a.max_new_tokens)
     if m["chains_used"] == 0:
         raise SystemExit("⛔⛔ " + m["refusal_reason"])

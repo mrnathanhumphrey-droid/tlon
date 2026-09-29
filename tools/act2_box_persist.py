@@ -706,6 +706,12 @@ FLUSH_PATTERNS = (
     "lag_*.json",            # IDF-2: one read per arm per seed
     "dose_*.json",           # IDF-2: §4's dose gate, per cell
     "corpus_diff*.json",     # IDF-2: the marker-only proof for M vs C1
+    # ⭐ §7's readout. Strictly it IS regenerable — it is computed from the
+    # transcripts inside `lag_*.json`, which the line above already covers — so
+    # this is belt and braces rather than a loss-bearing pattern. It earns its
+    # place because it is the analysis that had no input at all until
+    # DEVIATIONS D11, and kilobytes are not the constraint on this path.
+    "per_root_*.json",
 )
 
 
