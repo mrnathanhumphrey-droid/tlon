@@ -208,9 +208,8 @@ re-serving the same weights), but the *pipeline's output* does not (t +6.89
 between two builds).
 
 So several numbers on this page describe **one training run**, not the method.
-Whether the recipe determines the model at all is an open question with a
-pre-registered probe running against it. Written down here rather than left for
-someone else to find.
+The pre-registered probe has since answered it: **the recipe does not determine
+the model's question rate** (S = 0.1549; [`docs/RESULTS_RECIPE_VARIANCE_2026_08_28.md`](docs/RESULTS_RECIPE_VARIANCE_2026_08_28.md)).
 
 The fine-tuning research runs on rented A100 time; spend is ledgered privately.
 
@@ -224,11 +223,17 @@ Kept deliberately separate, because the difference is the whole point.
 - The class system is learnable from weights, both directions, cardless and
   unconstrained.
 - Comprehension improves significantly (paired test, n=256).
+- **A private convention forms between learned agents around a distinction the
+  grammar cannot express**: co-adapted listeners reach 98.9 % against a 33.3 %
+  no-code floor, in all 8 seeds (self-play agents with a table policy, not LLMs;
+  [`docs/VERDICT_13_2_FINAL_2026_08_24.md`](docs/VERDICT_13_2_FINAL_2026_08_24.md)).
 
 **Open**
-- The 90 % gate is not cleared on the write direction.
-- Whether two such models, talking only in Tlön, drift into a private dialect —
-  the actual experiment this was all built for. Pre-registered, not yet run.
+- The 90 % gate is cleared on writing by the multi-turn model (96.1 %), which is
+  not the published adapter.
+- Whether two such *language models*, talking only in Tlön, drift into a private
+  dialect, the experiment this was all built for. It has run; the first read is
+  **underpowered**: +0.080, 95 % CI [−0.286, +0.464] ([`MEASUREMENTS.md`](MEASUREMENTS.md)).
 
 **Retracted** — left in the record on purpose
 - Comprehension was called "clean" after one run. The replication did not reach
